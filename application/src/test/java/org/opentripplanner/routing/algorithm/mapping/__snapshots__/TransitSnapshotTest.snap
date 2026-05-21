@@ -2,10 +2,10 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
   [
     {
       "arrivedAtDestinationWithRentedBicycle" : false,
-      "duration" : 1465,
+      "duration" : 1461,
       "elevationGained" : 0.0,
       "elevationLost" : 0.0,
-      "endTime" : "2009-11-17T18:39:18.000+00:00",
+      "endTime" : "2009-11-17T18:39:15.000+00:00",
       "fare" : {
         "details" : { },
         "fare" : { },
@@ -25,7 +25,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           }
         ]
       },
-      "generalizedCost" : 2435,
+      "generalizedCost" : 2425,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
@@ -34,13 +34,13 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "distance" : 62.01,
           "endTime" : "2009-11-17T18:15:40.000+00:00",
           "from" : {
-            "departure" : "2009-11-17T18:14:53.000+00:00",
+            "departure" : "2009-11-17T18:14:54.000+00:00",
             "lat" : 45.51726,
             "lon" : -122.64847,
             "name" : "SE Morrison St. & SE 17th Ave. (P1)",
             "vertexType" : "NORMAL"
           },
-          "generalizedCost" : 161,
+          "generalizedCost" : 159,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -48,7 +48,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "realTime" : false,
           "rentedBike" : false,
           "route" : "",
-          "startTime" : "2009-11-17T18:14:53.000+00:00",
+          "startTime" : "2009-11-17T18:14:54.000+00:00",
           "steps" : [
             {
               "absoluteDirection" : "WEST",
@@ -85,7 +85,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "agencyUrl" : "http://trimet.org",
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 5218.86,
+          "distance" : 5219.0,
           "endTime" : "2009-11-17T18:35:54.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:15:40.000+00:00",
@@ -438,7 +438,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "arrivalDelay" : 0,
           "departureDelay" : 0,
           "distance" : 266.21,
-          "endTime" : "2009-11-17T18:39:18.000+00:00",
+          "endTime" : "2009-11-17T18:39:15.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:35:54.000+00:00",
             "departure" : "2009-11-17T18:35:54.000+00:00",
@@ -450,7 +450,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "1"
           },
-          "generalizedCost" : 459,
+          "generalizedCost" : 452,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -488,7 +488,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             }
           ],
           "to" : {
-            "arrival" : "2009-11-17T18:39:18.000+00:00",
+            "arrival" : "2009-11-17T18:39:15.000+00:00",
             "lat" : 45.53122,
             "lon" : -122.69659,
             "name" : "NW Northrup St. & NW 22nd Ave. (P2)",
@@ -498,21 +498,21 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "walkingBike" : false
         }
       ],
-      "startTime" : "2009-11-17T18:14:53.000+00:00",
+      "startTime" : "2009-11-17T18:14:54.000+00:00",
       "tooSloped" : false,
       "transfers" : 0,
       "transitTime" : 1214,
       "waitingTime" : 0,
       "walkDistance" : 328.22,
       "walkLimitExceeded" : false,
-      "walkTime" : 251
+      "walkTime" : 247
     },
     {
       "arrivedAtDestinationWithRentedBicycle" : false,
-      "duration" : 1535,
+      "duration" : 1531,
       "elevationGained" : 0.0,
       "elevationLost" : 0.0,
-      "endTime" : "2009-11-17T18:55:28.000+00:00",
+      "endTime" : "2009-11-17T18:55:25.000+00:00",
       "fare" : {
         "details" : { },
         "fare" : { },
@@ -532,7 +532,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           }
         ]
       },
-      "generalizedCost" : 2505,
+      "generalizedCost" : 2495,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
@@ -541,13 +541,13 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "distance" : 62.01,
           "endTime" : "2009-11-17T18:30:40.000+00:00",
           "from" : {
-            "departure" : "2009-11-17T18:29:53.000+00:00",
+            "departure" : "2009-11-17T18:29:54.000+00:00",
             "lat" : 45.51726,
             "lon" : -122.64847,
             "name" : "SE Morrison St. & SE 17th Ave. (P1)",
             "vertexType" : "NORMAL"
           },
-          "generalizedCost" : 161,
+          "generalizedCost" : 159,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -555,7 +555,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "realTime" : false,
           "rentedBike" : false,
           "route" : "",
-          "startTime" : "2009-11-17T18:29:53.000+00:00",
+          "startTime" : "2009-11-17T18:29:54.000+00:00",
           "steps" : [
             {
               "absoluteDirection" : "WEST",
@@ -592,7 +592,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "agencyUrl" : "http://trimet.org",
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 5218.86,
+          "distance" : 5219.0,
           "endTime" : "2009-11-17T18:52:04.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:30:40.000+00:00",
@@ -945,7 +945,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "arrivalDelay" : 0,
           "departureDelay" : 0,
           "distance" : 266.21,
-          "endTime" : "2009-11-17T18:55:28.000+00:00",
+          "endTime" : "2009-11-17T18:55:25.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:52:04.000+00:00",
             "departure" : "2009-11-17T18:52:04.000+00:00",
@@ -957,7 +957,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "1"
           },
-          "generalizedCost" : 459,
+          "generalizedCost" : 452,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -995,7 +995,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             }
           ],
           "to" : {
-            "arrival" : "2009-11-17T18:55:28.000+00:00",
+            "arrival" : "2009-11-17T18:55:25.000+00:00",
             "lat" : 45.53122,
             "lon" : -122.69659,
             "name" : "NW Northrup St. & NW 22nd Ave. (P2)",
@@ -1005,18 +1005,18 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "walkingBike" : false
         }
       ],
-      "startTime" : "2009-11-17T18:29:53.000+00:00",
+      "startTime" : "2009-11-17T18:29:54.000+00:00",
       "tooSloped" : false,
       "transfers" : 0,
       "transitTime" : 1284,
       "waitingTime" : 0,
       "walkDistance" : 328.22,
       "walkLimitExceeded" : false,
-      "walkTime" : 251
+      "walkTime" : 247
     },
     {
       "arrivedAtDestinationWithRentedBicycle" : false,
-      "duration" : 1842,
+      "duration" : 1838,
       "elevationGained" : 0.0,
       "elevationLost" : 0.0,
       "endTime" : "2009-11-17T19:08:17.000+00:00",
@@ -1052,7 +1052,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           }
         ]
       },
-      "generalizedCost" : 3837,
+      "generalizedCost" : 3820,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
@@ -1061,13 +1061,13 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "distance" : 419.62,
           "endTime" : "2009-11-17T18:42:54.000+00:00",
           "from" : {
-            "departure" : "2009-11-17T18:37:35.000+00:00",
+            "departure" : "2009-11-17T18:37:39.000+00:00",
             "lat" : 45.51726,
             "lon" : -122.64847,
             "name" : "SE Morrison St. & SE 17th Ave. (P1)",
             "vertexType" : "NORMAL"
           },
-          "generalizedCost" : 1087,
+          "generalizedCost" : 1072,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -1075,7 +1075,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "realTime" : false,
           "rentedBike" : false,
           "route" : "",
-          "startTime" : "2009-11-17T18:37:35.000+00:00",
+          "startTime" : "2009-11-17T18:37:39.000+00:00",
           "steps" : [
             {
               "absoluteDirection" : "WEST",
@@ -1125,7 +1125,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "agencyUrl" : "http://trimet.org",
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 2035.62,
+          "distance" : 2036.0,
           "endTime" : "2009-11-17T18:51:01.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:42:54.000+00:00",
@@ -1272,7 +1272,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "agencyUrl" : "http://trimet.org",
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 3560.24,
+          "distance" : 3561.0,
           "endTime" : "2009-11-17T19:07:55.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:51:01.000+00:00",
@@ -1503,21 +1503,21 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "walkingBike" : false
         }
       ],
-      "startTime" : "2009-11-17T18:37:35.000+00:00",
+      "startTime" : "2009-11-17T18:37:39.000+00:00",
       "tooSloped" : false,
       "transfers" : 1,
       "transitTime" : 1293,
       "waitingTime" : 208,
       "walkDistance" : 438.43,
       "walkLimitExceeded" : false,
-      "walkTime" : 341
+      "walkTime" : 337
     },
     {
       "arrivedAtDestinationWithRentedBicycle" : false,
-      "duration" : 1525,
+      "duration" : 1521,
       "elevationGained" : 0.0,
       "elevationLost" : 0.0,
-      "endTime" : "2009-11-17T19:10:18.000+00:00",
+      "endTime" : "2009-11-17T19:10:15.000+00:00",
       "fare" : {
         "details" : { },
         "fare" : { },
@@ -1537,7 +1537,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           }
         ]
       },
-      "generalizedCost" : 2495,
+      "generalizedCost" : 2485,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
@@ -1546,13 +1546,13 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "distance" : 62.01,
           "endTime" : "2009-11-17T18:45:40.000+00:00",
           "from" : {
-            "departure" : "2009-11-17T18:44:53.000+00:00",
+            "departure" : "2009-11-17T18:44:54.000+00:00",
             "lat" : 45.51726,
             "lon" : -122.64847,
             "name" : "SE Morrison St. & SE 17th Ave. (P1)",
             "vertexType" : "NORMAL"
           },
-          "generalizedCost" : 161,
+          "generalizedCost" : 159,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -1560,7 +1560,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "realTime" : false,
           "rentedBike" : false,
           "route" : "",
-          "startTime" : "2009-11-17T18:44:53.000+00:00",
+          "startTime" : "2009-11-17T18:44:54.000+00:00",
           "steps" : [
             {
               "absoluteDirection" : "WEST",
@@ -1597,7 +1597,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "agencyUrl" : "http://trimet.org",
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 5218.86,
+          "distance" : 5219.0,
           "endTime" : "2009-11-17T19:06:54.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:45:40.000+00:00",
@@ -1950,7 +1950,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "arrivalDelay" : 0,
           "departureDelay" : 0,
           "distance" : 266.21,
-          "endTime" : "2009-11-17T19:10:18.000+00:00",
+          "endTime" : "2009-11-17T19:10:15.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T19:06:54.000+00:00",
             "departure" : "2009-11-17T19:06:54.000+00:00",
@@ -1962,7 +1962,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "1"
           },
-          "generalizedCost" : 459,
+          "generalizedCost" : 452,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -2000,7 +2000,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             }
           ],
           "to" : {
-            "arrival" : "2009-11-17T19:10:18.000+00:00",
+            "arrival" : "2009-11-17T19:10:15.000+00:00",
             "lat" : 45.53122,
             "lon" : -122.69659,
             "name" : "NW Northrup St. & NW 22nd Ave. (P2)",
@@ -2010,18 +2010,18 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "walkingBike" : false
         }
       ],
-      "startTime" : "2009-11-17T18:44:53.000+00:00",
+      "startTime" : "2009-11-17T18:44:54.000+00:00",
       "tooSloped" : false,
       "transfers" : 0,
       "transitTime" : 1274,
       "waitingTime" : 0,
       "walkDistance" : 328.22,
       "walkLimitExceeded" : false,
-      "walkTime" : 251
+      "walkTime" : 247
     },
     {
       "arrivedAtDestinationWithRentedBicycle" : false,
-      "duration" : 1902,
+      "duration" : 1898,
       "elevationGained" : 0.0,
       "elevationLost" : 0.0,
       "endTime" : "2009-11-17T19:24:17.000+00:00",
@@ -2057,7 +2057,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           }
         ]
       },
-      "generalizedCost" : 3897,
+      "generalizedCost" : 3880,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
@@ -2066,13 +2066,13 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "distance" : 419.62,
           "endTime" : "2009-11-17T18:57:54.000+00:00",
           "from" : {
-            "departure" : "2009-11-17T18:52:35.000+00:00",
+            "departure" : "2009-11-17T18:52:39.000+00:00",
             "lat" : 45.51726,
             "lon" : -122.64847,
             "name" : "SE Morrison St. & SE 17th Ave. (P1)",
             "vertexType" : "NORMAL"
           },
-          "generalizedCost" : 1087,
+          "generalizedCost" : 1072,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -2080,7 +2080,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "realTime" : false,
           "rentedBike" : false,
           "route" : "",
-          "startTime" : "2009-11-17T18:52:35.000+00:00",
+          "startTime" : "2009-11-17T18:52:39.000+00:00",
           "steps" : [
             {
               "absoluteDirection" : "WEST",
@@ -2130,7 +2130,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "agencyUrl" : "http://trimet.org",
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 2035.62,
+          "distance" : 2035.0,
           "endTime" : "2009-11-17T19:06:01.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:57:54.000+00:00",
@@ -2277,7 +2277,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "agencyUrl" : "http://trimet.org",
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 3560.24,
+          "distance" : 3561.0,
           "endTime" : "2009-11-17T19:23:55.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T19:06:01.000+00:00",
@@ -2508,21 +2508,21 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "walkingBike" : false
         }
       ],
-      "startTime" : "2009-11-17T18:52:35.000+00:00",
+      "startTime" : "2009-11-17T18:52:39.000+00:00",
       "tooSloped" : false,
       "transfers" : 1,
       "transitTime" : 1293,
       "waitingTime" : 268,
       "walkDistance" : 438.43,
       "walkLimitExceeded" : false,
-      "walkTime" : 341
+      "walkTime" : 337
     },
     {
       "arrivedAtDestinationWithRentedBicycle" : false,
-      "duration" : 1535,
+      "duration" : 1531,
       "elevationGained" : 0.0,
       "elevationLost" : 0.0,
-      "endTime" : "2009-11-17T19:25:28.000+00:00",
+      "endTime" : "2009-11-17T19:25:25.000+00:00",
       "fare" : {
         "details" : { },
         "fare" : { },
@@ -2542,7 +2542,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           }
         ]
       },
-      "generalizedCost" : 2505,
+      "generalizedCost" : 2495,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
@@ -2551,13 +2551,13 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "distance" : 62.01,
           "endTime" : "2009-11-17T19:00:40.000+00:00",
           "from" : {
-            "departure" : "2009-11-17T18:59:53.000+00:00",
+            "departure" : "2009-11-17T18:59:54.000+00:00",
             "lat" : 45.51726,
             "lon" : -122.64847,
             "name" : "SE Morrison St. & SE 17th Ave. (P1)",
             "vertexType" : "NORMAL"
           },
-          "generalizedCost" : 161,
+          "generalizedCost" : 159,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -2565,7 +2565,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "realTime" : false,
           "rentedBike" : false,
           "route" : "",
-          "startTime" : "2009-11-17T18:59:53.000+00:00",
+          "startTime" : "2009-11-17T18:59:54.000+00:00",
           "steps" : [
             {
               "absoluteDirection" : "WEST",
@@ -2602,7 +2602,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "agencyUrl" : "http://trimet.org",
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 5218.86,
+          "distance" : 5219.0,
           "endTime" : "2009-11-17T19:22:04.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T19:00:40.000+00:00",
@@ -2955,7 +2955,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "arrivalDelay" : 0,
           "departureDelay" : 0,
           "distance" : 266.21,
-          "endTime" : "2009-11-17T19:25:28.000+00:00",
+          "endTime" : "2009-11-17T19:25:25.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T19:22:04.000+00:00",
             "departure" : "2009-11-17T19:22:04.000+00:00",
@@ -2967,7 +2967,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "1"
           },
-          "generalizedCost" : 459,
+          "generalizedCost" : 452,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -3005,7 +3005,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             }
           ],
           "to" : {
-            "arrival" : "2009-11-17T19:25:28.000+00:00",
+            "arrival" : "2009-11-17T19:25:25.000+00:00",
             "lat" : 45.53122,
             "lon" : -122.69659,
             "name" : "NW Northrup St. & NW 22nd Ave. (P2)",
@@ -3015,14 +3015,14 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "walkingBike" : false
         }
       ],
-      "startTime" : "2009-11-17T18:59:53.000+00:00",
+      "startTime" : "2009-11-17T18:59:54.000+00:00",
       "tooSloped" : false,
       "transfers" : 0,
       "transitTime" : 1284,
       "waitingTime" : 0,
       "walkDistance" : 328.22,
       "walkLimitExceeded" : false,
-      "walkTime" : 251
+      "walkTime" : 247
     }
   ]
 ]
@@ -3032,22 +3032,22 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
   [
     {
       "arrivedAtDestinationWithRentedBicycle" : false,
-      "duration" : 3556,
+      "duration" : 3504,
       "elevationGained" : 0.0,
       "elevationLost" : 0.0,
-      "endTime" : "2009-11-17T18:59:16.000+00:00",
+      "endTime" : "2009-11-17T18:58:24.000+00:00",
       "fare" : {
         "details" : { },
         "fare" : { }
       },
-      "generalizedCost" : 7892,
+      "generalizedCost" : 7775,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
           "arrivalDelay" : 0,
           "departureDelay" : 0,
           "distance" : 4690.3,
-          "endTime" : "2009-11-17T18:59:16.000+00:00",
+          "endTime" : "2009-11-17T18:58:24.000+00:00",
           "from" : {
             "departure" : "2009-11-17T18:00:00.000+00:00",
             "lat" : 45.52337,
@@ -3058,7 +3058,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "1"
           },
-          "generalizedCost" : 7891,
+          "generalizedCost" : 7775,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -3239,7 +3239,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             }
           ],
           "to" : {
-            "arrival" : "2009-11-17T18:59:16.000+00:00",
+            "arrival" : "2009-11-17T18:58:24.000+00:00",
             "lat" : 45.531,
             "lon" : -122.70029,
             "name" : "NW Northrup St. & NW 24th Ave. (P3)",
@@ -3256,14 +3256,14 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
       "waitingTime" : 0,
       "walkDistance" : 4690.3,
       "walkLimitExceeded" : false,
-      "walkTime" : 3556
+      "walkTime" : 3504
     },
     {
       "arrivedAtDestinationWithRentedBicycle" : false,
-      "duration" : 2134,
+      "duration" : 2131,
       "elevationGained" : 0.0,
       "elevationLost" : 0.0,
-      "endTime" : "2009-11-17T18:37:25.000+00:00",
+      "endTime" : "2009-11-17T18:37:23.000+00:00",
       "fare" : {
         "details" : { },
         "fare" : { },
@@ -3296,7 +3296,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           }
         ]
       },
-      "generalizedCost" : 4002,
+      "generalizedCost" : 3989,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
@@ -3305,7 +3305,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "distance" : 87.02,
           "endTime" : "2009-11-17T18:03:00.000+00:00",
           "from" : {
-            "departure" : "2009-11-17T18:01:51.000+00:00",
+            "departure" : "2009-11-17T18:01:52.000+00:00",
             "lat" : 45.52337,
             "lon" : -122.653725,
             "name" : "NE 12th & Couch",
@@ -3314,7 +3314,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "1"
           },
-          "generalizedCost" : 147,
+          "generalizedCost" : 145,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -3322,7 +3322,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "realTime" : false,
           "rentedBike" : false,
           "route" : "",
-          "startTime" : "2009-11-17T18:01:51.000+00:00",
+          "startTime" : "2009-11-17T18:01:52.000+00:00",
           "steps" : [
             {
               "absoluteDirection" : "SOUTH",
@@ -3372,7 +3372,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "agencyUrl" : "http://trimet.org",
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 2007.51,
+          "distance" : 2008.0,
           "endTime" : "2009-11-17T18:10:35.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:03:00.000+00:00",
@@ -3491,7 +3491,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "arrivalDelay" : 0,
           "departureDelay" : 0,
           "distance" : 422.72,
-          "endTime" : "2009-11-17T18:16:01.000+00:00",
+          "endTime" : "2009-11-17T18:15:56.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:10:35.000+00:00",
             "departure" : "2009-11-17T18:10:35.000+00:00",
@@ -3503,7 +3503,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "0"
           },
-          "generalizedCost" : 732,
+          "generalizedCost" : 722,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -3554,7 +3554,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             }
           ],
           "to" : {
-            "arrival" : "2009-11-17T18:16:01.000+00:00",
+            "arrival" : "2009-11-17T18:15:56.000+00:00",
             "departure" : "2009-11-17T18:18:09.000+00:00",
             "lat" : 45.521786,
             "lon" : -122.68109,
@@ -3574,10 +3574,10 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "agencyUrl" : "http://trimet.org",
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 2493.24,
+          "distance" : 2493.0,
           "endTime" : "2009-11-17T18:35:00.000+00:00",
           "from" : {
-            "arrival" : "2009-11-17T18:16:01.000+00:00",
+            "arrival" : "2009-11-17T18:15:56.000+00:00",
             "departure" : "2009-11-17T18:18:09.000+00:00",
             "lat" : 45.521786,
             "lon" : -122.68109,
@@ -3589,7 +3589,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "0"
           },
-          "generalizedCost" : 1739,
+          "generalizedCost" : 1744,
           "headsign" : "NW 23rd Ave",
           "interlineWithPreviousLeg" : false,
           "intermediateStops" : [
@@ -3757,7 +3757,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "arrivalDelay" : 0,
           "departureDelay" : 0,
           "distance" : 187.24,
-          "endTime" : "2009-11-17T18:37:25.000+00:00",
+          "endTime" : "2009-11-17T18:37:23.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:35:00.000+00:00",
             "departure" : "2009-11-17T18:35:00.000+00:00",
@@ -3769,7 +3769,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "1"
           },
-          "generalizedCost" : 328,
+          "generalizedCost" : 324,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -3820,7 +3820,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             }
           ],
           "to" : {
-            "arrival" : "2009-11-17T18:37:25.000+00:00",
+            "arrival" : "2009-11-17T18:37:23.000+00:00",
             "lat" : 45.531,
             "lon" : -122.70029,
             "name" : "NW Northrup St. & NW 24th Ave. (P3)",
@@ -3830,21 +3830,21 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "walkingBike" : false
         }
       ],
-      "startTime" : "2009-11-17T18:01:51.000+00:00",
+      "startTime" : "2009-11-17T18:01:52.000+00:00",
       "tooSloped" : false,
       "transfers" : 1,
       "transitTime" : 1466,
-      "waitingTime" : 128,
+      "waitingTime" : 133,
       "walkDistance" : 696.98,
       "walkLimitExceeded" : false,
-      "walkTime" : 540
+      "walkTime" : 532
     },
     {
       "arrivedAtDestinationWithRentedBicycle" : false,
-      "duration" : 1561,
+      "duration" : 1557,
       "elevationGained" : 0.0,
       "elevationLost" : 0.0,
-      "endTime" : "2009-11-17T18:38:52.000+00:00",
+      "endTime" : "2009-11-17T18:38:49.000+00:00",
       "fare" : {
         "details" : { },
         "fare" : { },
@@ -3877,7 +3877,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           }
         ]
       },
-      "generalizedCost" : 3076,
+      "generalizedCost" : 3068,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
@@ -3886,7 +3886,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "distance" : 87.02,
           "endTime" : "2009-11-17T18:14:00.000+00:00",
           "from" : {
-            "departure" : "2009-11-17T18:12:51.000+00:00",
+            "departure" : "2009-11-17T18:12:52.000+00:00",
             "lat" : 45.52337,
             "lon" : -122.653725,
             "name" : "NE 12th & Couch",
@@ -3895,7 +3895,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "1"
           },
-          "generalizedCost" : 147,
+          "generalizedCost" : 145,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -3903,7 +3903,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "realTime" : false,
           "rentedBike" : false,
           "route" : "",
-          "startTime" : "2009-11-17T18:12:51.000+00:00",
+          "startTime" : "2009-11-17T18:12:52.000+00:00",
           "steps" : [
             {
               "absoluteDirection" : "SOUTH",
@@ -3953,7 +3953,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "agencyUrl" : "http://trimet.org",
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 3520.32,
+          "distance" : 3520.0,
           "endTime" : "2009-11-17T18:26:22.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:14:00.000+00:00",
@@ -4178,7 +4178,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "agencyUrl" : "http://trimet.org",
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 981.85,
+          "distance" : 982.0,
           "endTime" : "2009-11-17T18:35:54.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:26:22.000+00:00",
@@ -4271,7 +4271,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "arrivalDelay" : 0,
           "departureDelay" : 0,
           "distance" : 231.46,
-          "endTime" : "2009-11-17T18:38:52.000+00:00",
+          "endTime" : "2009-11-17T18:38:49.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:35:54.000+00:00",
             "departure" : "2009-11-17T18:35:54.000+00:00",
@@ -4283,7 +4283,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "1"
           },
-          "generalizedCost" : 414,
+          "generalizedCost" : 409,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -4321,7 +4321,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             }
           ],
           "to" : {
-            "arrival" : "2009-11-17T18:38:52.000+00:00",
+            "arrival" : "2009-11-17T18:38:49.000+00:00",
             "lat" : 45.531,
             "lon" : -122.70029,
             "name" : "NW Northrup St. & NW 24th Ave. (P3)",
@@ -4331,21 +4331,21 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "walkingBike" : false
         }
       ],
-      "startTime" : "2009-11-17T18:12:51.000+00:00",
+      "startTime" : "2009-11-17T18:12:52.000+00:00",
       "tooSloped" : false,
       "transfers" : 1,
       "transitTime" : 958,
       "waitingTime" : 356,
       "walkDistance" : 318.48,
       "walkLimitExceeded" : false,
-      "walkTime" : 247
+      "walkTime" : 243
     },
     {
       "arrivedAtDestinationWithRentedBicycle" : false,
-      "duration" : 1579,
+      "duration" : 1567,
       "elevationGained" : 0.0,
       "elevationLost" : 0.0,
-      "endTime" : "2009-11-17T18:39:10.000+00:00",
+      "endTime" : "2009-11-17T18:38:59.000+00:00",
       "fare" : {
         "details" : { },
         "fare" : { },
@@ -4365,7 +4365,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           }
         ]
       },
-      "generalizedCost" : 3230,
+      "generalizedCost" : 3202,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
@@ -4374,7 +4374,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "distance" : 87.02,
           "endTime" : "2009-11-17T18:14:00.000+00:00",
           "from" : {
-            "departure" : "2009-11-17T18:12:51.000+00:00",
+            "departure" : "2009-11-17T18:12:52.000+00:00",
             "lat" : 45.52337,
             "lon" : -122.653725,
             "name" : "NE 12th & Couch",
@@ -4383,7 +4383,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "1"
           },
-          "generalizedCost" : 147,
+          "generalizedCost" : 145,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -4391,7 +4391,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "realTime" : false,
           "rentedBike" : false,
           "route" : "",
-          "startTime" : "2009-11-17T18:12:51.000+00:00",
+          "startTime" : "2009-11-17T18:12:52.000+00:00",
           "steps" : [
             {
               "absoluteDirection" : "SOUTH",
@@ -4441,7 +4441,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "agencyUrl" : "http://trimet.org",
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 3520.32,
+          "distance" : 3520.0,
           "endTime" : "2009-11-17T18:26:22.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:14:00.000+00:00",
@@ -4664,7 +4664,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "arrivalDelay" : 0,
           "departureDelay" : 0,
           "distance" : 1003.22,
-          "endTime" : "2009-11-17T18:39:10.000+00:00",
+          "endTime" : "2009-11-17T18:38:59.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:26:22.000+00:00",
             "departure" : "2009-11-17T18:26:22.000+00:00",
@@ -4676,7 +4676,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "1"
           },
-          "generalizedCost" : 1740,
+          "generalizedCost" : 1715,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -4779,7 +4779,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             }
           ],
           "to" : {
-            "arrival" : "2009-11-17T18:39:10.000+00:00",
+            "arrival" : "2009-11-17T18:38:59.000+00:00",
             "lat" : 45.531,
             "lon" : -122.70029,
             "name" : "NW Northrup St. & NW 24th Ave. (P3)",
@@ -4789,21 +4789,21 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "walkingBike" : false
         }
       ],
-      "startTime" : "2009-11-17T18:12:51.000+00:00",
+      "startTime" : "2009-11-17T18:12:52.000+00:00",
       "tooSloped" : false,
       "transfers" : 0,
       "transitTime" : 742,
       "waitingTime" : 0,
       "walkDistance" : 1090.24,
       "walkLimitExceeded" : false,
-      "walkTime" : 837
+      "walkTime" : 825
     },
     {
       "arrivedAtDestinationWithRentedBicycle" : false,
-      "duration" : 1601,
+      "duration" : 1589,
       "elevationGained" : 0.0,
       "elevationLost" : 0.0,
-      "endTime" : "2009-11-17T18:54:32.000+00:00",
+      "endTime" : "2009-11-17T18:54:21.000+00:00",
       "fare" : {
         "details" : { },
         "fare" : { },
@@ -4823,7 +4823,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           }
         ]
       },
-      "generalizedCost" : 3252,
+      "generalizedCost" : 3224,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
@@ -4832,7 +4832,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "distance" : 87.02,
           "endTime" : "2009-11-17T18:29:00.000+00:00",
           "from" : {
-            "departure" : "2009-11-17T18:27:51.000+00:00",
+            "departure" : "2009-11-17T18:27:52.000+00:00",
             "lat" : 45.52337,
             "lon" : -122.653725,
             "name" : "NE 12th & Couch",
@@ -4841,7 +4841,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "1"
           },
-          "generalizedCost" : 147,
+          "generalizedCost" : 145,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -4849,7 +4849,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "realTime" : false,
           "rentedBike" : false,
           "route" : "",
-          "startTime" : "2009-11-17T18:27:51.000+00:00",
+          "startTime" : "2009-11-17T18:27:52.000+00:00",
           "steps" : [
             {
               "absoluteDirection" : "SOUTH",
@@ -4899,7 +4899,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "agencyUrl" : "http://trimet.org",
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 3520.32,
+          "distance" : 3520.0,
           "endTime" : "2009-11-17T18:41:44.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:29:00.000+00:00",
@@ -5122,7 +5122,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "arrivalDelay" : 0,
           "departureDelay" : 0,
           "distance" : 1003.22,
-          "endTime" : "2009-11-17T18:54:32.000+00:00",
+          "endTime" : "2009-11-17T18:54:21.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:41:44.000+00:00",
             "departure" : "2009-11-17T18:41:44.000+00:00",
@@ -5134,7 +5134,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "1"
           },
-          "generalizedCost" : 1740,
+          "generalizedCost" : 1715,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -5237,7 +5237,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             }
           ],
           "to" : {
-            "arrival" : "2009-11-17T18:54:32.000+00:00",
+            "arrival" : "2009-11-17T18:54:21.000+00:00",
             "lat" : 45.531,
             "lon" : -122.70029,
             "name" : "NW Northrup St. & NW 24th Ave. (P3)",
@@ -5247,21 +5247,21 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "walkingBike" : false
         }
       ],
-      "startTime" : "2009-11-17T18:27:51.000+00:00",
+      "startTime" : "2009-11-17T18:27:52.000+00:00",
       "tooSloped" : false,
       "transfers" : 0,
       "transitTime" : 764,
       "waitingTime" : 0,
       "walkDistance" : 1090.24,
       "walkLimitExceeded" : false,
-      "walkTime" : 837
+      "walkTime" : 825
     },
     {
       "arrivedAtDestinationWithRentedBicycle" : false,
-      "duration" : 1631,
+      "duration" : 1627,
       "elevationGained" : 0.0,
       "elevationLost" : 0.0,
-      "endTime" : "2009-11-17T18:55:02.000+00:00",
+      "endTime" : "2009-11-17T18:54:59.000+00:00",
       "fare" : {
         "details" : { },
         "fare" : { },
@@ -5294,7 +5294,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           }
         ]
       },
-      "generalizedCost" : 3146,
+      "generalizedCost" : 3138,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
@@ -5303,7 +5303,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "distance" : 87.02,
           "endTime" : "2009-11-17T18:29:00.000+00:00",
           "from" : {
-            "departure" : "2009-11-17T18:27:51.000+00:00",
+            "departure" : "2009-11-17T18:27:52.000+00:00",
             "lat" : 45.52337,
             "lon" : -122.653725,
             "name" : "NE 12th & Couch",
@@ -5312,7 +5312,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "1"
           },
-          "generalizedCost" : 147,
+          "generalizedCost" : 145,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -5320,7 +5320,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "realTime" : false,
           "rentedBike" : false,
           "route" : "",
-          "startTime" : "2009-11-17T18:27:51.000+00:00",
+          "startTime" : "2009-11-17T18:27:52.000+00:00",
           "steps" : [
             {
               "absoluteDirection" : "SOUTH",
@@ -5370,7 +5370,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "agencyUrl" : "http://trimet.org",
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 3520.32,
+          "distance" : 3520.0,
           "endTime" : "2009-11-17T18:41:44.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:29:00.000+00:00",
@@ -5595,7 +5595,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "agencyUrl" : "http://trimet.org",
           "arrivalDelay" : 0,
           "departureDelay" : 0,
-          "distance" : 981.85,
+          "distance" : 982.0,
           "endTime" : "2009-11-17T18:52:04.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:41:44.000+00:00",
@@ -5688,7 +5688,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "arrivalDelay" : 0,
           "departureDelay" : 0,
           "distance" : 231.46,
-          "endTime" : "2009-11-17T18:55:02.000+00:00",
+          "endTime" : "2009-11-17T18:54:59.000+00:00",
           "from" : {
             "arrival" : "2009-11-17T18:52:04.000+00:00",
             "departure" : "2009-11-17T18:52:04.000+00:00",
@@ -5700,7 +5700,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "1"
           },
-          "generalizedCost" : 414,
+          "generalizedCost" : 409,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -5738,7 +5738,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             }
           ],
           "to" : {
-            "arrival" : "2009-11-17T18:55:02.000+00:00",
+            "arrival" : "2009-11-17T18:54:59.000+00:00",
             "lat" : 45.531,
             "lon" : -122.70029,
             "name" : "NW Northrup St. & NW 24th Ave. (P3)",
@@ -5748,14 +5748,14 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
           "walkingBike" : false
         }
       ],
-      "startTime" : "2009-11-17T18:27:51.000+00:00",
+      "startTime" : "2009-11-17T18:27:52.000+00:00",
       "tooSloped" : false,
       "transfers" : 1,
       "transitTime" : 1017,
       "waitingTime" : 367,
       "walkDistance" : 318.48,
       "walkLimitExceeded" : false,
-      "walkTime" : 247
+      "walkTime" : 243
     }
   ]
 ]
@@ -5765,22 +5765,22 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
   [
     {
       "arrivedAtDestinationWithRentedBicycle" : false,
-      "duration" : 3740,
+      "duration" : 3684,
       "elevationGained" : 0.0,
       "elevationLost" : 0.0,
-      "endTime" : "2009-11-17T19:02:20.000+00:00",
+      "endTime" : "2009-11-17T19:01:24.000+00:00",
       "fare" : {
         "details" : { },
         "fare" : { }
       },
-      "generalizedCost" : 8370,
+      "generalizedCost" : 8246,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
           "arrivalDelay" : 0,
           "departureDelay" : 0,
           "distance" : 4928.75,
-          "endTime" : "2009-11-17T19:02:20.000+00:00",
+          "endTime" : "2009-11-17T19:01:24.000+00:00",
           "from" : {
             "departure" : "2009-11-17T18:00:00.000+00:00",
             "lat" : 45.51932,
@@ -5788,7 +5788,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "name" : "SE Stark    St. & SE 17th Ave. (P0)",
             "vertexType" : "NORMAL"
           },
-          "generalizedCost" : 8369,
+          "generalizedCost" : 8246,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -5995,7 +5995,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             }
           ],
           "to" : {
-            "arrival" : "2009-11-17T19:02:20.000+00:00",
+            "arrival" : "2009-11-17T19:01:24.000+00:00",
             "lat" : 45.53122,
             "lon" : -122.69659,
             "name" : "NW Northrup St. & NW 22nd Ave. (P2)",
@@ -6012,7 +6012,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
       "waitingTime" : 0,
       "walkDistance" : 4928.75,
       "walkLimitExceeded" : false,
-      "walkTime" : 3740
+      "walkTime" : 3684
     }
   ]
 ]
@@ -6022,22 +6022,22 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
   [
     {
       "arrivedAtDestinationWithRentedBicycle" : false,
-      "duration" : 3339,
+      "duration" : 3290,
       "elevationGained" : 0.0,
       "elevationLost" : 0.0,
-      "endTime" : "2009-11-17T18:55:39.000+00:00",
+      "endTime" : "2009-11-17T18:54:50.000+00:00",
       "fare" : {
         "details" : { },
         "fare" : { }
       },
-      "generalizedCost" : 7389,
+      "generalizedCost" : 7279,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
           "arrivalDelay" : 0,
           "departureDelay" : 0,
           "distance" : 4401.53,
-          "endTime" : "2009-11-17T18:55:39.000+00:00",
+          "endTime" : "2009-11-17T18:54:50.000+00:00",
           "from" : {
             "departure" : "2009-11-17T18:00:00.000+00:00",
             "lat" : 45.52337,
@@ -6048,7 +6048,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "1"
           },
-          "generalizedCost" : 7388,
+          "generalizedCost" : 7279,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -6229,7 +6229,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             }
           ],
           "to" : {
-            "arrival" : "2009-11-17T18:55:39.000+00:00",
+            "arrival" : "2009-11-17T18:54:50.000+00:00",
             "lat" : 45.53122,
             "lon" : -122.69659,
             "name" : "NW Northrup St. & NW 22nd Ave. (P2)",
@@ -6246,7 +6246,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
       "waitingTime" : 0,
       "walkDistance" : 4401.53,
       "walkLimitExceeded" : false,
-      "walkTime" : 3339
+      "walkTime" : 3290
     }
   ]
 ]
@@ -6256,22 +6256,22 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
   [
     {
       "arrivedAtDestinationWithRentedBicycle" : false,
-      "duration" : 2376,
+      "duration" : 2341,
       "elevationGained" : 0.0,
       "elevationLost" : 0.0,
-      "endTime" : "2009-11-17T18:39:36.000+00:00",
+      "endTime" : "2009-11-17T18:39:01.000+00:00",
       "fare" : {
         "details" : { },
         "fare" : { }
       },
-      "generalizedCost" : 5266,
+      "generalizedCost" : 5188,
       "legs" : [
         {
           "agencyTimeZoneOffset" : -28800000,
           "arrivalDelay" : 0,
           "departureDelay" : 0,
           "distance" : 3131.67,
-          "endTime" : "2009-11-17T18:39:36.000+00:00",
+          "endTime" : "2009-11-17T18:39:01.000+00:00",
           "from" : {
             "departure" : "2009-11-17T18:00:00.000+00:00",
             "lat" : 45.529829,
@@ -6282,7 +6282,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             "vertexType" : "TRANSIT",
             "zoneId" : "0"
           },
-          "generalizedCost" : 5266,
+          "generalizedCost" : 5188,
           "interlineWithPreviousLeg" : false,
           "legGeometry" : { },
           "mode" : "WALK",
@@ -6424,7 +6424,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
             }
           ],
           "to" : {
-            "arrival" : "2009-11-17T18:39:36.000+00:00",
+            "arrival" : "2009-11-17T18:39:01.000+00:00",
             "lat" : 45.531,
             "lon" : -122.70029,
             "name" : "NW Northrup St. & NW 24th Ave. (P3)",
@@ -6441,7 +6441,7 @@ org.opentripplanner.routing.algorithm.mapping.TransitSnapshotTest.test_trip_plan
       "waitingTime" : 0,
       "walkDistance" : 3131.67,
       "walkLimitExceeded" : false,
-      "walkTime" : 2376
+      "walkTime" : 2341
     }
   ]
 ]

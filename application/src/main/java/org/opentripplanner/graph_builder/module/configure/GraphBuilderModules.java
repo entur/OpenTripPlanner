@@ -84,8 +84,7 @@ public class GraphBuilderModules {
           osmConfiguredDataSource.dataSource(),
           osmConfiguredDataSource.config().osmTagMapper(),
           osmConfiguredDataSource.config().timeZone(),
-          config.osmCacheDataInMem,
-          issueStore
+          config.osmCacheDataInMem
         )
       );
     }
@@ -106,7 +105,7 @@ public class GraphBuilderModules {
       .withIncludeInclinedEdgeLevelInfo(config.includeInclinedEdgeLevelInfo)
       .withMaxAreaNodes(config.maxAreaNodes)
       .withBoardingAreaRefTags(config.boardingLocationTags)
-      .withIncludeOsmSubwayEntrances(config.osmDefaults.includeOsmSubwayEntrances())
+      .withIncludeOsmStationEntrances(config.osmDefaults.includeOsmStationEntrances())
       .withIssueStore(issueStore)
       .build();
   }
@@ -270,9 +269,7 @@ public class GraphBuilderModules {
       timetableRepository,
       transferRepository,
       issueStore,
-      config.maxTransferDuration,
-      config.transferRequests,
-      config.transferParametersForMode
+      config.regularTransferParameters()
     );
   }
 
@@ -290,7 +287,7 @@ public class GraphBuilderModules {
       linker,
       timetableRepository,
       issueStore,
-      config.maxTransferDuration.toSeconds() * WalkPreferences.DEFAULT.speed()
+      config.regularTransferParameters().maxDuration().toSeconds() * WalkPreferences.DEFAULT.speed()
     );
   }
 
@@ -382,7 +379,11 @@ public class GraphBuilderModules {
     awsTileSource.awsSecretKey = config.elevationBucket.secretKey;
     awsTileSource.awsBucketName = config.elevationBucket.bucketName;
 
-    return new NEDGridCoverageFactoryImpl(nedCacheDirectory, awsTileSource);
+    return new NEDGridCoverageFactoryImpl(
+      nedCacheDirectory,
+      config.elevationBucket.datumUrl,
+      awsTileSource
+    );
   }
 
   private static List<ElevationGridCoverageFactory> createDemGeotiffGridCoverageFactories(
@@ -419,7 +420,8 @@ public class GraphBuilderModules {
       config.distanceBetweenElevationSamples,
       config.maxElevationPropagationMeters,
       config.includeEllipsoidToGeoidDifference,
-      config.multiThreadElevationCalculations
+      config.multiThreadElevationCalculations,
+      config.elevationTileCacheSizeMB
     );
   }
 

@@ -171,6 +171,8 @@ type Contact {
 type DatedServiceJourney {
   "Returns scheduled passingTimes for this dated service journey, updated with real-time-updates (if available). "
   estimatedCalls: [EstimatedCall!]! @timingData
+  "Whether this is an extra journey, either from planned data or added in realtime"
+  extraJourney: Boolean!
   id: ID!
   "JourneyPattern for the dated service journey."
   journeyPattern: JourneyPattern
@@ -191,7 +193,7 @@ type DatedServiceJourney {
   replacementForRelation: [ReplacementForRelation!]!
   "The service journey this Dated Service Journey is based on"
   serviceJourney: ServiceJourney!
-  "Alterations specified on the Trip in the planned data"
+  "Alterations specified on the Trip in the planned data. Note: realtime alterations are not included"
   tripAlteration: ServiceAlteration
 }
 
@@ -615,6 +617,8 @@ type Quay implements PlaceInterface {
   estimatedCalls(
     "Filters results by either departures, arrivals or both. For departures forBoarding has to be true and the departure time has to be within the specified time range. For arrivals, forAlight has to be true and the arrival time has to be within the specified time range. If both are asked for, either the conditions for arrivals or the conditions for departures will have to be true for an EstimatedCall to show."
     arrivalDeparture: ArrivalDeparture = departures,
+    "A list of filters for which estimated calls should be included. An estimated call will be included if it matches with at least one filter. An empty list is not allowed. Omit the parameter to include all estimated calls."
+    filters: [EstimatedCallFilterInput!],
     "Indicates that real-time-cancelled trips should also be included."
     includeCancelledTrips: Boolean = false,
     "Limit the total number of departures returned."
@@ -627,9 +631,9 @@ type Quay implements PlaceInterface {
     "Duration in seconds from start time to search forward for estimated calls. Must be a positive value. Default value is 24 hours"
     timeRange: Int = 86400,
     "Parameters for indicating the only authorities and/or lines or quays to list estimatedCalls for"
-    whiteListed: InputWhiteListed,
+    whiteListed: InputWhiteListed @deprecated(reason : "Use 'filters' instead."),
     "Only show estimated calls for selected modes."
-    whiteListedModes: [TransportMode]
+    whiteListedModes: [TransportMode] @deprecated(reason : "Use 'filters' instead.")
   ): [EstimatedCall!]! @timingData
   "Geometry for flexible area."
   flexibleArea: Coordinates
@@ -835,7 +839,7 @@ type QueryType {
   "Input type for executing a travel search for a trip between two locations. Returns trip patterns describing suggested alternatives for the trip."
   trip(
     "Time and cost penalty on access/egress modes."
-    accessEgressPenalty: [PenaltyForStreetMode!] = [{streetMode : car_park, timePenalty : "20m + 2.0 t", costFactor : 1.5}, {streetMode : car_pickup, timePenalty : "20m + 2.0 t", costFactor : 1.5}, {streetMode : car_rental, timePenalty : "20m + 2.0 t", costFactor : 1.5}, {streetMode : flexible, timePenalty : "10m + 1.30 t", costFactor : 1.3}],
+    accessEgressPenalty: [PenaltyForStreetMode!] = [{streetMode : car_park, timePenalty : "20m + 2.0 t", costFactor : 1.5}, {streetMode : car_pickup, timePenalty : "20m + 2.0 t", costFactor : 1.5}, {streetMode : car_rental, timePenalty : "20m + 2.0 t", costFactor : 1.5}, {streetMode : flexible, timePenalty : "10m + 1.3 t", costFactor : 1.3}],
     "The alightSlack is the minimum extra time after exiting a public transport vehicle. This is the default value used, if not overridden by the 'alightSlackList'."
     alightSlackDefault: Int = 0,
     "List of alightSlack for a given set of modes. Defaults: []"
@@ -990,7 +994,7 @@ type QueryType {
     "Walk cost is multiplied by this value. This is the main parameter to use for limiting walking."
     walkReluctance: Float = 2.0,
     "The maximum walk speed along streets, in meters per second."
-    walkSpeed: Float = 1.33,
+    walkSpeed: Float = 1.35,
     "Whether the trip must be wheelchair accessible. Supported for the street part to the search, not implemented for the transit yet."
     wheelchairAccessible: Boolean = false,
     "Parameters for indicating the only authorities, lines or quays to be used in the trip patterns"
@@ -1305,6 +1309,8 @@ type StopPlace implements PlaceInterface {
   "List of visits to this stop place as part of vehicle journeys."
   estimatedCalls(
     arrivalDeparture: ArrivalDeparture = departures,
+    "A list of filters for which estimated calls should be included. An estimated call will be included if it matches with at least one filter. An empty list is not allowed. Omit the parameter to include all estimated calls."
+    filters: [EstimatedCallFilterInput!],
     "Indicates that real-time-cancelled trips should also be included."
     includeCancelledTrips: Boolean = false,
     "Limit the total number of departures returned."
@@ -1316,9 +1322,9 @@ type StopPlace implements PlaceInterface {
     "Duration in seconds from start time to search forward for estimated calls. Must be a positive value. Default value is 24 hours"
     timeRange: Int = 86400,
     "Parameters for indicating the only authorities and/or lines or quays to list estimatedCalls for"
-    whiteListed: InputWhiteListed,
+    whiteListed: InputWhiteListed @deprecated(reason : "Use 'filters' instead."),
     "Only show estimated calls for selected modes."
-    whiteListedModes: [TransportMode]
+    whiteListedModes: [TransportMode] @deprecated(reason : "Use 'filters' instead.")
   ): [EstimatedCall!]! @timingData
   id: ID!
   latitude: Float
@@ -1912,6 +1918,8 @@ enum ReportType {
 enum RoutingErrorCode {
   "The specified location is not close to any streets or transit stops"
   locationNotFound
+  "No usable itineraries were found for the requested direct mode and no transit was included in the search"
+  noDirectModeConnection
   "No stops are reachable from the location specified. You can try searching using a different access or egress mode"
   noStopsInRange
   "No transit connection was found between the origin and destination withing the operating day or the next day"
@@ -2223,6 +2231,24 @@ input BikePreferencesInput {
   triangleFactors: TriangleFactors
 }
 
+"A collection of selectors for what estimated calls should be included / excluded. At least one of `select` or `not` must be provided. The `select` is always applied first, then `not`. If only `not` is present, the exclude is applied to the existing set of estimated calls."
+input EstimatedCallFilterInput {
+  "A list of selectors for what estimated calls should be excluded during the search. If a call matches with at least one selector it will be excluded."
+  not: [EstimatedCallSelectInput!]
+  "A list of selectors for what estimated calls should be included. A call is included if it matches at least one selector. Omit the field to include all calls. An empty list is not allowed."
+  select: [EstimatedCallSelectInput!]
+}
+
+"A selector for filter allow-list / exclude-list. At least one field must be provided. An estimated call matches a selector if it matches all fields. Within each field, a call matches if it matches any of the listed values."
+input EstimatedCallSelectInput {
+  "Set of ids for authorities that should be included in/excluded from search. A call matches if its authority matches any of the given IDs. An empty list is not allowed. Omit the field to match all authorities."
+  authorities: [ID!]
+  "Set of ids for lines that should be included in/excluded from search. A call matches if its line matches any of the given IDs. An empty list is not allowed. Omit the field to match all lines."
+  lines: [ID!]
+  "The allowed modes for the estimated call. A call matches if its mode matches any of the listed modes. An empty list is not allowed. Omit the field to match all modes. Omitting main mode (transportMode) is also not allowed."
+  transportModes: [TransportModes!]
+}
+
 "Filter trips by disallowing lines involving certain elements. If both lines and authorities are specified, only one must be valid for each line to be banned. If a line is both banned and whitelisted, it will be counted as banned."
 input InputBanned {
   "Set of ids for authorities that should not be used"
@@ -2287,7 +2313,7 @@ input ItineraryFilters {
   groupedOtherThanSameLegsMaxCostMultiplier: Float = 2.0
   "Add an additional cost for short transfers on long transit itineraries. See javaDoc on `AddMinSafeTransferCostFilter` details."
   minSafeTransferTimeFactor: Float @deprecated(reason : "This filter is removed, it has undesired side-effects")
-  "Set a relative limit for all transit itineraries. The limit is calculated based on the transit itinerary generalized-cost and the time between itineraries Itineraries without transit legs are excluded from this filter. Example: costLimitFunction(x) = 3600 + 2.0 x and intervalRelaxFactor = 0.5. If the lowest cost returned is 10 000, then the limit is set to: 3 600 + 2 * 10 000 = 26 600 plus half of the time between either departure or arrival times of the itinerary. Default: {\"costLimitFunction\": 15m + 1.50 t, \"intervalRelaxFactor\": 0.4}"
+  "Set a relative limit for all transit itineraries. The limit is calculated based on the transit itinerary generalized-cost and the time between itineraries Itineraries without transit legs are excluded from this filter. Example: costLimitFunction(x) = 3600 + 2.0 x and intervalRelaxFactor = 0.5. If the lowest cost returned is 10 000, then the limit is set to: 3 600 + 2 * 10 000 = 26 600 plus half of the time between either departure or arrival times of the itinerary. Default: {\"costLimitFunction\": 15m + 1.5 t, \"intervalRelaxFactor\": 0.4}"
   transitGeneralizedCostLimit: TransitGeneralizedCostFilterParams
 }
 

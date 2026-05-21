@@ -1,11 +1,12 @@
 package org.opentripplanner.raptorlegacy._data.transit;
 
 import static org.opentripplanner.core.model.accessibility.Accessibility.NO_INFORMATION;
+import static org.opentripplanner.raptorlegacy._data.RaptorTestConstants.createDeprecatedUnsupportedFeatureException;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import org.opentripplanner.core.model.accessibility.Accessibility;
-import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
+import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.TripTimes;
@@ -15,7 +16,6 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
 /**
  * An implementation of the {@link RaptorTripSchedule} for unit-testing.
  * <p>
- * The {@link RaptorTripPattern} for this schedule return {@code stopIndex == stopPosInPattern + 1 }
  *
  * @deprecated This was earlier part of Raptor and should not be used outside the Raptor
  *             module. Use the OTP model entities instead.
@@ -83,6 +83,11 @@ public class TestTripSchedule implements TripSchedule {
     return departureTimes[stopPosInPattern];
   }
 
+  @Override
+  public int relativeTravelDuration(int boardTime) {
+    return arrivalTimes[arrivalTimes.length - 1] - boardTime;
+  }
+
   public TestTripPattern pattern() {
     return pattern;
   }
@@ -123,6 +128,11 @@ public class TestTripSchedule implements TripSchedule {
   @Override
   public TripPattern getOriginalTripPattern() {
     return this.originalPattern;
+  }
+
+  @Override
+  public int tripScheduleIndex() {
+    throw createDeprecatedUnsupportedFeatureException();
   }
 
   @SuppressWarnings("UnusedReturnValue")

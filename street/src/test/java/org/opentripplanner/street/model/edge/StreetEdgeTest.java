@@ -224,7 +224,7 @@ public class StreetEdgeTest {
     State s1 = e0.traverse(s0)[0];
     State s2 = e1.traverse(s1)[0];
 
-    assertEquals(100.00, s2.getWalkDistance());
+    assertEquals(100.00, s2.getTraversalDistanceMeters());
   }
 
   /**
@@ -354,7 +354,7 @@ public class StreetEdgeTest {
       .build()
       .ifPresent(testStreet::setElevationExtension);
 
-    SlopeCosts costs = ElevationUtils.getSlopeCosts(elev, true);
+    SlopeCosts costs = ElevationUtils.getSlopeCosts(elev);
     double trueLength = costs.lengthMultiplier * length;
     double slopeWorkLength = testStreet.getEffectiveBikeDistanceForWorkCost();
     double slopeSpeedLength = testStreet.getEffectiveBikeDistance();

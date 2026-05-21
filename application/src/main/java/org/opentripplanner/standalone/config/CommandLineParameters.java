@@ -128,16 +128,16 @@ public class CommandLineParameters {
   public Integer port = DEFAULT_PORT;
 
   @Parameter(
-    names = { "--visualize" },
-    description = "Open a graph visualizer window for debugging."
-  )
-  public boolean visualize;
-
-  @Parameter(
     names = { "--abortOnUnknownConfig" },
     description = "Abort the startup if configuration files are found to contain unknown parameters."
   )
   public boolean abortOnUnknownConfig = false;
+
+  @Parameter(
+    names = { "--debugRequests" },
+    description = "Enable debug logging for OTP request and Raptor request handling."
+  )
+  public boolean debugRequests = false;
 
   /**
    * The remaining single parameter after the switches is the directory with the configuration
