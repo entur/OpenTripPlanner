@@ -17,6 +17,7 @@ import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
 import org.opentripplanner.ext.carpooling.routing.CarpoolStreetRouter;
 import org.opentripplanner.ext.carpooling.routing.CarpoolTreeStreetRouter;
 import org.opentripplanner.ext.carpooling.routing.CarpoolTripWithVertices;
+import org.opentripplanner.ext.carpooling.routing.EndpointLabel;
 import org.opentripplanner.ext.carpooling.routing.InsertionCandidate;
 import org.opentripplanner.ext.carpooling.routing.InsertionEvaluator;
 import org.opentripplanner.ext.carpooling.routing.InsertionPosition;
@@ -48,6 +49,7 @@ import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.opentripplanner.transit.model.site.AreaStop;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.transit.service.TransitServiceResolver;
 import org.opentripplanner.utils.time.TimeUtils;
@@ -301,7 +303,9 @@ public class DefaultCarpoolingService implements CarpoolingService {
       var carpoolReluctance = request.preferences().car().reluctance();
       itineraries = insertionCandidates
         .stream()
-        .map(candidate -> itineraryMapper.toItinerary(candidate, carpoolReluctance))
+        .map(candidate ->
+          itineraryMapper.toItinerary(candidate, carpoolReluctance, request.from(), request.to())
+        )
         .filter(Objects::nonNull)
         .toList();
     }
@@ -567,7 +571,9 @@ public class DefaultCarpoolingService implements CarpoolingService {
               Using the reluctance of mode car.
               TODO: Figure out whether carpooling should have its own reluctance variable
              */
-            request.preferences().car().reluctance()
+            request.preferences().car().reluctance(),
+            accessOrEgress,
+            passengerLocation
           )
         )
         .toList();
@@ -593,7 +599,9 @@ public class DefaultCarpoolingService implements CarpoolingService {
     TransitServiceResolver transitServiceResolver,
     InsertionCandidate insertionCandidate,
     ZonedDateTime transitSearchTimeZero,
-    double carpoolReluctance
+    double carpoolReluctance,
+    AccessEgressType accessOrEgress,
+    GenericLocation passengerLocation
   ) {
     var carpoolPickupTime = insertionCandidate
       .trip()
@@ -608,12 +616,23 @@ public class DefaultCarpoolingService implements CarpoolingService {
       passengerStartTime.toInstant()
     );
 
+    StopLocation transitStopLocation = transitServiceResolver.getStopLocation(
+      insertionCandidate.transitStop().stopId
+    );
+    EndpointLabel stopLabel = EndpointLabel.forStop(transitStopLocation);
+    EndpointLabel passengerLabel = EndpointLabel.forLocation(passengerLocation);
+
+    EndpointLabel startLabel = accessOrEgress.isAccess() ? passengerLabel : stopLabel;
+    EndpointLabel endLabel = accessOrEgress.isAccess() ? stopLabel : passengerLabel;
+
     return new CarpoolAccessEgress(
-      transitServiceResolver.getStopLocation(insertionCandidate.transitStop().stopId).getIndex(),
+      transitStopLocation.getIndex(),
       passengerDepartureTime,
       insertionCandidate,
       TimeAndCost.ZERO,
-      carpoolReluctance
+      carpoolReluctance,
+      startLabel,
+      endLabel
     );
   }
 }
