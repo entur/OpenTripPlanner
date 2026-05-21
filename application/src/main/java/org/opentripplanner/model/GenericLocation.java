@@ -60,6 +60,14 @@ public class GenericLocation {
     return new GenericLocation(label, id, new WgsCoordinate(lat, lng));
   }
 
+  public static GenericLocation fromCoordinate(WgsCoordinate coordinate) {
+    return new GenericLocation(null, null, coordinate);
+  }
+
+  public static GenericLocation fromCoordinate(WgsCoordinate coordinate, @Nullable String label) {
+    return new GenericLocation(label, null, coordinate);
+  }
+
   /**
    * Create a new location based on a coordinate - the input is primitive doubles to prevent
    * inserting {@code null} values.
