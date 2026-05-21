@@ -120,7 +120,7 @@ class ModifiedTripBuilder {
     try {
       stopPattern = createStopPattern(pattern, calls, entityResolver);
     } catch (UpdateException e) {
-      LOG.info(
+      LOG.debug(
         "Invalid SIRI-ET data for trip {} - {} at stop index {}",
         existingTripTimes.getTrip().getId(),
         e.errorType(),
