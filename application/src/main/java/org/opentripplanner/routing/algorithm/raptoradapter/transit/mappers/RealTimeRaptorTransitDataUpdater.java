@@ -232,7 +232,6 @@ public class RealTimeRaptorTransitDataUpdater implements TimetableSnapshotUpdate
           } else {
             // a previous FULL_DATASET update had real-time data for a trip, but the latest one doesn't
             // therefore we remove it from the RAPTOR data
-            LOG.debug("Could not fetch timetable for {}, removing.", pattern);
             patternsForDate.remove(tripPatternForDate);
           }
         }
