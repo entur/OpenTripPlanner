@@ -198,6 +198,7 @@ public class TimetableUpdateMapper {
           } else {
             // a previous FULL_DATASET update had real-time data for a trip, but the latest one doesn't
             // therefore we remove it from the RAPTOR data
+            LOG.warn("Could not fetch timetable for {}, removing.", pattern);
             patternsForDate.remove(tripPatternForDate);
           }
         }
