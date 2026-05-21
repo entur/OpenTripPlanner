@@ -102,7 +102,14 @@ public final class RequestPreProcessor {
     var iterationStep = Duration.ofSeconds(tuningParameters.iterationDepartureStepInSeconds());
 
     var requestBuilder = request.copyOf();
+
+    // The datetime must be set so that the raptor data gets data corresponding to the resolved
+    // boarding time
     requestBuilder.withDateTime(boardingDateTime);
+
+    // The iteration step must be set to the time of a single iteration. A zero-duration window does
+    // not work, as the results would then be filtered out by the filter chain, since it filters
+    // out results that don't fall within the window.
     requestBuilder.withSearchWindow(iterationStep);
 
     return requestBuilder.buildRequest();
