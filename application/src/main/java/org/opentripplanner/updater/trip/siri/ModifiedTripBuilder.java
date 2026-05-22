@@ -135,7 +135,7 @@ class ModifiedTripBuilder {
     applyUpdates(builder);
 
     if (!pattern.getStopPattern().equals(stopPattern)) {
-      builder.modifyTrip();
+      builder.withModifiedTripPattern();
     }
 
     int numStopsInUpdate = builder.numberOfStops();
@@ -169,7 +169,7 @@ class ModifiedTripBuilder {
    * Full cancellation of a trip.
    */
   private TripUpdate cancelTrip(RealTimeTripTimesBuilder builder) {
-    builder.cancelTrip();
+    builder.withCanceled();
     return new TripUpdate(pattern.getStopPattern(), builder.build(), serviceDate, dataSource);
   }
 

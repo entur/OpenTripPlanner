@@ -4,6 +4,8 @@ import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimes;
 import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
 import org.opentripplanner.transit.model.timetable.TripTimes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Maps from the internal model to the GTFS API. See
@@ -12,11 +14,9 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
  */
 public class RealtimeStateMapper {
 
-  public static GraphQLTypes.GraphQLRealtimeState map(TripTimes tripTimes) {
-    if (tripTimes == null) {
-      return null;
-    }
+  private static final Logger LOG = LoggerFactory.getLogger(RealtimeStateMapper.class);
 
+  public static GraphQLTypes.GraphQLRealtimeState map(TripTimes tripTimes) {
     return switch (tripTimes) {
       case RealTimeTripTimes realTimeTripTimes -> map(realTimeTripTimes);
       case ScheduledTripTimes _ -> GraphQLTypes.GraphQLRealtimeState.SCHEDULED;
@@ -26,11 +26,15 @@ public class RealtimeStateMapper {
   private static GraphQLTypes.GraphQLRealtimeState map(RealTimeTripTimes realTimeTripTimes) {
     boolean canceled = realTimeTripTimes.isCanceled();
     boolean added = realTimeTripTimes.isAdded();
-    boolean modified = realTimeTripTimes.isModified();
+    boolean modified = realTimeTripTimes.isTripPatternModified();
     boolean deleted = realTimeTripTimes.isDeleted();
-    boolean scheduled = realTimeTripTimes.isScheduled();
+    boolean updated = realTimeTripTimes.hasAnyUpdates();
 
-    if (canceled || deleted) {
+    if (canceled) {
+      return GraphQLTypes.GraphQLRealtimeState.CANCELED;
+    }
+    if (deleted) {
+      LOG.warn("deleted Trip {} should not be exposed to API", realTimeTripTimes.getTrip().getId());
       return GraphQLTypes.GraphQLRealtimeState.CANCELED;
     }
     if (added) {
@@ -39,9 +43,9 @@ public class RealtimeStateMapper {
     if (modified) {
       return GraphQLTypes.GraphQLRealtimeState.MODIFIED;
     }
-    if (scheduled) {
-      return GraphQLTypes.GraphQLRealtimeState.SCHEDULED;
+    if (updated) {
+      return GraphQLTypes.GraphQLRealtimeState.UPDATED;
     }
-    return GraphQLTypes.GraphQLRealtimeState.UPDATED;
+    return GraphQLTypes.GraphQLRealtimeState.SCHEDULED;
   }
 }

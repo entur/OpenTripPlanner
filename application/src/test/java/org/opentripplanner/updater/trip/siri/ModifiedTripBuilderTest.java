@@ -1,7 +1,6 @@
 package org.opentripplanner.updater.trip.siri;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
@@ -246,7 +245,7 @@ class ModifiedTripBuilderTest {
     assertEquals(secondsInDay(10, 13), updatedTimes.getDepartureTime(1));
     assertEquals(secondsInDay(10, 22), updatedTimes.getArrivalTime(2));
     assertEquals(secondsInDay(10, 22), updatedTimes.getDepartureTime(2));
-    assertFalse(updatedTimes.isScheduled());
+    assertTrue(updatedTimes.hasAnyUpdates());
   }
 
   @Test
@@ -331,7 +330,7 @@ class ModifiedTripBuilderTest {
     assertEquals(secondsInDay(10, 13), updatedTimes.getDepartureTime(1));
     assertEquals(secondsInDay(10, 22), updatedTimes.getArrivalTime(2));
     assertEquals(secondsInDay(10, 22), updatedTimes.getDepartureTime(2));
-    assertFalse(updatedTimes.isScheduled());
+    assertTrue(updatedTimes.hasAnyUpdates());
   }
 
   @Test
@@ -380,7 +379,7 @@ class ModifiedTripBuilderTest {
     assertEquals(secondsInDay(10, 13), updatedTimes.getDepartureTime(1));
     assertEquals(secondsInDay(10, 22), updatedTimes.getArrivalTime(2));
     assertEquals(secondsInDay(10, 22), updatedTimes.getDepartureTime(2));
-    assertTrue(updatedTimes.isModified());
+    assertTrue(updatedTimes.isTripPatternModified());
   }
 
   @Test

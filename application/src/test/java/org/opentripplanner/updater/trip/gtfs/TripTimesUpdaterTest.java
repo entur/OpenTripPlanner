@@ -380,7 +380,7 @@ public class TripTimesUpdaterTest {
 
     var updatedTripTimes = p.tripTimes();
     assertNotNull(updatedTripTimes);
-    assertFalse(updatedTripTimes.isScheduled());
+    assertTrue(updatedTripTimes.hasAnyUpdates());
     assertTrue(updatedTripTimes.isNoDataStop(0));
     assertFalse(updatedTripTimes.isNoDataStop(1));
     assertTrue(updatedTripTimes.isCanceledStop(1));
@@ -475,7 +475,7 @@ public class TripTimesUpdaterTest {
 
     var updatedTripTimes = p.tripTimes();
     assertNotNull(updatedTripTimes);
-    assertFalse(updatedTripTimes.isScheduled());
+    assertTrue(updatedTripTimes.hasAnyUpdates());
     assertFalse(updatedTripTimes.isCanceledStop(0));
     assertTrue(updatedTripTimes.isCanceledStop(1));
     assertFalse(updatedTripTimes.isCanceledStop(2));

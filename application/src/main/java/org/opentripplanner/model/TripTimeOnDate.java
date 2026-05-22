@@ -273,7 +273,7 @@ public class TripTimeOnDate {
   }
 
   public boolean isRealtime() {
-    return !tripTimes.isScheduled() && !isNoDataStop();
+    return tripTimes.hasAnyUpdates() && !isNoDataStop();
   }
 
   public boolean isCancelledStop() {

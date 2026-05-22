@@ -4,6 +4,8 @@ import org.opentripplanner.apis.transmodel.model.TransmodelRealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimes;
 import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
 import org.opentripplanner.transit.model.timetable.TripTimes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Maps from the internal model to the Transmodel API. See
@@ -11,11 +13,9 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
  */
 public class RealtimeStateMapper {
 
-  public static TransmodelRealTimeState map(TripTimes tripTimes) {
-    if (tripTimes == null) {
-      return null;
-    }
+  private static final Logger LOG = LoggerFactory.getLogger(RealtimeStateMapper.class);
 
+  public static TransmodelRealTimeState map(TripTimes tripTimes) {
     return switch (tripTimes) {
       case RealTimeTripTimes realTimeTripTimes -> map(realTimeTripTimes);
       case ScheduledTripTimes _ -> TransmodelRealTimeState.SCHEDULED;
@@ -25,11 +25,15 @@ public class RealtimeStateMapper {
   private static TransmodelRealTimeState map(RealTimeTripTimes realTimeTripTimes) {
     boolean canceled = realTimeTripTimes.isCanceled();
     boolean added = realTimeTripTimes.isAdded();
-    boolean modified = realTimeTripTimes.isModified();
+    boolean modified = realTimeTripTimes.isTripPatternModified();
     boolean deleted = realTimeTripTimes.isDeleted();
-    boolean scheduled = realTimeTripTimes.isScheduled();
+    boolean updated = realTimeTripTimes.hasAnyUpdates();
 
-    if (canceled || deleted) {
+    if (canceled) {
+      return TransmodelRealTimeState.CANCELED;
+    }
+    if (deleted) {
+      LOG.warn("deleted Trip {} should not be exposed to API", realTimeTripTimes.getTrip().getId());
       return TransmodelRealTimeState.CANCELED;
     }
     if (added) {
@@ -38,9 +42,9 @@ public class RealtimeStateMapper {
     if (modified) {
       return TransmodelRealTimeState.MODIFIED;
     }
-    if (scheduled) {
-      return TransmodelRealTimeState.SCHEDULED;
+    if (updated) {
+      return TransmodelRealTimeState.UPDATED;
     }
-    return TransmodelRealTimeState.UPDATED;
+    return TransmodelRealTimeState.SCHEDULED;
   }
 }

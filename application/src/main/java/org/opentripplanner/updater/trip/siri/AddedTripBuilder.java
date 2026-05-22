@@ -260,9 +260,9 @@ class AddedTripBuilder {
     }
 
     if (cancellation || stopPattern.isAllStopsNonRoutable()) {
-      builder.cancelTrip();
+      builder.withCanceled();
     } else {
-      builder.addTrip();
+      builder.withAdded();
     }
 
     /* Validate */

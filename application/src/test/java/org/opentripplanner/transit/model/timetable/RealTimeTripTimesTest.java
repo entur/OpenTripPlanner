@@ -338,7 +338,7 @@ class RealTimeTripTimesTest {
   @Test
   public void testCancel() {
     var builder = createInitialTripTimes().createRealTimeFromScheduledTimes();
-    builder.cancelTrip();
+    builder.withCanceled();
     assertTrue(builder.build().isCanceled());
   }
 

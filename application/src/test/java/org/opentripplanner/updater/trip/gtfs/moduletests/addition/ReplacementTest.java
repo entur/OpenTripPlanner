@@ -74,7 +74,7 @@ public class ReplacementTest implements RealtimeTestConstants {
         originalTripTimesScheduled.isCanceledOrDeleted(),
         "Original trip times should not be canceled in scheduled time table"
       );
-      assertTrue(originalTripTimesScheduled.isScheduled());
+      assertFalse(originalTripTimesScheduled.hasAnyUpdates());
 
       var originalTripTimesForToday = originalTimetableForToday.getTripTimes(tripId);
       assertNotNull(
@@ -101,7 +101,7 @@ public class ReplacementTest implements RealtimeTestConstants {
     // New trip pattern
     {
       var tripFetcher = env.tripData(TRIP_1_ID);
-      assertTrue(tripFetcher.tripTimes().isModified());
+      assertTrue(tripFetcher.tripTimes().isTripPatternModified());
 
       var newTripPattern = tripFetcher.tripPattern();
       assertNotNull(newTripPattern, "New trip pattern should be found");
@@ -110,7 +110,7 @@ public class ReplacementTest implements RealtimeTestConstants {
       var newTimetableScheduled = transitService.findTimetable(newTripPattern, null);
 
       assertNotNull(tripTimes, "New trip should be found in time table for service date");
-      assertTrue(tripTimes.isModified());
+      assertTrue(tripTimes.isTripPatternModified());
 
       assertNull(
         newTimetableScheduled.getTripTimes(tripId),

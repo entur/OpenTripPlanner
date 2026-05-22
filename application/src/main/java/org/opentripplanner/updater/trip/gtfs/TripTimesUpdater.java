@@ -45,20 +45,19 @@ class TripTimesUpdater {
   }
 
   /**
-   * Apply the TripUpdate to the appropriate TripTimes from a Timetable. The existing TripTimes
-   * must not be modified directly because they may be shared with the underlying
-   * scheduledTimetable, or other updated Timetables. The {@link TimetableSnapshot} performs the
-   * protective copying of this Timetable. It is not done in this update method to avoid repeatedly
-   * cloning the same Timetable when several updates are applied to it at once. We assume here that
-   * all trips in a timetable are from the same feed, which should always be the case.
+   * Apply the TripUpdate to the appropriate TripTimes from a Timetable. The existing TripTimes must
+   * not be modified directly because they may be shared with the underlying scheduledTimetable, or
+   * other updated Timetables. The {@link TimetableSnapshot} performs the protective copying of this
+   * Timetable. It is not done in this update method to avoid repeatedly cloning the same Timetable
+   * when several updates are applied to it at once. We assume here that all trips in a timetable
+   * are from the same feed, which should always be the case.
    *
-   * @param tripUpdate                    GTFS-RT trip update
-   * @param backwardsDelay Defines when delays are propagated to previous stops and
-   *                                      if these stops are given the NO_DATA flag
-   * @return {@link TripTimesPatch} contains a new copy of updated
-   * TripTimes after TripUpdate has been applied on TripTimes of trip with the id specified in the
-   * trip descriptor of the TripUpdate and a list of stop indices that have been skipped with the
-   * realtime update.
+   * @param tripUpdate     GTFS-RT trip update
+   * @param backwardsDelay Defines when delays are propagated to previous stops and if these stops
+   *                       are given the NO_DATA flag
+   * @return {@link TripTimesPatch} contains a new copy of updated TripTimes after TripUpdate has
+   * been applied on TripTimes of trip with the id specified in the trip descriptor of the
+   * TripUpdate and a list of stop indices that have been skipped with the realtime update.
    * @throws UpdateException if there are any problems with the data
    */
   public TripTimesPatch createUpdatedTripTimesFromGtfsRt(
@@ -145,7 +144,7 @@ class TripTimesUpdater {
 
     tripUpdate.wheelchairAccessibility().ifPresent(builder::withWheelchairAccessibility);
 
-    builder.updateTrip();
+    builder.withRealTimeUpdated();
     // Validate for non-increasing times. Log error if present.
     try {
       var result = builder.build();
@@ -158,9 +157,12 @@ class TripTimesUpdater {
   /**
    * Add a new or replacement trip to the snapshot
    *
-   * @param trip              trip
-   * @param tripUpdate        information about the trip
-   * @param realTimeState     real-time state of new trip
+   * @param trip                   trip
+   * @param tripUpdate             information about the trip
+   * @param stopAndStopTimeUpdates updates for the stops
+   * @param added                  whether this trip was added (extra Trip)
+   * @param tripPatternModified               whether the trip Pattern was tripPatternModified
+   * @param serviceCode            serviceCode of the trip
    * @throws UpdateException if there are any errors with the TripUpdate
    */
   public TripTimesWithStopPattern createNewTripTimesFromGtfsRt(
@@ -168,7 +170,7 @@ class TripTimesUpdater {
     TripUpdate tripUpdate,
     List<StopAndStopTimeUpdate> stopAndStopTimeUpdates,
     boolean added,
-    boolean modified,
+    boolean tripPatternModified,
     int serviceCode
   ) throws UpdateException {
     // Calculate seconds since epoch on GTFS midnight (noon minus 12h) of service date
@@ -241,10 +243,10 @@ class TripTimesUpdater {
     // Set service code of new trip times
     builder.withServiceCode(serviceCode);
     if (added) {
-      builder.addTrip();
+      builder.withAdded();
     }
-    if (modified) {
-      builder.modifyTrip();
+    if (tripPatternModified) {
+      builder.withModifiedTripPattern();
     }
 
     tripUpdate.tripHeadsign().ifPresent(builder::withTripHeadsign);

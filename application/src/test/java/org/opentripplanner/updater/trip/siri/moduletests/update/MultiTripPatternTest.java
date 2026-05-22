@@ -1,7 +1,7 @@
 package org.opentripplanner.updater.trip.siri.moduletests.update;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
 import org.junit.jupiter.api.Test;
@@ -52,10 +52,10 @@ class MultiTripPatternTest implements RealtimeTestConstants {
 
     assertSuccess(result);
     assertEquals(
-      "TIMES_UPDATED | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",
+      "UPDATED | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",
       env.tripData(TRIP_1_ID).showTimetable()
     );
-    assertTrue(env.tripData(TRIP_2_ID).tripTimes().isScheduled());
+    assertFalse(env.tripData(TRIP_2_ID).tripTimes().hasAnyUpdates());
     assertEquals(
       "SCHEDULED | A 0:01:10 0:01:11 | B 0:01:20 0:01:21",
       env.tripData(TRIP_2_ID).showTimetable()

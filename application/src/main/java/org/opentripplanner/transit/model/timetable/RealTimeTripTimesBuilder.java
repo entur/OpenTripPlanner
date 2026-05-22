@@ -32,10 +32,10 @@ public class RealTimeTripTimesBuilder {
   @Nullable
   private Accessibility wheelchairAccessibility;
 
-  private boolean realTimeUpdated = false;
+  private boolean updated = false;
   private boolean canceled = false;
   private boolean added = false;
-  private boolean modified = false;
+  private boolean tripPatternModified = false;
   private boolean deleted = false;
 
   /**
@@ -126,13 +126,13 @@ public class RealTimeTripTimesBuilder {
   }
 
   public RealTimeTripTimesBuilder withArrivalTime(int stop, int time) {
-    realTimeUpdated = true;
+    updated = true;
     arrivalTimes[stop] = time;
     return this;
   }
 
   public RealTimeTripTimesBuilder withArrivalDelay(int stop, int delay) {
-    realTimeUpdated = true;
+    updated = true;
     arrivalTimes[stop] = getScheduledArrivalTime(stop) + delay;
     return this;
   }
@@ -169,35 +169,35 @@ public class RealTimeTripTimesBuilder {
   }
 
   public RealTimeTripTimesBuilder withDepartureTime(int stop, int time) {
-    realTimeUpdated = true;
+    updated = true;
     departureTimes[stop] = time;
     return this;
   }
 
   public RealTimeTripTimesBuilder withDepartureDelay(int stop, int delay) {
-    realTimeUpdated = true;
+    updated = true;
     departureTimes[stop] = getScheduledDepartureTime(stop) + delay;
     return this;
   }
 
-  public RealTimeTripTimesBuilder updateTrip() {
-    this.realTimeUpdated = true;
+  public RealTimeTripTimesBuilder withRealTimeUpdated() {
+    this.updated = true;
     return this;
   }
 
-  public RealTimeTripTimesBuilder modifyTrip() {
-    this.modified = true;
-    this.realTimeUpdated = true;
+  public RealTimeTripTimesBuilder withModifiedTripPattern() {
+    this.tripPatternModified = true;
+    this.updated = true;
     return this;
   }
 
-  boolean isModified() {
-    return modified;
+  boolean isTripPatternModified() {
+    return tripPatternModified;
   }
 
-  public RealTimeTripTimesBuilder addTrip() {
+  public RealTimeTripTimesBuilder withAdded() {
     this.added = true;
-    this.realTimeUpdated = true;
+    this.updated = true;
     return this;
   }
 
@@ -205,9 +205,9 @@ public class RealTimeTripTimesBuilder {
     return added;
   }
 
-  public RealTimeTripTimesBuilder cancelTrip() {
+  public RealTimeTripTimesBuilder withCanceled() {
     this.canceled = true;
-    this.realTimeUpdated = true;
+    this.updated = true;
     return this;
   }
 
@@ -215,9 +215,9 @@ public class RealTimeTripTimesBuilder {
     return canceled;
   }
 
-  public RealTimeTripTimesBuilder deleteTrip() {
+  public RealTimeTripTimesBuilder withDeleted() {
     this.deleted = true;
-    this.realTimeUpdated = true;
+    this.updated = true;
     return this;
   }
 
@@ -225,8 +225,8 @@ public class RealTimeTripTimesBuilder {
     return deleted;
   }
 
-  boolean isRealTimeUpdated() {
-    return realTimeUpdated;
+  boolean isUpdated() {
+    return updated;
   }
 
   public StopRealTimeState getStopRealTimeState(int stop) {

@@ -49,7 +49,7 @@ class NoArrivalTimeTest implements RealtimeTestConstants {
 
     assertSuccess(rt.applyTripUpdate(tripUpdate));
     assertEquals(
-      "TIMES_UPDATED | A 10:00 10:00 | B 10:09 10:09 | C 10:20 10:20",
+      "UPDATED | A 10:00 10:00 | B 10:09 10:09 | C 10:20 10:20",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }

@@ -41,10 +41,10 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
   private final OccupancyStatus[] occupancyStatus;
   private final Accessibility wheelchairAccessibility;
 
-  private final boolean realTimeUpdated;
+  private final boolean updated;
   private final boolean canceled;
   private final boolean added;
-  private final boolean modified;
+  private final boolean tripPatternModified;
   private final boolean deleted;
 
   RealTimeTripTimes(RealTimeTripTimesBuilder builder) {
@@ -59,10 +59,10 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     wheelchairAccessibility = builder.wheelchairAccessibility();
     hasArrived = builder.hasArrived();
     hasDeparted = builder.hasDeparted();
-    realTimeUpdated = builder.isRealTimeUpdated();
+    updated = builder.isUpdated();
     canceled = builder.isCanceled();
     added = builder.isAdded();
-    modified = builder.isModified();
+    tripPatternModified = builder.isTripPatternModified();
     deleted = builder.isDeleted();
     validateNonIncreasingTimes();
   }
@@ -82,10 +82,10 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     this.wheelchairAccessibility = original.wheelchairAccessibility;
     this.hasArrived = original.hasArrived;
     this.hasDeparted = original.hasDeparted;
-    this.realTimeUpdated = original.realTimeUpdated;
+    this.updated = original.updated;
     this.canceled = original.canceled;
     this.added = original.added;
-    this.modified = original.modified;
+    this.tripPatternModified = original.tripPatternModified;
     this.deleted = original.deleted;
   }
 
@@ -107,10 +107,10 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     this.wheelchairAccessibility = original.wheelchairAccessibility;
     this.hasArrived = original.hasArrived;
     this.hasDeparted = original.hasDeparted;
-    this.realTimeUpdated = original.realTimeUpdated;
+    this.updated = original.updated;
     this.canceled = original.canceled;
     this.added = original.added;
-    this.modified = original.modified;
+    this.tripPatternModified = original.tripPatternModified;
     this.deleted = original.deleted;
   }
 
@@ -229,7 +229,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
   }
 
   public boolean isRealTimeUpdated(int stopPos) {
-    return (realTimeUpdated && !isStopRealTimeStates(stopPos, StopRealTimeState.NO_DATA));
+    return (updated && !isStopRealTimeStates(stopPos, StopRealTimeState.NO_DATA));
   }
 
   /**
@@ -261,8 +261,8 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
    * if a RealTimeTripTimes is constructed and no updates are applied, it is considered scheduled
    */
   @Override
-  public boolean isScheduled() {
-    return !realTimeUpdated;
+  public boolean hasAnyUpdates() {
+    return updated;
   }
 
   @Override
@@ -286,8 +286,8 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
   }
 
   @Override
-  public boolean isModified() {
-    return modified;
+  public boolean isTripPatternModified() {
+    return tripPatternModified;
   }
 
   /**
@@ -410,8 +410,8 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
       canceled == that.canceled &&
       deleted == that.deleted &&
       added == that.added &&
-      modified == that.modified &&
-      realTimeUpdated == that.realTimeUpdated
+      tripPatternModified == that.tripPatternModified &&
+      updated == that.updated
     );
   }
 
@@ -426,10 +426,10 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
       Arrays.hashCode(stopHeadsigns),
       Arrays.hashCode(occupancyStatus),
       wheelchairAccessibility,
-      realTimeUpdated,
+      updated,
       canceled,
       added,
-      modified,
+      tripPatternModified,
       deleted
     );
   }

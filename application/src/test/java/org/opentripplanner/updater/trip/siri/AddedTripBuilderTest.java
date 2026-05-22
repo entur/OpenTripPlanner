@@ -196,8 +196,7 @@ class AddedTripBuilderTest {
     var scheduledTimes = pattern.getScheduledTimetable().getTripTimes(trip);
     assertNotNull(scheduledTimes);
     // TODO - is this correct?
-    assertTrue(scheduledTimes.isScheduled());
-    assertTrue(scheduledTimes.isScheduled());
+    assertFalse(scheduledTimes.hasAnyUpdates());
     assertEquals(secondsInDay(10, 20), scheduledTimes.getArrivalTime(0));
     assertEquals(secondsInDay(10, 20), scheduledTimes.getDepartureTime(0));
     assertEquals(0, scheduledTimes.getDepartureDelay(0));
@@ -216,7 +215,7 @@ class AddedTripBuilderTest {
     var times = tripUpdate.tripTimes();
     assertEquals(trip, times.getTrip());
     assertTrue(times.isAdded());
-    assertFalse(times.isScheduled());
+    assertTrue(times.hasAnyUpdates());
     assertEquals(secondsInDay(10, 19), times.getArrivalTime(0));
     assertEquals(secondsInDay(10, 19), times.getDepartureTime(0));
     assertEquals(-60, times.getDepartureDelay(0));

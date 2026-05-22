@@ -171,11 +171,9 @@ class ExtraCallTripBuilder {
     }
 
     if (cancellation || stopPattern.isAllStopsNonRoutable()) {
-      builder.cancelTrip();
-    } else {
-      builder.modifyTrip();
+      builder.withCanceled();
     }
-
+    builder.withModifiedTripPattern();
     /* Validate */
     try {
       return new TripUpdate(

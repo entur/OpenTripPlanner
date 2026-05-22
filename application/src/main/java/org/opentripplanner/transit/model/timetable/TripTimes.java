@@ -109,10 +109,10 @@ public sealed interface TripTimes<T extends TripTimes>
   BookingInfo getPickupBookingInfo(int stopPos);
 
   /**
-   * Return {@code true} if the trip is unmodified, a scheduled trip from a published timetable.
-   * Return {@code false} if the trip is an updated, cancelled, or otherwise modified one.
+   * Return {@code false} if the trip is unmodified, a scheduled trip from a published timetable.
+   * Return {@code true} if the trip is an updated, cancelled, or otherwise modified one.
    */
-  boolean isScheduled();
+  boolean hasAnyUpdates();
 
   /**
    * Return {@code true} if canceled or soft-deleted
@@ -132,7 +132,7 @@ public sealed interface TripTimes<T extends TripTimes>
   /**
    * Return {@code true} if trip pattern was modified
    */
-  boolean isModified();
+  boolean isTripPatternModified();
 
   /**
    * Return true if trip is soft-deleted, and should not be visible to the user

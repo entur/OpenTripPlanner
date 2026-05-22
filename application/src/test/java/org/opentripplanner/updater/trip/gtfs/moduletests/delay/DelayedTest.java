@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNotSame;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
 import org.junit.jupiter.api.Test;
@@ -54,14 +53,14 @@ class DelayedTest implements RealtimeTestConstants {
     assertEquals(DELAY, trip1Realtime.getArrivalDelay(STOP_SEQUENCE));
     assertEquals(DELAY, trip1Realtime.getDepartureDelay(STOP_SEQUENCE));
 
-    assertTrue(trip1Scheduled.isScheduled());
+    assertFalse(trip1Scheduled.hasAnyUpdates());
 
     assertEquals(
       "SCHEDULED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
       env.tripData(TRIP_1_ID).showScheduledTimetable()
     );
     assertEquals(
-      "TIMES_UPDATED | A [ND] 0:00:10 0:00:11 | B 0:00:21 0:00:22",
+      "UPDATED | A [ND] 0:00:10 0:00:11 | B 0:00:21 0:00:22",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }
@@ -84,7 +83,7 @@ class DelayedTest implements RealtimeTestConstants {
     assertSuccess(rt.applyTripUpdate(tripUpdate));
 
     assertEquals(
-      "TIMES_UPDATED | A 10:01 10:01 | B 10:11 10:11",
+      "UPDATED | A 10:01 10:01 | B 10:11 10:11",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }
@@ -103,7 +102,7 @@ class DelayedTest implements RealtimeTestConstants {
     assertSuccess(rt.applyTripUpdate(tripUpdate));
 
     assertEquals(
-      "TIMES_UPDATED | A [ND] 10:00 10:00 | B 10:11 10:11",
+      "UPDATED | A [ND] 10:00 10:00 | B 10:11 10:11",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }
@@ -140,7 +139,7 @@ class DelayedTest implements RealtimeTestConstants {
       scheduledTripTimes.isCanceledOrDeleted(),
       "Original trip times should not be canceled in scheduled time table"
     );
-    assertTrue(scheduledTripTimes.isScheduled());
+    assertFalse(scheduledTripTimes.hasAnyUpdates());
 
     assertNotNull(
       realtimeTripTimes,
@@ -152,7 +151,7 @@ class DelayedTest implements RealtimeTestConstants {
       tripData.showScheduledTimetable()
     );
     assertEquals(
-      "TIMES_UPDATED | A 0:01 0:01:01 | B 0:02:10 0:02:31 | C 0:02:50 0:02:51",
+      "UPDATED | A 0:01 0:01:01 | B 0:02:10 0:02:31 | C 0:02:50 0:02:51",
       tripData.showTimetable()
     );
   }

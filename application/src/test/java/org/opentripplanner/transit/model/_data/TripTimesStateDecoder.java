@@ -12,16 +12,16 @@ public class TripTimesStateDecoder {
     if (tripTimes.isCanceled()) {
       stringBuilder.append("CANCELED ");
     }
-    if (tripTimes.isModified()) {
-      stringBuilder.append("STOPPATTERN_MODIFIED ");
+    if (tripTimes.isTripPatternModified()) {
+      stringBuilder.append("PATTERN_MODIFIED ");
     }
     if (tripTimes.isDeleted()) {
       stringBuilder.append("DELETED ");
     }
-    if (tripTimes.isScheduled()) {
-      stringBuilder.append("SCHEDULED ");
+    if (tripTimes.hasAnyUpdates()) {
+      stringBuilder.append("UPDATED ");
     } else {
-      stringBuilder.append("TIMES_UPDATED ");
+      stringBuilder.append("SCHEDULED ");
     }
     return stringBuilder.toString().trim();
   }

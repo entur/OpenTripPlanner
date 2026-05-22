@@ -358,14 +358,13 @@ public class GtfsRealTimeTripUpdateAdapter {
    * Add a new or replacement trip to the snapshot
    *
    * @param serviceDate       service date of trip
-   * @param realTimeState     real-time state of new trip
    * @return empty Result if successful or one containing an error
    */
   private UpdateSuccess addNewOrReplacementTripToSnapshot(
     final TripTimesWithStopPattern tripTimesWithStopPattern,
     final LocalDate serviceDate,
-    boolean added,
-    boolean modified,
+    final boolean added,
+    final boolean modified,
     final boolean hasANewRouteBeenCreated
   ) throws UpdateException {
     RealTimeTripTimes tripTimes = tripTimesWithStopPattern.tripTimes();
@@ -443,8 +442,8 @@ public class GtfsRealTimeTripUpdateAdapter {
           if (tripTimes != null && tripTimes.isAdded()) {
             var builder = tripTimes.createRealTimeFromScheduledTimes();
             switch (cancelationType) {
-              case CANCEL -> builder.cancelTrip();
-              case DELETE -> builder.deleteTrip();
+              case CANCEL -> builder.withCanceled();
+              case DELETE -> builder.withDeleted();
             }
             return snapshotManager.updateBuffer(
               RealTimeTripUpdate.of(addedPattern, builder.build(), tripUpdate.serviceDate()).build()
@@ -467,8 +466,8 @@ public class GtfsRealTimeTripUpdateAdapter {
 
     var builder = tripTimes.createRealTimeFromScheduledTimes();
     switch (cancelationType) {
-      case CANCEL -> builder.cancelTrip();
-      case DELETE -> builder.deleteTrip();
+      case CANCEL -> builder.withCanceled();
+      case DELETE -> builder.withDeleted();
     }
     return snapshotManager.updateBuffer(
       RealTimeTripUpdate.of(pattern, builder.build(), tripUpdate.serviceDate())

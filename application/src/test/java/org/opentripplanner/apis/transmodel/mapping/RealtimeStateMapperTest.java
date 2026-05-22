@@ -1,7 +1,6 @@
 package org.opentripplanner.apis.transmodel.mapping;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.opentripplanner.apis.transmodel.model.TransmodelRealTimeState.ADDED;
 import static org.opentripplanner.apis.transmodel.model.TransmodelRealTimeState.CANCELED;
 import static org.opentripplanner.apis.transmodel.model.TransmodelRealTimeState.MODIFIED;
@@ -13,13 +12,6 @@ import org.opentripplanner.transit.model._data.TripTimesForTest;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 
 class RealtimeStateMapperTest {
-
-  // ---- null input -------------------------------------------------------
-
-  @Test
-  void nullReturnsNull() {
-    assertNull(RealtimeStateMapper.map(null));
-  }
 
   // ---- ScheduledTripTimes -----------------------------------------------
 
@@ -45,7 +37,9 @@ class RealtimeStateMapperTest {
   void updatedReturnsUpdated() {
     assertEquals(
       UPDATED,
-      RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::updateTrip))
+      RealtimeStateMapper.map(
+        TripTimesForTest.realTime(RealTimeTripTimesBuilder::withRealTimeUpdated)
+      )
     );
   }
 
@@ -53,7 +47,7 @@ class RealtimeStateMapperTest {
   void addedReturnsAdded() {
     assertEquals(
       ADDED,
-      RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::addTrip))
+      RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::withAdded))
     );
   }
 
@@ -61,7 +55,9 @@ class RealtimeStateMapperTest {
   void modifiedReturnsModified() {
     assertEquals(
       MODIFIED,
-      RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::modifyTrip))
+      RealtimeStateMapper.map(
+        TripTimesForTest.realTime(RealTimeTripTimesBuilder::withModifiedTripPattern)
+      )
     );
   }
 
@@ -69,7 +65,7 @@ class RealtimeStateMapperTest {
   void canceledReturnsCanceled() {
     assertEquals(
       CANCELED,
-      RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::cancelTrip))
+      RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::withCanceled))
     );
   }
 
@@ -81,7 +77,7 @@ class RealtimeStateMapperTest {
   void deletedReturnsCanceled() {
     assertEquals(
       CANCELED,
-      RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::deleteTrip))
+      RealtimeStateMapper.map(TripTimesForTest.realTime(RealTimeTripTimesBuilder::withDeleted))
     );
   }
 
@@ -98,8 +94,8 @@ class RealtimeStateMapperTest {
       CANCELED,
       RealtimeStateMapper.map(
         TripTimesForTest.realTime(b -> {
-          b.addTrip();
-          b.cancelTrip();
+          b.withAdded();
+          b.withCanceled();
         })
       )
     );
@@ -114,8 +110,8 @@ class RealtimeStateMapperTest {
       CANCELED,
       RealtimeStateMapper.map(
         TripTimesForTest.realTime(b -> {
-          b.modifyTrip();
-          b.deleteTrip();
+          b.withModifiedTripPattern();
+          b.withDeleted();
         })
       )
     );
@@ -130,8 +126,8 @@ class RealtimeStateMapperTest {
       ADDED,
       RealtimeStateMapper.map(
         TripTimesForTest.realTime(b -> {
-          b.addTrip();
-          b.modifyTrip();
+          b.withAdded();
+          b.withModifiedTripPattern();
         })
       )
     );
@@ -146,8 +142,8 @@ class RealtimeStateMapperTest {
       CANCELED,
       RealtimeStateMapper.map(
         TripTimesForTest.realTime(b -> {
-          b.modifyTrip();
-          b.cancelTrip();
+          b.withModifiedTripPattern();
+          b.withCanceled();
         })
       )
     );

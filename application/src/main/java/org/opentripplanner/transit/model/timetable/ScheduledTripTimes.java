@@ -201,8 +201,8 @@ public final class ScheduledTripTimes implements TripTimes<ScheduledTripTimes> {
   }
 
   @Override
-  public boolean isScheduled() {
-    return true;
+  public boolean hasAnyUpdates() {
+    return false;
   }
 
   @Override
@@ -221,7 +221,7 @@ public final class ScheduledTripTimes implements TripTimes<ScheduledTripTimes> {
   }
 
   @Override
-  public boolean isModified() {
+  public boolean isTripPatternModified() {
     return false;
   }
 

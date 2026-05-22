@@ -125,8 +125,8 @@ class ScheduledTripTimesTest {
   }
 
   @Test
-  void isScheduled() {
-    assertTrue(subject.isScheduled());
+  void hasAnyUpdates() {
+    assertFalse(subject.hasAnyUpdates());
   }
 
   @Test
