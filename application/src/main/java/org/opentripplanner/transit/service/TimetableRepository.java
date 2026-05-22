@@ -130,6 +130,11 @@ public class TimetableRepository implements Serializable {
 
   private final Map<FeedScopedId, RegularStop> stopsByScheduledStopPointRefs = new HashMap<>();
 
+  /// Updates are not allowed after the repository is frozen. All realtime updates should be
+  /// applied to the TimetableSnapshot. The repository is modifiable during graph build then
+  /// frozen when the server is started.
+  private boolean frozen = false;
+
   @Inject
   public TimetableRepository(SiteRepository siteRepository) {
     this.siteRepository = Objects.requireNonNull(siteRepository);
@@ -146,6 +151,7 @@ public class TimetableRepository implements Serializable {
    * from the graph builder to the server in memory, without a round trip through serialization.
    */
   public void index() {
+    assertModificationsAllowed();
     if (index == null) {
       LOG.info("Index timetable repository...");
       this.index = new TimetableRepositoryIndex(this);
@@ -153,12 +159,25 @@ public class TimetableRepository implements Serializable {
     }
   }
 
+  /**
+   * Make the Timetable repository immutable when the otp server is started. After this point,
+   * all modifications should be done to the TimetableSnapshot.
+   */
+  public void freeze() {
+    index();
+    this.frozen = true;
+  }
+
   /** Data model for Raptor routing, with realtime updates applied (if any). */
   public RaptorTransitData getRaptorTransitData() {
     return raptorTransitData;
   }
 
-  public void setRaptorTransitData(RaptorTransitData raptorTransitData) {
+
+  public void initRaptorTransitData(RaptorTransitData raptorTransitData) {
+    // TODO Enforce this is initialized once with ObjectUtils.requireNotInitialized()
+    //      Currently there is tests which violates this.
+    assertModificationsAllowed();
     this.raptorTransitData = raptorTransitData;
   }
 
@@ -171,8 +190,11 @@ public class TimetableRepository implements Serializable {
   /**
    * Publish the latest snapshot of the real-time transit layer.
    * Should be called only when creating a new RaptorTransitData, from the graph writer thread.
+   * @deprecated TODO This should be moved to the TimetableSnapshot for now
    */
+  @Deprecated
   public void setRealtimeRaptorTransitData(RaptorTransitData realtimeRaptorTransitData) {
+    assertModificationsAllowed();
     this.realtimeRaptorTransitData.publish(realtimeRaptorTransitData);
   }
 
@@ -202,6 +224,7 @@ public class TimetableRepository implements Serializable {
   }
 
   public void updateCalendarServiceData(CalendarServiceData data) {
+    assertModificationsAllowed();
     invalidateIndex();
     calendarServiceData.add(data);
   }
@@ -233,6 +256,7 @@ public class TimetableRepository implements Serializable {
     if (!serviceCodes.containsKey(serviceId)) {
       // Calculating new unique serviceCode based on size (!)
       final int serviceCode = serviceCodes.size();
+      assertModificationsAllowed();
       serviceCodes.put(serviceId, serviceCode);
 
       index
@@ -256,6 +280,7 @@ public class TimetableRepository implements Serializable {
   }
 
   public void addAgency(Agency agency) {
+    assertModificationsAllowed();
     invalidateIndex();
     agencies.add(agency);
     feedIds.add(agency.getId().getFeedId());
@@ -284,6 +309,7 @@ public class TimetableRepository implements Serializable {
   }
 
   public void addFeedInfo(FeedInfo info) {
+    assertModificationsAllowed();
     invalidateIndex();
     this.feedInfoForId.put(info.getId(), info);
   }
@@ -308,6 +334,7 @@ public class TimetableRepository implements Serializable {
    * Initialize the time zone, if it has not been set previously.
    */
   public void initTimeZone(ZoneId timeZone) {
+    assertModificationsAllowed();
     if (timeZone == null || timeZone.equals(this.timeZone)) {
       return;
     }
@@ -337,6 +364,7 @@ public class TimetableRepository implements Serializable {
   }
 
   public void addOperators(Collection<Operator> operators) {
+    assertModificationsAllowed();
     this.operators.addAll(operators);
   }
 
@@ -372,6 +400,7 @@ public class TimetableRepository implements Serializable {
   }
 
   public void addNoticeAssignments(Multimap<AbstractTransitEntity, Notice> noticesByElement) {
+    assertModificationsAllowed();
     invalidateIndex();
     this.noticesByElement.putAll(noticesByElement);
   }
@@ -392,6 +421,7 @@ public class TimetableRepository implements Serializable {
   }
 
   public void addTripOnServiceDate(TripOnServiceDate tripOnServiceDate) {
+    assertModificationsAllowed();
     invalidateIndex();
     tripOnServiceDates.put(tripOnServiceDate.getId(), tripOnServiceDate);
     for (var replacementFor : tripOnServiceDate.getReplacementFor()) {
@@ -417,11 +447,13 @@ public class TimetableRepository implements Serializable {
   }
 
   public void addTripPattern(FeedScopedId id, TripPattern tripPattern) {
+    assertModificationsAllowed();
     invalidateIndex();
     tripPatternForId.put(id, tripPattern);
   }
 
   public void addScheduledStopPointMapping(Map<FeedScopedId, RegularStop> mapping) {
+    assertModificationsAllowed();
     stopsByScheduledStopPointRefs.putAll(mapping);
   }
 
@@ -489,11 +521,13 @@ public class TimetableRepository implements Serializable {
    * Updating the site repository is only allowed during graph build
    */
   public void mergeSiteRepositories(SiteRepository childSiteRepository) {
+    assertModificationsAllowed();
     invalidateIndex();
     this.siteRepository = this.siteRepository.merge(childSiteRepository);
   }
 
   public void addFlexTrip(FeedScopedId id, FlexTrip<?, ?> flexTrip) {
+    assertModificationsAllowed();
     invalidateIndex();
     flexTripsById.put(id, flexTrip);
   }
@@ -507,6 +541,7 @@ public class TimetableRepository implements Serializable {
    * This logic is unfortunate and quite brittle. We would like to improve it in the future.
    */
   public void setUpdaterManager(GraphUpdaterManager updaterManager) {
+    assertModificationsAllowed();
     this.updaterManager = updaterManager;
     this.transitAlertService = null;
   }
@@ -519,6 +554,7 @@ public class TimetableRepository implements Serializable {
   }
 
   public void setHasFrequencyService(boolean hasFrequencyService) {
+    assertModificationsAllowed();
     this.hasFrequencyService = hasFrequencyService;
   }
 
@@ -531,6 +567,7 @@ public class TimetableRepository implements Serializable {
   }
 
   public void setHasScheduledService(boolean hasScheduledService) {
+    assertModificationsAllowed();
     this.hasScheduledService = hasScheduledService;
   }
 
@@ -606,5 +643,16 @@ public class TimetableRepository implements Serializable {
 
   private void invalidateIndex() {
     this.index = null;
+  }
+
+  private void assertModificationsAllowed() {
+    if (frozen) {
+      LOG.error("""
+        THIS SHOULD NOT HAPPEN
+        Attempting to modify TimetableRepository after it has been frozen.
+        """,
+        new RuntimeException("StackTrace included to trace the source of the error.")
+      );
+    }
   }
 }

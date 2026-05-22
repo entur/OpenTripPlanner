@@ -50,7 +50,7 @@ public final class TransitTestEnvironment {
     this.timetableRepository = timetableRepository;
 
     this.timetableRepository.index();
-    this.timetableRepository.setRaptorTransitData(
+    this.timetableRepository.initRaptorTransitData(
       RaptorTransitDataMapper.map(
         new TestTransitTuningParameters(),
         timetableRepository,

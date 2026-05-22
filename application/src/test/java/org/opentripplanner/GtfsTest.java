@@ -256,7 +256,7 @@ public abstract class GtfsTest {
         FEED_ID
       );
       alertsUpdateHandler.update(feedMessage, null);
-    } catch (FileNotFoundException exception) {}
+    } catch (FileNotFoundException _) {}
     serverContext = TestServerContext.createServerContext(
       graph,
       timetableRepository,
