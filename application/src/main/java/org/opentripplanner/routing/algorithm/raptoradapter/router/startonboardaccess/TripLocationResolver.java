@@ -11,6 +11,7 @@ import org.opentripplanner.routing.api.response.RoutingErrorCode;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Trip;
+import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitService;
 
 /**
@@ -65,16 +66,47 @@ public class TripLocationResolver {
     LocalDate serviceDate,
     @Nullable Integer aimedDepartureTime
   ) {
-    var locationInTripPattern = aimedDepartureTime != null
-      ? findStopPositionByDepartureTime(
-          tripPattern,
-          stopOrStationId,
-          trip,
-          serviceDate,
-          aimedDepartureTime
+    var tripTimes = transitService.findTimetable(tripPattern, serviceDate).getTripTimes(trip);
+    if (tripTimes == null) {
+      throw new IllegalArgumentException(
+        "Trip %s not found in timetable for pattern %s on date %s".formatted(
+          trip.getId(),
+          tripPattern.getId(),
+          serviceDate
         )
-      : findSingleStopPosition(tripPattern, stopOrStationId, trip, serviceDate);
+      );
+    }
 
+    var locations = matchingLocations(tripPattern, stopOrStationId, tripTimes, aimedDepartureTime);
+
+    if (locations.isEmpty()) {
+      if (aimedDepartureTime != null) {
+        throw new IllegalArgumentException(
+          "No stop %s with the provided departure time found in pattern for trip %s".formatted(
+            stopOrStationId,
+            trip.getId()
+          )
+        );
+      }
+      throw new IllegalArgumentException(
+        "Stop or station %s not found in pattern for trip %s".formatted(
+          stopOrStationId,
+          trip.getId()
+        )
+      );
+    }
+    if (locations.size() > 1) {
+      throw new RoutingValidationException(
+        List.of(
+          new RoutingError(
+            RoutingErrorCode.ON_BOARD_LOCATION_MISSING_SCHEDULED_DEPARTURE_TIME,
+            InputField.FROM_PLACE
+          )
+        )
+      );
+    }
+
+    var locationInTripPattern = locations.getFirst();
     int lastStopPos = tripPattern.numberOfStops() - 1;
     if (locationInTripPattern.stopPositionInPattern() == lastStopPos) {
       throw new IllegalArgumentException(
@@ -88,100 +120,29 @@ public class TripLocationResolver {
     return locationInTripPattern;
   }
 
-  private LocationInTripPatternReference findStopPositionByDepartureTime(
+  /**
+   * If targetSeconds is non-null, only stops with a matching scheduled departure time are
+   * returned, otherwise all stops matching the stop or station id are returned.
+   */
+  private List<LocationInTripPatternReference> matchingLocations(
     TripPattern tripPattern,
     FeedScopedId stopOrStationId,
-    Trip trip,
-    LocalDate serviceDate,
-    int targetSeconds
+    TripTimes tripTimes,
+    @Nullable Integer targetSeconds
   ) {
-    var tripTimes = transitService.findTimetable(tripPattern, serviceDate).getTripTimes(trip);
-    if (tripTimes == null) {
-      throw new IllegalArgumentException(
-        "Trip %s not found in timetable for pattern %s on date %s".formatted(
-          trip.getId(),
-          tripPattern.getId(),
-          serviceDate
-        )
-      );
-    }
-
-    for (int stopPos = 0; stopPos < tripPattern.numberOfStops(); stopPos++) {
-      var stop = tripPattern.getStop(stopPos);
-      if (
-        !stop.getId().equals(stopOrStationId) && !stop.getStationOrStopId().equals(stopOrStationId)
-      ) {
-        continue;
-      }
-      if (tripTimes.getScheduledDepartureTime(stopPos) == targetSeconds) {
-        return new LocationInTripPatternReference(
-          stop.getIndex(),
-          stopPos,
-          tripTimes.getScheduledDepartureTime(stopPos)
-        );
-      }
-    }
-
-    throw new IllegalArgumentException(
-      "No stop %s with the provided departure time found in pattern for trip %s".formatted(
-        stopOrStationId,
-        trip.getId()
-      )
-    );
-  }
-
-  private LocationInTripPatternReference findSingleStopPosition(
-    TripPattern tripPattern,
-    FeedScopedId stopOrStationId,
-    Trip trip,
-    LocalDate serviceDate
-  ) {
-    var tripTimes = transitService.findTimetable(tripPattern, serviceDate).getTripTimes(trip);
-    if (tripTimes == null) {
-      throw new IllegalArgumentException(
-        "Trip %s not found in timetable for pattern %s on date %s".formatted(
-          trip.getId(),
-          tripPattern.getId(),
-          serviceDate
-        )
-      );
-    }
     var locations = new ArrayList<LocationInTripPatternReference>();
     for (int stopPos = 0; stopPos < tripPattern.numberOfStops(); stopPos++) {
       var stop = tripPattern.getStop(stopPos);
       if (
         stop.getId().equals(stopOrStationId) || stop.getStationOrStopId().equals(stopOrStationId)
       ) {
-        locations.add(
-          new LocationInTripPatternReference(
-            stop.getIndex(),
-            stopPos,
-            tripTimes.getScheduledDepartureTime(stopPos)
-          )
-        );
+        int departureTime = tripTimes.getScheduledDepartureTime(stopPos);
+        if (targetSeconds != null && departureTime != targetSeconds) {
+          continue;
+        }
+        locations.add(new LocationInTripPatternReference(stop.getIndex(), stopPos, departureTime));
       }
     }
-
-    if (locations.size() > 1) {
-      throw new RoutingValidationException(
-        List.of(
-          new RoutingError(
-            RoutingErrorCode.ON_BOARD_LOCATION_MISSING_SCHEDULED_DEPARTURE_TIME,
-            InputField.FROM_PLACE
-          )
-        )
-      );
-    }
-
-    if (locations.isEmpty()) {
-      throw new IllegalArgumentException(
-        "Stop or station %s not found in pattern for trip %s".formatted(
-          stopOrStationId,
-          trip.getId()
-        )
-      );
-    }
-
-    return locations.getFirst();
+    return locations;
   }
 }
