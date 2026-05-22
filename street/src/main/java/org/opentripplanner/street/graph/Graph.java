@@ -12,9 +12,13 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
+import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
+import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingZoneIndex;
 import org.opentripplanner.street.Scope;
 import org.opentripplanner.street.geometry.CompactElevationProfile;
 import org.opentripplanner.street.geometry.GeometryUtils;
@@ -68,6 +72,12 @@ public class Graph implements Serializable {
   private final OpeningHoursCalendarService openingHoursCalendarService;
 
   private transient StreetIndex streetIndex;
+
+  private transient Map<String, GeofencingZoneIndex> geofencingZoneIndexes =
+    new ConcurrentHashMap<>();
+
+  /** Serialized geofencing zones for rebuilding the spatial index after deserialization. */
+  private Map<String, Set<GeofencingZone>> serializedGeofencingZones = new ConcurrentHashMap<>();
 
   /** The convex hull of all the graph vertices. Generated at the time the Graph is built. */
   private Geometry convexHull = null;
@@ -276,6 +286,56 @@ public class Graph implements Serializable {
     LOG.info("Index street model...");
     streetIndex = new StreetIndex(this);
     LOG.info("Index street model complete.");
+
+    if (!serializedGeofencingZones.isEmpty()) {
+      LOG.info(
+        "Rebuilding geofencing zone indexes from {} data source(s)...",
+        serializedGeofencingZones.size()
+      );
+      long start = System.currentTimeMillis();
+      for (var entry : serializedGeofencingZones.entrySet()) {
+        geofencingZoneIndexes.put(entry.getKey(), new GeofencingZoneIndex(entry.getValue()));
+      }
+      LOG.info("Rebuilt geofencing zone indexes in {} ms", System.currentTimeMillis() - start);
+    }
+  }
+
+  /**
+   * Register a geofencing zone index for a specific data source. Called by the vehicle rental
+   * updater when zones are applied. Multiple data sources (networks) each register their index.
+   */
+  public void setGeofencingZoneIndex(String dataSourceName, GeofencingZoneIndex index) {
+    geofencingZoneIndexes.put(dataSourceName, index);
+  }
+
+  /**
+   * Register a geofencing zone index with the raw zones for serialization. The zones are
+   * persisted so the spatial index can be rebuilt after graph deserialization. Used by the
+   * build-time geofencing graph builder.
+   */
+  public void setGeofencingZoneIndex(
+    String dataSourceName,
+    GeofencingZoneIndex index,
+    Set<GeofencingZone> zones
+  ) {
+    geofencingZoneIndexes.put(dataSourceName, index);
+    serializedGeofencingZones.put(dataSourceName, Set.copyOf(zones));
+  }
+
+  /**
+   * Returns all geofencing zones from all registered data sources that contain the given
+   * coordinate.
+   */
+  public Set<GeofencingZone> getGeofencingZonesContaining(Coordinate coord) {
+    return geofencingZoneIndexes
+      .values()
+      .stream()
+      .flatMap(idx -> idx.getZonesContaining(coord).stream())
+      .collect(Collectors.toSet());
+  }
+
+  public Map<String, GeofencingZoneIndex> getAllGeofencingZoneIndexes() {
+    return Map.copyOf(geofencingZoneIndexes);
   }
 
   /**
@@ -316,6 +376,14 @@ public class Graph implements Serializable {
   public Collection<Edge> findEdges(Envelope env, Scope scope) {
     requireIndex();
     return streetIndex.findEdges(env, scope);
+  }
+
+  /**
+   * Find all edges near the segments of the given line strings.
+   */
+  public Set<Edge> findEdgesAlongLineStrings(Collection<LineString> lineStrings, Scope scope) {
+    requireIndex();
+    return streetIndex.findEdgesAlongLineStrings(lineStrings, scope);
   }
 
   /**
