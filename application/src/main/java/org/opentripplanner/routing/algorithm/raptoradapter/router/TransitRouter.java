@@ -52,15 +52,7 @@ public class TransitRouter {
   private final AdditionalSearchDays additionalSearchDays;
   private final ViaCoordinateTransferFactory viaTransferResolver;
   private final LinkingContext linkingContext;
-
-  @Nullable
-  private AccessEgressFetcher fetchAccessEgress = null;
-
-  @Nullable
-  private RaptorTransitData raptorTransitData = null;
-
-  @Nullable
-  private RaptorRoutingRequestTransitData requestTransitDataProvider = null;
+  private final CarpoolingService carpoolingService;
 
   private TransitRouter(
     RouteRequest request,
@@ -80,24 +72,7 @@ public class TransitRouter {
     this.debugTimingAggregator = debugTimingAggregator;
     this.viaTransferResolver = serverContext.viaTransferResolver();
     this.linkingContext = linkingContext;
-
-    // Skip the creation of raptor transit data when the request cannot use transit
-    if (request.journey().transit().enabled() && !request.cannotReachTransit()) {
-      this.raptorTransitData = request.preferences().transit().ignoreRealtimeUpdates()
-        ? serverContext.transitService().getRaptorTransitData()
-        : serverContext.transitService().getRealtimeRaptorTransitData();
-      this.requestTransitDataProvider = createRequestTransitDataProvider(raptorTransitData);
-
-      this.fetchAccessEgress = new AccessEgressFetcher(
-        request,
-        serverContext,
-        transitSearchTimeZero,
-        additionalSearchDays,
-        linkingContext,
-        carpoolingService,
-        requestTransitDataProvider
-      );
-    }
+    this.carpoolingService = carpoolingService;
   }
 
   public static TransitRouterResult route(
@@ -125,13 +100,23 @@ public class TransitRouter {
   }
 
   private TransitRouterResult route() {
-    // Skip the transit search if transit data and related services are null. This means transit
-    // is disabled for the request or no transit stops are reachable with access/egress.
-    if (
-      raptorTransitData == null || requestTransitDataProvider == null || fetchAccessEgress == null
-    ) {
+    if (!request.journey().transit().enabled() || request.cannotReachTransit()) {
       return new TransitRouterResult(List.of(), null);
     }
+
+    var raptorTransitData = request.preferences().transit().ignoreRealtimeUpdates()
+      ? serverContext.transitService().getRaptorTransitData()
+      : serverContext.transitService().getRealtimeRaptorTransitData();
+    var requestTransitDataProvider = createRequestTransitDataProvider(raptorTransitData);
+    var fetchAccessEgress = new AccessEgressFetcher(
+      request,
+      serverContext,
+      transitSearchTimeZero,
+      additionalSearchDays,
+      linkingContext,
+      carpoolingService,
+      requestTransitDataProvider
+    );
 
     if (!serverContext.transitService().transitFeedCovers(request.dateTime())) {
       throw new RoutingValidationException(
@@ -141,7 +126,7 @@ public class TransitRouter {
 
     debugTimingAggregator.finishedPatternFiltering();
 
-    var accessEgresses = fetchAccessEgresses();
+    var accessEgresses = fetchAccessEgresses(fetchAccessEgress);
 
     debugTimingAggregator.finishedAccessEgress(
       accessEgresses.getAccesses().size(),
@@ -237,7 +222,7 @@ public class TransitRouter {
     return new TransitRouterResult(itineraries, transitResponse.requestUsed().searchParams());
   }
 
-  private AccessEgresses fetchAccessEgresses() {
+  private AccessEgresses fetchAccessEgresses(AccessEgressFetcher fetchAccessEgress) {
     final var accessList = new ArrayList<RoutingAccessEgress>();
     final var egressList = new ArrayList<RoutingAccessEgress>();
 
@@ -246,15 +231,15 @@ public class TransitRouter {
         // TODO: This is not using {@link OtpRequestThreadFactory} which mean we do not get
         //       log-trace-parameters-propagation and graceful timeout handling here.
         CompletableFuture.allOf(
-          CompletableFuture.runAsync(() -> accessList.addAll(fetchAccess())),
-          CompletableFuture.runAsync(() -> egressList.addAll(fetchEgress()))
+          CompletableFuture.runAsync(() -> accessList.addAll(fetchAccess(fetchAccessEgress))),
+          CompletableFuture.runAsync(() -> egressList.addAll(fetchEgress(fetchAccessEgress)))
         ).join();
       } catch (CompletionException e) {
         RoutingValidationException.unwrapAndRethrowCompletionException(e);
       }
     } else {
-      accessList.addAll(fetchAccess());
-      egressList.addAll(fetchEgress());
+      accessList.addAll(fetchAccess(fetchAccessEgress));
+      egressList.addAll(fetchEgress(fetchAccessEgress));
     }
 
     verifyAccessEgress(accessList, egressList);
@@ -272,14 +257,18 @@ public class TransitRouter {
     return new AccessEgresses(accessListWithPenalty, egressListWithPenalty);
   }
 
-  private Collection<? extends RoutingAccessEgress> fetchAccess() {
+  private Collection<? extends RoutingAccessEgress> fetchAccess(
+    AccessEgressFetcher fetchAccessEgress
+  ) {
     debugTimingAggregator.startedAccessCalculating();
     var list = fetchAccessEgress.fetchAccess();
     debugTimingAggregator.finishedAccessCalculating();
     return list;
   }
 
-  private Collection<? extends RoutingAccessEgress> fetchEgress() {
+  private Collection<? extends RoutingAccessEgress> fetchEgress(
+    AccessEgressFetcher fetchAccessEgress
+  ) {
     debugTimingAggregator.startedEgressCalculating();
     var list = fetchAccessEgress.fetchEgress();
     debugTimingAggregator.finishedEgressCalculating();
