@@ -44,7 +44,7 @@ public class TimetableUpdateMapper {
   private final Map<
     TripIdAndServiceDate,
     TripPatternForDate
-    > tripPatternsForTripIdAndServiceDateCache = new HashMap<>();
+  > tripPatternsForTripIdAndServiceDateCache = new HashMap<>();
 
   private final Map<LocalDate, Set<TripPatternForDate>> tripPatternsRunningOnDateMapCache =
     new HashMap<>();
@@ -77,7 +77,6 @@ public class TimetableUpdateMapper {
     Function<FeedScopedId, SortedSet<Timetable>> timetableProvider,
     TripPatternForDateMapper tripPatternForDateMapper
   ) {
-
     RaptorTransitData realtimeRaptorTransitData = new RaptorTransitData(oldRaptorTransitData);
 
     Set<LocalDate> datesToBeUpdated = new HashSet<>();
@@ -197,7 +196,8 @@ public class TimetableUpdateMapper {
               patternsForDate.remove(tripPatternForDate);
             }
           } else {
-            LOG.warn("Could not fetch timetable for {}, removing.", pattern);
+            // a previous FULL_DATASET update had real-time data for a trip, but the latest one doesn't
+            // therefore we remove it from the RAPTOR data
             patternsForDate.remove(tripPatternForDate);
           }
         }
