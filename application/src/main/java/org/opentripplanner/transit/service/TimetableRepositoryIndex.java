@@ -16,7 +16,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.flex.FlexIndex;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
 import org.opentripplanner.framework.application.OTPFeature;
-import org.opentripplanner.model.calendar.CalendarService;
+import org.opentripplanner.transit.model.calendar.TripCalendars;
 import org.opentripplanner.transit.model.network.GroupOfRoutes;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -200,7 +200,7 @@ class TimetableRepositoryIndex {
   }
 
   private void initializeServiceData(TimetableRepository timetableRepository) {
-    CalendarService calendarService = timetableRepository.getCalendarService();
+    TripCalendars calendarService = timetableRepository.getTripCalendar();
 
     if (calendarService == null) {
       return;
@@ -220,10 +220,8 @@ class TimetableRepositoryIndex {
     Multimap<LocalDate, FeedScopedId> serviceIdsForServiceDate = HashMultimap.create();
     Map<FeedScopedId, LocalDate> endOfServiceDateForService = new HashMap<>();
 
-    for (FeedScopedId serviceId : calendarService.getServiceIds()) {
-      Set<LocalDate> serviceDatesForService = calendarService.getServiceDatesForServiceId(
-        serviceId
-      );
+    for (FeedScopedId serviceId : calendarService.listServiceIds()) {
+      Set<LocalDate> serviceDatesForService = calendarService.listServiceDates(serviceId);
       for (LocalDate serviceDate : serviceDatesForService) {
         serviceIdsForServiceDate.put(serviceDate, serviceId);
 

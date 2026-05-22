@@ -27,7 +27,6 @@ import org.opentripplanner.framework.application.OTPRequestTimeoutException;
 import org.opentripplanner.model.FeedInfo;
 import org.opentripplanner.model.StopTimesInPattern;
 import org.opentripplanner.model.TripTimeOnDate;
-import org.opentripplanner.model.calendar.CalendarService;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.services.TransitAlertService;
 import org.opentripplanner.transfer.constrained.ConstrainedTransferService;
@@ -39,6 +38,7 @@ import org.opentripplanner.transit.api.request.TripRequest;
 import org.opentripplanner.transit.api.request.TripTimeOnDateRequest;
 import org.opentripplanner.transit.model.basic.Notice;
 import org.opentripplanner.transit.model.basic.TransitMode;
+import org.opentripplanner.transit.model.calendar.TripCalendars;
 import org.opentripplanner.transit.model.filter.expr.Matcher;
 import org.opentripplanner.transit.model.filter.transit.RegularStopMatcherFactory;
 import org.opentripplanner.transit.model.filter.transit.RouteMatcherFactory;
@@ -628,7 +628,7 @@ public class DefaultTransitService implements TransitEditorService {
   public List<Trip> getTrips(TripRequest request) {
     Matcher<Trip> matcher = TripMatcherFactory.of(
       request,
-      this.getCalendarService()::getServiceDatesForServiceId
+      this.getTripCalendars()::listServiceDates
     );
     return listTrips().stream().filter(matcher::match).toList();
   }
@@ -656,8 +656,8 @@ public class DefaultTransitService implements TransitEditorService {
   }
 
   @Override
-  public CalendarService getCalendarService() {
-    return this.timetableRepository.getCalendarService();
+  public TripCalendars getTripCalendars() {
+    return this.timetableRepository.getTripCalendar();
   }
 
   @Override

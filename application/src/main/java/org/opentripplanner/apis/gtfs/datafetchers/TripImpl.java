@@ -49,8 +49,8 @@ public class TripImpl implements GraphQLDataFetchers.GraphQLTrip {
   public DataFetcher<Iterable<String>> activeDates() {
     return environment ->
       getTransitService(environment)
-        .getCalendarService()
-        .getServiceDatesForServiceId(getSource(environment).getServiceId())
+        .getTripCalendars()
+        .listServiceDates(getSource(environment).getServiceId())
         .stream()
         .map(ServiceDateUtils::asCompactString)
         .collect(Collectors.toList());

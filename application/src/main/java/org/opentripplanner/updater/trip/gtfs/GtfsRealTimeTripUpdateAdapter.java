@@ -193,9 +193,7 @@ public class GtfsRealTimeTripUpdateAdapter {
     }
 
     var serviceId = transitEditorService.getTrip(tripUpdate.tripId()).getServiceId();
-    var serviceDates = transitEditorService
-      .getCalendarService()
-      .getServiceDatesForServiceId(serviceId);
+    var serviceDates = transitEditorService.getTripCalendars().listServiceDates(serviceId);
     if (!serviceDates.contains(tripUpdate.serviceDate())) {
       throw UpdateException.of(tripUpdate.tripId(), NO_SERVICE_ON_DATE);
     }
@@ -411,8 +409,8 @@ public class GtfsRealTimeTripUpdateAdapter {
 
     // Check whether service date is served by trip
     final Set<FeedScopedId> serviceIds = transitEditorService
-      .getCalendarService()
-      .getServiceIdsOnDate(tripUpdate.serviceDate());
+      .getTripCalendars()
+      .listServiceIdsOnServiceDate(tripUpdate.serviceDate());
     if (!serviceIds.contains(trip.getServiceId())) {
       // TODO: should we support this and change service id of trip?
       throw UpdateException.of(tripUpdate.tripId(), NO_SERVICE_ON_DATE);
