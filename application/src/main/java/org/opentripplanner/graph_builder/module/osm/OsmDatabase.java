@@ -677,5 +677,4 @@ public class OsmDatabase {
         .forEach(node -> stopsInAreas.put(area, node));
     }
   }
-
 }
