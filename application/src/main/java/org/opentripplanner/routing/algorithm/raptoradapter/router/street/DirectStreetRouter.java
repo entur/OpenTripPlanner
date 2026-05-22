@@ -43,7 +43,7 @@ public class DirectStreetRouter {
       GraphPathFinder gpFinder = new GraphPathFinder(
         serverContext.listExtensionRequestContexts(request),
         maxCarSpeed,
-        serverContext.graph().getAllGeofencingZoneIndexes()
+        serverContext.vehicleRentalService()
       );
       var paths = gpFinder.find(request, linkingContext);
 

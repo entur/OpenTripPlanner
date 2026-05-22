@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Polygon;
 import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.service.vehiclerental.GeofencingZoneService;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.TestGeofencingZoneBuilder;
 import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingBoundaryExtension;
@@ -111,11 +112,11 @@ class VertexLinkerGeofencingTest {
     var graph = new Graph();
     graph.addVertex(v1);
     graph.addVertex(v2);
-    registerZoneIndex(graph);
     graph.index();
 
     var linker = new VertexLinker(
       graph,
+      zoneService(),
       VisibilityMode.COMPUTE_AREA_VISIBILITY_LINES,
       StreetConstants.DEFAULT_MAX_AREA_NODES,
       true
@@ -154,11 +155,11 @@ class VertexLinkerGeofencingTest {
     var graph = new Graph();
     graph.addVertex(vertexOutside);
     graph.addVertex(vertexInside);
-    registerZoneIndex(graph);
     graph.index();
 
     var linker = new VertexLinker(
       graph,
+      zoneService(),
       VisibilityMode.COMPUTE_AREA_VISIBILITY_LINES,
       StreetConstants.DEFAULT_MAX_AREA_NODES,
       true
@@ -192,8 +193,23 @@ class VertexLinkerGeofencingTest {
     return fail("No SplitterVertex found connected to the temporary location");
   }
 
-  private static void registerZoneIndex(Graph graph) {
+  private static GeofencingZoneService zoneService() {
     var index = new GeofencingZoneIndex(Set.of(NO_DROP_OFF_ZONE));
-    graph.setGeofencingZoneIndex("tier", index);
+    return new GeofencingZoneService() {
+      @Override
+      public Set<GeofencingZone> zonesContaining(Coordinate coord) {
+        return index.getZonesContaining(coord);
+      }
+
+      @Override
+      public boolean hasIndexedZones() {
+        return true;
+      }
+
+      @Override
+      public Set<GeofencingZone> allZones() {
+        return index.getAllZones();
+      }
+    };
   }
 }

@@ -3,7 +3,6 @@ package org.opentripplanner.routing.algorithm.raptoradapter.router.street;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import org.opentripplanner.astar.strategy.DurationSkipEdgeStrategy;
@@ -12,8 +11,8 @@ import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.preference.StreetPreferences;
 import org.opentripplanner.routing.error.PathNotFoundException;
 import org.opentripplanner.routing.linking.LinkingContext;
+import org.opentripplanner.service.vehiclerental.GeofencingZoneService;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
-import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingZoneIndex;
 import org.opentripplanner.street.model.edge.ExtensionRequestContext;
 import org.opentripplanner.street.model.path.StreetPath;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -32,16 +31,16 @@ class GraphPathFinder {
 
   private final float maxCarSpeed;
 
-  private final Map<String, GeofencingZoneIndex> geofencingZoneIndexes;
+  private final GeofencingZoneService geofencingZoneService;
 
   GraphPathFinder(
     Collection<ExtensionRequestContext> extensionRequestContexts,
     float maxCarSpeed,
-    Map<String, GeofencingZoneIndex> geofencingZoneIndexes
+    GeofencingZoneService geofencingZoneService
   ) {
     this.extensionRequestContexts = Objects.requireNonNull(extensionRequestContexts);
     this.maxCarSpeed = maxCarSpeed;
-    this.geofencingZoneIndexes = Objects.requireNonNull(geofencingZoneIndexes);
+    this.geofencingZoneService = Objects.requireNonNull(geofencingZoneService);
   }
 
   List<StreetPath> find(RouteRequest request, LinkingContext linkingContext) {
@@ -70,7 +69,7 @@ class GraphPathFinder {
     if (
       request.arriveBy() &&
       request.journey().direct().mode().includesRenting() &&
-      !geofencingZoneIndexes.isEmpty()
+      geofencingZoneService.hasIndexedZones()
     ) {
       var destinationZones = computeZonesAtVertices(to);
       if (!destinationZones.isEmpty()) {
@@ -98,10 +97,7 @@ class GraphPathFinder {
   private Set<GeofencingZone> computeZonesAtVertices(Set<Vertex> vertices) {
     var zones = new HashSet<GeofencingZone>();
     for (var vertex : vertices) {
-      var coord = vertex.getCoordinate();
-      for (var index : geofencingZoneIndexes.values()) {
-        zones.addAll(index.getZonesContaining(coord));
-      }
+      zones.addAll(geofencingZoneService.zonesContaining(vertex.getCoordinate()));
     }
     return zones;
   }

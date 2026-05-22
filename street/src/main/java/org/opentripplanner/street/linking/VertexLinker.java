@@ -17,6 +17,7 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.linearref.LinearLocation;
 import org.locationtech.jts.linearref.LocationIndexedLine;
+import org.opentripplanner.service.vehiclerental.GeofencingZoneService;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingBoundaryExtension;
 import org.opentripplanner.street.Scope;
@@ -92,6 +93,7 @@ public class VertexLinker {
   );
 
   private final Graph graph;
+  private final GeofencingZoneService geofencingZoneService;
 
   private final VisibilityMode visibilityMode;
   private final int maxAreaNodes;
@@ -103,11 +105,13 @@ public class VertexLinker {
    */
   public VertexLinker(
     Graph graph,
+    GeofencingZoneService geofencingZoneService,
     VisibilityMode visibilityMode,
     int maxAreaNodes,
     boolean linkFlex
   ) {
     this.graph = Objects.requireNonNull(graph);
+    this.geofencingZoneService = Objects.requireNonNull(geofencingZoneService);
     this.visibilityMode = Objects.requireNonNull(visibilityMode);
     this.maxAreaNodes = maxAreaNodes;
     this.shouldLinkFlex = linkFlex;
@@ -564,7 +568,7 @@ public class VertexLinker {
     var toBoundaries = originalEdge.getToVertex().getGeofencingBoundaries();
     if (!fromBoundaries.isEmpty() || !toBoundaries.isEmpty()) {
       var splitCoord = new Coordinate(x, y);
-      var containingZones = graph.getGeofencingZonesContaining(splitCoord);
+      var containingZones = geofencingZoneService.zonesContaining(splitCoord);
       var boundaryZones = new HashSet<GeofencingZone>();
       for (var b : fromBoundaries) {
         boundaryZones.add(b.zone());
