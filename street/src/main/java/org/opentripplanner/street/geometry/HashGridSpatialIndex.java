@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.CoordinateSequence;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.index.ItemVisitor;
@@ -158,23 +159,79 @@ public class HashGridSpatialIndex<T> implements SpatialIndex, Serializable {
   }
 
   /**
-   * Query all items near any segment of the given line strings. Visits each bin touched by each
-   * segment, collecting unique items in a single pass. This avoids the per-segment allocations
-   * of calling {@link #query(Envelope)} per segment.
+   * Query all items near any segment of the given line strings. Collects the unique set of bin
+   * keys touched by every segment, then reads each bin exactly once. Avoids per-segment
+   * {@link Envelope} and lambda allocations, and the re-read of bins shared by consecutive
+   * segments (which is the common case — adjacent segments always share at least one bin via
+   * their shared endpoint).
    */
   public Set<T> queryAlongLineStrings(Collection<LineString> lineStrings) {
-    final Set<T> result = new HashSet<>(1024);
+    Set<T> result = new HashSet<>(1024);
+    TLongSet keys = new TLongHashSet(256);
     for (LineString ls : lineStrings) {
-      Coordinate[] coords = ls.getCoordinates();
-      for (int i = 0; i < coords.length - 1; i++) {
-        Envelope env = new Envelope(coords[i], coords[i + 1]);
-        visit(env, false, (bin, mapKey) -> {
-          result.addAll(bin);
-          return false;
-        });
+      CoordinateSequence seq = ls.getCoordinateSequence();
+      for (int i = 0; i < seq.size() - 1; i++) {
+        collectBinKeys(seq.getX(i), seq.getY(i), seq.getX(i + 1), seq.getY(i + 1), keys);
       }
     }
+    keys.forEach(key -> {
+      ArrayList<T> bin = bins.get(key);
+      if (bin != null) {
+        result.addAll(bin);
+      }
+      return true;
+    });
     return result;
+  }
+
+  /**
+   * Collect the bin keys touched by a segment's axis-aligned bounding box into {@code out}.
+   * Mirrors the bin-key math in {@link #visit(Envelope, boolean, BinVisitor)} but operates on
+   * primitive coordinates so the hot query loop has no per-segment object allocations.
+   */
+  private void collectBinKeys(double x1, double y1, double x2, double y2, TLongSet out) {
+    double minX = clampLon(Math.min(x1, x2));
+    double maxX = clampLon(Math.max(x1, x2));
+    double minY = clampLat(Math.min(y1, y2));
+    double maxY = clampLat(Math.max(y1, y2));
+    long minXKey = Math.round(minX / xBinSize);
+    long maxXKey = Math.round(maxX / xBinSize);
+    long minYKey = Math.round(minY / yBinSize);
+    long maxYKey = Math.round(maxY / yBinSize);
+    for (long xKey = minXKey; xKey <= maxXKey; xKey++) {
+      for (long yKey = minYKey; yKey <= maxYKey; yKey++) {
+        out.add(binKey(xKey, yKey));
+      }
+    }
+  }
+
+  /**
+   * Pack (xKey, yKey) into a single {@code long} hash key. The xKey halves are swapped so the
+   * default long {@code hashCode} ({@code (int) (v ^ (v >>> 32))}) distributes well — see the
+   * note in {@link #visit(Envelope, boolean, BinVisitor)}.
+   */
+  private static long binKey(long xKey, long yKey) {
+    return (yKey << 32) | ((xKey & 0xFFFF) << 16) | ((xKey >> 16) & 0xFFFF);
+  }
+
+  private static double clampLon(double x) {
+    if (x > 180) {
+      return 180;
+    }
+    if (x < -180) {
+      return -180;
+    }
+    return x;
+  }
+
+  private static double clampLat(double y) {
+    if (y > 90) {
+      return 90;
+    }
+    if (y < -90) {
+      return -90;
+    }
+    return y;
   }
 
   /**
