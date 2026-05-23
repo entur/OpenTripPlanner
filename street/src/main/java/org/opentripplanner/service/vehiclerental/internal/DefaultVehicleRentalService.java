@@ -147,7 +147,7 @@ public class DefaultVehicleRentalService implements VehicleRentalService, Vehicl
     return geofencingZoneIndexes
       .values()
       .stream()
-      .flatMap(idx -> idx.getZonesContaining(coord).stream())
+      .flatMap(idx -> idx.findZonesContaining(coord).stream())
       .collect(Collectors.toSet());
   }
 
@@ -160,7 +160,7 @@ public class DefaultVehicleRentalService implements VehicleRentalService, Vehicl
   public Set<GeofencingZone> allZones() {
     var zones = new HashSet<GeofencingZone>();
     for (var idx : geofencingZoneIndexes.values()) {
-      zones.addAll(idx.getAllZones());
+      zones.addAll(idx.findZones());
     }
     return zones;
   }

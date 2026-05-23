@@ -87,11 +87,11 @@ class GeofencingZoneApplierTest {
     assertNotNull(result.zoneIndex());
 
     // point inside Frogner Park should find the zone
-    var zones = result.zoneIndex().getZonesContaining(insideFrognerPark1.getCoordinate());
+    var zones = result.zoneIndex().findZonesContaining(insideFrognerPark1.getCoordinate());
     assertTrue(zones.contains(zone));
 
     // point outside both should find neither restricted zone
-    var outsideZones = result.zoneIndex().getZonesContaining(outsideFrognerPark2.getCoordinate());
+    var outsideZones = result.zoneIndex().findZonesContaining(outsideFrognerPark2.getCoordinate());
     assertFalse(outsideZones.contains(zone));
   }
 }

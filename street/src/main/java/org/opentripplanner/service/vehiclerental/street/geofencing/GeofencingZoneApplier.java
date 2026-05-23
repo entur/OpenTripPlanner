@@ -81,7 +81,7 @@ public class GeofencingZoneApplier {
     GeofencingZoneIndex zoneIndex
   ) {
     for (var vertex : vertices) {
-      var zones = zoneIndex.getZonesContaining(vertex.getCoordinate());
+      var zones = zoneIndex.findZonesContaining(vertex.getCoordinate());
       vertex.setInitialGeofencingZones(Set.copyOf(zones));
     }
   }

@@ -198,7 +198,7 @@ class VertexLinkerGeofencingTest {
     return new GeofencingZoneService() {
       @Override
       public Set<GeofencingZone> zonesContaining(Coordinate coord) {
-        return index.getZonesContaining(coord);
+        return index.findZonesContaining(coord);
       }
 
       @Override
@@ -208,7 +208,7 @@ class VertexLinkerGeofencingTest {
 
       @Override
       public Set<GeofencingZone> allZones() {
-        return index.getAllZones();
+        return index.findZones();
       }
     };
   }

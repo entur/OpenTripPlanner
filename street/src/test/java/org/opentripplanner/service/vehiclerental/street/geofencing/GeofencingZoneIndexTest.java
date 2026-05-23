@@ -30,7 +30,7 @@ class GeofencingZoneIndexTest {
   void pointInsideSingleZone() {
     // inside Frogner Park and inside Oslo
     var coord = new Coordinate(10.699322, 59.928667);
-    var zones = index.getZonesContaining(coord);
+    var zones = index.findZonesContaining(coord);
     assertTrue(zones.contains(frognerPark));
     assertTrue(zones.contains(oslo));
   }
@@ -39,7 +39,7 @@ class GeofencingZoneIndexTest {
   void pointInsideOnlyOuterZone() {
     // inside Oslo but outside Frogner Park
     var coord = new Coordinate(10.76411762080707, 59.95961972533365);
-    var zones = index.getZonesContaining(coord);
+    var zones = index.findZonesContaining(coord);
     assertTrue(zones.contains(oslo));
     assertEquals(Set.of(oslo), zones);
   }
@@ -48,7 +48,7 @@ class GeofencingZoneIndexTest {
   void pointOutsideAllZones() {
     // way outside Oslo
     var coord = new Coordinate(5.0, 60.5);
-    var zones = index.getZonesContaining(coord);
+    var zones = index.findZonesContaining(coord);
     assertTrue(zones.isEmpty());
   }
 
@@ -58,7 +58,7 @@ class GeofencingZoneIndexTest {
     // matching GeofencingZoneApplier.isVertexInZone which uses covers().
     // Use the first vertex of the Oslo polygon (which is on its boundary).
     var boundaryCoord = new Coordinate(10.62535658370308, 59.961055202323195);
-    var zones = index.getZonesContaining(boundaryCoord);
+    var zones = index.findZonesContaining(boundaryCoord);
     assertTrue(
       zones.contains(oslo),
       "Point on zone boundary should be included (covers semantics)"
@@ -68,7 +68,7 @@ class GeofencingZoneIndexTest {
   @Test
   void emptyIndex() {
     var emptyIndex = new GeofencingZoneIndex(List.of());
-    var zones = emptyIndex.getZonesContaining(new Coordinate(10.7, 59.9));
+    var zones = emptyIndex.findZonesContaining(new Coordinate(10.7, 59.9));
     assertTrue(zones.isEmpty());
   }
 }

@@ -35,19 +35,19 @@ public class GeofencingZoneIndex {
   }
 
   /**
+   * Returns all zones in this index.
+   */
+  public Set<GeofencingZone> findZones() {
+    return Set.copyOf(preparedGeometries.keySet());
+  }
+
+  /**
    * Returns all zones whose geometry covers the given coordinate. Uses {@code covers()} (not
    * {@code contains()}) to include points on the zone boundary, matching the semantics of
    * {@link GeofencingZoneApplier} which uses {@code covers()} for boundary detection.
    */
-  /**
-   * Returns all zones in this index.
-   */
-  public Set<GeofencingZone> getAllZones() {
-    return Set.copyOf(preparedGeometries.keySet());
-  }
-
   @SuppressWarnings("unchecked")
-  public Set<GeofencingZone> getZonesContaining(Coordinate coord) {
+  public Set<GeofencingZone> findZonesContaining(Coordinate coord) {
     var point = GeometryUtils.getGeometryFactory().createPoint(coord);
     List<GeofencingZone> candidates = index.query(new Envelope(coord));
     return candidates
