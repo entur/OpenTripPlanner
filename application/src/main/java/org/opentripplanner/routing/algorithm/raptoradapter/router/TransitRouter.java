@@ -104,6 +104,12 @@ public class TransitRouter {
       return new TransitRouterResult(List.of(), null);
     }
 
+    if (!serverContext.transitService().transitFeedCovers(request.dateTime())) {
+      throw new RoutingValidationException(
+        List.of(new RoutingError(RoutingErrorCode.OUTSIDE_SERVICE_PERIOD, InputField.DATE_TIME))
+      );
+    }
+
     var raptorTransitData = request.preferences().transit().ignoreRealtimeUpdates()
       ? serverContext.transitService().getRaptorTransitData()
       : serverContext.transitService().getRealtimeRaptorTransitData();
@@ -117,12 +123,6 @@ public class TransitRouter {
       carpoolingService,
       requestTransitDataProvider
     );
-
-    if (!serverContext.transitService().transitFeedCovers(request.dateTime())) {
-      throw new RoutingValidationException(
-        List.of(new RoutingError(RoutingErrorCode.OUTSIDE_SERVICE_PERIOD, InputField.DATE_TIME))
-      );
-    }
 
     debugTimingAggregator.finishedPatternFiltering();
 
