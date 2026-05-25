@@ -7,7 +7,6 @@ import com.google.common.collect.HashMultimap;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import gnu.trove.set.TIntSet;
-import gnu.trove.set.hash.TIntHashSet;
 import jakarta.inject.Inject;
 import java.io.Serializable;
 import java.time.Instant;
@@ -107,7 +106,6 @@ public class TimetableRepository implements Serializable {
     new ConcurrentPublished<>();
 
   private final DefaultTripCalendars tripCalendar = new DefaultTripCalendars();
-  private final Map<FeedScopedId, Integer> serviceCodes = new HashMap<>();
 
   private transient TimetableRepositoryIndex index;
   private ZoneId timeZone = null;
@@ -153,6 +151,7 @@ public class TimetableRepository implements Serializable {
     assertModificationsAllowed();
     if (index == null) {
       LOG.info("Index timetable repository...");
+      this.tripCalendar.initializeServiceCodes();
       this.index = new TimetableRepositoryIndex(this);
       LOG.info("Index timetable repository complete.");
     }
@@ -239,26 +238,13 @@ public class TimetableRepository implements Serializable {
   @Nullable
   public FeedScopedId getOrCreateServiceIdForDate(LocalDate serviceDate) {
     // Start of day
+    assertModificationsAllowed();
     ZonedDateTime time = ServiceDateUtils.asStartOfService(serviceDate, getTimeZone());
 
     if (!transitFeedCovers(time.toInstant())) {
       return null;
     }
-
-    FeedScopedId serviceId = tripCalendar.getOrCreateServiceIdForDate(serviceDate);
-
-    if (!serviceCodes.containsKey(serviceId)) {
-      // Calculating new unique serviceCode based on size (!)
-      final int serviceCode = serviceCodes.size();
-      assertModificationsAllowed();
-      serviceCodes.put(serviceId, serviceCode);
-
-      index
-        .getServiceCodesRunningForDate()
-        .computeIfAbsent(serviceDate, ignored -> new TIntHashSet())
-        .add(serviceCode);
-    }
-    return serviceId;
+    return tripCalendar.getOrCreateServiceIdForDate(serviceDate);
   }
 
   public Collection<String> getFeedIds() {
@@ -433,7 +419,7 @@ public class TimetableRepository implements Serializable {
    * from multiple feeds.
    */
   public Map<FeedScopedId, Integer> getServiceCodes() {
-    return serviceCodes;
+    return tripCalendar.getServiceCodes();
   }
 
   public SiteRepository getSiteRepository() {
@@ -578,7 +564,7 @@ public class TimetableRepository implements Serializable {
    * For all dates in the system get the service codes that run on it.
    */
   public Map<LocalDate, TIntSet> getServiceCodesRunningForDate() {
-    return Collections.unmodifiableMap(index.getServiceCodesRunningForDate());
+    return tripCalendar.getServiceCodesRunningForDate();
   }
 
   public boolean isIndexed() {

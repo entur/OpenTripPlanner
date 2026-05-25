@@ -205,7 +205,7 @@ public class DefaultTransitService implements TransitEditorService {
 
   @Override
   public TIntSet getServiceCodesRunningForDate(LocalDate serviceDate) {
-    return timetableRepositoryIndex
+    return timetableRepository
       .getServiceCodesRunningForDate()
       .getOrDefault(serviceDate, new TIntHashSet());
   }
@@ -732,13 +732,13 @@ public class DefaultTransitService implements TransitEditorService {
   @Override
   public Set<LocalDate> listServiceDates() {
     return Collections.unmodifiableSet(
-      timetableRepositoryIndex.getServiceCodesRunningForDate().keySet()
+      timetableRepository.getServiceCodesRunningForDate().keySet()
     );
   }
 
   @Override
   public Map<LocalDate, TIntSet> getServiceCodesRunningForDate() {
-    return Collections.unmodifiableMap(timetableRepositoryIndex.getServiceCodesRunningForDate());
+    return Collections.unmodifiableMap(timetableRepository.getServiceCodesRunningForDate());
   }
 
   @Override
