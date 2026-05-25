@@ -1,5 +1,6 @@
 package org.opentripplanner.transit.service;
 
+import gnu.trove.TCollections;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 import jakarta.inject.Inject;
@@ -77,6 +78,10 @@ import org.opentripplanner.utils.time.ServiceDateUtils;
  * duration of the request (which may involve several method calls).
  */
 public class DefaultTransitService implements TransitEditorService {
+
+  private static final TIntSet EMPTY_SERVICE_CODES = TCollections.unmodifiableSet(
+    new TIntHashSet()
+  );
 
   private final TimetableRepository timetableRepository;
 
@@ -207,7 +212,7 @@ public class DefaultTransitService implements TransitEditorService {
   public TIntSet getServiceCodesRunningForDate(LocalDate serviceDate) {
     return timetableRepository
       .getServiceCodesRunningForDate()
-      .getOrDefault(serviceDate, new TIntHashSet());
+      .getOrDefault(serviceDate, EMPTY_SERVICE_CODES);
   }
 
   @Override

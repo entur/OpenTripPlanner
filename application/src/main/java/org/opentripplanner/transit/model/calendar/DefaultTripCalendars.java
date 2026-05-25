@@ -1,7 +1,5 @@
 package org.opentripplanner.transit.model.calendar;
 
-import com.google.common.collect.HashMultimap;
-import com.google.common.collect.Multimap;
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
 import java.time.LocalDate;
@@ -103,30 +101,16 @@ public class DefaultTripCalendars implements TripCalendars {
   }
 
   public void initializeServiceCodes() {
-    // CalendarService has one main implementation (CalendarServiceImpl) which contains a
-    // CalendarServiceData which can easily supply all of the dates. But it's impossible to
-    // actually see those dates without modifying the interfaces and inheritance. So we have
-    // to work around this abstraction and reconstruct the CalendarData.
-    // Note the "multiCalendarServiceImpl" which has docs saying it expects one single
-    // CalendarData. It seems to merge the calendar services from multiple GTFS feeds, but
-    // its only documentation says it's a hack.
-
-    // Reconstruct set of all dates where service is defined, keeping track of which services
-    // run on which days.
-    Multimap<LocalDate, FeedScopedId> serviceIdsForServiceDate = HashMultimap.create();
-
     for (FeedScopedId serviceId : listServiceIds()) {
-      var serviceDates = listServiceDates(serviceId);
-      for (LocalDate serviceDate : serviceDates) {
-        serviceIdsForServiceDate.put(serviceDate, serviceId);
+      Integer code = serviceCodes.get(serviceId);
+      if (code == null) {
+        continue;
       }
-    }
-    for (LocalDate serviceDate : serviceIdsForServiceDate.keySet()) {
-      TIntSet serviceCodesRunning = new TIntHashSet();
-      for (FeedScopedId serviceId : serviceIdsForServiceDate.get(serviceDate)) {
-        serviceCodesRunning.add(serviceCodes.get(serviceId));
+      for (LocalDate serviceDate : listServiceDates(serviceId)) {
+        serviceCodesRunningForDate
+          .computeIfAbsent(serviceDate, ignored -> new TIntHashSet())
+          .add(code);
       }
-      serviceCodesRunningForDate.put(serviceDate, serviceCodesRunning);
     }
   }
 }
