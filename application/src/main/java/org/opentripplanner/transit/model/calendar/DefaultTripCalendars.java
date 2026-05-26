@@ -17,11 +17,33 @@ import org.opentripplanner.model.calendar.CalendarServiceData;
 public class DefaultTripCalendars implements TripCalendars {
 
   private final CalendarServiceData calendarServiceData;
-  private final Map<LocalDate, TIntSet> serviceCodesRunningForDate = new HashMap<>();
-  private final Map<FeedScopedId, Integer> serviceCodes = new HashMap<>();
+  private final Map<LocalDate, TIntSet> serviceCodesRunningForDate;
+  private final Map<FeedScopedId, Integer> serviceCodes;
+
+  private DefaultTripCalendars(
+    CalendarServiceData calendarServiceData,
+    Map<LocalDate, TIntSet> serviceCodesRunningForDate,
+    Map<FeedScopedId, Integer> serviceCodes
+  ) {
+    this.calendarServiceData = calendarServiceData;
+    this.serviceCodesRunningForDate = serviceCodesRunningForDate;
+    this.serviceCodes = serviceCodes;
+  }
 
   public DefaultTripCalendars() {
-    this.calendarServiceData = new CalendarServiceData();
+    this(new CalendarServiceData(), new HashMap<>(), new HashMap<>());
+  }
+
+  /**
+   * Make the mutable copy.
+   */
+  public DefaultTripCalendars copyOf() {
+    return new DefaultTripCalendars(
+      // TODO, inline the calendarServiceData and copy the maps
+      calendarServiceData,
+      new HashMap<>(serviceCodesRunningForDate),
+      new HashMap<>(serviceCodes)
+    );
   }
 
   @Override

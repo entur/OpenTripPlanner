@@ -216,8 +216,11 @@ public class TimetableRepository implements Serializable {
   }
 
   public TripCalendars getTripCalendar() {
-    // No need to cache the CalendarService, it is a thin wrapper around the data
     return tripCalendar;
+  }
+
+  public DefaultTripCalendars copyTripCalendarForRealTimeUpdates() {
+    return tripCalendar.copyOf();
   }
 
   public void updateCalendarServiceData(CalendarServiceData data) {
