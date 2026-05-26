@@ -9,6 +9,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransit
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RealTimeRaptorTransitDataUpdater;
 import org.opentripplanner.standalone.api.HttpRequestScoped;
 import org.opentripplanner.standalone.config.ConfigModel;
+import org.opentripplanner.transit.model.calendar.DefaultTripCalendars;
 import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
@@ -30,6 +31,7 @@ public abstract class TransitModule {
     TimetableRepository timetableRepository
   ) {
     return new TimetableSnapshotManager(
+      (DefaultTripCalendars) timetableRepository.getTripCalendar(),
       realtimeRaptorTransitDataUpdater,
       config.routerConfig().updaterConfig().timetableSnapshotParameters(),
       () -> LocalDate.now(timetableRepository.getTimeZone())

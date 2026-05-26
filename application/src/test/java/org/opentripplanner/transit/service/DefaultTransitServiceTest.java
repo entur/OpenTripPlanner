@@ -26,6 +26,7 @@ import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.transit.api.model.FilterValues;
 import org.opentripplanner.transit.api.request.TripOnServiceDateRequest;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model.calendar.DefaultTripCalendars;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -189,7 +190,7 @@ class DefaultTransitServiceTest {
 
     timetableRepository.index();
 
-    TimetableSnapshot timetableSnapshot = new TimetableSnapshot();
+    TimetableSnapshot timetableSnapshot = new TimetableSnapshot(new DefaultTripCalendars());
     TripTimes tripTimes = ScheduledTripTimes.of()
       .withTrip(TimetableRepositoryForTest.trip("123").build())
       .withDepartureTimes(new int[] { 0, 1 })

@@ -49,6 +49,7 @@ import org.opentripplanner.transfer.regular.TransferRepository;
 import org.opentripplanner.transfer.regular.TransferServiceTestFactory;
 import org.opentripplanner.transfer.regular.internal.DefaultTransferRepository;
 import org.opentripplanner.transfer.regular.internal.TransferIndex;
+import org.opentripplanner.transit.model.calendar.DefaultTripCalendars;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
@@ -92,6 +93,7 @@ public class TestServerContext {
     }
     if (snapshotManager == null) {
       snapshotManager = new TimetableSnapshotManager(
+        (DefaultTripCalendars) timetableRepository.getTripCalendar(),
         null,
         TimetableSnapshotParameters.DEFAULT,
         LocalDate::now
