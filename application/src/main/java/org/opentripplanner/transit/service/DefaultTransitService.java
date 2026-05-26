@@ -204,11 +204,6 @@ public class DefaultTransitService implements TransitEditorService {
   }
 
   @Override
-  public Integer getServiceCode(FeedScopedId id) {
-    return this.timetableRepository.getServiceCodes().get(id);
-  }
-
-  @Override
   public TIntSet getServiceCodesRunningForDate(LocalDate serviceDate) {
     return timetableRepository
       .getServiceCodesRunningForDate()

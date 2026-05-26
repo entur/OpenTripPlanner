@@ -103,8 +103,6 @@ public interface TransitService {
 
   Collection<Station> listStations();
 
-  Integer getServiceCode(FeedScopedId id);
-
   TIntSet getServiceCodesRunningForDate(LocalDate date);
 
   Agency getAgency(FeedScopedId id);

@@ -338,7 +338,7 @@ public class GtfsRealTimeTripUpdateAdapter {
       tripUpdate,
       stopAndStopTimeUpdates,
       realTimeState,
-      transitEditorService.getServiceCode(trip.getServiceId())
+      transitEditorService.getTripCalendars().getServiceCode(trip.getServiceId())
     );
 
     return addNewOrReplacementTripToSnapshot(

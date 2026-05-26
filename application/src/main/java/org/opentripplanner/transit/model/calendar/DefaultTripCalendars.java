@@ -44,6 +44,13 @@ public class DefaultTripCalendars implements TripCalendars {
     return calendarServiceData.getServiceIdsForDate(serviceDate);
   }
 
+  @Override
+  public Integer getServiceCode(FeedScopedId serviceId) {
+    // TODO Change this to return an int, it there is no service code for the given serviceId,
+    //      then it is an error.
+    return serviceCodes.get(serviceId);
+  }
+
   /**
    * Map from GTFS ServiceIds to integers close to 0. Allows using BitSets instead of
    * {@code Set<Object>}. An empty Map is created before the Graph is built to allow registering IDs
