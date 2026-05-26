@@ -96,7 +96,7 @@ public class RefetchTripPatternQuery {
           .description(
             "A list of legIds describing the trip pattern. At least one leg is required."
           )
-          .type(new GraphQLList(new GraphQLNonNull(Scalars.GraphQLID)))
+          .type(new GraphQLNonNull(new GraphQLList(new GraphQLNonNull(Scalars.GraphQLID))))
           .build()
       )
       .argument(

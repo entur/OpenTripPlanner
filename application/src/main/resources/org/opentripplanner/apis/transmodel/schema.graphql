@@ -805,7 +805,7 @@ type QueryType {
     "When true, real-time updates are ignored during this search."
     ignoreRealtimeUpdates: Boolean = false,
     "A list of legIds describing the trip pattern. At least one leg is required."
-    legs: [ID!],
+    legs: [ID!]!,
     "Maximum duration for access/egress for street searches per respective mode. Cannot be higher than default value. This is a performance optimisation parameter, avoid using it to limit the search. "
     maxAccessEgressDurationForMode: [StreetModeDurationInput!] = [],
     "The set of access/egress modes to be used for this search. The direct and transit modes are ignored"
