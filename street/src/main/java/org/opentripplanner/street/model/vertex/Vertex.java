@@ -10,6 +10,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.astar.spi.AStarVertex;
 import org.opentripplanner.core.model.i18n.I18NString;
@@ -39,7 +40,10 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
 
   private transient Edge[] outgoing = new Edge[0];
 
-  private List<GeofencingBoundaryExtension> geofencingBoundaries = List.of();
+  // Populated at runtime by the vehicle-rental updater; not persisted in graph.obj.
+  // Null until first write — readers go through {@link #listGeofencingBoundaries}.
+  @Nullable
+  private transient List<GeofencingBoundaryExtension> geofencingBoundaries;
 
   /* CONSTRUCTORS */
 
@@ -263,20 +267,22 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
   }
 
   public void addGeofencingBoundary(GeofencingBoundaryExtension ext) {
-    if (geofencingBoundaries.contains(ext)) {
+    var current = listGeofencingBoundaries();
+    if (current.contains(ext)) {
       return;
     }
-    var newList = new ArrayList<>(geofencingBoundaries);
+    var newList = new ArrayList<>(current);
     newList.add(ext);
     geofencingBoundaries = List.copyOf(newList);
   }
 
   public List<GeofencingBoundaryExtension> listGeofencingBoundaries() {
-    return geofencingBoundaries;
+    // null after Kryo deserialization (transient fields skip the inline initializer).
+    return geofencingBoundaries == null ? List.of() : geofencingBoundaries;
   }
 
   public void removeGeofencingBoundariesForZones(Set<GeofencingZone> zones) {
-    var newList = new ArrayList<>(geofencingBoundaries);
+    var newList = new ArrayList<>(listGeofencingBoundaries());
     newList.removeIf(ext -> zones.contains(ext.zone()));
     geofencingBoundaries = List.copyOf(newList);
   }
