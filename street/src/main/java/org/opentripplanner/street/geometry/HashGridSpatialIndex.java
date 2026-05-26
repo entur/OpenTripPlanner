@@ -298,7 +298,7 @@ public class HashGridSpatialIndex<T> implements SpatialIndex, Serializable {
          * xKey in order to have a well-behaving long hash, fitting in an int, because the
          * default implementation is: hashInt = (int)(value ^ (value >>> 32));
          */
-        long mapKey = (yKey << 32) | ((xKey & 0xFFFF) << 16) | ((xKey >> 16) & 0xFFFF);
+        long mapKey = binKey(xKey, yKey);
         ArrayList<T> bin = bins.get(mapKey);
         if (createIfEmpty && bin == null) {
           bin = new ArrayList<>();
