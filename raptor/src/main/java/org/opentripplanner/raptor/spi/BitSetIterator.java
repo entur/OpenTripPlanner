@@ -1,17 +1,16 @@
-package org.opentripplanner.raptor.util;
+package org.opentripplanner.raptor.spi;
 
 import java.util.BitSet;
-import org.opentripplanner.raptor.spi.IntIterator;
 
 /**
  * Iterate over the set bits in the {@code BitSet}.
  */
-public final class BitSetIterator implements IntIterator {
+final class BitSetIterator implements IntIterator {
 
   private final BitSet set;
   private int nextIndex;
 
-  public BitSetIterator(BitSet set) {
+  BitSetIterator(BitSet set) {
     this.set = set;
     this.nextIndex = set.nextSetBit(nextIndex);
   }
