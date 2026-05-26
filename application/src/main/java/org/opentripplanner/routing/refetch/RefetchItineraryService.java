@@ -41,6 +41,7 @@ import org.opentripplanner.transfer.regular.model.PathTransfer;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.transit.service.TransitServiceResolver;
+import org.opentripplanner.utils.collection.CollectionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,10 +56,14 @@ public class RefetchItineraryService {
   private final LinkingContextFactory linkingContextFactory;
   private final StreetPathToLegsMapper streetPathToLegsMapper;
 
-  public RefetchItineraryService(OtpServerRequestContext serverContext) {
+  public RefetchItineraryService(OtpServerRequestContext serverContext, boolean ignoreRealtime) {
+    var transitService = serverContext.transitService();
+    if (ignoreRealtime) {
+      transitService = transitService.getScheduledTransitService();
+    }
     this(
       serverContext.graph(),
-      serverContext.transitService(),
+      transitService,
       serverContext.transferService(),
       serverContext.streetDetailsService(),
       serverContext.linkingContextFactory(),
@@ -105,11 +110,7 @@ public class RefetchItineraryService {
     }
 
     try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
-      var ignoreRealtime = routeRequest.preferences().transit().ignoreRealtimeUpdates();
-      var transitLegs = getScheduledTransitLegs(
-        legReferences,
-        ignoreRealtime ? transitService.getScheduledTransitService() : transitService
-      );
+      var transitLegs = getScheduledTransitLegs(legReferences);
 
       Set<Vertex> fromVertices = null;
       if (from != null) {
@@ -159,10 +160,7 @@ public class RefetchItineraryService {
       .anyMatch(child -> child.getId().equals(stop.getId()));
   }
 
-  private List<ScheduledTransitLeg> getScheduledTransitLegs(
-    List<LegReference> legReferences,
-    TransitService transitService
-  ) {
+  private List<ScheduledTransitLeg> getScheduledTransitLegs(List<LegReference> legReferences) {
     var transitLegs = new ArrayList<ScheduledTransitLeg>(legReferences.size());
     for (LegReference legReference : legReferences) {
       if (legReference instanceof ScheduledTransitLegReference scheduledTransitLeg) {
@@ -340,7 +338,7 @@ public class RefetchItineraryService {
     StreetSearchRequest request
   ) {
     var edges = pathTransfer.getEdges();
-    if (edges == null || edges.isEmpty()) {
+    if (CollectionUtils.isEmpty(edges)) {
       // We don't support straight line transfers currently.
       return Optional.empty();
     }

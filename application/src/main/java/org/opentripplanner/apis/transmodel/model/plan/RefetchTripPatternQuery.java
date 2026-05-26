@@ -217,7 +217,8 @@ public class RefetchTripPatternQuery {
     var from = mapLocation(environment.getArgument("from"));
     var to = mapLocation(environment.getArgument("to"));
 
-    var refetcher = new RefetchItineraryService(ctx.getServerContext());
+    var ignoreRealtime = routeRequest.preferences().transit().ignoreRealtimeUpdates();
+    var refetcher = new RefetchItineraryService(ctx.getServerContext(), ignoreRealtime);
 
     try {
       var itinerary = refetcher.refetchItinerary(from, to, legs, routeRequest);
