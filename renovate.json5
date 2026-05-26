@@ -8,7 +8,6 @@
     "+Skip Changelog"
   ],
   "rebaseWhen": "conflicted",
-  "recreateWhen": "never",
   "enabledManagers": [
     "npm",
     "maven",
