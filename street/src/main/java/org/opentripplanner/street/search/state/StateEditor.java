@@ -88,10 +88,11 @@ public class StateEditor {
     }
 
     if (traversingBackward != parent.getRequest().arriveBy()) {
-      LOG.error(
-        "Actual traversal direction does not match traversal direction in TraverseOptions."
+      throw new IllegalStateException(
+        "Actual traversal direction does not match traversal direction in %s".formatted(
+          parent.getRequest()
+        )
       );
-      defectiveTraversal = true;
     }
   }
 
@@ -388,10 +389,6 @@ public class StateEditor {
 
   public void setTimeSeconds(long seconds) {
     this.time_ms = 1000 * seconds;
-  }
-
-  public void setTimeMilliseconds(long milliseconds) {
-    this.time_ms = milliseconds;
   }
 
   /* PUBLIC GETTER METHODS */
