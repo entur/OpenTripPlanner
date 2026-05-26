@@ -259,31 +259,15 @@ public class HashGridSpatialIndex<T> implements SpatialIndex, Serializable {
     );
   }
 
-  /** Clamp a coordinate to allowable lat/lon values */
+  /** Clamp a coordinate to allowable lat/lon values. */
   private static Coordinate clamp(Coordinate coord) {
     if (Math.abs(coord.x) > 180 || Math.abs(coord.y) > 90) {
       LOG.warn(
         "Corner of envelope {} was invalid, clamping to valid range. Perhaps you're buffering something near a pole?",
         coord
       );
-
-      // make a defensive copy as we're about to modify the coordinate
-      coord = new Coordinate(coord);
-
-      if (coord.x > 180) {
-        coord.x = 180;
-      }
-      if (coord.x < -180) {
-        coord.x = -180;
-      }
-      if (coord.y > 90) {
-        coord.y = 90;
-      }
-      if (coord.y < -90) {
-        coord.y = -90;
-      }
+      return new Coordinate(clampLon(coord.x), clampLat(coord.y));
     }
-
     return coord;
   }
 
