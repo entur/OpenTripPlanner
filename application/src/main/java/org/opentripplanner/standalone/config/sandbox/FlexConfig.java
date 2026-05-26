@@ -1,6 +1,7 @@
 package org.opentripplanner.standalone.config.sandbox;
 
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_1;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_10;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_3;
 
 import java.time.Duration;
@@ -25,12 +26,14 @@ public class FlexConfig implements FlexParameters {
   private final Duration maxFlexTripDuration;
   private final Duration maxAccessWalkDuration;
   private final Duration maxEgressWalkDuration;
+  private final int boardCost;
 
   private FlexConfig() {
-    maxTransferDuration = Duration.ofMinutes(5);
-    maxFlexTripDuration = Duration.ofMinutes(45);
-    maxAccessWalkDuration = Duration.ofMinutes(45);
-    maxEgressWalkDuration = Duration.ofMinutes(45);
+    maxTransferDuration = DEFAULT.maxTransferDuration();
+    maxFlexTripDuration = DEFAULT.maxFlexTripDuration();
+    maxAccessWalkDuration = DEFAULT.maxAccessWalkDuration();
+    maxEgressWalkDuration = DEFAULT.maxEgressWalkDuration();
+    boardCost = DEFAULT.boardCost();
   }
 
   public FlexConfig(NodeAdapter root, String parameterName) {
@@ -87,6 +90,19 @@ public class FlexConfig implements FlexParameters {
       )
       .description(ACCESS_EGRESS_DESCRIPTION)
       .asDuration(DEFAULT.maxEgressWalkDuration());
+
+    boardCost = json
+      .of("boardCost")
+      .since(V2_10)
+      .summary("A board cost added to the generalized cost of a flex access/egress leg.")
+      .description(
+        """
+        This cost is applied once per flex access or egress leg in a flex + transit itinerary,
+        penalizing the act of boarding the flex vehicle. Using the board cost seems to work well
+        when setting an access/egress penalty with no time penalty and a high cost factor.
+        """
+      )
+      .asInt(DEFAULT.boardCost());
   }
 
   public Duration maxFlexTripDuration() {
@@ -103,5 +119,9 @@ public class FlexConfig implements FlexParameters {
 
   public Duration maxEgressWalkDuration() {
     return maxEgressWalkDuration;
+  }
+
+  public int boardCost() {
+    return boardCost;
   }
 }

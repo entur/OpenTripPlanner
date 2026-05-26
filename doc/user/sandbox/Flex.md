@@ -49,6 +49,7 @@ following to `router-config.json`.
 
 | Config Parameter                                     |    Type    | Summary                                                                                                                       |  Req./Opt. | Default Value | Since |
 |------------------------------------------------------|:----------:|-------------------------------------------------------------------------------------------------------------------------------|:----------:|---------------|:-----:|
+| [boardCost](#flex_boardCost)                         |  `integer` | A board cost added to the generalized cost of a flex access/egress leg.                                                       | *Optional* | `600`         |  2.10 |
 | [maxAccessWalkDuration](#flex_maxAccessWalkDuration) | `duration` | The maximum duration the passenger will be allowed to walk to reach a flex stop or zone.                                      | *Optional* | `"PT45M"`     |  2.3  |
 | [maxEgressWalkDuration](#flex_maxEgressWalkDuration) | `duration` | The maximum duration the passenger will be allowed to walk after leaving the flex vehicle at the final destination.           | *Optional* | `"PT45M"`     |  2.3  |
 | [maxFlexTripDuration](#flex_maxFlexTripDuration)     | `duration` | How long can a non-scheduled flex trip at maximum be.                                                                         | *Optional* | `"PT45M"`     |  2.3  |
@@ -56,6 +57,18 @@ following to `router-config.json`.
 
 
 ### Details
+
+<h4 id="flex_boardCost">boardCost</h4>
+
+**Since version:** `2.10` ∙ **Type:** `integer` ∙ **Cardinality:** `Optional` ∙ **Default value:** `600`   
+**Path:** /flex 
+
+A board cost added to the generalized cost of a flex access/egress leg.
+
+This cost is applied once per flex access or egress leg in a flex + transit itinerary,
+penalizing the act of boarding the flex vehicle. Using the board cost seems to work well
+when setting an access/egress penalty with no time penalty and a high cost factor.
+
 
 <h4 id="flex_maxAccessWalkDuration">maxAccessWalkDuration</h4>
 

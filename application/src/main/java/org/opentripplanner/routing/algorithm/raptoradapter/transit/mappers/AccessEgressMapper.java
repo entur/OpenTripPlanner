@@ -29,11 +29,12 @@ public class AccessEgressMapper {
   }
 
   public static Collection<RoutingAccessEgress> mapFlexAccessEgresses(
-    Collection<FlexAccessEgress> flexAccessEgresses
+    Collection<FlexAccessEgress> flexAccessEgresses,
+    int boardCost
   ) {
     return flexAccessEgresses
       .stream()
-      .map(FlexAccessEgressAdapter::new)
+      .map(f -> new FlexAccessEgressAdapter(f, boardCost))
       .collect(Collectors.toList());
   }
 

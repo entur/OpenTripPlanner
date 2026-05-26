@@ -197,7 +197,7 @@ public class RaptorPathToItineraryMapperTest {
       true,
       RoutingBookingInfo.NOT_SET
     );
-    RaptorAccessEgress access = new FlexAccessEgressAdapter(flexAccessEgress);
+    RaptorAccessEgress access = new FlexAccessEgressAdapter(flexAccessEgress, 0);
     var transfer = new PathTransfer(S1, S2, 0, List.of(), EnumSet.of(StreetMode.WALK));
     RaptorTransfer raptorTransfer = new DefaultRaptorTransfer(S1.getIndex(), 0, 0, transfer);
     RaptorAccessEgress egress = new DefaultAccessEgress(S2.getIndex(), state);
