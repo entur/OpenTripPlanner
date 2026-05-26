@@ -155,6 +155,7 @@ public class ConstructApplication {
       factory.transferRepository(),
       factory.worldEnvelopeRepository(),
       factory.vehicleParkingRepository(),
+      factory.vehicleRentalRepository(),
       factory.emissionRepository(),
       factory.empiricalDelayRepository(),
       factory.stopConsolidationRepository(),
