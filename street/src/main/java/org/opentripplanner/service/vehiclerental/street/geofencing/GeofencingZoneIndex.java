@@ -37,7 +37,7 @@ public class GeofencingZoneIndex {
   /**
    * Returns all zones in this index.
    */
-  public Set<GeofencingZone> findZones() {
+  public Set<GeofencingZone> listZones() {
     return Set.copyOf(preparedGeometries.keySet());
   }
 

@@ -160,7 +160,7 @@ public class DefaultVehicleRentalService implements VehicleRentalService, Vehicl
   public Set<GeofencingZone> allZones() {
     var zones = new HashSet<GeofencingZone>();
     for (var idx : geofencingZoneIndexes.values()) {
-      zones.addAll(idx.findZones());
+      zones.addAll(idx.listZones());
     }
     return zones;
   }
