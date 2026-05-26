@@ -20,13 +20,22 @@ import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingZon
 /**
  * Default {@link VehicleRentalRepository}. Owns the rental places and the geofencing zone
  * indices, and answers geofencing zone queries via {@link GeofencingZoneService}.
+ *
+ * <p>The spatial indices are {@code transient} — JTS {@code STRtree} / {@code PreparedGeometry}
+ * caches don't survive Kryo. Raw zones registered via the build-time
+ * {@link #setGeofencingZoneIndex(String, GeofencingZoneIndex, Collection)} overload are persisted
+ * and used to rebuild the indices lazily on first access.
  */
 @Singleton
 public class DefaultVehicleRentalRepository implements VehicleRentalRepository, Serializable {
 
   private final Map<FeedScopedId, VehicleRentalPlace> rentalPlaces = new ConcurrentHashMap<>();
 
-  private final Map<String, GeofencingZoneIndex> geofencingZoneIndexes = new ConcurrentHashMap<>();
+  /** Raw zones for build-time data sources whose state must survive serialization. */
+  private final Map<String, Set<GeofencingZone>> serializedZones = new ConcurrentHashMap<>();
+
+  /** Rebuilt lazily from {@link #serializedZones} via {@link #indexes()} after deserialization. */
+  private transient volatile Map<String, GeofencingZoneIndex> geofencingZoneIndexes;
 
   @Inject
   public DefaultVehicleRentalRepository() {}
@@ -41,9 +50,20 @@ public class DefaultVehicleRentalRepository implements VehicleRentalRepository, 
     rentalPlaces.remove(vehicleRentalStationId);
   }
 
+  /** Runtime registration; not persisted. Used by the GBFS rental updater. */
   @Override
   public void setGeofencingZoneIndex(String dataSourceName, GeofencingZoneIndex index) {
-    geofencingZoneIndexes.put(dataSourceName, index);
+    indexes().put(dataSourceName, index);
+  }
+
+  /** Build-time registration; the raw zones are persisted for rebuild after deserialization. */
+  public void setGeofencingZoneIndex(
+    String dataSourceName,
+    GeofencingZoneIndex index,
+    Collection<GeofencingZone> zones
+  ) {
+    indexes().put(dataSourceName, index);
+    serializedZones.put(dataSourceName, Set.copyOf(zones));
   }
 
   @Override
@@ -58,7 +78,7 @@ public class DefaultVehicleRentalRepository implements VehicleRentalRepository, 
 
   @Override
   public Set<GeofencingZone> zonesContaining(Coordinate coord) {
-    return geofencingZoneIndexes
+    return indexes()
       .values()
       .stream()
       .flatMap(idx -> idx.findZonesContaining(coord).stream())
@@ -67,15 +87,30 @@ public class DefaultVehicleRentalRepository implements VehicleRentalRepository, 
 
   @Override
   public boolean hasIndexedZones() {
-    return !geofencingZoneIndexes.isEmpty();
+    return !indexes().isEmpty();
   }
 
   @Override
   public Set<GeofencingZone> allZones() {
     var zones = new HashSet<GeofencingZone>();
-    for (var idx : geofencingZoneIndexes.values()) {
+    for (var idx : indexes().values()) {
       zones.addAll(idx.listZones());
     }
     return zones;
+  }
+
+  private Map<String, GeofencingZoneIndex> indexes() {
+    var indexes = this.geofencingZoneIndexes;
+    if (indexes != null) {
+      return indexes;
+    }
+    synchronized (this) {
+      if (geofencingZoneIndexes == null) {
+        var rebuilt = new ConcurrentHashMap<String, GeofencingZoneIndex>();
+        serializedZones.forEach((name, zones) -> rebuilt.put(name, new GeofencingZoneIndex(zones)));
+        geofencingZoneIndexes = rebuilt;
+      }
+      return geofencingZoneIndexes;
+    }
   }
 }
