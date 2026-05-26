@@ -39,7 +39,7 @@ public class SiriETCarpoolingUpdater extends PollingGraphUpdater {
 
     LOG.info("Creating SIRI-ET updater running every {}: {}", pollingPeriod(), updateSource);
 
-    this.mapper = new CarpoolSiriMapper();
+    this.mapper = new CarpoolSiriMapper(config.feedId());
   }
 
   /**

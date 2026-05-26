@@ -35,14 +35,25 @@ import uk.org.siri.siri21.EstimatedVehicleJourney;
 public class CarpoolSiriMapper {
 
   private static final Logger LOG = LoggerFactory.getLogger(CarpoolSiriMapper.class);
-  private static final String FEED_ID = "ENT";
   private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
+
+  private final String feedId;
+
+  /**
+   * @param feedId the feed prefix used for every {@link FeedScopedId} this mapper produces.
+   *        Owned by the enclosing updater instance and supplied from
+   *        {@code router-config.json}, so one OTP can run multiple carpool updaters
+   *        side-by-side without trip-id collisions across feeds.
+   */
+  public CarpoolSiriMapper(String feedId) {
+    this.feedId = feedId;
+  }
 
   /**
    * Returns the trip id for the given journey.
    */
   FeedScopedId tripId(EstimatedVehicleJourney journey) {
-    return new FeedScopedId(FEED_ID, journey.getEstimatedVehicleJourneyCode());
+    return new FeedScopedId(feedId, journey.getEstimatedVehicleJourneyCode());
   }
 
   private static boolean isCancelled(EstimatedCall call) {
@@ -108,7 +119,7 @@ public class CarpoolSiriMapper {
 
     int totalCapacity = extractTotalCapacity(tripId, calls);
 
-    var builder = new CarpoolTripBuilder(new FeedScopedId(FEED_ID, tripId))
+    var builder = new CarpoolTripBuilder(new FeedScopedId(feedId, tripId))
       .withStartTime(startTime)
       .withEndTime(endTime)
       .withProvider(journey.getOperatorRef().getValue())
@@ -352,7 +363,7 @@ public class CarpoolSiriMapper {
       ? toWgsCoordinate(toPolygon(legacyGeometry))
       : toWgsCoordinate(circleLocation);
 
-    return CarpoolStop.of(new FeedScopedId(FEED_ID, id))
+    return CarpoolStop.of(new FeedScopedId(feedId, id))
       .withCoordinate(centroid)
       .withAimedDepartureTime(isLast ? null : call.getAimedDepartureTime())
       .withExpectedDepartureTime(isLast ? null : call.getExpectedDepartureTime())
