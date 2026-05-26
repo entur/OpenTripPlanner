@@ -191,7 +191,10 @@ public class StreetSearchRequest implements AStarRequest {
   }
 
   public StreetSearchRequestBuilder copyOfReversed(Instant time) {
-    return copyOf(this).withStartTime(time).withArriveBy(!arriveBy);
+    return copyOf(this)
+      .withStartTime(time)
+      .withArriveBy(!arriveBy)
+      .withArriveByDestinationZones(Set.of());
   }
 
   /**
