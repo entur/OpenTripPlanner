@@ -4,6 +4,7 @@ import static org.opentripplanner.service.vehicleparking.model.VehicleParkingSta
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.time.Duration;
 import java.util.ArrayList;
@@ -85,7 +86,8 @@ public class BikelyUpdater implements DataSource<VehicleParking> {
 
   @Nullable
   private VehicleParking parseElement(JsonNode jsonNode) {
-    if (jsonNode.path("hasStandardParking").asBoolean()) {
+    var avail = jsonNode.path("doorAvailibilities");
+    if (avail instanceof ArrayNode && !avail.isEmpty()) {
       var vehicleParkId = new FeedScopedId(parameters.feedId(), jsonNode.get("id").asText());
 
       var lat = jsonNode.get("latitude").asDouble();
