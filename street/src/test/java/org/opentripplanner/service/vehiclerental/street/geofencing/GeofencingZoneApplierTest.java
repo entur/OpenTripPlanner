@@ -56,7 +56,7 @@ class GeofencingZoneApplierTest {
   void interiorVertexHasNoBoundaryExtensions() {
     var result = applier.applyGeofencingZones(List.of(zone, businessArea));
 
-    assertTrue(insideFrognerPark1.getGeofencingBoundaries().isEmpty());
+    assertTrue(insideFrognerPark1.listGeofencingBoundaries().isEmpty());
     assertFalse(result.boundaryVertices().contains(insideFrognerPark1));
   }
 
@@ -65,7 +65,7 @@ class GeofencingZoneApplierTest {
     var result = applier.applyGeofencingZones(List.of(zone, businessArea));
 
     // fromv (insideFrognerPark2) should have a boundary extension
-    var boundaries = insideFrognerPark2.getGeofencingBoundaries();
+    var boundaries = insideFrognerPark2.listGeofencingBoundaries();
     assertFalse(boundaries.isEmpty());
 
     // boundary vertices tracked for cleanup

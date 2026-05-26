@@ -62,7 +62,7 @@ class VertexLinkerGeofencingTest {
     // Split at a point inside the zone (lon=10.703, which is inside [10.70, 10.71])
     var splitVertex = linkAndFindSplitVertex(59.925, 10.703);
 
-    var boundaries = splitVertex.getGeofencingBoundaries();
+    var boundaries = splitVertex.listGeofencingBoundaries();
     assertEquals(1, boundaries.size());
     var boundary = boundaries.getFirst();
     assertEquals(NO_DROP_OFF_ZONE, boundary.zone());
@@ -75,7 +75,7 @@ class VertexLinkerGeofencingTest {
     // Split at a point outside the zone (lon=10.698, which is outside [10.70, 10.71])
     var splitVertex = linkAndFindSplitVertex(59.925, 10.698);
 
-    var boundaries = splitVertex.getGeofencingBoundaries();
+    var boundaries = splitVertex.listGeofencingBoundaries();
     assertEquals(1, boundaries.size());
     var boundary = boundaries.getFirst();
     assertEquals(NO_DROP_OFF_ZONE, boundary.zone());
@@ -94,12 +94,12 @@ class VertexLinkerGeofencingTest {
     var splitVertex = linkAndFindSplitVertex(59.925, 10.703);
 
     // The split vertex itself should have a boundary (entering=false, it's inside)
-    assertEquals(1, splitVertex.getGeofencingBoundaries().size());
-    assertFalse(splitVertex.getGeofencingBoundaries().getFirst().entering());
+    assertEquals(1, splitVertex.listGeofencingBoundaries().size());
+    assertFalse(splitVertex.listGeofencingBoundaries().getFirst().entering());
 
     // vertexOutside (fromVertex of the original edge) should only have its own boundary
-    assertEquals(1, vertexOutside.getGeofencingBoundaries().size());
-    assertTrue(vertexOutside.getGeofencingBoundaries().getFirst().entering());
+    assertEquals(1, vertexOutside.listGeofencingBoundaries().size());
+    assertTrue(vertexOutside.listGeofencingBoundaries().getFirst().entering());
   }
 
   @Test
@@ -137,7 +137,7 @@ class VertexLinkerGeofencingTest {
     // Find the split vertex
     var splitterVertex = findSplitterVertex(split);
     assertTrue(
-      splitterVertex.getGeofencingBoundaries().isEmpty(),
+      splitterVertex.listGeofencingBoundaries().isEmpty(),
       "Split vertex on non-boundary edge should have no geofencing boundaries"
     );
 

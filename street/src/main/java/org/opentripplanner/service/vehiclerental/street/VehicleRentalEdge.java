@@ -202,7 +202,7 @@ public class VehicleRentalEdge extends Edge {
       if (
         rentingState != null &&
         GeofencingBoundaryExtension.hasNoTraversalEntry(
-          stationVertex.getGeofencingBoundaries(),
+          stationVertex.listGeofencingBoundaries(),
           rentingState.getVehicleRentalNetwork()
         )
       ) {

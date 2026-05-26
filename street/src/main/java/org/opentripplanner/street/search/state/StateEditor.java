@@ -222,8 +222,8 @@ public class StateEditor {
    */
   public void updateGeofencingZones(Vertex fromVertex, Vertex toVertex, boolean arriveBy) {
     var newZones = GeofencingBoundaryExtension.resolveZoneTransitions(
-      fromVertex.getGeofencingBoundaries(),
-      toVertex.getGeofencingBoundaries(),
+      fromVertex.listGeofencingBoundaries(),
+      toVertex.listGeofencingBoundaries(),
       stateData.currentGeofencingZones,
       arriveBy
     );

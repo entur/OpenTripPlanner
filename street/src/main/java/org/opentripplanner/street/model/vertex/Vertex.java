@@ -271,7 +271,7 @@ public abstract class Vertex implements AStarVertex<State, Edge, Vertex>, Serial
     geofencingBoundaries = List.copyOf(newList);
   }
 
-  public List<GeofencingBoundaryExtension> getGeofencingBoundaries() {
+  public List<GeofencingBoundaryExtension> listGeofencingBoundaries() {
     return geofencingBoundaries;
   }
 

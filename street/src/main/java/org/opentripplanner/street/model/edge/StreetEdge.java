@@ -733,8 +733,8 @@ public class StreetEdge
   private State[] traverseWithGeofencing(State s0) {
     return GeofencingInterceptor.apply(
       s0,
-      fromv.getGeofencingBoundaries(),
-      tov.getGeofencingBoundaries(),
+      fromv.listGeofencingBoundaries(),
+      tov.listGeofencingBoundaries(),
       (state, mode) -> doTraverse(state, mode, false)
     );
   }
@@ -782,7 +782,7 @@ public class StreetEdge
       return null;
     }
 
-    if (s0.getRequest().mode().includesRenting() && !fromv.getGeofencingBoundaries().isEmpty()) {
+    if (s0.getRequest().mode().includesRenting() && !fromv.listGeofencingBoundaries().isEmpty()) {
       s1.updateGeofencingZones(fromv, tov, s0.getRequest().arriveBy());
     }
 

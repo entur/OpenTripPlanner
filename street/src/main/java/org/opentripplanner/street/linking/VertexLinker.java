@@ -564,8 +564,8 @@ public class VertexLinker {
     // The entering flag encodes position: outside=true, inside=false.
     // Blind-copying from parent vertices would give the wrong flag when
     // the split point is on the opposite side of the zone boundary.
-    var fromBoundaries = originalEdge.getFromVertex().getGeofencingBoundaries();
-    var toBoundaries = originalEdge.getToVertex().getGeofencingBoundaries();
+    var fromBoundaries = originalEdge.getFromVertex().listGeofencingBoundaries();
+    var toBoundaries = originalEdge.getToVertex().listGeofencingBoundaries();
     if (!fromBoundaries.isEmpty() || !toBoundaries.isEmpty()) {
       var splitCoord = new Coordinate(x, y);
       var containingZones = geofencingZoneService.zonesContaining(splitCoord);
