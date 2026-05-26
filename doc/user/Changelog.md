@@ -56,6 +56,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Critical fixes to the via and pass-through search [#7593](https://github.com/opentripplanner/OpenTripPlanner/pull/7593)
 - Clarify error codes of SIRI fuzzy trip matcher [#7644](https://github.com/opentripplanner/OpenTripPlanner/pull/7644)
 - Fix ArrayIndexOutOfBoundsException in RaptorPathToItineraryMapper [#7639](https://github.com/opentripplanner/OpenTripPlanner/pull/7639)
+- Move `ElevationProfile` to street, reduce `StreetPath` API surface [#7628](https://github.com/opentripplanner/OpenTripPlanner/pull/7628)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
