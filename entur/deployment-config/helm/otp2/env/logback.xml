@@ -20,6 +20,13 @@
        for logging and debug log messages will never make it to slf4j. -->
   <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator"/>
 
+  <!-- Using the synchronous ConsoleAppender is generally not recommended in a production
+      environment, but in a Google Cloud environment this appender does not cause contention unless
+      extreme log pressure, which we do not experience in this deployment.
+      The "reportLocation" field could be enriched with "functionName" and "lineNumber".
+      This would have however a (small) performance impact since LogBack needs to create a Throwable object
+      and extract a stacktrace to populate these fields.
+  -->
   <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
       <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
           <providers>
@@ -39,9 +46,7 @@
                       "correlationId": "%X{correlationId}",
                       "etClientName": "%X{etClientName}",
                       "reportLocation": {
-                          "filePath": "%logger",
-                          "lineNumber": "%line",
-                          "functionName": "%method"
+                          "filePath": "%logger"
                       }
                       }
                   </pattern>
@@ -54,27 +59,14 @@
   <root level="info">
     <appender-ref ref="console" />
   </root>
+  <!-- Third-party loggers -->
   <logger name="ch.qos.logback" level="warn"/>
-  <logger name="com" level="info"/>
-  <logger name="org" level="info"/>
   <logger name="com.amazonaws" level="info"/>
-  <logger name="org.apache.http" level="info" />
+  <logger name="org.apache.hc" level="info" />
   <logger name="com.conveyal" level="info"/>
-
-  <logger name="org.opentripplanner.graph_builder.module.DirectTransferGenerator" level="info" />
-  <logger name="org.opentripplanner" level="info" />
-  <logger name="org.opentripplanner.analyst" level="info" />
-  <logger name="org.opentripplanner.routing" level="info" />
-  <logger name="org.opentripplanner.routing.impl.RetryingPathServiceImpl" level="info" />
-  <logger name="org.opentripplanner.routing.algorithm.GenericAStar" level="info" />
-  <!-- Avoid printing debug messages about free-flowing vertices -->
-  <logger name="org.opentripplanner.routing.vertextype.IntersectionVertex" level="info" />
-  <!-- Avoid printing debug messages when walk limits are exceeded -->
-  <logger name="org.opentripplanner.routing.edgetype.PlainStreetEdge" level="info" />
+  <logger name="com.azure" level="warn"/>
   <!-- Avoid printing info messages about calendars when building graph -->
   <logger name="org.onebusaway.gtfs.impl.calendar.CalendarServiceDataFactoryImpl" level="warn" />
-  <!-- Avoid printing ugly warning message when unable to create websocket connection -->
-  <logger name="com.ning.http.client.providers.netty.NettyAsyncHttpProvider" level="error" />
   <logger name="com.sun.jersey" level="warn" />
   <!-- Suppress an inconsequential IOException that is logged at debug level. -->
   <logger name="org.glassfish.grizzly" level="info" />
