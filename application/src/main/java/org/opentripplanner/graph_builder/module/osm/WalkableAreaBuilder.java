@@ -404,7 +404,7 @@ class WalkableAreaBuilder {
         }
         AreaGroup ag = vertexToAreaGroup.getOrDefault(v1, vertexToAreaGroup.get(v2));
         if (ag != null) {
-          createSegments(v1, v2, group.areas, ag, false);
+          createSegments(v1, v2, group.areas, ag, true);
         }
       }
     } else {
