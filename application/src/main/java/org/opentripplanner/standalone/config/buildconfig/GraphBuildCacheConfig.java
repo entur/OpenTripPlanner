@@ -3,7 +3,9 @@ package org.opentripplanner.standalone.config.buildconfig;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_10;
 
 import java.net.URI;
+import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.opentripplanner.graph_builder.module.cache.CacheTask;
@@ -19,8 +21,7 @@ public class GraphBuildCacheConfig {
   public final boolean enabled;
 
   /**
-   * Root directory for cache files. {@code null} means "use the OTP base directory", resolved at
-   * runtime via {@link org.opentripplanner.graph_builder.GraphBuilderDataSources#getCacheDirectory(URI)}.
+   * Root directory for cache files. {@code null} means "use the OTP base directory".
    */
   @Nullable
   private final URI path;
@@ -132,5 +133,12 @@ public class GraphBuildCacheConfig {
 
   public GraphBuildCacheParameters toParameters() {
     return new GraphBuildCacheParameters(enabled, tasks);
+  }
+
+  public List<URI> files() {
+    return Arrays.stream(CacheTask.values())
+      .map(CacheTask::cacheFileName)
+      .map(it -> URI.create((path == null ? "" : path.getPath() + "/") + it))
+      .toList();
   }
 }

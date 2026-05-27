@@ -6,6 +6,9 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import java.io.Closeable;
 import java.time.Duration;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -44,13 +47,13 @@ public class GraphBuildCacheManager implements Closeable {
   /** Disabled no-op instance — safe to use as a default when no real cache is needed. */
   public static final GraphBuildCacheManager NOOP = new GraphBuildCacheManager(
     GraphBuildCacheParameters.DISABLED,
-    null
+    List.of()
   );
 
   private static final Logger LOG = LoggerFactory.getLogger(GraphBuildCacheManager.class);
 
   private final GraphBuildCacheParameters parameters;
-  private final CompositeDataSource cacheDir;
+  private final Map<CacheTask, DataSource> cacheFiles;
 
   /** Used for load operations only (main thread). Save operations create their own Kryo instance. */
   private final Kryo kryo;
@@ -59,10 +62,10 @@ public class GraphBuildCacheManager implements Closeable {
 
   public GraphBuildCacheManager(
     GraphBuildCacheParameters parameters,
-    CompositeDataSource cacheDir
+    Iterable<DataSource> cacheFiles
   ) {
     this.parameters = parameters;
-    this.cacheDir = cacheDir;
+    this.cacheFiles = mapFilesToTask(cacheFiles);
     this.kryo = KryoBuilder.create();
     this.writeExecutor = Executors.newSingleThreadExecutor(r -> {
       var t = new Thread(r, "cache-writer");
@@ -81,8 +84,8 @@ public class GraphBuildCacheManager implements Closeable {
    */
   @SuppressWarnings("unchecked")
   public <T> T load(CacheTask task) {
-    DataSource entry = cacheDir.entry(task.cacheFileName());
-    if (!entry.exists()) {
+    DataSource entry = cacheFiles.get(task);
+    if (entry == null || !entry.exists()) {
       LOG.info("No {} cache file found at '{}'.", task, entry.path());
       return null;
     }
@@ -121,7 +124,7 @@ public class GraphBuildCacheManager implements Closeable {
    * Call {@link #close()} at the end of the build to wait for the write to finish.
    */
   public <T> void save(CacheTask task, T data) {
-    DataSource entry = cacheDir.entry(task.cacheFileName());
+    DataSource entry = cacheFiles.get(task);
     LOG.info("Saving {} cache to '{}' (async).", task, entry.path());
     writeExecutor.submit(() -> {
       try (Output output = new Output(entry.asOutputStream())) {
@@ -157,5 +160,13 @@ public class GraphBuildCacheManager implements Closeable {
       writeExecutor.shutdownNow();
       Thread.currentThread().interrupt();
     }
+  }
+
+  private Map<CacheTask, DataSource> mapFilesToTask(Iterable<DataSource> cacheFiles) {
+    var result = new HashMap<CacheTask, DataSource>();
+    for (DataSource dataSource : cacheFiles) {
+      result.put(CacheTask.matchName(dataSource.name()), dataSource);
+    }
+    return result;
   }
 }

@@ -659,6 +659,12 @@ public class BuildConfig implements OtpDataStoreConfig {
   }
 
   @Override
+  @Nullable
+  public List<URI> cacheFiles() {
+    return cache.files();
+  }
+
+  @Override
   public Pattern gtfsLocalFilePattern() {
     return gtfsLocalFilePattern;
   }

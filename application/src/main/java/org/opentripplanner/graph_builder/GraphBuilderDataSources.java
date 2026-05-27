@@ -1,5 +1,6 @@
 package org.opentripplanner.graph_builder;
 
+import static org.opentripplanner.datastore.api.FileType.CACHE;
 import static org.opentripplanner.datastore.api.FileType.DEM;
 import static org.opentripplanner.datastore.api.FileType.EMISSION;
 import static org.opentripplanner.datastore.api.FileType.EMPIRICAL_DATA;
@@ -15,6 +16,7 @@ import java.io.Closeable;
 import java.io.File;
 import java.io.IOException;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
@@ -30,6 +32,7 @@ import org.opentripplanner.ext.empiricaldelay.parameters.EmpiricalDelayFeedParam
 import org.opentripplanner.framework.application.OtpAppException;
 import org.opentripplanner.graph_builder.model.ConfiguredCompositeDataSource;
 import org.opentripplanner.graph_builder.model.ConfiguredDataSource;
+import org.opentripplanner.graph_builder.module.cache.CacheTask;
 import org.opentripplanner.graph_builder.module.ned.parameter.DemExtractParameters;
 import org.opentripplanner.graph_builder.module.ned.parameter.DemExtractParametersBuilder;
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmExtractParameters;
@@ -86,6 +89,7 @@ public class GraphBuilderDataSources implements Closeable {
     // Select which files to import
     include(cli.doBuildStreet(), OSM);
     include(cli.doBuildStreet(), DEM);
+    include(cli.doBuildStreet(), CACHE);
     include(cli.doBuildTransit(), GTFS);
     include(cli.doBuildTransit(), NETEX);
 
@@ -161,6 +165,14 @@ public class GraphBuilderDataSources implements Closeable {
    */
   public CompositeDataSource getCacheDirectory(@Nullable URI path) {
     return store.getCacheDir(path);
+  }
+
+  public Iterable<DataSource> listCachedDataSources() {
+    return Arrays.stream(CacheTask.values())
+      .map(CacheTask::cacheFileName)
+      .map(buildConfig::cachePath)
+      .map(store::getCacheFile)
+      .toList();
   }
 
   /**

@@ -23,4 +23,13 @@ public enum CacheTask {
   public String cacheFileName() {
     return name().toLowerCase() + "-cache-" + serializationVersionId + ".obj";
   }
+
+  public static CacheTask matchName(String name) {
+    for (var it : values()) {
+      if (it.cacheFileName().equals(name)) {
+        return it;
+      }
+    }
+    return null;
+  }
 }
