@@ -25,7 +25,7 @@ public class AStarBuilder<
 
   private Runnable preStartHook = () ->
     LOG.warn("No pre-start hook provided. Call withPreStartHook() to set one.");
-  private RemainingWeightHeuristic<State> heuristic = RemainingWeightHeuristic.TRIVIAL;
+  private RemainingWeightHeuristic<State> heuristic;
   private SkipEdgeStrategy<State, Edge> skipEdgeStrategy;
   private TraverseVisitor<State, Edge> traverseVisitor;
   private boolean arriveBy;

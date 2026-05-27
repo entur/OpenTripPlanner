@@ -3,7 +3,6 @@ package org.opentripplanner.ext.carpooling.util;
 import java.time.Duration;
 import javax.annotation.Nullable;
 import org.opentripplanner.astar.model.GraphPath;
-import org.opentripplanner.astar.spi.RemainingWeightHeuristic;
 import org.opentripplanner.astar.spi.SearchTerminationStrategy;
 import org.opentripplanner.astar.strategy.DurationSkipEdgeStrategy;
 import org.opentripplanner.street.model.StreetMode;
@@ -157,7 +156,6 @@ public final class CarAccessibleVertexSnapper {
     // state with larger g but smaller h, breaking the "first match is cheapest" guarantee.
     var builder = StreetSearchBuilder.of()
       .withRequest(request)
-      .withHeuristic(RemainingWeightHeuristic.TRIVIAL)
       .withSkipEdgeStrategy(new DurationSkipEdgeStrategy<>(maxWalk))
       .withDominanceFunction(new DominanceFunctions.MinimumWeight())
       .withTerminationStrategy(terminator);

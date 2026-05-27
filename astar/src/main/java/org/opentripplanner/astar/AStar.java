@@ -42,7 +42,9 @@ public class AStar<
   @Nullable
   private final Set<Vertex> toVertices;
 
+  @Nullable
   private final RemainingWeightHeuristic<State> heuristic;
+
   private final Runnable preSearchHook;
 
   @Nullable
@@ -64,8 +66,11 @@ public class AStar<
   private State u;
   private int nVisited;
 
+  /// Create an AStar search
+  /// @param heuristic An astar heuristic that estimates a lower bound of the weight to the destination. If set to null the search will be a basic Dijkstra search.
+  /// @param arriveBy If set to true we will do a backwards search by traversing the incoming edges from each vertex.
   AStar(
-    RemainingWeightHeuristic<State> heuristic,
+    @Nullable RemainingWeightHeuristic<State> heuristic,
     Runnable preSearchHook,
     @Nullable SkipEdgeStrategy<State, Edge> skipEdgeStrategy,
     @Nullable TraverseVisitor<State, Edge> traverseVisitor,
@@ -77,7 +82,7 @@ public class AStar<
     Collection<State> initialStates,
     StatisticsCallback<Vertex> statisticsCallback
   ) {
-    this.heuristic = Objects.requireNonNull(heuristic);
+    this.heuristic = heuristic;
     this.skipEdgeStrategy = skipEdgeStrategy;
     this.traverseVisitor = traverseVisitor;
     this.fromVertices = initialStates
@@ -157,7 +162,7 @@ public class AStar<
           traverseVisitor.visitEdge(edge);
         }
 
-        double remaining_w = heuristic.estimateRemainingWeight(v);
+        double remaining_w = heuristic != null ? heuristic.estimateRemainingWeight(v) : 0;
 
         if (remaining_w < 0 || Double.isInfinite(remaining_w)) {
           continue;

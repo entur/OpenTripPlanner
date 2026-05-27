@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.opentripplanner.astar.AStar;
 import org.opentripplanner.astar.AStarBuilder;
 import org.opentripplanner.astar.model.ShortestPathTree;
@@ -26,7 +27,7 @@ public class StreetSearchBuilder {
   private StreetSearchRequest request;
   private Set<Vertex> fromVertices;
   private Set<Vertex> toVertices;
-  private RemainingWeightHeuristic<State> heuristic = RemainingWeightHeuristic.TRIVIAL;
+  private RemainingWeightHeuristic<State> heuristic;
 
   public static StreetSearchBuilder of() {
     return new StreetSearchBuilder();
@@ -123,12 +124,10 @@ public class StreetSearchBuilder {
 
   private AStar<State, Edge, Vertex> buildAstar() {
     Objects.requireNonNull(request);
-    Objects.requireNonNull(heuristic);
     var arriveBy = request.arriveBy();
     var originVertices = arriveBy ? toVertices : fromVertices;
     var destinationVertices = arriveBy ? fromVertices : toVertices;
     var initialStates = State.getInitialStates(originVertices, request);
-
     var heuristic = initializedHeuristic(destinationVertices);
 
     return aStarBuilder
@@ -138,12 +137,11 @@ public class StreetSearchBuilder {
       .build();
   }
 
+  @Nullable
   private RemainingWeightHeuristic<State> initializedHeuristic(Set<Vertex> destination) {
-    if (heuristic.equals(RemainingWeightHeuristic.TRIVIAL)) {
-      // No initialization needed
-    } else if (heuristic instanceof EuclideanRemainingWeightHeuristic euclideanHeuristic) {
+    if (heuristic instanceof EuclideanRemainingWeightHeuristic euclideanHeuristic) {
       euclideanHeuristic.initialize(destination, request);
-    } else {
+    } else if (heuristic != null) {
       throw new IllegalArgumentException("Unknown heuristic type: " + heuristic);
     }
     return heuristic;
