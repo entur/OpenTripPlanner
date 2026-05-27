@@ -82,26 +82,4 @@ class CompactLineStringUtilsTest {
     ls3 = CompactLineStringUtils.uncompactLineString(X_1, Y_1, X_0, Y_0, packedCoords, true);
     assertTrue(lsi.equalsExact(ls3, TOLERANCE));
   }
-
-  @Test
-  void testNoEndpointRoundTrip() {
-    Coordinate[] points = {
-      new Coordinate(-179.99, 1.12345),
-      new Coordinate(10.123456, 59.654321),
-      new Coordinate(179.99, 1.12345),
-    };
-    LineString original = GF.createLineString(points);
-
-    // Forward
-    byte[] packed = CompactLineStringUtils.compactLineString(original, false);
-    LineString result = CompactLineStringUtils.uncompactLineString(packed, false);
-    assertEquals(original.getNumPoints(), result.getNumPoints());
-    assertTrue(original.equalsExact(result, 0.0000015));
-
-    // Reverse
-    LineString reversed = original.reverse();
-    result = CompactLineStringUtils.uncompactLineString(packed, true);
-    assertEquals(reversed.getNumPoints(), result.getNumPoints());
-    assertTrue(reversed.equalsExact(result, 0.0000015));
-  }
 }

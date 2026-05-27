@@ -1,35 +1,21 @@
 package org.opentripplanner.street.geometry;
 
-import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.CoordinateSequence;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.utils.lang.IntUtils;
 
 /**
- * Compact line string. To optimize storage, we use the following tricks:
- * <ul>
- * <li>Store only intermediate points (end-points are given by the external context, ie from/to
- * vertices)</li>
- * <li>For straight-line geometries (sometimes around half of the street geometries), re-use the
- * same static object (since there is nothing to store)</li>
- * <li>Store intermediate point in fixed floating points with fixed precision, using delta coding
- * from the previous point, and variable length coding (most of the delta coordinates will thus fits
- * in 1 or 2 bytes).</li>
- * </ul>
+ * Endpoint-context glue around {@link CompactLineString} for callers (e.g. {@code StreetEdge}) whose
+ * endpoints come from external context and are <i>omitted</i> from the packed form to save memory.
+ * The Dlugosz/delta engine lives in {@link CompactLineString}; this class only handles the endpoint
+ * splice/strip + the stick-to-endpoint check at compaction time.
  * <p>
- * This trick alone saves around 20% of memory compared to the bulky JTS LineString, which is split
- * on many objects (Coordinates, cached Envelope, Geometry itself). Performance hit should be low as
- * we do not need the geometry during a path search.
+ * For the self-contained contract (endpoints baked into the packed form) use {@link CompactLineString}
+ * directly.
  *
  * @author laurent
  */
 public final class CompactLineStringUtils {
-
-  /**
-   * Multiplier for fixed-float representation. For lat/lon CRS, 1e6 leads to a precision of 0.11
-   * meter at a minimum (at the equator).
-   */
-  private static final double FIXED_FLOAT_MULT = 1.0e6;
 
   /**
    * Constant to check that line string end points are sticking to given points. 0.000001 is around
@@ -39,20 +25,26 @@ public final class CompactLineStringUtils {
   private static final double EPS = 0.000001;
 
   /**
-   * Singleton representation of a straight-line (where nothing has to be stored), to be re-used.
+   * Singleton representation of a straight-line (where nothing has to be stored). Shares its
+   * underlying byte array with {@link CompactLineString#STRAIGHT_LINE} so there is exactly one
+   * empty-byte-array instance in the JVM.
    */
-  public static final byte[] STRAIGHT_LINE_PACKED = new byte[0];
+  public static final byte[] STRAIGHT_LINE_PACKED = CompactLineString.STRAIGHT_LINE.packed();
+
+  private CompactLineStringUtils() {}
 
   /**
-   * Public factory to create a compact line string. Optimize for straight-line only line string
-   * (w/o intermediate end-points).
+   * Pack a line string into the endpoint-context form: the first and last coordinates are
+   * <i>omitted</i> (they must equal the supplied {@code (xa,ya)} and {@code (xb,yb)} endpoints up
+   * to {@link #EPS}) and only the intermediate points are stored, delta-coded against the start
+   * endpoint.
    *
    * @param xa         X coordinate of end point A
    * @param ya         Y coordinate of end point A
    * @param xb         X coordinate of end point B
    * @param yb         Y coordinate of end point B
-   * @param lineString The geometry to compact. Please be aware that we ignore first and last
-   *                   coordinate in the line string, they need to be exactly the same as A and B.
+   * @param lineString The geometry to compact. The first and last coordinate must equal A and B
+   *                   (or, when {@code reverse} is true, B and A).
    * @param reverse    True if A and B are inverted (B is start, A is end).
    */
   public static byte[] compactLineString(
@@ -89,44 +81,15 @@ public final class CompactLineStringUtils {
         "CompactLineStringUtils geometry must stick to given end points. If you need to relax this, please read source code."
       );
     }
-    int oix = IntUtils.round(x0 * FIXED_FLOAT_MULT);
-    int oiy = IntUtils.round(y0 * FIXED_FLOAT_MULT);
-    int[] coords = new int[(n - 2) * 2];
-    for (int i = 1; i < n - 1; i++) {
-      /*
-       * Note: We should do the rounding *before* the delta to prevent rounding errors from
-       * accumulating on long line strings.
-       */
-      int ix = IntUtils.round(seq.getX(i) * FIXED_FLOAT_MULT);
-      int iy = IntUtils.round(seq.getY(i) * FIXED_FLOAT_MULT);
-      int dix = ix - oix;
-      int diy = iy - oiy;
-      coords[(i - 1) * 2] = dix;
-      coords[(i - 1) * 2 + 1] = diy;
-      oix = ix;
-      oiy = iy;
-    }
-    return DlugoszVarLenIntPacker.pack(coords);
+    int oix = IntUtils.round(x0 * CompactLineString.FIXED_FLOAT_MULT);
+    int oiy = IntUtils.round(y0 * CompactLineString.FIXED_FLOAT_MULT);
+    return CompactLineString.packIntermediateDeltas(lineString, oix, oiy);
   }
 
   /**
-   * Wrapper for the above method in the case where there are no start/end coordinates provided.
-   * 0-coordinates are added in order for the delta encoding to work correctly.
-   */
-  public static byte[] compactLineString(LineString lineString, boolean reverse) {
-    if (lineString == null) {
-      return null;
-    }
-    lineString = GeometryUtils.addStartEndCoordinatesToLineString(
-      new Coordinate(0.0, 0.0),
-      lineString,
-      new Coordinate(0.0, 0.0)
-    );
-    return compactLineString(0.0, 0.0, 0.0, 0.0, lineString, reverse);
-  }
-
-  /**
-   * Same as the other version, but in a var-len int packed form (Dlugosz coding).
+   * Decode a line string previously produced by
+   * {@link #compactLineString(double, double, double, double, LineString, boolean)}, splicing the
+   * supplied endpoints back around the decoded intermediate points.
    *
    * @param xa           X coordinate of end point A
    * @param ya           Y coordinate of end point A
@@ -146,87 +109,20 @@ public final class CompactLineStringUtils {
     double y0 = reverse ? yb : ya;
     double x1 = reverse ? xa : xb;
     double y1 = reverse ? ya : yb;
-    int intermediateCount = coordinateCount(packedCoords);
+    int intermediateCount = packedCoords == null
+      ? 0
+      : DlugoszVarLenIntPacker.countValues(packedCoords) / 2;
     double[] c = new double[(intermediateCount + 2) * 2];
     c[0] = x0;
     c[1] = y0;
     if (intermediateCount > 0) {
-      int oix = IntUtils.round(x0 * FIXED_FLOAT_MULT);
-      int oiy = IntUtils.round(y0 * FIXED_FLOAT_MULT);
-      decodeDeltaCoordinatesInto(packedCoords, c, 2, oix, oiy, false);
+      int oix = IntUtils.round(x0 * CompactLineString.FIXED_FLOAT_MULT);
+      int oiy = IntUtils.round(y0 * CompactLineString.FIXED_FLOAT_MULT);
+      CompactLineString.decodeInto(packedCoords, c, 2, oix, oiy, false);
     }
     c[c.length - 2] = x1;
     c[c.length - 1] = y1;
     LineString out = GeometryUtils.makeLineString(c);
     return reverse ? out.reverse() : out;
-  }
-
-  /**
-   * Uncompact a line string that was compacted without start/end endpoint context. Decodes the
-   * delta-encoded coordinates directly without adding/removing dummy endpoints.
-   */
-  public static LineString uncompactLineString(byte[] packedCoords, boolean reverse) {
-    int intermediateCount = coordinateCount(packedCoords);
-    if (intermediateCount == 0) {
-      return GeometryUtils.emptyLineString();
-    }
-    double[] c = new double[intermediateCount * 2];
-    decodeDeltaCoordinatesInto(packedCoords, c, 0, 0, 0, false);
-    LineString out = GeometryUtils.makeLineString(c);
-    return reverse ? out.reverse() : out;
-  }
-
-  /**
-   * Number of coordinates encoded in {@code packedCoords} without decoding them. Use this to
-   * pre-size a target buffer for {@link #decodeDeltaCoordinatesInto}.
-   */
-  public static int coordinateCount(byte[] packedCoords) {
-    return DlugoszVarLenIntPacker.countValues(packedCoords) / 2;
-  }
-
-  /**
-   * Decode delta-encoded coordinates from {@code packedCoords} directly into {@code out} starting
-   * at {@code offset}, returning the new offset (one past the last double written).
-   * <p>
-   * Streams through the packed bytes without allocating an intermediate {@code int[]} or boxing.
-   * Used by {@link #uncompactLineString} and by callers that concatenate several packed line
-   * strings into one buffer.
-   *
-   * @param packedCoords   the compact line string, or {@code null} / empty for a no-op
-   * @param out            target array to write decoded coordinates into (flat: [x0, y0, x1, y1, ...])
-   * @param offset         starting index in {@code out} to write to
-   * @param oix            initial x in fixed-point (start of delta chain)
-   * @param oiy            initial y in fixed-point (start of delta chain)
-   * @param skipFirstCoord skip writing the first decoded coordinate. Deltas still accumulate so the
-   *                       remaining coordinates land at their correct absolute positions. Used to
-   *                       drop the shared stop coord at hop seams in transit-pattern leg-geometry
-   *                       concatenation.
-   * @return the offset of the first unwritten slot in {@code out}
-   */
-  public static int decodeDeltaCoordinatesInto(
-    byte[] packedCoords,
-    double[] out,
-    int offset,
-    int oix,
-    int oiy,
-    boolean skipFirstCoord
-  ) {
-    if (packedCoords == null || packedCoords.length == 0) {
-      return offset;
-    }
-    int writeIdx = offset;
-    boolean skip = skipFirstCoord;
-    var decoder = new DlugoszVarLenIntPacker.Decoder(packedCoords);
-    while (decoder.hasNext()) {
-      oix += decoder.next();
-      oiy += decoder.next();
-      if (skip) {
-        skip = false;
-        continue;
-      }
-      out[writeIdx++] = oix / FIXED_FLOAT_MULT;
-      out[writeIdx++] = oiy / FIXED_FLOAT_MULT;
-    }
-    return writeIdx;
   }
 }
