@@ -70,7 +70,6 @@ public class AStar<
     @Nullable SkipEdgeStrategy<State, Edge> skipEdgeStrategy,
     @Nullable TraverseVisitor<State, Edge> traverseVisitor,
     boolean arriveBy,
-    Set<Vertex> fromVertices,
     @Nullable Set<Vertex> toVertices,
     @Nullable SearchTerminationStrategy<State> terminationStrategy,
     DominanceFunction<State> dominanceFunction,
@@ -81,7 +80,10 @@ public class AStar<
     this.heuristic = Objects.requireNonNull(heuristic);
     this.skipEdgeStrategy = skipEdgeStrategy;
     this.traverseVisitor = traverseVisitor;
-    this.fromVertices = fromVertices;
+    this.fromVertices = initialStates
+      .stream()
+      .map(AStarState::getVertex)
+      .collect(Collectors.toSet());
     this.toVertices = toVertices;
     this.arriveBy = arriveBy;
     this.terminationStrategy = terminationStrategy;

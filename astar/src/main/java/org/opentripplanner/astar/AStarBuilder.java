@@ -29,7 +29,6 @@ public class AStarBuilder<
   private SkipEdgeStrategy<State, Edge> skipEdgeStrategy;
   private TraverseVisitor<State, Edge> traverseVisitor;
   private boolean arriveBy;
-  private Set<Vertex> origin;
   private Set<Vertex> destination;
   private SearchTerminationStrategy<State> terminationStrategy;
   private DominanceFunction<State> dominanceFunction;
@@ -85,11 +84,6 @@ public class AStarBuilder<
     return arriveBy;
   }
 
-  public AStarBuilder<State, Edge, Vertex> withOrigin(Set<Vertex> originVertices) {
-    this.origin = originVertices;
-    return this;
-  }
-
   public AStarBuilder<State, Edge, Vertex> withDestination(Set<Vertex> destinationVertices) {
     this.destination = destinationVertices;
     return this;
@@ -127,7 +121,6 @@ public class AStarBuilder<
       skipEdgeStrategy,
       traverseVisitor,
       arriveBy,
-      origin,
       destination,
       terminationStrategy,
       dominanceFunction,

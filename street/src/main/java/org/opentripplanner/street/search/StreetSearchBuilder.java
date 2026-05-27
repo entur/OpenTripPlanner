@@ -132,7 +132,6 @@ public class StreetSearchBuilder {
     var heuristic = initializedHeuristic(destinationVertices);
 
     return aStarBuilder
-      .withOrigin(originVertices)
       .withDestination(destinationVertices)
       .withInitialStates(initialStates)
       .withHeuristic(heuristic)

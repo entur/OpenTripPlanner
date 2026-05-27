@@ -11,7 +11,6 @@ public class TestAStarBuilder {
     TestVertex destination
   ) {
     return new AStarBuilder<TestState, TestEdge, TestVertex>()
-      .withOrigin(Set.of(origin))
       .withDestination(Set.of(destination))
       .withTimeout(Duration.ofMinutes(5))
       .withDominanceFunction((a, b) -> a.getWeight() <= b.getWeight())
