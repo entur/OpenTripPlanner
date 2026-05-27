@@ -116,14 +116,6 @@ public class DefaultTransitService implements TransitEditorService {
   }
 
   @Override
-  public TransitService getScheduledTransitService() {
-    if (timetableSnapshot == null) {
-      return this;
-    }
-    return new DefaultTransitService(timetableRepository);
-  }
-
-  @Override
   public Optional<List<TripTimeOnDate>> getScheduledTripTimes(Trip trip) {
     TripPattern tripPattern = findPattern(trip);
     return Optional.ofNullable(

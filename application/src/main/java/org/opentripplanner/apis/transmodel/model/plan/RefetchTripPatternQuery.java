@@ -111,14 +111,6 @@ public class RefetchTripPatternQuery {
       )
       .argument(
         GraphQLArgument.newArgument()
-          .name("ignoreRealtimeUpdates")
-          .description("When true, real-time updates are ignored during this search.")
-          .type(Scalars.GraphQLBoolean)
-          .defaultValue(preferences.transit().ignoreRealtimeUpdates())
-          .build()
-      )
-      .argument(
-        GraphQLArgument.newArgument()
           .name("modes")
           .description(
             "The set of access/egress modes to be used for this search. The direct and transit modes are ignored"
@@ -217,8 +209,7 @@ public class RefetchTripPatternQuery {
     var from = mapLocation(environment.getArgument("from"));
     var to = mapLocation(environment.getArgument("to"));
 
-    var ignoreRealtime = routeRequest.preferences().transit().ignoreRealtimeUpdates();
-    var refetcher = new RefetchItineraryService(ctx.getServerContext(), ignoreRealtime);
+    var refetcher = new RefetchItineraryService(ctx.getServerContext());
 
     try {
       var itinerary = refetcher.refetchItinerary(from, to, legs, routeRequest);

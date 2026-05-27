@@ -802,8 +802,6 @@ type QueryType {
     boardSlackList: [TransportModeSlack],
     "The start location, if null the trip pattern will start with the first provided leg"
     from: Location,
-    "When true, real-time updates are ignored during this search."
-    ignoreRealtimeUpdates: Boolean = false,
     "A list of legIds describing the trip pattern. At least one leg is required."
     legs: [ID!]!,
     "Maximum duration for access/egress for street searches per respective mode. Cannot be higher than default value. This is a performance optimisation parameter, avoid using it to limit the search. "

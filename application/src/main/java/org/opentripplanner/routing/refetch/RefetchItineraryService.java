@@ -56,14 +56,10 @@ public class RefetchItineraryService {
   private final LinkingContextFactory linkingContextFactory;
   private final StreetPathToLegsMapper streetPathToLegsMapper;
 
-  public RefetchItineraryService(OtpServerRequestContext serverContext, boolean ignoreRealtime) {
-    var transitService = serverContext.transitService();
-    if (ignoreRealtime) {
-      transitService = transitService.getScheduledTransitService();
-    }
+  public RefetchItineraryService(OtpServerRequestContext serverContext) {
     this(
       serverContext.graph(),
-      transitService,
+      serverContext.transitService(),
       serverContext.transferService(),
       serverContext.streetDetailsService(),
       serverContext.linkingContextFactory(),
