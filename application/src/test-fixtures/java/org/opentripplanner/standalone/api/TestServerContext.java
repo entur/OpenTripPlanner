@@ -12,6 +12,7 @@ import org.opentripplanner.ext.emission.internal.DefaultEmissionRepository;
 import org.opentripplanner.ext.emission.internal.DefaultEmissionService;
 import org.opentripplanner.ext.emission.internal.itinerary.EmissionItineraryDecorator;
 import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
+import org.opentripplanner.ext.flex.FlexParameters;
 import org.opentripplanner.raptor.configure.RaptorConfig;
 import org.opentripplanner.routing.algorithm.filterchain.framework.spi.ItineraryDecorator;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
@@ -72,6 +73,7 @@ public class TestServerContext {
       transferRepository,
       fareService,
       null,
+      null,
       null
     );
   }
@@ -83,7 +85,8 @@ public class TestServerContext {
     TransferRepository transferRepository,
     FareService fareService,
     @Nullable TimetableSnapshotManager snapshotManager,
-    @Nullable RouteRequest request
+    @Nullable RouteRequest request,
+    @Nullable FlexParameters flexParameters
   ) {
     var routerConfig = RouterConfig.DEFAULT;
 
@@ -122,7 +125,7 @@ public class TestServerContext {
     return new DefaultServerRequestContext(
       DebugUiConfig.DEFAULT,
       fareService,
-      routerConfig.flexParameters(),
+      flexParameters,
       graph,
       createLinkingContextFactory(graph, vertexLinker, transitService),
       Metrics.globalRegistry,

@@ -32,6 +32,11 @@ public interface FlexParameters {
   int boardCost();
 
   /**
+   * See {@link org.opentripplanner.standalone.config.sandbox.FlexConfig}
+   */
+  double reluctance();
+
+  /**
    * This defines the default values. This will be used by the OTP configuration and by tests,
    * avoid using this directly.
    */
@@ -60,6 +65,11 @@ public interface FlexParameters {
       @Override
       public int boardCost() {
         return 600;
+      }
+
+      @Override
+      public double reluctance() {
+        return 10.0;
       }
     };
   }

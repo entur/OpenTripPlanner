@@ -43,6 +43,38 @@ import org.opentripplanner.transit.service.TimetableRepository;
  */
 public class FlexIntegrationTest {
 
+  private static final FlexParameters FLEX_PARAMETERS = new FlexParameters() {
+    @Override
+    public Duration maxTransferDuration() {
+      return FlexParameters.defaultValues().maxTransferDuration();
+    }
+
+    @Override
+    public Duration maxFlexTripDuration() {
+      return FlexParameters.defaultValues().maxFlexTripDuration();
+    }
+
+    @Override
+    public Duration maxAccessWalkDuration() {
+      return FlexParameters.defaultValues().maxAccessWalkDuration();
+    }
+
+    @Override
+    public Duration maxEgressWalkDuration() {
+      return FlexParameters.defaultValues().maxEgressWalkDuration();
+    }
+
+    @Override
+    public int boardCost() {
+      return 600;
+    }
+
+    @Override
+    public double reluctance() {
+      return 1.0;
+    }
+  };
+
   public static final GenericLocation OUTSIDE_FLEX_ZONE = GenericLocation.fromCoordinate(
     33.7552,
     -84.4631
@@ -84,7 +116,10 @@ public class FlexIntegrationTest {
       graph,
       timetableRepository,
       transferRepository,
-      model.fareServiceFactory().makeFareService()
+      model.fareServiceFactory().makeFareService(),
+      null,
+      null,
+      FLEX_PARAMETERS
     ).routingService();
   }
 

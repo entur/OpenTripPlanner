@@ -12,8 +12,8 @@ public class FlexAccessEgressAdapter extends DefaultAccessEgress {
 
   private final FlexAccessEgress flexAccessEgress;
 
-  public FlexAccessEgressAdapter(FlexAccessEgress flexAccessEgress, int boardCost) {
-    super(flexAccessEgress.stop().getIndex(), flexAccessEgress.lastState(), boardCost);
+  public FlexAccessEgressAdapter(FlexAccessEgress flexAccessEgress) {
+    super(flexAccessEgress.stop().getIndex(), flexAccessEgress.lastState());
     this.flexAccessEgress = flexAccessEgress;
   }
 

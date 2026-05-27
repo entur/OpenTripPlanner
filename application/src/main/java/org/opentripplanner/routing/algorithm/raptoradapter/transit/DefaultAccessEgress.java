@@ -60,17 +60,6 @@ public class DefaultAccessEgress implements RoutingAccessEgress {
     );
   }
 
-  protected DefaultAccessEgress(int stop, State finalState, int boardCost) {
-    this(
-      stop,
-      (int) finalState.getElapsedTimeSeconds(),
-      RaptorCostConverter.toRaptorCost(finalState.getWeight()) +
-        RaptorCostConverter.toRaptorCost(boardCost),
-      TimeAndCost.ZERO,
-      finalState
-    );
-  }
-
   protected DefaultAccessEgress(RoutingAccessEgress other, TimeAndCost penalty) {
     // In the API we have a cost associated with the time-penalty. In Raptor, there is no
     // association between the time-penalty and the cost. So, we add the time-penalty cost to

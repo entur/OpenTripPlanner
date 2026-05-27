@@ -27,6 +27,7 @@ public class FlexConfig implements FlexParameters {
   private final Duration maxAccessWalkDuration;
   private final Duration maxEgressWalkDuration;
   private final int boardCost;
+  private final double reluctance;
 
   private FlexConfig() {
     maxTransferDuration = DEFAULT.maxTransferDuration();
@@ -34,6 +35,7 @@ public class FlexConfig implements FlexParameters {
     maxAccessWalkDuration = DEFAULT.maxAccessWalkDuration();
     maxEgressWalkDuration = DEFAULT.maxEgressWalkDuration();
     boardCost = DEFAULT.boardCost();
+    reluctance = DEFAULT.reluctance();
   }
 
   public FlexConfig(NodeAdapter root, String parameterName) {
@@ -103,6 +105,12 @@ public class FlexConfig implements FlexParameters {
         """
       )
       .asInt(DEFAULT.boardCost());
+
+    reluctance = json
+      .of("reluctance")
+      .since(V2_10)
+      .summary("A factor multiplied with the travel time of a flex leg to calculate the weight.")
+      .asDouble(DEFAULT.reluctance());
   }
 
   public Duration maxFlexTripDuration() {
@@ -123,5 +131,9 @@ public class FlexConfig implements FlexParameters {
 
   public int boardCost() {
     return boardCost;
+  }
+
+  public double reluctance() {
+    return reluctance;
   }
 }

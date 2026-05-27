@@ -124,12 +124,7 @@ class AccessEgressFetcher {
         linkingContext
       );
 
-      results.addAll(
-        AccessEgressMapper.mapFlexAccessEgresses(
-          flexAccessList,
-          serverContext.flexParameters().boardCost()
-        )
-      );
+      results.addAll(AccessEgressMapper.mapFlexAccessEgresses(flexAccessList));
     }
 
     if (OTPFeature.CarPooling.isOn() && mode == StreetMode.CARPOOL) {
