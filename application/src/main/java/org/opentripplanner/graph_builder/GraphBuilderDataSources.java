@@ -21,7 +21,6 @@ import java.util.EnumSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 import org.opentripplanner.datastore.OtpDataStore;
 import org.opentripplanner.datastore.api.CompositeDataSource;
 import org.opentripplanner.datastore.api.DataSource;
@@ -159,20 +158,19 @@ public class GraphBuilderDataSources implements Closeable {
   }
 
   /**
-   * Returns a {@link CompositeDataSource} for the graph-build cache directory. When {@code path}
-   * is {@code null}, the OTP base directory is used. Works with any configured repository —
-   * local filesystem, GCS bucket, etc.
+   * Returns a list of data sources for the graph-build cache manager - one for each
+   * cache task type.
    */
-  public CompositeDataSource getCacheDirectory(@Nullable URI path) {
-    return store.getCacheDir(path);
-  }
-
   public Iterable<DataSource> listCachedDataSources() {
     return Arrays.stream(CacheTask.values())
       .map(CacheTask::cacheFileName)
       .map(buildConfig::cachePath)
       .map(store::getCacheFile)
       .toList();
+  }
+
+  public CompositeDataSource getNedCacheDirectory() {
+    return store.getCacheDir(buildConfig.cachePath("ned"));
   }
 
   /**

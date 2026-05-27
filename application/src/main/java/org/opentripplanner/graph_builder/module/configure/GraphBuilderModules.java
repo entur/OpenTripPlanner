@@ -5,7 +5,6 @@ import static org.opentripplanner.datastore.api.FileType.DEM;
 import dagger.Module;
 import dagger.Provides;
 import jakarta.inject.Singleton;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -243,9 +242,8 @@ public class GraphBuilderModules {
     List<ElevationModule> result = new ArrayList<>();
     List<ElevationGridCoverageFactory> gridCoverageFactories = new ArrayList<>();
     if (config.elevationBucket != null) {
-      var nedUri = new File(dataSources.getBaseDirectory(), "ned").toURI();
       gridCoverageFactories.add(
-        createNedElevationFactory(dataSources.getCacheDirectory(nedUri), config)
+        createNedElevationFactory(dataSources.getNedCacheDirectory(), config)
       );
     } else if (dataSources.has(DEM)) {
       gridCoverageFactories.addAll(

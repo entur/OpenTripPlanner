@@ -127,8 +127,10 @@ public class GraphBuildCacheConfig {
   }
 
   @Nullable
-  public URI path() {
-    return path;
+  public URI path(String resourceName) {
+    return path == null
+      ? URI.create(resourceName)
+      : URI.create(path.getPath() + "/" + resourceName);
   }
 
   public GraphBuildCacheParameters toParameters() {
@@ -136,9 +138,6 @@ public class GraphBuildCacheConfig {
   }
 
   public List<URI> files() {
-    return Arrays.stream(CacheTask.values())
-      .map(CacheTask::cacheFileName)
-      .map(it -> URI.create((path == null ? "" : path.getPath() + "/") + it))
-      .toList();
+    return Arrays.stream(CacheTask.values()).map(CacheTask::cacheFileName).map(this::path).toList();
   }
 }

@@ -608,8 +608,11 @@ public class BuildConfig implements OtpDataStoreConfig {
     return cache.toParameters();
   }
 
-  public URI cachePath() {
-    return cache.path();
+  /**
+   * Create a URI for a resource within the configured cache directory.
+   */
+  public URI cachePath(String resourceName) {
+    return cache.path(resourceName);
   }
 
   @Override
