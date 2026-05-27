@@ -241,19 +241,21 @@ class WalkableAreaBuilder {
       }
     }
 
-    ringSetData.visibilityVertexCandidates().forEach((areaGroup, vertices) -> {
-      if (vertices.size() > maxAreaNodes) {
-        areaGroup.addVisibilityVertices(
-          vertices
-            .stream()
-            .sorted((v1, v2) -> Long.compare(v2.getDegreeOut(), v1.getDegreeOut()))
-            .limit(maxAreaNodes)
-            .collect(Collectors.toSet())
-        );
-      } else {
-        areaGroup.addVisibilityVertices(vertices);
-      }
-    });
+    ringSetData
+      .visibilityVertexCandidates()
+      .forEach((areaGroup, vertices) -> {
+        if (vertices.size() > maxAreaNodes) {
+          areaGroup.addVisibilityVertices(
+            vertices
+              .stream()
+              .sorted((v1, v2) -> Long.compare(v2.getDegreeOut(), v1.getDegreeOut()))
+              .limit(maxAreaNodes)
+              .collect(Collectors.toSet())
+          );
+        } else {
+          areaGroup.addVisibilityVertices(vertices);
+        }
+      });
   }
 
   // ---- Phase 1: ring traversal -------------------------------------------------------
@@ -270,13 +272,13 @@ class WalkableAreaBuilder {
     Map<IntersectionVertex, AreaGroup> vertexToAreaGroup = new HashMap<>();
     List<PerRingData> perRingData = new ArrayList<>();
 
+    GeometryFactory geometryFactory = GeometryUtils.getGeometryFactory();
     for (Ring ring : group.outermostRings) {
       Polygon polygon = ring.jtsPolygon;
       AreaGroup areaGroup = new AreaGroup(polygon);
       HashSet<NodeEdge> alreadyAddedEdges = new HashSet<>();
       HashSet<IntersectionVertex> platformLinkingVertices = new HashSet<>();
       HashSet<IntersectionVertex> visibilityVertices = new HashSet<>();
-      GeometryFactory geometryFactory = GeometryUtils.getGeometryFactory();
 
       for (OsmArea area : group.areas) {
         OsmEntity areaEntity = area.parent;
@@ -325,16 +327,16 @@ class WalkableAreaBuilder {
             ringEdges.addAll(newEdges);
 
             // Convex corners and mid-points when link points are present are visibility candidates.
-            if (
+            boolean convex =
               outerRing.isNodeConvex(i) ||
-              (linkPointsAdded && (i == 0 || i == outerRing.nodes.size() / 2))
-            ) {
-              visibilityVertices.add(vertexBuilder.getVertexForOsmNode(node, areaEntity, SPLIT));
-            }
-            if (isStartingNode(node, osmWayIds)) {
+              (linkPointsAdded && (i == 0 || i == outerRing.nodes.size() / 2));
+            boolean starting = isStartingNode(node, osmWayIds);
+            if (convex || starting) {
               var v = vertexBuilder.getVertexForOsmNode(node, areaEntity, SPLIT);
-              startingVertices.add(v);
               visibilityVertices.add(v);
+              if (starting) {
+                startingVertices.add(v);
+              }
             }
           }
 
@@ -351,13 +353,14 @@ class WalkableAreaBuilder {
               allEdges.addAll(newEdges);
               ringEdges.addAll(newEdges);
               // For holes the convexity condition is inverted.
-              if (!innerRing.isNodeConvex(j)) {
-                visibilityVertices.add(vertexBuilder.getVertexForOsmNode(node, areaEntity, SPLIT));
-              }
-              if (isStartingNode(node, osmWayIds)) {
+              boolean concave = !innerRing.isNodeConvex(j);
+              boolean starting = isStartingNode(node, osmWayIds);
+              if (concave || starting) {
                 var v = vertexBuilder.getVertexForOsmNode(node, areaEntity, SPLIT);
-                startingVertices.add(v);
                 visibilityVertices.add(v);
+                if (starting) {
+                  startingVertices.add(v);
+                }
               }
             }
           }
@@ -384,8 +387,13 @@ class WalkableAreaBuilder {
       }
       createAreas(areaGroup, ring, group.areas);
       perRingData.add(
-        new PerRingData(areaGroup, polygon, visibilityVertices, platformLinkingVertices,
-          alreadyAddedEdges)
+        new PerRingData(
+          areaGroup,
+          polygon,
+          visibilityVertices,
+          platformLinkingVertices,
+          alreadyAddedEdges
+        )
       );
     }
 
@@ -456,10 +464,7 @@ class WalkableAreaBuilder {
    * Create graph edges for each visibility pair and return them split into all edges and the
    * subset that must survive pruning because they connect platform-linking vertices.
    */
-  private VisibilityEdgesResult addVisibilityEdges(
-    List<VisibilityPair> pairs,
-    OsmAreaGroup group
-  ) {
+  private VisibilityEdgesResult addVisibilityEdges(List<VisibilityPair> pairs, OsmAreaGroup group) {
     Set<AreaEdge> allEdges = new HashSet<>();
     Set<AreaEdge> platformLinkedEdges = new HashSet<>();
     for (VisibilityPair pair : pairs) {
@@ -489,20 +494,19 @@ class WalkableAreaBuilder {
     RingSetData ringSetData,
     OsmAreaGroup group
   ) {
-    Map<String, IntersectionVertex> vertexByCoord = new HashMap<>();
+    Map<CoordKey, IntersectionVertex> vertexByCoord = new HashMap<>();
     for (IntersectionVertex v : ringSetData.vertexToAreaGroup().keySet()) {
-      vertexByCoord.put(coordKey(v.getX(), v.getY()), v);
+      vertexByCoord.put(new CoordKey(v.getX(), v.getY()), v);
     }
     for (double[] pair : cachedPairs) {
-      IntersectionVertex v1 = vertexByCoord.get(coordKey(pair[0], pair[1]));
-      IntersectionVertex v2 = vertexByCoord.get(coordKey(pair[2], pair[3]));
+      IntersectionVertex v1 = vertexByCoord.get(new CoordKey(pair[0], pair[1]));
+      IntersectionVertex v2 = vertexByCoord.get(new CoordKey(pair[2], pair[3]));
       if (v1 == null || v2 == null) {
         continue;
       }
-      AreaGroup ag = ringSetData.vertexToAreaGroup().getOrDefault(
-        v1,
-        ringSetData.vertexToAreaGroup().get(v2)
-      );
+      AreaGroup ag = ringSetData
+        .vertexToAreaGroup()
+        .getOrDefault(v1, ringSetData.vertexToAreaGroup().get(v2));
       if (ag != null) {
         createSegments(v1, v2, group.areas, ag, true);
       }
@@ -592,13 +596,9 @@ class WalkableAreaBuilder {
   }
 
   private WayProperties findAreaProperties(OsmEntity entity) {
-    if (!wayPropertiesCache.containsKey(entity)) {
-      var wayData = entity.getOsmProvider().getWayPropertySet().getDataForEntity(entity);
-      wayPropertiesCache.put(entity, wayData);
-      return wayData;
-    } else {
-      return wayPropertiesCache.get(entity);
-    }
+    return wayPropertiesCache.computeIfAbsent(entity, e ->
+      e.getOsmProvider().getWayPropertySet().getDataForEntity(e)
+    );
   }
 
   private Set<AreaEdge> createEdgesForRingSegment(
@@ -651,7 +651,10 @@ class WalkableAreaBuilder {
     // combine properties of intersected areas
     for (OsmArea area : areas) {
       MultiPolygon polygon = area.jtsMultiPolygon;
-      boolean crosses = testIntersection ? polygon.intersection(line).getLength() > 0.000001 : true;
+      // intersects() is a cheap spatial predicate; only compute the full intersection when needed
+      boolean crosses =
+        !testIntersection ||
+        (polygon.intersects(line) && polygon.intersection(line).getLength() > 0.000001);
       if (crosses) {
         parent = area.parent;
         wayData = findAreaProperties(parent);
@@ -787,11 +790,6 @@ class WalkableAreaBuilder {
     return false;
   }
 
-  /** Encode a vertex coordinate as a string key for map lookup. */
-  private static String coordKey(double x, double y) {
-    return Double.doubleToLongBits(x) + "," + Double.doubleToLongBits(y);
-  }
-
   // ---- Inner types -------------------------------------------------------------------
 
   record ListedEdgesOnly(Set<Edge> edges) implements SkipEdgeStrategy<State, Edge> {
@@ -835,8 +833,12 @@ class WalkableAreaBuilder {
   ) {}
 
   /** Output of Phase 3a: visibility edges split by whether they must survive pruning. */
-  private record VisibilityEdgesResult(
-    Set<AreaEdge> allEdges,
-    Set<AreaEdge> platformLinkedEdges
-  ) {}
+  private record VisibilityEdgesResult(Set<AreaEdge> allEdges, Set<AreaEdge> platformLinkedEdges) {}
+
+  /** Allocation-free coordinate key for vertex lookup maps. */
+  private record CoordKey(long xBits, long yBits) {
+    CoordKey(double x, double y) {
+      this(Double.doubleToLongBits(x), Double.doubleToLongBits(y));
+    }
+  }
 }
