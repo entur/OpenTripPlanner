@@ -101,7 +101,7 @@ public class GraphBuildCacheManager implements Closeable {
       }
       LOG.info("Loaded {} cache from '{}'.", task, entry.path());
       return wrapper.data;
-    } catch (KryoException | ClassCastException e) {
+    } catch (Exception e) {
       LOG.warn(
         "Failed to load {} cache from '{}': {}. Starting with empty cache.",
         task,
