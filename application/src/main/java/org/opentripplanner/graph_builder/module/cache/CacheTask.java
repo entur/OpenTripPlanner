@@ -8,7 +8,7 @@ package org.opentripplanner.graph_builder.module.cache;
  */
 public enum CacheTask {
   ELEVATION(1),
-  VISIBILITY(2);
+  VISIBILITY(1);
 
   /**
    * Per-task cache format version. Increment when the serialized data structure changes so that
