@@ -216,14 +216,10 @@ public final class CompactLineStringUtils {
     }
     int writeIdx = offset;
     boolean skip = skipFirstCoord;
-    int pos = 0;
-    while (pos < packedCoords.length) {
-      var dx = DlugoszVarLenIntPacker.decodeAt(packedCoords, pos);
-      pos = dx.nextPos();
-      var dy = DlugoszVarLenIntPacker.decodeAt(packedCoords, pos);
-      pos = dy.nextPos();
-      oix += dx.value();
-      oiy += dy.value();
+    var decoder = new DlugoszVarLenIntPacker.Decoder(packedCoords);
+    while (decoder.hasNext()) {
+      oix += decoder.next();
+      oiy += decoder.next();
       if (skip) {
         skip = false;
         continue;
