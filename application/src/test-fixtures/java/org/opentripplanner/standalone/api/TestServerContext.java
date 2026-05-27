@@ -50,7 +50,6 @@ import org.opentripplanner.transfer.regular.TransferRepository;
 import org.opentripplanner.transfer.regular.TransferServiceTestFactory;
 import org.opentripplanner.transfer.regular.internal.DefaultTransferRepository;
 import org.opentripplanner.transfer.regular.internal.TransferIndex;
-import org.opentripplanner.transit.model.calendar.DefaultTripCalendars;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
@@ -91,10 +90,12 @@ public class TestServerContext {
   ) {
     var routerConfig = RouterConfig.DEFAULT;
 
-    if (snapshotManager == null) {
+    if (request == null) {
+      request = routerConfig.routingRequestDefaults();
+    }
+    boolean snapshotManagerProvided = snapshotManager != null;
+    if (!snapshotManagerProvided) {
       snapshotManager = new TimetableSnapshotManager(
-        (DefaultTripCalendars) timetableRepository.getTripCalendar(),
-        null,
         TimetableSnapshotParameters.DEFAULT,
         LocalDate::now
       );
@@ -107,11 +108,18 @@ public class TestServerContext {
     }
 
     timetableRepository.index();
-    createRaptorTransitData(
-      timetableRepository,
-      transferRepository,
-      routerConfig.transitTuningConfig()
-    );
+    // Only initialize raptor data when no pre-initialized snapshotManager was provided.
+    // If the caller passed one in, they are responsible for having called createRaptorTransitData
+    // already (e.g. GtfsTest applies real-time updates before calling here, so we must not
+    // reinitialize the manager and discard those updates).
+    if (!snapshotManagerProvided) {
+      createRaptorTransitData(
+        timetableRepository,
+        transferRepository,
+        snapshotManager,
+        routerConfig.transitTuningConfig()
+      );
+    }
 
     snapshotManager.purgeAndCommit();
 

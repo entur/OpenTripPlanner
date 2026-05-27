@@ -652,7 +652,9 @@ public class DefaultTransitService implements TransitEditorService {
   @Override
   public RaptorTransitData getRealtimeRaptorTransitData() {
     OTPRequestTimeoutException.checkForTimeout();
-    return this.timetableRepository.getRealtimeRaptorTransitData();
+    return Optional.ofNullable(timetableSnapshot)
+      .map(TimetableSnapshot::getRealtimeRaptorTransitData)
+      .orElse(null);
   }
 
   @Override

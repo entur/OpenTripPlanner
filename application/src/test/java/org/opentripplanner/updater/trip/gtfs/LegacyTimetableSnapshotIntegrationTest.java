@@ -23,6 +23,7 @@ import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.TestOtpModel;
 import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitDataTestFactory;
 import org.opentripplanner.transit.model.calendar.DefaultTripCalendars;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -67,7 +68,10 @@ public class LegacyTimetableSnapshotIntegrationTest {
     LocalDate yesterday = today.minusDays(1);
     LocalDate tomorrow = today.plusDays(1);
     TripPattern pattern = patternIndex.get(new FeedScopedId(feedId, "1.1"));
-    TimetableSnapshot resolver = new TimetableSnapshot(new DefaultTripCalendars());
+    TimetableSnapshot resolver = new TimetableSnapshot(
+      RaptorTransitDataTestFactory.empty(),
+      new DefaultTripCalendars()
+    );
 
     Timetable scheduled = resolver.resolve(pattern, today);
     assertEquals(scheduled, resolver.resolve(pattern, null));
@@ -115,7 +119,10 @@ public class LegacyTimetableSnapshotIntegrationTest {
     LocalDate yesterday = today.minusDays(1);
     TripPattern pattern = patternIndex.get(new FeedScopedId(feedId, "1.1"));
 
-    TimetableSnapshot resolver = new TimetableSnapshot(new DefaultTripCalendars());
+    TimetableSnapshot resolver = new TimetableSnapshot(
+      RaptorTransitDataTestFactory.empty(),
+      new DefaultTripCalendars()
+    );
     Timetable origNow = resolver.resolve(pattern, today);
 
     TripDescriptor.Builder tripDescriptorBuilder = TripDescriptor.newBuilder();
@@ -166,7 +173,10 @@ public class LegacyTimetableSnapshotIntegrationTest {
       LocalDate yesterday = today.minusDays(1);
       TripPattern pattern = patternIndex.get(new FeedScopedId(feedId, "1.1"));
 
-      TimetableSnapshot resolver = new TimetableSnapshot(new DefaultTripCalendars());
+      TimetableSnapshot resolver = new TimetableSnapshot(
+        RaptorTransitDataTestFactory.empty(),
+        new DefaultTripCalendars()
+      );
 
       // only return a new snapshot if there are changes
       TimetableSnapshot snapshot = resolver.commit();
@@ -243,7 +253,10 @@ public class LegacyTimetableSnapshotIntegrationTest {
 
     GtfsRealtime.TripUpdate tripUpdate = tripUpdateBuilder.build();
 
-    TimetableSnapshot resolver = new TimetableSnapshot(new DefaultTripCalendars());
+    TimetableSnapshot resolver = new TimetableSnapshot(
+      RaptorTransitDataTestFactory.empty(),
+      new DefaultTripCalendars()
+    );
     updateSnapshot(resolver, pattern, tripUpdate, today);
     updateSnapshot(resolver, pattern, tripUpdate, yesterday);
 

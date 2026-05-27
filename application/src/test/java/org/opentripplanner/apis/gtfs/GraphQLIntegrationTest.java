@@ -75,6 +75,7 @@ import org.opentripplanner.routing.alertpatch.AlertSeverity;
 import org.opentripplanner.routing.alertpatch.EntitySelector;
 import org.opentripplanner.routing.alertpatch.TimePeriod;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitDataTestFactory;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.impl.TransitAlertServiceImpl;
 import org.opentripplanner.routing.services.TransitAlertService;
@@ -276,7 +277,10 @@ class GraphQLIntegrationTest {
     timetableRepository.updateCalendarServiceData(calendarServiceData);
     timetableRepository.index();
 
-    TimetableSnapshot timetableSnapshot = new TimetableSnapshot(new DefaultTripCalendars());
+    TimetableSnapshot timetableSnapshot = new TimetableSnapshot(
+      RaptorTransitDataTestFactory.empty(),
+      new DefaultTripCalendars()
+    );
     timetableSnapshot.update(
       RealTimeTripUpdate.of(
         pattern,

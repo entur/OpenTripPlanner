@@ -5,7 +5,7 @@ import java.util.Objects;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RealTimeRaptorTransitDataUpdater;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.util.ConcurrentPublished;
 import org.opentripplanner.transit.model.calendar.DefaultTripCalendars;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -24,13 +24,11 @@ public final class TimetableSnapshotManager {
 
   private static final Logger LOG = LoggerFactory.getLogger(TimetableSnapshotManager.class);
 
-  private final RealTimeRaptorTransitDataUpdater realtimeRaptorTransitDataUpdater;
-
   /**
    * The working copy of the timetable snapshot. Should not be visible to routing threads.
    * By design, only one thread should ever be writing to this buffer.
    */
-  private final TimetableSnapshot buffer;
+  private TimetableSnapshot buffer;
 
   /**
    * The last committed snapshot that was handed off to a routing thread. This snapshot may be given
@@ -57,15 +55,18 @@ public final class TimetableSnapshotManager {
    *                     considered 'today'. This is useful for unit testing.
    */
   public TimetableSnapshotManager(
-    DefaultTripCalendars tripCalendars,
-    @Nullable RealTimeRaptorTransitDataUpdater realtimeRaptorTransitDataUpdater,
     TimetableSnapshotParameters parameters,
     Supplier<LocalDate> localDateNow
   ) {
-    this.buffer = new TimetableSnapshot(tripCalendars);
-    this.realtimeRaptorTransitDataUpdater = realtimeRaptorTransitDataUpdater;
     this.purgeExpiredData = parameters.purgeExpiredData();
     this.localDateNow = Objects.requireNonNull(localDateNow);
+  }
+
+  public void initRaptorData(
+    RaptorTransitData scheduledRaptorTransitData,
+    DefaultTripCalendars tripCalendars
+  ) {
+    this.buffer = new TimetableSnapshot(scheduledRaptorTransitData, tripCalendars);
     // Force commit so that snapshot initializes
     commitTimetableSnapshot(true);
   }
@@ -100,7 +101,7 @@ public final class TimetableSnapshotManager {
    */
   void commitTimetableSnapshot(final boolean force) {
     if (force || buffer.isDirty()) {
-      snapshot.publish(buffer.commit(realtimeRaptorTransitDataUpdater, force));
+      snapshot.publish(buffer.commit(force));
     }
   }
 

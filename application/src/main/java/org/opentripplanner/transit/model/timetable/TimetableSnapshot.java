@@ -27,6 +27,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.TimetableUpdateMapper;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.TripPatternForDateMapper;
 import org.opentripplanner.transit.model.calendar.DefaultTripCalendars;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -161,7 +164,13 @@ public class TimetableSnapshot {
    */
   private boolean dirty = false;
 
-  public TimetableSnapshot(DefaultTripCalendars tripCalendars) {
+  private final RaptorTransitData realtimeRaptorTransitData;
+  private final TimetableUpdateMapper timetableUpdateMapper;
+
+  public TimetableSnapshot(
+    RaptorTransitData raptorTransitData,
+    DefaultTripCalendars tripCalendars
+  ) {
     this(
       new HashMap<>(),
       new HashMap<>(),
@@ -174,6 +183,7 @@ public class TimetableSnapshot {
       new HashMap<>(),
       HashMultimap.create(),
       tripCalendars,
+      raptorTransitData,
       false
     );
   }
@@ -190,6 +200,7 @@ public class TimetableSnapshot {
     Map<TripIdAndServiceDate, TripOnServiceDate> realTimeAddedTripOnServiceDateForTripAndDay,
     SetMultimap<StopLocation, TripPattern> patternsForStop,
     DefaultTripCalendars tripCalendars,
+    RaptorTransitData realtimeRaptorTransitData,
     boolean readOnly
   ) {
     this.timetables = timetables;
@@ -205,6 +216,8 @@ public class TimetableSnapshot {
     this.patternsForStop = patternsForStop;
     this.tripCalendars = tripCalendars;
     this.readOnly = readOnly;
+    this.realtimeRaptorTransitData = realtimeRaptorTransitData;
+    this.timetableUpdateMapper = new TimetableUpdateMapper();
   }
 
   /**
@@ -384,18 +397,23 @@ public class TimetableSnapshot {
    * @return an immutable copy of this TimetableSnapshot with all updates applied
    */
   public TimetableSnapshot commit() {
-    return commit(null, false);
+    return commit(false);
   }
 
-  public TimetableSnapshot commit(
-    @Nullable TimetableSnapshotUpdateListener updatesEventListener,
-    boolean force
-  ) {
+  public TimetableSnapshot commit(boolean force) {
     validateNotReadOnly();
 
     if (!force && !this.isDirty()) {
       return null;
     }
+
+    RaptorTransitData updatedRaptorData = timetableUpdateMapper.map(
+      realtimeRaptorTransitData,
+      dirtyTimetables.values(),
+      timetables::get,
+      new TripPatternForDateMapper(tripCalendars.getServiceCodesRunningForDate())
+    );
+
     TimetableSnapshot ret = new TimetableSnapshot(
       Map.copyOf(timetables),
       Map.copyOf(realTimeNewTripPatternsForModifiedTrips),
@@ -408,12 +426,9 @@ public class TimetableSnapshot {
       Map.copyOf(realTimeAddedTripOnServiceDateForTripAndDay),
       ImmutableSetMultimap.copyOf(patternsForStop),
       tripCalendars,
+      updatedRaptorData,
       true
     );
-
-    if (updatesEventListener != null) {
-      updatesEventListener.update(dirtyTimetables.values(), timetables::get);
-    }
 
     dirtyTimetables.clear();
     dirty = false;
@@ -586,6 +601,10 @@ public class TimetableSnapshot {
       realTimeAddedReplacedByTripOnServiceDateById.isEmpty() &&
       realTimeAddedTripOnServiceDateForTripAndDay.isEmpty()
     );
+  }
+
+  public RaptorTransitData getRealtimeRaptorTransitData() {
+    return realtimeRaptorTransitData;
   }
 
   /**

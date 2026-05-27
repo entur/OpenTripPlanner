@@ -189,6 +189,7 @@ public class ConstructApplication {
     createRaptorTransitData(
       timetableRepository(),
       transferRepository(),
+      snapshotManager(),
       routerConfig().transitTuningConfig()
     );
 
@@ -236,6 +237,7 @@ public class ConstructApplication {
   public static void createRaptorTransitData(
     TimetableRepository timetableRepository,
     TransferRepository transferRepository,
+    TimetableSnapshotManager timetableSnapshotManager,
     TransitTuningParameters tuningParameters
   ) {
     if (!timetableRepository.hasTransit() || !timetableRepository.isIndexed()) {
@@ -247,8 +249,9 @@ public class ConstructApplication {
     timetableRepository.initRaptorTransitData(
       RaptorTransitDataMapper.map(tuningParameters, timetableRepository, transferRepository)
     );
-    timetableRepository.setRealtimeRaptorTransitData(
-      new RaptorTransitData(timetableRepository.getRaptorTransitData())
+    timetableSnapshotManager.initRaptorData(
+      new RaptorTransitData(timetableRepository.getRaptorTransitData()),
+      timetableRepository.copyTripCalendarForRealTimeUpdates()
     );
   }
 
