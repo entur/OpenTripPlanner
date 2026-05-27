@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.opentripplanner.astar.model.BinHeap;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.model.ShortestPathTree;
@@ -37,12 +38,22 @@ public class AStar<
 
   private final boolean arriveBy;
   private final Set<Vertex> fromVertices;
+
+  @Nullable
   private final Set<Vertex> toVertices;
+
   private final RemainingWeightHeuristic<State> heuristic;
   private final Runnable preSearchHook;
+
+  @Nullable
   private final SkipEdgeStrategy<State, Edge> skipEdgeStrategy;
+
+  @Nullable
   private final SearchTerminationStrategy<State> terminationStrategy;
+
+  @Nullable
   private final TraverseVisitor<State, Edge> traverseVisitor;
+
   private final StatisticsCallback<Vertex> statisticsCallback;
   private final Duration timeout;
 
@@ -56,18 +67,18 @@ public class AStar<
   AStar(
     RemainingWeightHeuristic<State> heuristic,
     Runnable preSearchHook,
-    SkipEdgeStrategy<State, Edge> skipEdgeStrategy,
-    TraverseVisitor<State, Edge> traverseVisitor,
+    @Nullable SkipEdgeStrategy<State, Edge> skipEdgeStrategy,
+    @Nullable TraverseVisitor<State, Edge> traverseVisitor,
     boolean arriveBy,
     Set<Vertex> fromVertices,
-    Set<Vertex> toVertices,
-    SearchTerminationStrategy<State> terminationStrategy,
+    @Nullable Set<Vertex> toVertices,
+    @Nullable SearchTerminationStrategy<State> terminationStrategy,
     DominanceFunction<State> dominanceFunction,
     Duration timeout,
     Collection<State> initialStates,
     StatisticsCallback<Vertex> statisticsCallback
   ) {
-    this.heuristic = heuristic;
+    this.heuristic = Objects.requireNonNull(heuristic);
     this.skipEdgeStrategy = skipEdgeStrategy;
     this.traverseVisitor = traverseVisitor;
     this.fromVertices = fromVertices;
@@ -76,7 +87,7 @@ public class AStar<
     this.terminationStrategy = terminationStrategy;
     this.timeout = Objects.requireNonNull(timeout);
 
-    this.spt = new ShortestPathTree<>(dominanceFunction);
+    this.spt = new ShortestPathTree<>(Objects.requireNonNull(dominanceFunction));
 
     this.statisticsCallback = statisticsCallback;
     this.preSearchHook = preSearchHook;
@@ -178,7 +189,7 @@ public class AStar<
        * Terminate based on timeout. We don't check the termination on every round, as it is
        * expensive to fetch the current time, compared to just running one more round.
        */
-      if (timeout != null && nVisited % 100 == 0 && System.currentTimeMillis() > abortTime) {
+      if (nVisited % 128 == 0 && System.currentTimeMillis() > abortTime) {
         LOG.warn("Search timeout. origin={} target={}", fromVertices, toVertices);
         break;
       }
