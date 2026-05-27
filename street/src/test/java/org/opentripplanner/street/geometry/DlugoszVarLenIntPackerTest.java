@@ -2,7 +2,9 @@ package org.opentripplanner.street.geometry;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.Arrays;
 import org.junit.jupiter.api.Test;
@@ -106,12 +108,13 @@ class DlugoszVarLenIntPackerTest {
   }
 
   /**
-   * {@link DlugoszVarLenIntPacker#decodeAt(byte[], int)} must produce the encoded value and
-   * advance the next-read position past the consumed varint, for every encoding width. Verified
-   * at the boundary values that uniquely identify each width.
+   * A {@link DlugoszVarLenIntPacker.Decoder} must produce the encoded value and consume exactly the
+   * bytes of the varint, for every encoding width. Verified at the boundary values that uniquely
+   * identify each width: after a single {@link DlugoszVarLenIntPacker.Decoder#next()} the cursor
+   * must be exhausted for a one-element packing.
    */
   @Test
-  void decodeAtReturnsValueAndAdvancesPositionForEveryWidth() {
+  void decoderReturnsValueAndAdvancesPositionForEveryWidth() {
     int[][] cases = {
       // { value, expected width in bytes }
       { 0, 1 },
@@ -139,9 +142,10 @@ class DlugoszVarLenIntPackerTest {
       int expectedWidth = c[1];
       byte[] packed = DlugoszVarLenIntPacker.pack(new int[] { value });
       assertEquals(expectedWidth, packed.length, "packed width for value " + value);
-      var decoded = DlugoszVarLenIntPacker.decodeAt(packed, 0);
-      assertEquals(value, decoded.value(), "decoded value for input " + value);
-      assertEquals(expectedWidth, decoded.nextPos(), "nextPos for input " + value);
+      var decoder = new DlugoszVarLenIntPacker.Decoder(packed);
+      assertTrue(decoder.hasNext(), "decoder should have a value for input " + value);
+      assertEquals(value, decoder.next(), "decoded value for input " + value);
+      assertFalse(decoder.hasNext(), "decoder should be exhausted after one value for " + value);
     }
   }
 
@@ -161,20 +165,18 @@ class DlugoszVarLenIntPackerTest {
   }
 
   /**
-   * Calling {@code decodeAt} sequentially with the position returned by the previous call must
-   * walk the entire array and produce exactly the values fed to {@code pack}, regardless of width
+   * Walking a {@link DlugoszVarLenIntPacker.Decoder} with {@code hasNext()}/{@code next()} must
+   * visit the entire array and produce exactly the values fed to {@code pack}, regardless of width
    * mix.
    */
   @Test
-  void decodeAtCanWalkAnArrayManually() {
+  void decoderCanWalkAnArray() {
     int[] values = { -64, 64, -8192, 8192, -1048576, 1048576 };
     byte[] packed = DlugoszVarLenIntPacker.pack(values);
-    int pos = 0;
+    var decoder = new DlugoszVarLenIntPacker.Decoder(packed);
     int idx = 0;
-    while (pos < packed.length) {
-      var d = DlugoszVarLenIntPacker.decodeAt(packed, pos);
-      assertEquals(values[idx++], d.value(), "value at index " + (idx - 1));
-      pos = d.nextPos();
+    while (decoder.hasNext()) {
+      assertEquals(values[idx++], decoder.next(), "value at index " + (idx - 1));
     }
     assertEquals(values.length, idx);
   }
