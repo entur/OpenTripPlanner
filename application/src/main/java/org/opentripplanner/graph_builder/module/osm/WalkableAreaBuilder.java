@@ -204,7 +204,7 @@ class WalkableAreaBuilder {
     // Vertex-to-areaGroup map needed for cache-hit reconstruction
     Map<IntersectionVertex, AreaGroup> vertexToAreaGroup = new HashMap<>();
 
-    long cacheKey = visibilityCacheKey(group);
+    long cacheKey = group.cacheKey();
     double[][] cachedPairs = visibilityCache != null ? visibilityCache.get(cacheKey) : null;
 
     // OSM ways that this area group consists of
@@ -712,32 +712,6 @@ class WalkableAreaBuilder {
   }
 
   private record NodeEdge(IntersectionVertex from, IntersectionVertex to) {}
-
-  /**
-   * Compute a stable hash key for an {@link OsmAreaGroup} that is used to look up and store
-   * cached visibility computation results. The hash incorporates the sorted OSM entity IDs forming
-   * the group and the coordinates of all ring polygons, so that any change to the underlying OSM
-   * data produces a different key and forces a cache miss.
-   */
-  static long visibilityCacheKey(OsmAreaGroup group) {
-    long hash = 1L;
-    long[] entityIds = group.areas
-      .stream()
-      .map(a -> a.parent)
-      .mapToLong(OsmEntity::getId)
-      .sorted()
-      .toArray();
-    for (long id : entityIds) {
-      hash = 31L * hash + id;
-    }
-    for (Ring ring : group.outermostRings) {
-      for (Coordinate c : ring.jtsPolygon.getCoordinates()) {
-        hash = 31L * hash + Double.doubleToLongBits(c.x);
-        hash = 31L * hash + Double.doubleToLongBits(c.y);
-      }
-    }
-    return hash;
-  }
 
   /** Encode a vertex coordinate as a string key for map lookup. */
   private static String coordKey(double x, double y) {
