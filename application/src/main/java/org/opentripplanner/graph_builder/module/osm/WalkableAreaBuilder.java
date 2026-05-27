@@ -2,7 +2,6 @@ package org.opentripplanner.graph_builder.module.osm;
 
 import static org.opentripplanner.graph_builder.module.osm.LinearBarrierNodeType.SPLIT;
 
-import gnu.trove.map.TLongObjectMap;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,6 +24,7 @@ import org.opentripplanner.astar.spi.SkipEdgeStrategy;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.framework.application.OTPRequestTimeoutException;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
+import org.opentripplanner.graph_builder.module.cache.KeyValueCache;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmNode;
@@ -73,18 +73,11 @@ class WalkableAreaBuilder {
 
   /**
    * Visibility cache loaded from disk before processing begins. Key: area group hash.
-   * Value: survived visibility edge pairs as {@code {fromX, fromY, toX, toY}} per entry.
-   * Null when visibility caching is disabled.
+   * Value: survived visibility-edge pairs as {@code {fromX, fromY, toX, toY}} per entry.
+   * {@code null} when visibility caching is disabled.
    */
   @Nullable
-  private final TLongObjectMap<double[][]> visibilityCache;
-
-  /**
-   * Accumulates newly-computed visibility edge pairs for storage in the cache after all areas are
-   * processed. Null when visibility caching is disabled.
-   */
-  @Nullable
-  private final TLongObjectMap<double[][]> newVisibilityCacheEntries;
+  private final KeyValueCache<Long, double[][]> visibilityCache;
 
   // template for AreaEdge names
   private static final String LABEL_TEMPLATE = "way (area) %s from %s to %s";
@@ -112,7 +105,6 @@ class WalkableAreaBuilder {
       maxAreaNodes,
       platformEntriesLinking,
       boardingLocationRefTags,
-      null,
       null
     );
   }
@@ -128,8 +120,7 @@ class WalkableAreaBuilder {
     int maxAreaNodes,
     boolean platformEntriesLinking,
     Set<String> boardingLocationRefTags,
-    @Nullable TLongObjectMap<double[][]> visibilityCache,
-    @Nullable TLongObjectMap<double[][]> newVisibilityCacheEntries
+    @Nullable KeyValueCache<Long, double[][]> visibilityCache
   ) {
     this.graph = graph;
     this.osmdb = osmdb;
@@ -142,7 +133,6 @@ class WalkableAreaBuilder {
     this.platformEntriesLinking = platformEntriesLinking;
     this.boardingLocationRefTags = boardingLocationRefTags;
     this.visibilityCache = visibilityCache;
-    this.newVisibilityCacheEntries = newVisibilityCacheEntries;
     this.platformLinkingPoints = platformEntriesLinking
       ? graph
           .getVertices()
@@ -420,7 +410,7 @@ class WalkableAreaBuilder {
     } else {
       // Cache miss: prune and, if caching is enabled, store the result.
       Set<Edge> survivingVisibilityEdges = pruneAreaEdges(startingVertices, edges, ringEdges);
-      if (newVisibilityCacheEntries != null) {
+      if (visibilityCache != null) {
         double[][] pairs = survivingVisibilityEdges
           .stream()
           .map(e ->
@@ -432,7 +422,7 @@ class WalkableAreaBuilder {
             }
           )
           .toArray(double[][]::new);
-        newVisibilityCacheEntries.put(cacheKey, pairs);
+        visibilityCache.put(cacheKey, pairs);
       }
     }
 

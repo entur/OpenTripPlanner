@@ -5,6 +5,7 @@ import com.esotericsoftware.kryo.KryoException;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import java.io.Closeable;
+import java.io.Serializable;
 import java.time.Duration;
 import java.util.HashMap;
 import java.util.List;
@@ -12,6 +13,7 @@ import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 import org.opentripplanner.datastore.api.CompositeDataSource;
 import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.routing.graph.kryosupport.KryoBuilder;
@@ -81,12 +83,23 @@ public class GraphBuildCacheManager implements Closeable {
   /**
    * Load the cache for the given task. Returns {@code null} on a miss (entry absent, unreadable,
    * or version mismatch).
+   * <p>
+   * Return {@code null} if the cache is disabled by configuration.
    */
+  @Nullable
   @SuppressWarnings("unchecked")
   public <T> T load(CacheTask task) {
+    if (!isEnabled(task)) {
+      LOG.info("{} cache is disabled by configuration.", task);
+      return null;
+    }
     DataSource entry = cacheFiles.get(task);
     if (entry == null || !entry.exists()) {
-      LOG.info("No {} cache file found at '{}'.", task, entry.path());
+      LOG.info(
+        "No {} cache file found in {}.",
+        task.cacheFileName(),
+        entry == null ? "configured cache directory" : entry.directory()
+      );
       return null;
     }
     LOG.info("Loading {} cache from '{}'.", task, entry.path());
@@ -115,6 +128,17 @@ public class GraphBuildCacheManager implements Closeable {
   }
 
   /**
+   * <p>
+   * Return {@code null} if the cache is disabled by configuration.
+   */
+  @Nullable
+  public <K extends Serializable, V extends Serializable> KeyValueCache<K, V> loadKVCache(
+    CacheTask task
+  ) {
+    return isEnabled(task) ? new KeyValueCache<>(task, load(task)) : null;
+  }
+
+  /**
    * Schedule an asynchronous write of {@code data} to the cache file for {@code task}.
    * <p>
    * The write is performed on a dedicated background thread so the calling (graph-build) thread
@@ -137,6 +161,12 @@ public class GraphBuildCacheManager implements Closeable {
         LOG.warn("Failed to save {} cache to '{}': {}.", task, entry.path(), e.getMessage());
       }
     });
+  }
+
+  public <K extends Serializable, V extends Serializable> void saveKVCache(
+    KeyValueCache<K, V> cache
+  ) {
+    save(cache.task(), cache.newEntries());
   }
 
   /**

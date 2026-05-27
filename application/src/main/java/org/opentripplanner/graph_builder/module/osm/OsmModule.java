@@ -9,8 +9,6 @@ import static org.opentripplanner.osm.model.TraverseDirection.FORWARD;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import gnu.trove.iterator.TLongIterator;
-import gnu.trove.map.TLongObjectMap;
-import gnu.trove.map.hash.TLongObjectHashMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -27,6 +25,7 @@ import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.model.GraphBuilderModule;
 import org.opentripplanner.graph_builder.module.cache.CacheTask;
 import org.opentripplanner.graph_builder.module.cache.GraphBuildCacheManager;
+import org.opentripplanner.graph_builder.module.cache.KeyValueCache;
 import org.opentripplanner.graph_builder.module.osm.edgelevelinfo.DefaultInclinedEdgeLevelInfoProcessor;
 import org.opentripplanner.graph_builder.module.osm.edgelevelinfo.NoopInclinedEdgeLevelInfoProcessor;
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmProcessingParameters;
@@ -280,14 +279,9 @@ public class OsmModule implements GraphBuilderModule {
       vertexGenerator.nodesInBarrierWays()
     );
 
-    TLongObjectMap<double[][]> visibilityCache = null;
-    TLongObjectMap<double[][]> newVisibilityCacheEntries = null;
-    if (!skipVisibility && cacheManager.isEnabled(CacheTask.VISIBILITY)) {
-      visibilityCache = cacheManager.load(CacheTask.VISIBILITY);
-      if (visibilityCache == null) {
-        visibilityCache = new TLongObjectHashMap<>();
-      }
-      newVisibilityCacheEntries = new TLongObjectHashMap<>(visibilityCache);
+    KeyValueCache<Long, double[][]> visibilityCache = null;
+    if (!skipVisibility) {
+      visibilityCache = cacheManager.loadKVCache(CacheTask.VISIBILITY);
     }
 
     WalkableAreaBuilder walkableAreaBuilder = new WalkableAreaBuilder(
@@ -301,8 +295,7 @@ public class OsmModule implements GraphBuilderModule {
       params.maxAreaNodes(),
       params.platformEntriesLinking(),
       params.boardingAreaRefTags(),
-      visibilityCache,
-      newVisibilityCacheEntries
+      visibilityCache
     );
     if (skipVisibility) {
       for (OsmAreaGroup group : areaGroups) {
@@ -323,8 +316,8 @@ public class OsmModule implements GraphBuilderModule {
       LOG.info(progress.completeMessage());
     }
 
-    if (newVisibilityCacheEntries != null) {
-      cacheManager.save(CacheTask.VISIBILITY, new TLongObjectHashMap<>(newVisibilityCacheEntries));
+    if (visibilityCache != null) {
+      cacheManager.saveKVCache(visibilityCache);
     }
 
     if (skipVisibility) {

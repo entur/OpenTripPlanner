@@ -152,7 +152,7 @@ public class ElevationModule implements GraphBuilderModule {
     boolean multiThreadElevationCalculations,
     int elevationTileCacheSizeMB
   ) {
-    gridCoverageFactory = factory;
+    this.gridCoverageFactory = factory;
     this.graph = graph;
     this.issueStore = issueStore;
     this.cacheManager = cacheManager;
@@ -172,12 +172,7 @@ public class ElevationModule implements GraphBuilderModule {
 
     graph.setDistanceBetweenElevationSamples(this.distanceBetweenSamplesM);
 
-    if (cacheManager.isEnabled(CacheTask.ELEVATION)) {
-      cachedElevations = cacheManager.load(CacheTask.ELEVATION);
-      if (cachedElevations == null) {
-        cachedElevations = new HashMap<>();
-      }
-    }
+    cachedElevations = cacheManager.load(CacheTask.ELEVATION);
     LOG.info("Setting street elevation profiles from digital elevation model...");
 
     List<StreetEdge> streetsWithElevationEdges = new LinkedList<>();
