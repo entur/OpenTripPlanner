@@ -108,12 +108,12 @@ public class BikelyUpdater implements DataSource<VehicleParking> {
           .walkAccessible(true)
           .carAccessible(false);
 
-      return VehicleParking.builder()
+      return VehicleParking.of()
         .id(vehicleParkId)
         .name(name)
         .bicyclePlaces(true)
-        .capacity(VehicleParkingSpaces.builder().bicycleSpaces(totalSpots).build())
-        .availability(VehicleParkingSpaces.builder().bicycleSpaces(freeSpots).build())
+        .capacity(VehicleParkingSpaces.of().bicycleSpaces(totalSpots).build())
+        .availability(VehicleParkingSpaces.of().bicycleSpaces(freeSpots).build())
         .state(toState(isUnderMaintenance))
         .coordinate(coord)
         .entrance(entrance)
