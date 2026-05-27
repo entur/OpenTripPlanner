@@ -1,10 +1,11 @@
 package org.opentripplanner.transit.model.network;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.LineString;
-import org.opentripplanner.street.geometry.CompactLineStringUtils;
+import org.opentripplanner.street.geometry.CompactGeometrySequence;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.transit.model.site.StopLocation;
@@ -30,7 +31,7 @@ final class TripPatternGeometry implements Serializable {
    * non-null. For shapeless patterns the entries are the compressed form of synthetic
    * 2-point straight lines between consecutive stops.
    */
-  private final byte[][] hopGeometries;
+  private final CompactGeometrySequence hopGeometries;
 
   /**
    * Cumulative distance in meters along the pattern from stop 0 up to stop i.
@@ -38,7 +39,10 @@ final class TripPatternGeometry implements Serializable {
    */
   private final int[] cumulativeDistanceMeters;
 
-  private TripPatternGeometry(byte[][] hopGeometries, int[] cumulativeDistanceMeters) {
+  private TripPatternGeometry(
+    CompactGeometrySequence hopGeometries,
+    int[] cumulativeDistanceMeters
+  ) {
     this.hopGeometries = hopGeometries;
     this.cumulativeDistanceMeters = cumulativeDistanceMeters;
   }
@@ -63,14 +67,14 @@ final class TripPatternGeometry implements Serializable {
       );
     }
     double[] cumulativeDouble = new double[numberOfStops];
-    byte[][] compressed = new byte[expectedHops][];
+    List<LineString> hops = new ArrayList<>(expectedHops);
 
     if (hopGeometries != null) {
       for (int i = 0; i < hopGeometries.size(); i++) {
         LineString hop = hopGeometries.get(i);
         cumulativeDouble[i + 1] =
           cumulativeDouble[i] + GeometryUtils.sumDistances(hop.getCoordinateSequence());
-        compressed[i] = CompactLineStringUtils.compactLineString(hop, false);
+        hops.add(hop);
       }
     } else {
       for (int i = 0; i < numberOfStops - 1; i++) {
@@ -80,7 +84,7 @@ final class TripPatternGeometry implements Serializable {
         cumulativeDouble[i + 1] =
           cumulativeDouble[i] +
           SphericalDistanceLibrary.distance(from.getLat(), from.getLon(), to.getLat(), to.getLon());
-        compressed[i] = CompactLineStringUtils.compactLineString(hop, false);
+        hops.add(hop);
       }
     }
 
@@ -88,7 +92,7 @@ final class TripPatternGeometry implements Serializable {
     for (int i = 0; i < numberOfStops; i++) {
       cumulativeMeters[i] = (int) Math.round(cumulativeDouble[i]);
     }
-    return new TripPatternGeometry(compressed, cumulativeMeters);
+    return new TripPatternGeometry(CompactGeometrySequence.compact(hops), cumulativeMeters);
   }
 
   /**
@@ -107,44 +111,16 @@ final class TripPatternGeometry implements Serializable {
    * matches the previous on-the-fly synthesis behaviour.
    */
   LineString hopGeometry(int hopIndex) {
-    return CompactLineStringUtils.uncompactLineString(hopGeometries[hopIndex], false);
+    return hopGeometries.get(hopIndex);
   }
 
   /**
    * Return the concatenated hop geometry between the boarding and alighting stop positions.
-   * Symmetric with {@link #distanceBetween(int, int)}.
-   * <p>
-   * Decodes each packed hop directly into a single result buffer instead of materializing one
-   * {@link LineString} per hop and concatenating afterwards. The shared stop coordinate at every
-   * hop seam (last coord of hop {@code i} == first coord of hop {@code i+1}) is emitted only once.
+   * Symmetric with {@link #distanceBetween(int, int)}. The shared stop coordinate at every hop
+   * seam is emitted only once.
    */
   LineString geometryBetween(int boardingStopPosition, int alightingStopPosition) {
-    int numHops = alightingStopPosition - boardingStopPosition;
-    if (numHops <= 0) {
-      return GeometryUtils.emptyLineString();
-    }
-    int totalCoords = 0;
-    for (int i = boardingStopPosition; i < alightingStopPosition; i++) {
-      totalCoords += CompactLineStringUtils.coordinateCount(hopGeometries[i]);
-    }
-    // Each seam between two consecutive hops repeats one stop coordinate; emit it only once.
-    totalCoords -= (numHops - 1);
-    if (totalCoords <= 0) {
-      return GeometryUtils.emptyLineString();
-    }
-    double[] out = new double[totalCoords * 2];
-    int offset = 0;
-    for (int i = boardingStopPosition; i < alightingStopPosition; i++) {
-      offset = CompactLineStringUtils.decodeDeltaCoordinatesInto(
-        hopGeometries[i],
-        out,
-        offset,
-        0,
-        0,
-        i > boardingStopPosition
-      );
-    }
-    return GeometryUtils.makeLineString(out);
+    return hopGeometries.concatenate(boardingStopPosition, alightingStopPosition);
   }
 
   /**
@@ -153,6 +129,6 @@ final class TripPatternGeometry implements Serializable {
    * with no hops (one stop or fewer) the returned geometry is empty but never null.
    */
   LineString concatenatedGeometry() {
-    return geometryBetween(0, hopGeometries.length);
+    return hopGeometries.concatenate(0, hopGeometries.size());
   }
 }

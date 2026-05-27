@@ -180,7 +180,7 @@ public final class CompactLineStringUtils {
    * Number of coordinates encoded in {@code packedCoords} without decoding them. Use this to
    * pre-size a target buffer for {@link #decodeDeltaCoordinatesInto}.
    */
-  public static int coordinateCount(byte[] packedCoords) {
+  static int coordinateCount(byte[] packedCoords) {
     return DlugoszVarLenIntPacker.countValues(packedCoords) / 2;
   }
 
@@ -189,8 +189,8 @@ public final class CompactLineStringUtils {
    * at {@code offset}, returning the new offset (one past the last double written).
    * <p>
    * Streams through the packed bytes without allocating an intermediate {@code int[]} or boxing.
-   * Used by {@link #uncompactLineString} and by callers that concatenate several packed line
-   * strings into one buffer.
+   * Used by {@link #uncompactLineString} and by {@link CompactGeometrySequence#concatenate} to
+   * concatenate several packed line strings into one buffer.
    *
    * @param packedCoords   the compact line string, or {@code null} / empty for a no-op
    * @param out            target array to write decoded coordinates into (flat: [x0, y0, x1, y1, ...])
@@ -203,7 +203,7 @@ public final class CompactLineStringUtils {
    *                       concatenation.
    * @return the offset of the first unwritten slot in {@code out}
    */
-  public static int decodeDeltaCoordinatesInto(
+  static int decodeDeltaCoordinatesInto(
     byte[] packedCoords,
     double[] out,
     int offset,
