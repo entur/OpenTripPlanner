@@ -87,7 +87,7 @@
           "availableDoorsDescriptions": null
         },
         {
-          "availableSpots": 0,
+          "availableSpots": 3,
           "hasParking": false,
           "totalSpots": 0,
           "doorTypeName": "Rack",
