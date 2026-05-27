@@ -1,6 +1,9 @@
 package org.opentripplanner.raptor.rangeraptor.standard;
 
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
+import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.rangeraptor.internalapi.WorkerLifeCycle;
 import org.opentripplanner.raptor.rangeraptor.transit.RaptorTransitCalculator;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
@@ -40,14 +43,23 @@ public class StdTransferEarlyPruning<T extends RaptorTripSchedule> {
   private int currentRound;
 
   public StdTransferEarlyPruning(
-    int[] egressStopIndices,
-    int[] egressMinDurations,
+    Collection<RaptorAccessEgress> egressPaths,
     int nRounds,
     RaptorTransitCalculator<T> calculator,
     WorkerLifeCycle lifeCycle
   ) {
-    this.egressStopIndices = egressStopIndices;
-    this.egressMinDurations = egressMinDurations;
+    var minDurationByStop = new LinkedHashMap<Integer, Integer>();
+    for (var egress : egressPaths) {
+      minDurationByStop.merge(egress.stop(), egress.durationInSeconds(), Math::min);
+    }
+    this.egressStopIndices = new int[minDurationByStop.size()];
+    this.egressMinDurations = new int[minDurationByStop.size()];
+    int i = 0;
+    for (var entry : minDurationByStop.entrySet()) {
+      this.egressStopIndices[i] = entry.getKey();
+      this.egressMinDurations[i] = entry.getValue();
+      i++;
+    }
     this.calculator = calculator;
     this.bestDestArrivalByRound = new int[nRounds + 1];
     Arrays.fill(this.bestDestArrivalByRound, calculator.unreachedTime());

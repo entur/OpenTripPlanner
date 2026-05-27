@@ -277,19 +277,12 @@ public class StdRangeRaptorConfig<T extends RaptorTripSchedule> {
     if (!ctx.transferEarlyPruningEnabled()) {
       return null;
     }
-    var minDurationByStop = new java.util.LinkedHashMap<Integer, Integer>();
-    for (var egress : egressPaths().listAll()) {
-      minDurationByStop.merge(egress.stop(), egress.durationInSeconds(), Math::min);
-    }
-    int[] stops = new int[minDurationByStop.size()];
-    int[] durations = new int[minDurationByStop.size()];
-    int i = 0;
-    for (var entry : minDurationByStop.entrySet()) {
-      stops[i] = entry.getKey();
-      durations[i] = entry.getValue();
-      i++;
-    }
-    return new StdTransferEarlyPruning<T>(stops, durations, ctx.nRounds(), ctx.calculator(), ctx.lifeCycle());
+    return new StdTransferEarlyPruning<T>(
+      egressPaths().listAll(),
+      ctx.nRounds(),
+      ctx.calculator(),
+      ctx.lifeCycle()
+    );
   }
 
   private <S extends BestNumberOfTransfers> S withBestNumberOfTransfers(S value) {
