@@ -99,7 +99,6 @@ public class GraphBuildCacheManager implements Closeable {
         );
         return null;
       }
-      LOG.info("Loaded {} cache from '{}'.", task, entry.path());
       return wrapper.data;
     } catch (Exception e) {
       LOG.warn(
