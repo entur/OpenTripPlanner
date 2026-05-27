@@ -90,7 +90,6 @@ public class GraphBuildCacheManager implements Closeable {
   @SuppressWarnings("unchecked")
   public <T> T load(CacheTask task) {
     if (!isEnabled(task)) {
-      LOG.info("{} cache is disabled by configuration.", task);
       return null;
     }
     DataSource entry = cacheFiles.get(task);
