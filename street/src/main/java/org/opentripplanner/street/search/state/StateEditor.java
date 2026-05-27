@@ -77,20 +77,22 @@ public class StateEditor {
       traversingBackward = true;
       this.vertex = fromVertex;
     } else {
-      // Parent state is not at either end of edge.
-      LOG.warn("Edge is not connected to parent state: {}", e);
-      LOG.warn("   from   vertex: {}", fromVertex);
-      LOG.warn("   to     vertex: {}", toVertex);
-      LOG.warn("   parent vertex: {}", parentVertex);
-      defectiveTraversal = true;
-      this.vertex = null;
+      throw new IllegalStateException(
+        "Edge is not connected to parent state: %s, from=%s, to=%s, parent=%s".formatted(
+          e,
+          fromVertex,
+          toVertex,
+          parentVertex
+        )
+      );
     }
 
     if (traversingBackward != parent.getRequest().arriveBy()) {
-      LOG.error(
-        "Actual traversal direction does not match traversal direction in TraverseOptions."
+      throw new IllegalStateException(
+        "Actual traversal direction does not match traversal direction in %s".formatted(
+          parent.getRequest()
+        )
       );
-      defectiveTraversal = true;
     }
   }
 
@@ -387,10 +389,6 @@ public class StateEditor {
 
   public void setTimeSeconds(long seconds) {
     this.time_ms = 1000 * seconds;
-  }
-
-  public void setTimeMilliseconds(long milliseconds) {
-    this.time_ms = milliseconds;
   }
 
   /* PUBLIC GETTER METHODS */

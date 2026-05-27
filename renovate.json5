@@ -39,6 +39,16 @@
     },
     {
       "matchFiles": ["client/package.json"],
+      "matchPackageNames": [
+        // incompatible with the current code, needs further investigation
+        "@graphql-codegen/cli",
+        "@graphql-codegen/client-preset",
+        "@graphql-codegen/introspection"
+      ],
+      enabled: false
+    },
+    {
+      "matchFiles": ["client/package.json"],
       "matchUpdateTypes": ["major"],
       "minimumReleaseAge": "4 days",
       "reviewers": ["testower"],

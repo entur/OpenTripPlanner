@@ -1,4 +1,4 @@
-package org.opentripplanner;
+package org.opentripplanner.standalone.api;
 
 import static org.opentripplanner.standalone.configure.ConstructApplication.createRaptorTransitData;
 
@@ -11,6 +11,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.ext.emission.internal.DefaultEmissionRepository;
 import org.opentripplanner.ext.emission.internal.DefaultEmissionService;
 import org.opentripplanner.ext.emission.internal.itinerary.EmissionItineraryDecorator;
+import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
 import org.opentripplanner.raptor.configure.RaptorConfig;
 import org.opentripplanner.routing.algorithm.filterchain.framework.spi.ItineraryDecorator;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
@@ -35,7 +36,6 @@ import org.opentripplanner.service.worldenvelope.WorldEnvelopeService;
 import org.opentripplanner.service.worldenvelope.internal.DefaultWorldEnvelopeRepository;
 import org.opentripplanner.service.worldenvelope.internal.DefaultWorldEnvelopeService;
 import org.opentripplanner.service.worldenvelope.model.WorldEnvelope;
-import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.standalone.config.DebugUiConfig;
 import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.standalone.config.routerconfig.RaptorEnvironmentFactory;
@@ -47,6 +47,8 @@ import org.opentripplanner.street.service.DefaultStreetLimitationParametersServi
 import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.transfer.regular.TransferRepository;
 import org.opentripplanner.transfer.regular.TransferServiceTestFactory;
+import org.opentripplanner.transfer.regular.internal.DefaultTransferRepository;
+import org.opentripplanner.transfer.regular.internal.TransferIndex;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
@@ -216,6 +218,15 @@ public class TestServerContext {
         var group = transitService.getStopLocationsGroup(id);
         return Optional.ofNullable(group).map(locationsGroup -> locationsGroup.getCoordinate());
       }
+    );
+  }
+
+  public static OtpServerRequestContext ofGraph(Graph graph) {
+    return createServerContext(
+      graph,
+      new TimetableRepository(),
+      new DefaultTransferRepository(new TransferIndex()),
+      new DefaultFareService()
     );
   }
 }

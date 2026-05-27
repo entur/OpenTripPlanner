@@ -1,4 +1,4 @@
-package org.opentripplanner.routing.algorithm;
+package org.opentripplanner.street.integration;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
