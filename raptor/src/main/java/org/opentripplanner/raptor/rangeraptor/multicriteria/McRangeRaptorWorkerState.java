@@ -64,8 +64,6 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule>
   implements RaptorWorkerState<T> {
 
-  private static final boolean EARLY_PRUNING_ENABLED = true;
-
   private final McStopArrivals<T> arrivals;
   private final DestinationArrivalPaths<T> paths;
   private final HeuristicsProvider<T> heuristics;

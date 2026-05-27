@@ -17,6 +17,7 @@ import org.opentripplanner.raptor.rangeraptor.path.configure.PathConfig;
 import org.opentripplanner.raptor.rangeraptor.standard.ArrivalTimeRoutingStrategy;
 import org.opentripplanner.raptor.rangeraptor.standard.MinTravelDurationRoutingStrategy;
 import org.opentripplanner.raptor.rangeraptor.standard.StdRangeRaptorWorkerState;
+import org.opentripplanner.raptor.rangeraptor.standard.StdTransferEarlyPruning;
 import org.opentripplanner.raptor.rangeraptor.standard.StdWorkerState;
 import org.opentripplanner.raptor.rangeraptor.standard.besttimes.BestTimes;
 import org.opentripplanner.raptor.rangeraptor.standard.besttimes.BestTimesOnlyStopArrivalsState;
@@ -106,7 +107,6 @@ public class StdRangeRaptorConfig<T extends RaptorTripSchedule> {
 
   private StdRangeRaptorWorkerState<T> resolveState() {
     if (state == null) {
-      var egressData = computeEgressStopData();
       this.state = oneOf(
         new StdRangeRaptorWorkerState<>(
           ctx.calculator(),
@@ -114,10 +114,7 @@ public class StdRangeRaptorConfig<T extends RaptorTripSchedule> {
           createStopArrivals(),
           resolveBestNumberOfTransfers(),
           resolveArrivedAtDestinationCheck(),
-          egressData[0],
-          egressData[1],
-          ctx.nRounds(),
-          ctx.lifeCycle()
+          createEarlyPruning()
         ),
         StdWorkerState.class
       );
@@ -276,16 +273,13 @@ public class StdRangeRaptorConfig<T extends RaptorTripSchedule> {
     );
   }
 
-  /**
-   * Compute egress stop data for Early Pruning: returns [stopIndices, minDurations] where
-   * minDurations[i] is the minimum egress duration from stopIndices[i] to the destination.
-   */
-  private int[][] computeEgressStopData() {
+  private StdTransferEarlyPruning<T> createEarlyPruning() {
+    if (!ctx.transferEarlyPruningEnabled()) {
+      return null;
+    }
     var minDurationByStop = new java.util.LinkedHashMap<Integer, Integer>();
     for (var egress : egressPaths().listAll()) {
-      int stop = egress.stop();
-      int dur = egress.durationInSeconds();
-      minDurationByStop.merge(stop, dur, Math::min);
+      minDurationByStop.merge(egress.stop(), egress.durationInSeconds(), Math::min);
     }
     int[] stops = new int[minDurationByStop.size()];
     int[] durations = new int[minDurationByStop.size()];
@@ -295,7 +289,7 @@ public class StdRangeRaptorConfig<T extends RaptorTripSchedule> {
       durations[i] = entry.getValue();
       i++;
     }
-    return new int[][] { stops, durations };
+    return new StdTransferEarlyPruning<T>(stops, durations, ctx.nRounds(), ctx.calculator(), ctx.lifeCycle());
   }
 
   private <S extends BestNumberOfTransfers> S withBestNumberOfTransfers(S value) {

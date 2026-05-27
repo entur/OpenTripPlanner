@@ -1,0 +1,96 @@
+package org.opentripplanner.raptor.rangeraptor.standard;
+
+import java.util.Arrays;
+import org.opentripplanner.raptor.rangeraptor.internalapi.WorkerLifeCycle;
+import org.opentripplanner.raptor.rangeraptor.transit.RaptorTransitCalculator;
+import org.opentripplanner.raptor.spi.RaptorTripSchedule;
+
+/**
+ * Early Pruning optimization for Standard Range Raptor transfer relaxation.
+ * <p>
+ * This optimization breaks the transfer loop early when the current arrival time exceeds the best
+ * known destination arrival time. It requires transfers to be sorted by duration (non-decreasing),
+ * so that once a transfer exceeds the bound, all subsequent transfers will too.
+ * <p>
+ * The optimization is only applied to Standard RAPTOR (not Multi-Criteria). In MC-Raptor, multiple
+ * Pareto-optimal arrivals at each stop must be explored; pruning based on a single best destination
+ * time would discard arrivals that are suboptimal in time but optimal in cost.
+ * <p>
+ * Two bounds are maintained for correctness with Range Raptor:
+ * <ol>
+ *   <li>A per-round bound ({@code bestDestArrivalByRound}) tracking the best destination arrival
+ *   across all Range Raptor iterations for the current round. This ensures that a fast path from an
+ *   earlier iteration (later departure) does not incorrectly prune a path in the current iteration,
+ *   since the Pareto set includes both departure time and arrival time.</li>
+ *   <li>A within-iteration bound ({@code bestDestCurrentIteration}) tracking the best destination
+ *   arrival seen in earlier rounds of the current iteration. Within a fixed departure-time
+ *   iteration, rounds are processed sequentially, so this bound is safe to apply.</li>
+ * </ol>
+ * See: Rohovyi, Abuaisha, Walsh — "Early Pruning for Public Transport Routing", WCTR 2026.
+ *
+ * @param <T> The TripSchedule type defined by the user of the raptor API.
+ */
+public class StdTransferEarlyPruning<T extends RaptorTripSchedule> {
+
+  private final int[] egressStopIndices;
+  private final int[] egressMinDurations;
+  private final int[] bestDestArrivalByRound;
+  private final RaptorTransitCalculator<T> calculator;
+  private int bestDestCurrentIteration;
+  private int currentRound;
+
+  public StdTransferEarlyPruning(
+    int[] egressStopIndices,
+    int[] egressMinDurations,
+    int nRounds,
+    RaptorTransitCalculator<T> calculator,
+    WorkerLifeCycle lifeCycle
+  ) {
+    this.egressStopIndices = egressStopIndices;
+    this.egressMinDurations = egressMinDurations;
+    this.calculator = calculator;
+    this.bestDestArrivalByRound = new int[nRounds + 1];
+    Arrays.fill(this.bestDestArrivalByRound, calculator.unreachedTime());
+    this.bestDestCurrentIteration = calculator.unreachedTime();
+    this.currentRound = 0;
+    lifeCycle.onPrepareForNextRound(round -> this.currentRound = round);
+    lifeCycle.onSetupIteration(ignore -> this.bestDestCurrentIteration = calculator.unreachedTime());
+  }
+
+  /**
+   * Notify early pruning of a new best arrival at {@code stop}. If this is an egress stop, the
+   * destination arrival bounds are updated.
+   */
+  void updateArrival(int stop, int alightTime) {
+    for (int i = 0; i < egressStopIndices.length; i++) {
+      if (egressStopIndices[i] == stop) {
+        int destArrival = calculator.plusDuration(alightTime, egressMinDurations[i]);
+        if (
+          currentRound < bestDestArrivalByRound.length &&
+          calculator.isBefore(destArrival, bestDestArrivalByRound[currentRound])
+        ) {
+          bestDestArrivalByRound[currentRound] = destArrival;
+        }
+        if (calculator.isBefore(destArrival, bestDestCurrentIteration)) {
+          bestDestCurrentIteration = destArrival;
+        }
+        break;
+      }
+    }
+  }
+
+  /**
+   * Returns {@code true} if {@code arrivalTime} is not better than the best known destination
+   * arrival time, meaning this transfer — and all subsequent longer ones — can be skipped.
+   */
+  boolean exceedsBound(int arrivalTime) {
+    int bound = bestDestCurrentIteration;
+    if (
+      currentRound < bestDestArrivalByRound.length &&
+      calculator.isBefore(bestDestArrivalByRound[currentRound], bound)
+    ) {
+      bound = bestDestArrivalByRound[currentRound];
+    }
+    return !calculator.isBefore(arrivalTime, bound);
+  }
+}
