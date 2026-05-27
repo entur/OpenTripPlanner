@@ -41,7 +41,7 @@ public class BikelyUpdaterTest {
     assertEquals(11, availibility.getBicycleSpaces());
 
     var capacity = first.getCapacity();
-    assertEquals(11, capacity.getBicycleSpaces());
+    assertEquals(15, capacity.getBicycleSpaces());
     assertEquals(VehicleParkingState.OPERATIONAL, first.getState());
 
     parkingLots.forEach(lot -> {

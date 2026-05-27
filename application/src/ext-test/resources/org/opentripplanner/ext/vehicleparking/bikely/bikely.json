@@ -89,7 +89,7 @@
         {
           "availableSpots": 3,
           "hasParking": false,
-          "totalSpots": 0,
+          "totalSpots": 5,
           "doorTypeName": "Rack",
           "preAllocatedDoorId": 0,
           "preAllocatedDoorName": null,

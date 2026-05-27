@@ -125,7 +125,7 @@ public class BikelyUpdater implements DataSource<VehicleParking> {
         .id(vehicleParkId)
         .name(name)
         .bicyclePlaces(true)
-        .capacity(VehicleParkingSpaces.of().bicycleSpaces(availableSpots).build())
+        .capacity(VehicleParkingSpaces.of().bicycleSpaces(totalSpots).build())
         .availability(VehicleParkingSpaces.of().bicycleSpaces(availableSpots).build())
         .state(toState(isUnderMaintenance))
         .coordinate(coord)
