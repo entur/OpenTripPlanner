@@ -9,6 +9,8 @@ import static org.opentripplanner.osm.model.TraverseDirection.FORWARD;
 import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.Multimap;
 import gnu.trove.iterator.TLongIterator;
+import gnu.trove.map.TLongObjectMap;
+import gnu.trove.map.hash.TLongObjectHashMap;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -278,14 +280,14 @@ public class OsmModule implements GraphBuilderModule {
       vertexGenerator.nodesInBarrierWays()
     );
 
-    Map<Long, double[][]> visibilityCache = null;
-    Map<Long, double[][]> newVisibilityCacheEntries = null;
+    TLongObjectMap<double[][]> visibilityCache = null;
+    TLongObjectMap<double[][]> newVisibilityCacheEntries = null;
     if (!skipVisibility && cacheManager.isEnabled(CacheTask.VISIBILITY)) {
       visibilityCache = cacheManager.load(CacheTask.VISIBILITY);
       if (visibilityCache == null) {
-        visibilityCache = new HashMap<>();
+        visibilityCache = new TLongObjectHashMap<>();
       }
-      newVisibilityCacheEntries = new HashMap<>(visibilityCache);
+      newVisibilityCacheEntries = new TLongObjectHashMap<>(visibilityCache);
     }
 
     WalkableAreaBuilder walkableAreaBuilder = new WalkableAreaBuilder(
@@ -322,7 +324,7 @@ public class OsmModule implements GraphBuilderModule {
     }
 
     if (newVisibilityCacheEntries != null) {
-      cacheManager.save(CacheTask.VISIBILITY, new HashMap<>(newVisibilityCacheEntries));
+      cacheManager.save(CacheTask.VISIBILITY, new TLongObjectHashMap<>(newVisibilityCacheEntries));
     }
 
     if (skipVisibility) {

@@ -2,6 +2,7 @@ package org.opentripplanner.graph_builder.module.osm;
 
 import static org.opentripplanner.graph_builder.module.osm.LinearBarrierNodeType.SPLIT;
 
+import gnu.trove.map.TLongObjectMap;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -76,14 +77,14 @@ class WalkableAreaBuilder {
    * Null when visibility caching is disabled.
    */
   @Nullable
-  private final Map<Long, double[][]> visibilityCache;
+  private final TLongObjectMap<double[][]> visibilityCache;
 
   /**
    * Accumulates newly-computed visibility edge pairs for storage in the cache after all areas are
    * processed. Null when visibility caching is disabled.
    */
   @Nullable
-  private final Map<Long, double[][]> newVisibilityCacheEntries;
+  private final TLongObjectMap<double[][]> newVisibilityCacheEntries;
 
   // template for AreaEdge names
   private static final String LABEL_TEMPLATE = "way (area) %s from %s to %s";
@@ -127,8 +128,8 @@ class WalkableAreaBuilder {
     int maxAreaNodes,
     boolean platformEntriesLinking,
     Set<String> boardingLocationRefTags,
-    @Nullable Map<Long, double[][]> visibilityCache,
-    @Nullable Map<Long, double[][]> newVisibilityCacheEntries
+    @Nullable TLongObjectMap<double[][]> visibilityCache,
+    @Nullable TLongObjectMap<double[][]> newVisibilityCacheEntries
   ) {
     this.graph = graph;
     this.osmdb = osmdb;

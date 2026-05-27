@@ -9,6 +9,6 @@ class CacheTaskTest {
   @Test
   void cacheFileName_followsNamingConvention() {
     assertEquals("elevation-cache-1.obj", CacheTask.ELEVATION.cacheFileName());
-    assertEquals("visibility-cache-1.obj", CacheTask.VISIBILITY.cacheFileName());
+    assertEquals("visibility-cache-2.obj", CacheTask.VISIBILITY.cacheFileName());
   }
 }
