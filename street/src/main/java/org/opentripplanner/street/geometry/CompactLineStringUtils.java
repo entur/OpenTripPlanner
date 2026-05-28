@@ -2,7 +2,6 @@ package org.opentripplanner.street.geometry;
 
 import org.locationtech.jts.geom.CoordinateSequence;
 import org.locationtech.jts.geom.LineString;
-import org.opentripplanner.utils.lang.IntUtils;
 
 /**
  * Endpoint-context glue around {@link CompactLineString} for callers (e.g. {@code StreetEdge}) whose
@@ -81,8 +80,8 @@ public final class CompactLineStringUtils {
         "CompactLineStringUtils geometry must stick to given end points. If you need to relax this, please read source code."
       );
     }
-    int oix = IntUtils.round(x0 * CompactLineString.FIXED_FLOAT_MULT);
-    int oiy = IntUtils.round(y0 * CompactLineString.FIXED_FLOAT_MULT);
+    int oix = CompactLineString.toFixedPoint(x0);
+    int oiy = CompactLineString.toFixedPoint(y0);
     return CompactLineString.packIntermediateDeltas(lineString, oix, oiy);
   }
 
@@ -116,8 +115,8 @@ public final class CompactLineStringUtils {
     c[0] = x0;
     c[1] = y0;
     if (intermediateCount > 0) {
-      int oix = IntUtils.round(x0 * CompactLineString.FIXED_FLOAT_MULT);
-      int oiy = IntUtils.round(y0 * CompactLineString.FIXED_FLOAT_MULT);
+      int oix = CompactLineString.toFixedPoint(x0);
+      int oiy = CompactLineString.toFixedPoint(y0);
       CompactLineString.decodeInto(packedCoords, c, 2, oix, oiy, false);
     }
     c[c.length - 2] = x1;

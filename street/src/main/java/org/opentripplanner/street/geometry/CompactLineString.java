@@ -28,9 +28,26 @@ public final class CompactLineString implements Serializable {
 
   /**
    * Multiplier for fixed-float representation. For lat/lon CRS, 1e6 leads to a precision of 0.11
-   * meter at a minimum (at the equator).
+   * meter at a minimum (at the equator). Private — callers use {@link #toFixedPoint(double)} and
+   * {@link #toFloatingPoint(int)} so the conversion mechanism (multiplier + rounding) is the only
+   * place this constant is referenced.
    */
-  static final double FIXED_FLOAT_MULT = 1.0e6;
+  private static final double FIXED_FLOAT_MULT = 1.0e6;
+
+  /**
+   * Encode a floating-point coordinate as a fixed-point integer at the precision implied by the
+   * codec's {@code FIXED_FLOAT_MULT}. Rounds to the nearest integer.
+   */
+  static int toFixedPoint(double v) {
+    return IntUtils.round(v * FIXED_FLOAT_MULT);
+  }
+
+  /**
+   * Decode a fixed-point integer back to the corresponding floating-point coordinate.
+   */
+  static double toFloatingPoint(int v) {
+    return v / FIXED_FLOAT_MULT;
+  }
 
   /**
    * Shared instance for a 2-point straight line (nothing to store). Reused everywhere a straight
@@ -142,8 +159,8 @@ public final class CompactLineString implements Serializable {
         skip = false;
         continue;
       }
-      out[writeIdx++] = oix / FIXED_FLOAT_MULT;
-      out[writeIdx++] = oiy / FIXED_FLOAT_MULT;
+      out[writeIdx++] = toFloatingPoint(oix);
+      out[writeIdx++] = toFloatingPoint(oiy);
     }
     return writeIdx;
   }
@@ -164,8 +181,8 @@ public final class CompactLineString implements Serializable {
     int[] coords = new int[(n - 2) * 2];
     for (int i = 1; i < n - 1; i++) {
       // Round to fixed point before taking the delta to prevent rounding errors from accumulating.
-      int ix = IntUtils.round(seq.getX(i) * FIXED_FLOAT_MULT);
-      int iy = IntUtils.round(seq.getY(i) * FIXED_FLOAT_MULT);
+      int ix = toFixedPoint(seq.getX(i));
+      int iy = toFixedPoint(seq.getY(i));
       coords[(i - 1) * 2] = ix - oix;
       coords[(i - 1) * 2 + 1] = iy - oiy;
       oix = ix;
