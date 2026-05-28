@@ -11,9 +11,9 @@ import java.io.ByteArrayOutputStream;
  *
  * @author laurent
  */
-public class DlugoszVarLenIntPacker {
+class DlugoszVarLenIntPacker {
 
-  public static byte[] pack(int[] arr) {
+  static byte[] pack(int[] arr) {
     if (arr == null) {
       return null;
     }
@@ -74,7 +74,7 @@ public class DlugoszVarLenIntPacker {
     return baos.toByteArray();
   }
 
-  public static int[] unpack(byte[] arr) {
+  static int[] unpack(byte[] arr) {
     if (arr == null) {
       return null;
     }
@@ -91,7 +91,7 @@ public class DlugoszVarLenIntPacker {
    * Number of ints encoded in {@code arr} without decoding their values. Walks the leading tag of
    * each varint to skip its body. Used by allocation-free decoders to size their target buffers.
    */
-  public static int countValues(byte[] arr) {
+  static int countValues(byte[] arr) {
     if (arr == null) {
       return 0;
     }
