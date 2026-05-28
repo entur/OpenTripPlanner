@@ -68,7 +68,7 @@ public class AccessEgressPreferencesTest {
         "CAR_PICKUP: (timePenalty: 20m + 2.0 t, costFactor: 1.5), " +
         "CAR_RENTAL: (timePenalty: 20m + 2.0 t, costFactor: 1.5), " +
         "CAR_HAILING: (timePenalty: 20m + 2.0 t, costFactor: 1.5), " +
-        "FLEXIBLE: (timePenalty: 10m + 1.3 t, costFactor: 1.3)}, " +
+        "FLEXIBLE: (timePenalty: 20m + 3.0 t, costFactor: 1.0)}, " +
         "maxDuration: DurationForStreetMode{default:5m}, " +
         "maxStopCount: MaxStopCountLimit{defaultLimit: 245, limitsForModes: {CAR=0}}" +
         "}",

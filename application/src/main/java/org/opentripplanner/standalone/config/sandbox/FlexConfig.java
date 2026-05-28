@@ -96,12 +96,11 @@ public class FlexConfig implements FlexParameters {
     boardCost = json
       .of("boardCost")
       .since(V2_10)
-      .summary("A board cost added to the generalized cost of a flex access/egress leg.")
+      .summary("A board cost added to the generalized cost of a flex leg.")
       .description(
         """
-        This cost is applied once per flex access or egress leg in a flex + transit itinerary,
-        penalizing the act of boarding the flex vehicle. Using the board cost seems to work well
-        when setting an access/egress penalty with no time penalty and a high cost factor.
+        This cost is applied once per any type of flex leg including access/egress and direct legs,
+        penalizing the act of boarding the flex vehicle.
         """
       )
       .asInt(DEFAULT.boardCost());

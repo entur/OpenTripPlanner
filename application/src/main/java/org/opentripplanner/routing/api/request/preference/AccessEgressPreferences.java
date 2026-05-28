@@ -162,7 +162,7 @@ public final class AccessEgressPreferences implements Serializable {
   private static TimeAndCostPenaltyForEnum<StreetMode> createDefaultCarPenalty() {
     var penaltyBuilder = TimeAndCostPenaltyForEnum.of(StreetMode.class);
 
-    var flexDefaultPenalty = TimeAndCostPenalty.of(TimePenalty.of(ofMinutes(10), 1.3f), 1.3);
+    var flexDefaultPenalty = TimeAndCostPenalty.of(TimePenalty.of(ofMinutes(20), 3f), 1.0);
     penaltyBuilder.with(StreetMode.FLEXIBLE, flexDefaultPenalty);
 
     var carPenalty = TimeAndCostPenalty.of(TimePenalty.of(ofMinutes(20), 2f), 1.5);

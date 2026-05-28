@@ -64,12 +64,12 @@ public interface FlexParameters {
 
       @Override
       public int boardCost() {
-        return 600;
+        return 0;
       }
 
       @Override
       public double reluctance() {
-        return 10.0;
+        return 5.0;
       }
     };
   }
