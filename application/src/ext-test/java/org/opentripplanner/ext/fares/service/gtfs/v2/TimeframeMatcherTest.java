@@ -22,7 +22,7 @@ class TimeframeMatcherTest implements FareTestConstants {
     .withFromTimeframes(List.of(TIMEFRAME_TWELVE_TO_TWO))
     .withToTimeframes(List.of(TIMEFRAME_THREE_TO_FIVE))
     .build();
-  public static final FeedScopedId ID2 = FeedScopedIdForTestFactory.id("2");
+  public static final FeedScopedId ID2 = id("2");
 
   private static List<Arguments> outsideTimeframeCases() {
     return List.of(
