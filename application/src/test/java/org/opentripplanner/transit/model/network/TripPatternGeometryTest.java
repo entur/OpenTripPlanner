@@ -200,6 +200,19 @@ class TripPatternGeometryTest {
   }
 
   @Test
+  void factoryAcceptsZeroStopPattern() {
+    // Degenerate edge case: a pattern with zero stops has no hops and no meaningful vertex
+    // positions. The factory must still produce a valid (empty) sequence whose cumulative table
+    // has the contract-mandated single zero entry — even though numberOfStops is 0.
+    StopPattern empty = StopPattern.create(0).build();
+    var subject = TripPatternBuilder.buildHopGeometries(empty, null);
+
+    assertEquals(0, subject.size());
+    assertEquals(0, subject.distanceBetween(0, 0));
+    assertTrue(subject.concatenate(0, subject.size()).isEmpty());
+  }
+
+  @Test
   void factoryAcceptsSingleStopPattern() {
     // Degenerate edge case: a pattern with a single stop has no hops. cumulative must still exist
     // and distanceBetween(0,0) must return 0 without throwing. concatenate(0, size) has nothing

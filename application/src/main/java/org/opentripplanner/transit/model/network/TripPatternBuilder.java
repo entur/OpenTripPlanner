@@ -257,7 +257,10 @@ public final class TripPatternBuilder
         )
       );
     }
-    double[] cumulativeDouble = new double[numberOfStops];
+    // Cumulative table has one entry per vertex position (0 .. expectedHops). For a degenerate
+    // pattern with 0 or 1 stops this is just {0}.
+    int cumulativeLength = expectedHops + 1;
+    double[] cumulativeDouble = new double[cumulativeLength];
     List<LineString> hops = new ArrayList<>(expectedHops);
 
     if (hopGeometries != null) {
@@ -279,8 +282,8 @@ public final class TripPatternBuilder
       }
     }
 
-    int[] cumulativeMeters = new int[numberOfStops];
-    for (int i = 0; i < numberOfStops; i++) {
+    int[] cumulativeMeters = new int[cumulativeLength];
+    for (int i = 0; i < cumulativeLength; i++) {
       cumulativeMeters[i] = (int) Math.round(cumulativeDouble[i]);
     }
     return CompactLineStringSequence.of(hops, cumulativeMeters);

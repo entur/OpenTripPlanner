@@ -106,6 +106,22 @@ class CompactLineStringSequenceTest {
     );
   }
 
+  @Test
+  void ofRejectsNonZeroFirstCumulative() {
+    // Entry 0 must be 0 by contract (distance from the start of the sequence to itself).
+    assertThrows(IllegalArgumentException.class, () ->
+      CompactLineStringSequence.of(List.of(HOP_0, HOP_1, HOP_2), new int[] { 50, 150, 300, 400 })
+    );
+  }
+
+  @Test
+  void ofRejectsNonMonotonicCumulative() {
+    // Cumulative arc length cannot shrink; a decreasing entry is a caller bug.
+    assertThrows(IllegalArgumentException.class, () ->
+      CompactLineStringSequence.of(List.of(HOP_0, HOP_1, HOP_2), new int[] { 0, 100, 80, 300 })
+    );
+  }
+
   private static LineString line(double... lonLat) {
     Coordinate[] coords = new Coordinate[lonLat.length / 2];
     for (int i = 0; i < coords.length; i++) {
