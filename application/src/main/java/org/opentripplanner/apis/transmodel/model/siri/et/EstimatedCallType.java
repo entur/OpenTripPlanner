@@ -21,6 +21,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.apis.transmodel.mapping.OccupancyStatusMapper;
 import org.opentripplanner.apis.transmodel.mapping.RealtimeStateMapper;
 import org.opentripplanner.apis.transmodel.model.EnumTypes;
+import org.opentripplanner.apis.transmodel.model.TransmodelRealTimeState;
 import org.opentripplanner.apis.transmodel.model.framework.TransmodelDirectives;
 import org.opentripplanner.apis.transmodel.model.framework.TransmodelScalars;
 import org.opentripplanner.apis.transmodel.model.timetable.EmpiricalDelayType;
@@ -161,7 +162,7 @@ public class EstimatedCallType {
           .name("realtimeState")
           .type(new GraphQLNonNull(EnumTypes.REALTIME_STATE))
           .dataFetcher(env ->
-            RealtimeStateMapper.map(((TripTimeOnDate) env.getSource()).getTripTimes())
+            getRealtimeStateOnStop(env)
           )
           .build()
       )
@@ -308,6 +309,12 @@ public class EstimatedCallType {
       //                        .dataFetcher(env -> ((TripTimeShort) env.getSource()).isFlexible())
       //                        .build())
       .build();
+  }
+
+  /// Determines the RealTimeState for the specific stop, if NO_DATA on Stop its RealTimeState is regarded as "Scheduled"
+  private static TransmodelRealTimeState getRealtimeStateOnStop(DataFetchingEnvironment env) {
+    TripTimeOnDate tripTimeOnDate = env.getSource();
+    return tripTimeOnDate.isNoDataStop() ? TransmodelRealTimeState.SCHEDULED : RealtimeStateMapper.map(tripTimeOnDate.getTripTimes());
   }
 
   /// Same as [#calcTime(TripTimeOnDate, ToIntFunction)]. If the offset is `-1`, this
