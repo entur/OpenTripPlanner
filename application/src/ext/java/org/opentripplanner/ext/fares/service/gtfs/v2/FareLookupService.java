@@ -153,7 +153,7 @@ class FareLookupService implements Serializable {
           .fromLegRule()
           .fareProducts()
           .stream()
-          .filter(p -> !p.isFree())
+          .filter(t::matchesEligibility)
           .map(product ->
             LegOffer.of(
               FareOffer.of(head.startTime(), product, dependencies.get(product)),
