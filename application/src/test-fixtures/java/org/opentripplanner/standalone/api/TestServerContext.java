@@ -90,15 +90,18 @@ public class TestServerContext {
   ) {
     var routerConfig = RouterConfig.DEFAULT;
 
-    if (request == null) {
-      request = routerConfig.routingRequestDefaults();
-    }
     if (snapshotManager == null) {
       snapshotManager = new TimetableSnapshotManager(
         null,
         TimetableSnapshotParameters.DEFAULT,
         LocalDate::now
       );
+    }
+    if (request == null) {
+      request = routerConfig.routingRequestDefaults();
+    }
+    if (flexParameters == null) {
+      flexParameters = routerConfig.flexParameters();
     }
 
     timetableRepository.index();

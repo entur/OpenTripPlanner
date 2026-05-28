@@ -62,7 +62,7 @@ abstract class AbstractFlexTemplate {
    * @param alightStopPosition The stop-alight-position in the trip pattern
    * @param date               The service date of this FlexTrip
    * @param calculator         Calculates the path and duration of the FlexTrip
-   * @param flexParameters     Flex configuration parameters (reluctance, boardCost, etc.)
+   * @param flexParameters     Flex configuration parameters (maxTransferDuration, etc.)
    */
   AbstractFlexTemplate(
     FlexTrip<?, ?> trip,
