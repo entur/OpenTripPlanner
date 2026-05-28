@@ -8,7 +8,7 @@ import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.street.geometry.CompactGeometrySequence;
+import org.opentripplanner.street.geometry.CompactLineStringSequence;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.transit.model.basic.SubMode;
@@ -217,7 +217,7 @@ public final class TripPatternBuilder
     return stopPatternModifiedInRealTime;
   }
 
-  CompactGeometrySequence buildGeometry() {
+  CompactLineStringSequence buildGeometry() {
     List<LineString> geometries;
     if (this.hopGeometries != null) {
       geometries = this.hopGeometries;
@@ -243,7 +243,7 @@ public final class TripPatternBuilder
    * Package-private so test fixtures (e.g. {@code TripPatternGeometryTest}) can exercise this
    * factory directly without going through the full builder.
    */
-  static CompactGeometrySequence buildHopGeometries(
+  static CompactLineStringSequence buildHopGeometries(
     StopPattern stopPattern,
     @Nullable List<LineString> hopGeometries
   ) {
@@ -283,7 +283,7 @@ public final class TripPatternBuilder
     for (int i = 0; i < numberOfStops; i++) {
       cumulativeMeters[i] = (int) Math.round(cumulativeDouble[i]);
     }
-    return CompactGeometrySequence.compact(hops, cumulativeMeters);
+    return CompactLineStringSequence.compact(hops, cumulativeMeters);
   }
 
   /**

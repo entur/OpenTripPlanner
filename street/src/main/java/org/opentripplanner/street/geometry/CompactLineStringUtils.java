@@ -5,12 +5,12 @@ import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.utils.lang.IntUtils;
 
 /**
- * Endpoint-context glue around {@link CompactGeometry} for callers (e.g. {@code StreetEdge}) whose
+ * Endpoint-context glue around {@link CompactLineString} for callers (e.g. {@code StreetEdge}) whose
  * endpoints come from external context and are <i>omitted</i> from the packed form to save memory.
- * The Dlugosz/delta engine lives in {@link CompactGeometry}; this class only handles the endpoint
+ * The Dlugosz/delta engine lives in {@link CompactLineString}; this class only handles the endpoint
  * splice/strip + the stick-to-endpoint check at compaction time.
  * <p>
- * For the self-contained contract (endpoints baked into the packed form) use {@link CompactGeometry}
+ * For the self-contained contract (endpoints baked into the packed form) use {@link CompactLineString}
  * directly.
  *
  * @author laurent
@@ -26,10 +26,10 @@ public final class CompactLineStringUtils {
 
   /**
    * Singleton representation of a straight-line (where nothing has to be stored). Shares its
-   * underlying byte array with {@link CompactGeometry#STRAIGHT_LINE} so there is exactly one
+   * underlying byte array with {@link CompactLineString#STRAIGHT_LINE} so there is exactly one
    * empty-byte-array instance in the JVM.
    */
-  public static final byte[] STRAIGHT_LINE_PACKED = CompactGeometry.STRAIGHT_LINE.packed();
+  public static final byte[] STRAIGHT_LINE_PACKED = CompactLineString.STRAIGHT_LINE.packed();
 
   private CompactLineStringUtils() {}
 
@@ -81,9 +81,9 @@ public final class CompactLineStringUtils {
         "CompactLineStringUtils geometry must stick to given end points. If you need to relax this, please read source code."
       );
     }
-    int oix = IntUtils.round(x0 * CompactGeometry.FIXED_FLOAT_MULT);
-    int oiy = IntUtils.round(y0 * CompactGeometry.FIXED_FLOAT_MULT);
-    return CompactGeometry.packIntermediateDeltas(lineString, oix, oiy);
+    int oix = IntUtils.round(x0 * CompactLineString.FIXED_FLOAT_MULT);
+    int oiy = IntUtils.round(y0 * CompactLineString.FIXED_FLOAT_MULT);
+    return CompactLineString.packIntermediateDeltas(lineString, oix, oiy);
   }
 
   /**
@@ -116,9 +116,9 @@ public final class CompactLineStringUtils {
     c[0] = x0;
     c[1] = y0;
     if (intermediateCount > 0) {
-      int oix = IntUtils.round(x0 * CompactGeometry.FIXED_FLOAT_MULT);
-      int oiy = IntUtils.round(y0 * CompactGeometry.FIXED_FLOAT_MULT);
-      CompactGeometry.decodeInto(packedCoords, c, 2, oix, oiy, false);
+      int oix = IntUtils.round(x0 * CompactLineString.FIXED_FLOAT_MULT);
+      int oiy = IntUtils.round(y0 * CompactLineString.FIXED_FLOAT_MULT);
+      CompactLineString.decodeInto(packedCoords, c, 2, oix, oiy, false);
     }
     c[c.length - 2] = x1;
     c[c.length - 1] = y1;

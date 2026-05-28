@@ -5,7 +5,7 @@ import java.util.List;
 import org.locationtech.jts.geom.LineString;
 
 /**
- * An ordered sequence of {@link CompactGeometry} members that are assumed to join end-to-end (the
+ * An ordered sequence of {@link CompactLineString} members that are assumed to join end-to-end (the
  * last coordinate of one equals the first coordinate of the next), together with a precomputed
  * cumulative arc-length table indexed by vertex position.
  * <p>
@@ -23,14 +23,17 @@ import org.locationtech.jts.geom.LineString;
  * <p>
  * Callers work only in terms of {@link LineString}s, vertex positions, and indices: they never see
  * the packed bytes, fixed-point delta origins, flat coordinate buffers, or seam-deduplication
- * arithmetic that {@link CompactGeometry}'s engine deals in.
+ * arithmetic that {@link CompactLineString}'s engine deals in.
  */
-public final class CompactGeometrySequence implements Serializable {
+public final class CompactLineStringSequence implements Serializable {
 
-  private final CompactGeometry[] geometries;
+  private final CompactLineString[] geometries;
   private final int[] cumulativeDistanceMeters;
 
-  private CompactGeometrySequence(CompactGeometry[] geometries, int[] cumulativeDistanceMeters) {
+  private CompactLineStringSequence(
+    CompactLineString[] geometries,
+    int[] cumulativeDistanceMeters
+  ) {
     this.geometries = geometries;
     this.cumulativeDistanceMeters = cumulativeDistanceMeters;
   }
@@ -42,7 +45,7 @@ public final class CompactGeometrySequence implements Serializable {
    * and each subsequent entry is the meter distance from the start of the sequence up to that
    * vertex position.
    */
-  public static CompactGeometrySequence compact(
+  public static CompactLineStringSequence compact(
     List<LineString> geometries,
     int[] cumulativeDistanceMeters
   ) {
@@ -54,11 +57,11 @@ public final class CompactGeometrySequence implements Serializable {
         )
       );
     }
-    var packed = new CompactGeometry[geometries.size()];
+    var packed = new CompactLineString[geometries.size()];
     for (int i = 0; i < geometries.size(); i++) {
-      packed[i] = CompactGeometry.compact(geometries.get(i));
+      packed[i] = CompactLineString.compact(geometries.get(i));
     }
-    return new CompactGeometrySequence(packed, cumulativeDistanceMeters);
+    return new CompactLineStringSequence(packed, cumulativeDistanceMeters);
   }
 
   /** Number of line strings in the sequence. */
@@ -103,7 +106,14 @@ public final class CompactGeometrySequence implements Serializable {
     double[] out = new double[totalCoords * 2];
     int offset = 0;
     for (int i = fromIndex; i < toIndexExclusive; i++) {
-      offset = CompactGeometry.decodeInto(geometries[i].packed(), out, offset, 0, 0, i > fromIndex);
+      offset = CompactLineString.decodeInto(
+        geometries[i].packed(),
+        out,
+        offset,
+        0,
+        0,
+        i > fromIndex
+      );
     }
     return GeometryUtils.makeLineString(out);
   }

@@ -16,7 +16,7 @@ import org.opentripplanner.utils.lang.IntUtils;
  *   <li><b>self-contained</b> &mdash; the line string's endpoints are encoded into the packed form
  *       (by padding with {@code (0,0)} sentinels). Decode is fully described by the bytes alone.
  *       Exposed here as {@link #compact(LineString)} / {@link #toLineString(boolean)}. Used by
- *       {@link CompactGeometrySequence}.</li>
+ *       {@link CompactLineStringSequence}.</li>
  *   <li><b>endpoint-context</b> &mdash; the line string's endpoints are <i>omitted</i> from the
  *       packed form and re-supplied at decode time from external context (e.g. a street edge's
  *       from/to vertex). The endpoint-context glue still lives in {@link CompactLineStringUtils}
@@ -24,7 +24,7 @@ import org.opentripplanner.utils.lang.IntUtils;
  *       so there is no duplicated codec logic.</li>
  * </ul>
  */
-public final class CompactGeometry implements Serializable {
+public final class CompactLineString implements Serializable {
 
   /**
    * Multiplier for fixed-float representation. For lat/lon CRS, 1e6 leads to a precision of 0.11
@@ -36,11 +36,11 @@ public final class CompactGeometry implements Serializable {
    * Shared instance for a 2-point straight line (nothing to store). Reused everywhere a straight
    * line is encoded, both in self-contained and endpoint-context contexts.
    */
-  public static final CompactGeometry STRAIGHT_LINE = new CompactGeometry(new byte[0]);
+  public static final CompactLineString STRAIGHT_LINE = new CompactLineString(new byte[0]);
 
   private final byte[] packed;
 
-  private CompactGeometry(byte[] packed) {
+  private CompactLineString(byte[] packed) {
     this.packed = packed;
   }
 
@@ -48,11 +48,11 @@ public final class CompactGeometry implements Serializable {
    * Wrap an already-packed byte array. Returns the shared {@link #STRAIGHT_LINE} singleton for an
    * empty array. {@code null} input maps to {@code null}.
    */
-  public static CompactGeometry of(byte[] packed) {
+  public static CompactLineString of(byte[] packed) {
     if (packed == null) {
       return null;
     }
-    return packed.length == 0 ? STRAIGHT_LINE : new CompactGeometry(packed);
+    return packed.length == 0 ? STRAIGHT_LINE : new CompactLineString(packed);
   }
 
   /**
@@ -60,7 +60,7 @@ public final class CompactGeometry implements Serializable {
    * form by padding the input with two {@code (0,0)} sentinels and delta-encoding every original
    * coordinate against that origin.
    */
-  public static CompactGeometry compact(LineString lineString) {
+  public static CompactLineString compact(LineString lineString) {
     if (lineString == null) {
       return null;
     }
@@ -94,7 +94,7 @@ public final class CompactGeometry implements Serializable {
     return DlugoszVarLenIntPacker.countValues(packed) / 2;
   }
 
-  /** Package-private accessor for the endpoint-context glue and {@link CompactGeometrySequence}. */
+  /** Package-private accessor for the endpoint-context glue and {@link CompactLineStringSequence}. */
   byte[] packed() {
     return packed;
   }
@@ -178,7 +178,7 @@ public final class CompactGeometry implements Serializable {
 
   @Override
   public boolean equals(Object o) {
-    return o instanceof CompactGeometry g && Arrays.equals(packed, g.packed);
+    return o instanceof CompactLineString g && Arrays.equals(packed, g.packed);
   }
 
   @Override

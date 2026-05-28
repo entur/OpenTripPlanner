@@ -14,7 +14,7 @@ import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.PickDrop;
-import org.opentripplanner.street.geometry.CompactGeometrySequence;
+import org.opentripplanner.street.geometry.CompactLineStringSequence;
 import org.opentripplanner.transit.model.basic.SubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
@@ -98,7 +98,7 @@ public final class TripPattern
    * cumulative distance along the pattern. Not used in routing, only for API listing and
    * per-leg distance computation via {@link #distanceBetween(int, int)}.
    */
-  private final CompactGeometrySequence patternGeometry;
+  private final CompactLineStringSequence patternGeometry;
 
   @Nullable
   private final TripPattern originalTripPattern;

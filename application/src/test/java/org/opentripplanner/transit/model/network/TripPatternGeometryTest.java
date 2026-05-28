@@ -10,7 +10,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.model.PickDrop;
-import org.opentripplanner.street.geometry.CompactGeometrySequence;
+import org.opentripplanner.street.geometry.CompactLineStringSequence;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
@@ -19,7 +19,7 @@ import org.opentripplanner.transit.model.site.StopLocation;
 
 /**
  * Exercises {@link TripPatternBuilder#buildHopGeometries} and the resulting
- * {@link CompactGeometrySequence} (the per-pattern hop geometries + cumulative distance table).
+ * {@link CompactLineStringSequence} (the per-pattern hop geometries + cumulative distance table).
  */
 class TripPatternGeometryTest {
 

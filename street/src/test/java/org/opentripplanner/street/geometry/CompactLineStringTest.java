@@ -11,30 +11,30 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 
-class CompactGeometryTest {
+class CompactLineStringTest {
 
   private static final GeometryFactory GF = new GeometryFactory();
   private static final double TOLERANCE = 0.0000015;
 
   @Test
   void ofEmptyReturnsSingleton() {
-    assertSame(CompactGeometry.STRAIGHT_LINE, CompactGeometry.of(new byte[0]));
+    assertSame(CompactLineString.STRAIGHT_LINE, CompactLineString.of(new byte[0]));
   }
 
   @Test
   void ofNullReturnsNull() {
-    assertNull(CompactGeometry.of(null));
+    assertNull(CompactLineString.of(null));
   }
 
   @Test
   void compactNullReturnsNull() {
-    assertNull(CompactGeometry.compact(null));
+    assertNull(CompactLineString.compact(null));
   }
 
   @Test
   void roundTripPreservesAllCoordinatesIncludingEndpoints() {
     LineString original = line(-179.99, 1.12345, 10.123456, 59.654321, 179.99, 1.12345);
-    CompactGeometry g = CompactGeometry.compact(original);
+    CompactLineString g = CompactLineString.compact(original);
 
     assertEquals(original.getNumPoints(), g.coordinateCount());
     LineString result = g.toLineString(false);
@@ -45,7 +45,7 @@ class CompactGeometryTest {
   @Test
   void reverseToLineStringMatchesReverseOfOriginal() {
     LineString original = line(10.0, 59.0, 10.1, 59.1, 10.2, 59.0);
-    CompactGeometry g = CompactGeometry.compact(original);
+    CompactLineString g = CompactLineString.compact(original);
     LineString reversed = g.toLineString(true);
     assertTrue(original.reverse().equalsExact(reversed, TOLERANCE));
   }
@@ -53,9 +53,9 @@ class CompactGeometryTest {
   @Test
   void twoPointLineRoundTrips() {
     LineString original = line(10.0, 59.0, 10.5, 59.0);
-    CompactGeometry g = CompactGeometry.compact(original);
+    CompactLineString g = CompactLineString.compact(original);
     // compact() pads with (0,0) sentinels, so even a 2-point line is encoded (not the singleton).
-    assertNotEquals(CompactGeometry.STRAIGHT_LINE, g);
+    assertNotEquals(CompactLineString.STRAIGHT_LINE, g);
     LineString result = g.toLineString(false);
     assertEquals(2, result.getNumPoints());
     assertTrue(original.equalsExact(result, TOLERANCE));
@@ -64,20 +64,20 @@ class CompactGeometryTest {
   @Test
   void equalsAndHashCodeAreContentBased() {
     LineString ls = line(10.0, 59.0, 10.1, 59.1, 10.2, 59.0);
-    CompactGeometry a = CompactGeometry.compact(ls);
-    CompactGeometry b = CompactGeometry.compact(ls);
+    CompactLineString a = CompactLineString.compact(ls);
+    CompactLineString b = CompactLineString.compact(ls);
     // Different instances, same content -> equal, same hashCode (enables interning).
     assertEquals(a, b);
     assertEquals(a.hashCode(), b.hashCode());
 
-    CompactGeometry other = CompactGeometry.compact(line(20.0, 50.0, 20.5, 50.0));
+    CompactLineString other = CompactLineString.compact(line(20.0, 50.0, 20.5, 50.0));
     assertNotEquals(a, other);
   }
 
   @Test
   void straightLineSingletonHasZeroCoordinates() {
-    assertEquals(0, CompactGeometry.STRAIGHT_LINE.coordinateCount());
-    assertTrue(CompactGeometry.STRAIGHT_LINE.toLineString(false).isEmpty());
+    assertEquals(0, CompactLineString.STRAIGHT_LINE.coordinateCount());
+    assertTrue(CompactLineString.STRAIGHT_LINE.toLineString(false).isEmpty());
   }
 
   private static LineString line(double... lonLat) {
