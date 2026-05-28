@@ -16,14 +16,7 @@ import org.locationtech.jts.geom.LineString;
  *       {@code i-1} and member {@code i}</li>
  *   <li>position {@code size()} is the end of the last member</li>
  * </ul>
- * For a transit pattern this maps exactly onto stop positions; this type does not depend on that
- * domain — the cumulative array is purely a function of the joined geometries' arc lengths, but
- * the way those lengths are measured (planar sum vs. haversine vs. anything else) is the caller's
- * choice and must be passed in.
  * <p>
- * Callers work only in terms of {@link LineString}s, vertex positions, and indices: they never see
- * the packed bytes, fixed-point delta origins, flat coordinate buffers, or seam-deduplication
- * arithmetic that {@link CompactLineString}'s engine deals in.
  */
 public final class CompactLineStringSequence implements Serializable {
 
@@ -56,6 +49,23 @@ public final class CompactLineStringSequence implements Serializable {
           geometries.size() + 1
         )
       );
+    }
+    if (cumulativeDistanceMeters[0] != 0) {
+      throw new IllegalArgumentException(
+        "cumulativeDistanceMeters[0] must be 0 (was %d)".formatted(cumulativeDistanceMeters[0])
+      );
+    }
+    for (int i = 1; i < cumulativeDistanceMeters.length; i++) {
+      if (cumulativeDistanceMeters[i] < cumulativeDistanceMeters[i - 1]) {
+        throw new IllegalArgumentException(
+          "cumulativeDistanceMeters must be non-decreasing, but entry %d (%d) < entry %d (%d)".formatted(
+            i,
+            cumulativeDistanceMeters[i],
+            i - 1,
+            cumulativeDistanceMeters[i - 1]
+          )
+        );
+      }
     }
     var packed = new CompactLineString[geometries.size()];
     for (int i = 0; i < geometries.size(); i++) {
