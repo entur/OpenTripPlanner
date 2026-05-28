@@ -8,13 +8,15 @@ import graphql.execution.DataFetcherExceptionHandlerResult;
 import graphql.execution.SimpleDataFetcherExceptionHandler;
 import java.util.concurrent.CompletableFuture;
 import org.opentripplanner.apis.support.InvalidInputException;
+import org.opentripplanner.routing.error.InvalidRoutingInputException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * OTP-specific exception handler for GraphQL data fetchers. Logs warnings for unexpected
- * exceptions and classifies {@link InvalidInputException} as client errors
- * ({@code BadRequestError}) logged at INFO level.
+ * exceptions and classifies {@link InvalidInputException} and
+ * {@link InvalidRoutingInputException} as client errors ({@code BadRequestError}) logged
+ * at INFO level.
  */
 public class OtpDataFetcherExceptionHandler extends SimpleDataFetcherExceptionHandler {
 
@@ -26,7 +28,10 @@ public class OtpDataFetcherExceptionHandler extends SimpleDataFetcherExceptionHa
   ) {
     Throwable exception = unwrap(handlerParameters.getException());
 
-    if (exception instanceof InvalidInputException) {
+    if (
+      exception instanceof InvalidInputException ||
+      exception instanceof InvalidRoutingInputException
+    ) {
       LOG.info("Bad request: {}", exception.getMessage());
       var error = GraphQLError.newError()
         .errorType(ErrorClassification.errorClassification("BadRequestError"))

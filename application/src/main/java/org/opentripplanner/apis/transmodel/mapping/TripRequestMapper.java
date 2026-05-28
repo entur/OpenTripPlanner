@@ -7,7 +7,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
-import org.opentripplanner.apis.support.InvalidInputException;
 import org.opentripplanner.apis.transmodel.TransmodelRequestContext;
 import org.opentripplanner.apis.transmodel.model.plan.TripQuery;
 import org.opentripplanner.apis.transmodel.support.DataFetcherDecorator;
@@ -51,14 +50,9 @@ public class TripRequestMapper {
     callWith.argument("from", (Map<String, Object> v) ->
       genericLocationMapper.toGenericLocation(v).ifPresent(requestBuilder::withFrom)
     );
-    callWith.argument("to", (Map<String, Object> v) -> {
-      if (v.get("serviceJourneyLocation") != null) {
-        throw new InvalidInputException(
-          "'serviceJourneyLocation' is only supported for the 'from' location, not 'to'"
-        );
-      }
-      genericLocationMapper.toGenericLocation(v).ifPresent(requestBuilder::withTo);
-    });
+    callWith.argument("to", (Map<String, Object> v) ->
+      genericLocationMapper.toGenericLocation(v).ifPresent(requestBuilder::withTo)
+    );
     callWith.argument("passThroughPoints", (List<Map<String, Object>> v) -> {
       requestBuilder.withViaLocations(tripViaLocationMapper.toLegacyPassThroughLocations(v));
     });

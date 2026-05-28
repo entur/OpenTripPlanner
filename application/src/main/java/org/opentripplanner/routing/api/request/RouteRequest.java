@@ -20,6 +20,7 @@ import org.opentripplanner.routing.api.request.via.VisitViaLocation;
 import org.opentripplanner.routing.api.response.InputField;
 import org.opentripplanner.routing.api.response.RoutingError;
 import org.opentripplanner.routing.api.response.RoutingErrorCode;
+import org.opentripplanner.routing.error.InvalidRoutingInputException;
 import org.opentripplanner.routing.error.RoutingValidationException;
 import org.opentripplanner.standalone.config.routerconfig.TransitRoutingConfig;
 import org.opentripplanner.street.model.StreetMode;
@@ -231,6 +232,7 @@ public class RouteRequest implements Serializable {
    * TODO - Refactor and make separate requests for one-to-one and the other searches.
    *
    * @throws RoutingValidationException if either origin or destination is missing.
+   * @throws InvalidRoutingInputException if the destination is an on-board location.
    */
   public void validateOriginAndDestination() {
     List<RoutingError> routingErrors = new ArrayList<>(2);
@@ -247,6 +249,12 @@ public class RouteRequest implements Serializable {
 
     if (!routingErrors.isEmpty()) {
       throw new RoutingValidationException(routingErrors);
+    }
+
+    if (to.isOnBoard()) {
+      throw new InvalidRoutingInputException(
+        "'serviceJourneyLocation' is only supported for the 'from' location, not 'to'"
+      );
     }
   }
 
