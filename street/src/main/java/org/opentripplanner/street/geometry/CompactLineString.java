@@ -8,8 +8,7 @@ import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.utils.lang.IntUtils;
 
 /**
- * A single delta-packed line string. Holds the packed bytes and owns the codec: callers work in
- * terms of {@link LineString}s, never the bytes, fixed-point origins, or Dlugosz framing.
+ * A single delta-packed line string.
  * <p>
  * The same packed-bytes format is shared by two encoding contracts:
  * <ul>
@@ -19,18 +18,15 @@ import org.opentripplanner.utils.lang.IntUtils;
  *       {@link CompactLineStringSequence}.</li>
  *   <li><b>endpoint-context</b> &mdash; the line string's endpoints are <i>omitted</i> from the
  *       packed form and re-supplied at decode time from external context (e.g. a street edge's
- *       from/to vertex). The endpoint-context glue still lives in {@link CompactLineStringUtils}
- *       and delegates to the engine here ({@link #decodeInto} / {@link #packIntermediateDeltas}),
- *       so there is no duplicated codec logic.</li>
+ *       from/to vertex). See {@link CompactLineStringUtils}
+ *   </li>
  * </ul>
  */
 public final class CompactLineString implements Serializable {
 
   /**
    * Multiplier for fixed-float representation. For lat/lon CRS, 1e6 leads to a precision of 0.11
-   * meter at a minimum (at the equator). Private — callers use {@link #toFixedPoint(double)} and
-   * {@link #toFloatingPoint(int)} so the conversion mechanism (multiplier + rounding) is the only
-   * place this constant is referenced.
+   * meter at a minimum (at the equator).
    */
   private static final double FIXED_FLOAT_MULT = 1.0e6;
 

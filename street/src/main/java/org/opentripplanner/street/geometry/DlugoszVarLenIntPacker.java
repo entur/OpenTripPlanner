@@ -137,18 +137,9 @@ public class DlugoszVarLenIntPacker {
     /**
      * Decode the varint at the current position, advance past it, and return its signed value.
      * <p>
-     * Performance-critical shape, do not "simplify": this method must stay under the HotSpot
-     * {@code FreqInlineSize} budget (325 bytes) so the JIT inlines it, which in turn lets escape
-     * analysis scalar-replace the enclosing {@link Decoder} in hot decode loops (zero allocation).
-     * Two things keep it small enough — measured at 307 bytes, and ~332 (over budget, not inlined,
-     * ~2.5x slower with constant GC) if either is undone:
-     * <ul>
-     *   <li>{@code pos} is read once into the local {@code p}, so the per-branch array indexing uses
-     *   local loads instead of repeated {@code getfield}s;</li>
-     *   <li>the value and width are computed into locals and the {@code pos} field is written
-     *   exactly once at the end, instead of a {@code pos += n} write in every branch.</li>
-     * </ul>
-     * Verified with a JIT inlining/allocation microbenchmark.
+     * Implementation note: This method is hot and is currently short enough to be inlined
+     * by the JIT. When changing the implementation or refactoring, make sure to measure
+     * performance with a microbenchmark.
      */
     int next() {
       int p = pos;

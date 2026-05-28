@@ -28,7 +28,7 @@ public final class CompactLineStringUtils {
    * underlying byte array with {@link CompactLineString#STRAIGHT_LINE} so there is exactly one
    * empty-byte-array instance in the JVM.
    */
-  public static final byte[] STRAIGHT_LINE_PACKED = CompactLineString.STRAIGHT_LINE.packed();
+  static final byte[] STRAIGHT_LINE_PACKED = CompactLineString.STRAIGHT_LINE.packed();
 
   private CompactLineStringUtils() {}
 
