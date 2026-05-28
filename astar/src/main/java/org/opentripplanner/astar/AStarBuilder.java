@@ -116,16 +116,16 @@ public class AStarBuilder<
 
   public AStar<State, Edge, Vertex> build() {
     return new AStar<>(
-      heuristic,
-      preStartHook,
-      skipEdgeStrategy,
-      traverseVisitor,
-      arriveBy,
-      destination,
-      terminationStrategy,
-      dominanceFunction,
-      timeout,
       initialStates,
+      arriveBy,
+      dominanceFunction,
+      destination,
+      heuristic,
+      traverseVisitor,
+      skipEdgeStrategy,
+      terminationStrategy,
+      timeout,
+      preStartHook,
       statisticsCallback
     );
   }

@@ -67,19 +67,25 @@ public class AStar<
   private int nVisited;
 
   /// Create an AStar search
-  /// @param heuristic An astar heuristic that estimates a lower bound of the weight to the destination. If set to null the search will be a basic Dijkstra search.
+  /// @param initialStates The initial states to start the search from.
   /// @param arriveBy If set to true we will do a backwards search by traversing the incoming edges from each vertex.
+  /// @param dominanceFunction A dominance function that determines which states we should keep during the search.
+  /// @param goalVertices The search stops once the first goal vertex is reached.
+  /// @param heuristic An astar heuristic that estimates a lower bound of the weight to the destination. If set to null the search will be a basic Dijkstra search.
+  /// @param timeout A timeout that exits the search.
+  /// @param preSearchHook A runnable that is run before the search starts.
+  /// @param statisticsCallback A pluggable callback for logging metrics.
   AStar(
-    @Nullable RemainingWeightHeuristic<State> heuristic,
-    Runnable preSearchHook,
-    @Nullable SkipEdgeStrategy<State, Edge> skipEdgeStrategy,
-    @Nullable TraverseVisitor<State, Edge> traverseVisitor,
-    boolean arriveBy,
-    @Nullable Set<Vertex> toVertices,
-    @Nullable SearchTerminationStrategy<State> terminationStrategy,
-    DominanceFunction<State> dominanceFunction,
-    Duration timeout,
     Collection<State> initialStates,
+    boolean arriveBy,
+    DominanceFunction<State> dominanceFunction,
+    @Nullable Set<Vertex> goalVertices,
+    @Nullable RemainingWeightHeuristic<State> heuristic,
+    @Nullable TraverseVisitor<State, Edge> traverseVisitor,
+    @Nullable SkipEdgeStrategy<State, Edge> skipEdgeStrategy,
+    @Nullable SearchTerminationStrategy<State> terminationStrategy,
+    Duration timeout,
+    Runnable preSearchHook,
     StatisticsCallback<Vertex> statisticsCallback
   ) {
     this.heuristic = heuristic;
@@ -89,7 +95,7 @@ public class AStar<
       .stream()
       .map(AStarState::getVertex)
       .collect(Collectors.toSet());
-    this.toVertices = toVertices;
+    this.toVertices = goalVertices;
     this.arriveBy = arriveBy;
     this.terminationStrategy = terminationStrategy;
     this.timeout = Objects.requireNonNull(timeout);
