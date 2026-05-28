@@ -177,9 +177,10 @@ public class DlugoszVarLenIntPacker {
           67108864;
         width = 4;
       } else {
-        // 1110 1xxx + 4x8 -> 35 bits value
+        // 1110 1xxx + 4x8 -> 35 bits value; the tag occupies the upper 5 bits,
+        // leaving 3 value bits in v1.
         long lsv =
-          (((long) v1 & 0x1F) << 32) +
+          (((long) v1 & 0x07) << 32) +
           ((arr[p + 1] & 0xFF) << 24) +
           ((arr[p + 2] & 0xFF) << 16) +
           ((arr[p + 3] & 0xFF) << 8) +
