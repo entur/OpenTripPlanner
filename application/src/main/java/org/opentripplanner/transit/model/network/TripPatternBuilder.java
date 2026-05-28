@@ -283,7 +283,7 @@ public final class TripPatternBuilder
     for (int i = 0; i < numberOfStops; i++) {
       cumulativeMeters[i] = (int) Math.round(cumulativeDouble[i]);
     }
-    return CompactLineStringSequence.compact(hops, cumulativeMeters);
+    return CompactLineStringSequence.of(hops, cumulativeMeters);
   }
 
   /**

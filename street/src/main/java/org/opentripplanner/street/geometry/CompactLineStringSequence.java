@@ -45,7 +45,7 @@ public final class CompactLineStringSequence implements Serializable {
    * and each subsequent entry is the meter distance from the start of the sequence up to that
    * vertex position.
    */
-  public static CompactLineStringSequence compact(
+  public static CompactLineStringSequence of(
     List<LineString> geometries,
     int[] cumulativeDistanceMeters
   ) {

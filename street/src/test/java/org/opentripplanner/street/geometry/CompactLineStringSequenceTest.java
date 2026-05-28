@@ -26,7 +26,7 @@ class CompactLineStringSequenceTest {
 
   @Test
   void sizeAndGetRoundTripEachMember() {
-    var seq = CompactLineStringSequence.compact(List.of(HOP_0, HOP_1, HOP_2), CUMULATIVE);
+    var seq = CompactLineStringSequence.of(List.of(HOP_0, HOP_1, HOP_2), CUMULATIVE);
     assertEquals(3, seq.size());
     assertTrue(HOP_0.equalsExact(seq.get(0), TOLERANCE));
     assertTrue(HOP_1.equalsExact(seq.get(1), TOLERANCE));
@@ -35,7 +35,7 @@ class CompactLineStringSequenceTest {
 
   @Test
   void concatenateAllDeduplicatesSeams() {
-    var seq = CompactLineStringSequence.compact(List.of(HOP_0, HOP_1, HOP_2), CUMULATIVE);
+    var seq = CompactLineStringSequence.of(List.of(HOP_0, HOP_1, HOP_2), CUMULATIVE);
     LineString full = seq.concatenate(0, seq.size());
 
     // 3 + 3 + 2 points, minus the 2 shared seam coordinates = 6.
@@ -59,7 +59,7 @@ class CompactLineStringSequenceTest {
 
   @Test
   void concatenateSubRange() {
-    var seq = CompactLineStringSequence.compact(List.of(HOP_0, HOP_1, HOP_2), CUMULATIVE);
+    var seq = CompactLineStringSequence.of(List.of(HOP_0, HOP_1, HOP_2), CUMULATIVE);
     LineString sub = seq.concatenate(1, 3);
 
     // hop1 (3 pts) + hop2 (2 pts) minus 1 shared seam = 4.
@@ -70,7 +70,7 @@ class CompactLineStringSequenceTest {
 
   @Test
   void concatenateSingleMemberEqualsThatMember() {
-    var seq = CompactLineStringSequence.compact(List.of(HOP_0, HOP_1, HOP_2), CUMULATIVE);
+    var seq = CompactLineStringSequence.of(List.of(HOP_0, HOP_1, HOP_2), CUMULATIVE);
     LineString single = seq.concatenate(0, 1);
     assertEquals(HOP_0.getNumPoints(), single.getNumPoints());
     assertTrue(HOP_0.equalsExact(single, TOLERANCE));
@@ -78,21 +78,21 @@ class CompactLineStringSequenceTest {
 
   @Test
   void concatenateEmptyRangeReturnsEmptyLineString() {
-    var seq = CompactLineStringSequence.compact(List.of(HOP_0, HOP_1, HOP_2), CUMULATIVE);
+    var seq = CompactLineStringSequence.of(List.of(HOP_0, HOP_1, HOP_2), CUMULATIVE);
     assertTrue(seq.concatenate(1, 1).isEmpty());
     assertTrue(seq.concatenate(2, 0).isEmpty());
   }
 
   @Test
   void emptySequence() {
-    var seq = CompactLineStringSequence.compact(List.of(), new int[] { 0 });
+    var seq = CompactLineStringSequence.of(List.of(), new int[] { 0 });
     assertEquals(0, seq.size());
     assertTrue(seq.concatenate(0, 0).isEmpty());
   }
 
   @Test
   void distanceBetweenIsCumulativeDelta() {
-    var seq = CompactLineStringSequence.compact(List.of(HOP_0, HOP_1, HOP_2), CUMULATIVE);
+    var seq = CompactLineStringSequence.of(List.of(HOP_0, HOP_1, HOP_2), CUMULATIVE);
     assertEquals(100, seq.distanceBetween(0, 1));
     assertEquals(150, seq.distanceBetween(1, 2));
     assertEquals(300, seq.distanceBetween(0, 3));
@@ -100,9 +100,9 @@ class CompactLineStringSequenceTest {
   }
 
   @Test
-  void compactRejectsWrongLengthCumulative() {
+  void ofRejectsWrongLengthCumulative() {
     assertThrows(IllegalArgumentException.class, () ->
-      CompactLineStringSequence.compact(List.of(HOP_0, HOP_1, HOP_2), new int[] { 0, 100, 250 })
+      CompactLineStringSequence.of(List.of(HOP_0, HOP_1, HOP_2), new int[] { 0, 100, 250 })
     );
   }
 
