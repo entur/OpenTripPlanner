@@ -166,7 +166,7 @@ public class RefetchItineraryService {
         }
         transitLegs.add(transitLeg);
       } else {
-        throw new IllegalArgumentException(
+        throw new RefetchItineraryException(
           "RefetchItinerary not implemented for non transit legs yet"
         );
       }
