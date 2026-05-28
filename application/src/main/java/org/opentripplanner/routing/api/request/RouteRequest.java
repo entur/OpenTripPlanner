@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
-import org.opentripplanner.apis.support.InvalidInputException;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.plan.SortOrder;
 import org.opentripplanner.model.plan.paging.cursor.PageCursor;
@@ -248,12 +247,6 @@ public class RouteRequest implements Serializable {
 
     if (!routingErrors.isEmpty()) {
       throw new RoutingValidationException(routingErrors);
-    }
-
-    if (to.isOnBoard()) {
-      throw new InvalidInputException(
-        "'serviceJourneyLocation' is only supported for the 'from' location, not 'to'"
-      );
     }
   }
 
