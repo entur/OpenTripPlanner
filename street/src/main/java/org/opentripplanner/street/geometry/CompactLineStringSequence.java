@@ -69,7 +69,7 @@ public final class CompactLineStringSequence implements Serializable {
     }
     var packed = new CompactLineString[geometries.size()];
     for (int i = 0; i < geometries.size(); i++) {
-      packed[i] = CompactLineString.compact(geometries.get(i));
+      packed[i] = CompactLineString.of(geometries.get(i));
     }
     return new CompactLineStringSequence(packed, cumulativeDistanceMeters);
   }

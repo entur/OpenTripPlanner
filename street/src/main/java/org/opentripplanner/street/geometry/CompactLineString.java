@@ -14,7 +14,7 @@ import org.opentripplanner.utils.lang.IntUtils;
  * <ul>
  *   <li><b>self-contained</b> &mdash; the line string's endpoints are encoded into the packed form
  *       (by padding with {@code (0,0)} sentinels). Decode is fully described by the bytes alone.
- *       Exposed here as {@link #compact(LineString)} / {@link #toLineString(boolean)}. Used by
+ *       Exposed here as {@link #of(LineString)} / {@link #toLineString(boolean)}. Used by
  *       {@link CompactLineStringSequence}.</li>
  *   <li><b>endpoint-context</b> &mdash; the line string's endpoints are <i>omitted</i> from the
  *       packed form and re-supplied at decode time from external context (e.g. a street edge's
@@ -61,7 +61,7 @@ public final class CompactLineString implements Serializable {
    * Wrap an already-packed byte array. Returns the shared {@link #STRAIGHT_LINE} singleton for an
    * empty array. {@code null} input maps to {@code null}.
    */
-  public static CompactLineString of(byte[] packed) {
+  static CompactLineString wrap(byte[] packed) {
     if (packed == null) {
       return null;
     }
@@ -73,7 +73,7 @@ public final class CompactLineString implements Serializable {
    * form by padding the input with two {@code (0,0)} sentinels and delta-encoding every original
    * coordinate against that origin.
    */
-  public static CompactLineString compact(LineString lineString) {
+  public static CompactLineString of(LineString lineString) {
     if (lineString == null) {
       return null;
     }
@@ -82,7 +82,7 @@ public final class CompactLineString implements Serializable {
       lineString,
       new Coordinate(0.0, 0.0)
     );
-    return of(packIntermediateDeltas(padded, 0, 0));
+    return wrap(packIntermediateDeltas(padded, 0, 0));
   }
 
   /**
@@ -166,7 +166,7 @@ public final class CompactLineString implements Serializable {
    * deltas accumulated from {@code (oix, oiy)} and produce the Dlugosz-packed bytes. The first and
    * last coordinates of the input are <b>not</b> stored.
    * <p>
-   * Single home of the encode logic; both the self-contained {@link #compact(LineString)} (which
+   * Single home of the encode logic; both the self-contained {@link #of(LineString)} (which
    * passes a padded line string starting and ending at {@code (0,0)}) and the endpoint-context
    * compact in {@link CompactLineStringUtils} (which passes the vertex coordinates as origin)
    * delegate here.

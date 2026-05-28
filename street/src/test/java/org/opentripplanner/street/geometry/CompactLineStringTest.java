@@ -18,7 +18,12 @@ class CompactLineStringTest {
 
   @Test
   void ofEmptyReturnsSingleton() {
-    assertSame(CompactLineString.STRAIGHT_LINE, CompactLineString.of(new byte[0]));
+    assertSame(CompactLineString.STRAIGHT_LINE, CompactLineString.wrap(new byte[0]));
+  }
+
+  @Test
+  void wrapNullReturnsNull() {
+    assertNull(CompactLineString.wrap(null));
   }
 
   @Test
@@ -27,14 +32,9 @@ class CompactLineStringTest {
   }
 
   @Test
-  void compactNullReturnsNull() {
-    assertNull(CompactLineString.compact(null));
-  }
-
-  @Test
   void roundTripPreservesAllCoordinatesIncludingEndpoints() {
     LineString original = line(-179.99, 1.12345, 10.123456, 59.654321, 179.99, 1.12345);
-    CompactLineString g = CompactLineString.compact(original);
+    CompactLineString g = CompactLineString.of(original);
 
     assertEquals(original.getNumPoints(), g.coordinateCount());
     LineString result = g.toLineString(false);
@@ -45,7 +45,7 @@ class CompactLineStringTest {
   @Test
   void reverseToLineStringMatchesReverseOfOriginal() {
     LineString original = line(10.0, 59.0, 10.1, 59.1, 10.2, 59.0);
-    CompactLineString g = CompactLineString.compact(original);
+    CompactLineString g = CompactLineString.of(original);
     LineString reversed = g.toLineString(true);
     assertTrue(original.reverse().equalsExact(reversed, TOLERANCE));
   }
@@ -53,7 +53,7 @@ class CompactLineStringTest {
   @Test
   void twoPointLineRoundTrips() {
     LineString original = line(10.0, 59.0, 10.5, 59.0);
-    CompactLineString g = CompactLineString.compact(original);
+    CompactLineString g = CompactLineString.of(original);
     // compact() pads with (0,0) sentinels, so even a 2-point line is encoded (not the singleton).
     assertNotEquals(CompactLineString.STRAIGHT_LINE, g);
     LineString result = g.toLineString(false);
@@ -64,13 +64,13 @@ class CompactLineStringTest {
   @Test
   void equalsAndHashCodeAreContentBased() {
     LineString ls = line(10.0, 59.0, 10.1, 59.1, 10.2, 59.0);
-    CompactLineString a = CompactLineString.compact(ls);
-    CompactLineString b = CompactLineString.compact(ls);
+    CompactLineString a = CompactLineString.of(ls);
+    CompactLineString b = CompactLineString.of(ls);
     // Different instances, same content -> equal, same hashCode (enables interning).
     assertEquals(a, b);
     assertEquals(a.hashCode(), b.hashCode());
 
-    CompactLineString other = CompactLineString.compact(line(20.0, 50.0, 20.5, 50.0));
+    CompactLineString other = CompactLineString.of(line(20.0, 50.0, 20.5, 50.0));
     assertNotEquals(a, other);
   }
 
