@@ -790,7 +790,7 @@ type QueryType {
     "Radius via streets (in meters) to search for from the specified location"
     radius: Float!
   ): quayAtDistanceConnection @timingData
-  "Input type for refetching a single trip pattern for a trip between two locations."
+  "Get an updated version of a trip pattern with realtime changes applied."
   refetchTripPattern(
     "The alightSlack is the minimum extra time after exiting a public transport vehicle. This is the default value used, if not overridden by the 'alightSlackList'."
     alightSlackDefault: Int = 0,
@@ -816,7 +816,7 @@ type QueryType {
     walkSpeed: Float = 1.35,
     "Whether the trip must be wheelchair accessible. Supported for the street part of the search."
     wheelchairAccessible: Boolean = false
-  ): RefetchTripPatternResult! @timingData
+  ): RefetchTripPatternResult! @deprecated(reason : "This query is experimental and might change in the future.") @timingData
   "Get default routing parameters."
   routingParameters: RoutingParameters @timingData
   "Get OTP deployment information. This is only useful for developers of OTP itself not regular API users."

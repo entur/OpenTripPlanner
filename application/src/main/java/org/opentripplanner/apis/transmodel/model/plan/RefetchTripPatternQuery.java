@@ -67,9 +67,7 @@ public class RefetchTripPatternQuery {
 
     return GraphQLFieldDefinition.newFieldDefinition()
       .name("refetchTripPattern")
-      .description(
-        "Input type for refetching a single trip pattern for a trip between two locations."
-      )
+      .description("Get an updated version of a trip pattern with realtime changes applied.")
       .withDirective(TransmodelDirectives.TIMING_DATA)
       .type(new GraphQLNonNull(outputType))
       .argument(
@@ -190,6 +188,7 @@ public class RefetchTripPatternQuery {
           .build()
       )
       .dataFetcher(this::refetchJourney)
+      .deprecate("This query is experimental and might change in the future.")
       .build();
   }
 
