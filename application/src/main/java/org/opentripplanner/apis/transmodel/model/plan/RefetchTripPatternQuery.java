@@ -85,7 +85,7 @@ public class RefetchTripPatternQuery {
         GraphQLArgument.newArgument()
           .name("to")
           .description(
-            "The destination location, if null the trip pattern will start with the first provided leg"
+            "The destination location, if null the trip pattern will end with the last provided leg"
           )
           .type(LocationInputType.INPUT_TYPE)
           .build()

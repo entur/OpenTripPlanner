@@ -808,7 +808,7 @@ type QueryType {
     maxAccessEgressDurationForMode: [StreetModeDurationInput!] = [],
     "The set of access/egress modes to be used for this search. The direct and transit modes are ignored"
     modes: Modes,
-    "The destination location, if null the trip pattern will start with the first provided leg"
+    "The destination location, if null the trip pattern will end with the last provided leg"
     to: Location,
     "Walk cost is multiplied by this value. This is the main parameter to use for limiting walking."
     walkReluctance: Float = 2.0,
