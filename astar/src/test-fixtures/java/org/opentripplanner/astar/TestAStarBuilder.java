@@ -6,7 +6,7 @@ import java.util.Set;
 
 public class TestAStarBuilder {
 
-  public static AStarBuilder<TestState, TestEdge, TestVertex> of(
+  public static AStarBuilder<TestState, TestEdge, TestVertex> ofDefault(
     TestVertex origin,
     TestVertex destination
   ) {
