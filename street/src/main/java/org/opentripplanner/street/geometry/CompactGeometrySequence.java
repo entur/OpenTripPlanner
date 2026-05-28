@@ -5,33 +5,29 @@ import java.util.List;
 import org.locationtech.jts.geom.LineString;
 
 /**
- * An ordered sequence of compactly-encoded line strings (e.g. the per-hop geometries of a transit
- * pattern), kept in their packed {@code byte[]} form to save memory.
+ * An ordered sequence of {@link CompactGeometry} members (e.g. the per-hop geometries of a transit
+ * pattern), kept in their packed form to save memory.
  * <p>
- * This type owns the codec interaction so that callers work only in terms of {@link LineString}s
- * and hop indices: they never see the packed bytes, the fixed-point delta origins, the flat
- * coordinate buffers, or the seam-deduplication arithmetic that {@link CompactLineStringUtils}
- * deals in. Each line string is compacted without endpoint context (its endpoints are stored in
- * the packed form), so a sequence is self-contained and needs no external from/to vertices to
- * decode.
+ * Callers work only in terms of {@link LineString}s and indices: they never see the packed bytes,
+ * the fixed-point delta origins, the flat coordinate buffers, or the seam-deduplication arithmetic
+ * that {@link CompactGeometry}'s engine deals in. Each member is encoded self-contained (its
+ * endpoints are stored in the packed form), so a sequence round-trips on its own.
  */
 public final class CompactGeometrySequence implements Serializable {
 
-  private final byte[][] packedGeometries;
+  private final CompactGeometry[] geometries;
 
-  private CompactGeometrySequence(byte[][] packedGeometries) {
-    this.packedGeometries = packedGeometries;
+  private CompactGeometrySequence(CompactGeometry[] geometries) {
+    this.geometries = geometries;
   }
 
   /**
-   * Compact each line string into its packed form, preserving order. Endpoints are encoded into
-   * the packed form (no external endpoint context), so the resulting sequence round-trips on its
-   * own.
+   * Compact each line string into a {@link CompactGeometry}, preserving order.
    */
   public static CompactGeometrySequence compact(List<LineString> geometries) {
-    byte[][] packed = new byte[geometries.size()][];
+    var packed = new CompactGeometry[geometries.size()];
     for (int i = 0; i < geometries.size(); i++) {
-      packed[i] = CompactLineStringUtils.compactLineString(geometries.get(i), false);
+      packed[i] = CompactGeometry.compact(geometries.get(i));
     }
     return new CompactGeometrySequence(packed);
   }
@@ -40,14 +36,14 @@ public final class CompactGeometrySequence implements Serializable {
    * Number of line strings in the sequence.
    */
   public int size() {
-    return packedGeometries.length;
+    return geometries.length;
   }
 
   /**
    * Decode the line string at {@code index}.
    */
   public LineString get(int index) {
-    return CompactLineStringUtils.uncompactLineString(packedGeometries[index], false);
+    return geometries[index].toLineString(false);
   }
 
   /**
@@ -69,7 +65,7 @@ public final class CompactGeometrySequence implements Serializable {
     }
     int totalCoords = 0;
     for (int i = fromIndex; i < toIndexExclusive; i++) {
-      totalCoords += CompactLineStringUtils.coordinateCount(packedGeometries[i]);
+      totalCoords += geometries[i].coordinateCount();
     }
     // Each seam between two consecutive members repeats one coordinate; emit it only once.
     totalCoords -= (count - 1);
@@ -79,14 +75,7 @@ public final class CompactGeometrySequence implements Serializable {
     double[] out = new double[totalCoords * 2];
     int offset = 0;
     for (int i = fromIndex; i < toIndexExclusive; i++) {
-      offset = CompactLineStringUtils.decodeDeltaCoordinatesInto(
-        packedGeometries[i],
-        out,
-        offset,
-        0,
-        0,
-        i > fromIndex
-      );
+      offset = CompactGeometry.decodeInto(geometries[i].packed(), out, offset, 0, 0, i > fromIndex);
     }
     return GeometryUtils.makeLineString(out);
   }
