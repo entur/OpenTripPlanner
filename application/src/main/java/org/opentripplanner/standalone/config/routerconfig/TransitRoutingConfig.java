@@ -3,10 +3,10 @@ package org.opentripplanner.standalone.config.routerconfig;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.NA;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_0;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_1;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_10;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_2;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_3;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_4;
-import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_10;
 
 import java.time.Duration;
 import java.util.List;
@@ -119,6 +119,9 @@ public final class TransitRoutingConfig implements RaptorTuningParameters, Trans
         exceeds the best known destination arrival time. Transfers must be sorted by duration for
         this to be correct (which OTP ensures). This optimization only applies to Standard RAPTOR
         (not Multi-Criteria searches).
+
+        See _Rohovyi, Abuaisha, Walsh — "Early Pruning for Public Transport Routing", WCTR 2026_
+        in the [Bibliography](Bibliography.md).
         """
       )
       .asBoolean(dft.transferEarlyPruningEnabled());

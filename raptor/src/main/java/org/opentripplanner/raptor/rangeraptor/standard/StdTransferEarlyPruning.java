@@ -29,7 +29,8 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
  *   arrival seen in earlier rounds of the current iteration. Within a fixed departure-time
  *   iteration, rounds are processed sequentially, so this bound is safe to apply.</li>
  * </ol>
- * See: Rohovyi, Abuaisha, Walsh — "Early Pruning for Public Transport Routing", WCTR 2026.
+ * See: Rohovyi, Abuaisha, Walsh — "Early Pruning for Public Transport Routing", WCTR 2026
+ * (<a href="https://arxiv.org/abs/2603.12592">arxiv.org/abs/2603.12592</a>).
  *
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
@@ -66,7 +67,9 @@ public class StdTransferEarlyPruning<T extends RaptorTripSchedule> {
     this.bestDestCurrentIteration = calculator.unreachedTime();
     this.currentRound = 0;
     lifeCycle.onPrepareForNextRound(round -> this.currentRound = round);
-    lifeCycle.onSetupIteration(ignore -> this.bestDestCurrentIteration = calculator.unreachedTime());
+    lifeCycle.onSetupIteration(ignore ->
+      this.bestDestCurrentIteration = calculator.unreachedTime()
+    );
   }
 
   /**
