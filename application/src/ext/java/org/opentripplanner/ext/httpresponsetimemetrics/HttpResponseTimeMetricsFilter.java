@@ -89,7 +89,7 @@ public class HttpResponseTimeMetricsFilter
       registry
     );
     this.totalTimers = createTimers(
-      metricName + "_total_time",
+      metricName + ".total.time",
       "Total client-perceived HTTP request time including thread pool queue wait",
       Objects.requireNonNull(minExpectedResponseTime),
       Objects.requireNonNull(maxExpectedResponseTime),
