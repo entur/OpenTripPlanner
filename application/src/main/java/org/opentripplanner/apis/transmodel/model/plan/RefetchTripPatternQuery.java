@@ -199,11 +199,15 @@ public class RefetchTripPatternQuery {
     List<String> legsIds = Objects.requireNonNull(environment.getArgument("legs"));
     var legs = legsIds
       .stream()
-      .map(legId -> Objects.requireNonNull(LegReferenceSerializer.decode(legId), "Invalid legId"))
+      .map(legId ->
+        Optional.ofNullable(LegReferenceSerializer.decode(legId)).orElseThrow(() ->
+          new InvalidInputException("Invalid leg id")
+        )
+      )
       .toList();
 
     if (legs.isEmpty()) {
-      throw new IllegalArgumentException("At least one leg is required");
+      throw new InvalidInputException("At least one leg is required");
     }
 
     var from = mapLocation(environment.getArgument("from"));
