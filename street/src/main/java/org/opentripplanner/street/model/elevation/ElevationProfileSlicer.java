@@ -5,7 +5,9 @@ import java.util.List;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 
-public class ElevationProfileSlicer {
+public final class ElevationProfileSlicer {
+
+  private ElevationProfileSlicer() {}
 
   /**
    * Slice an elevation profile to {@code [start, end]} along the edge. Returns {@code null}
