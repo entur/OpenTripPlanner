@@ -1,0 +1,116 @@
+package org.opentripplanner.service.vehiclerental.internal;
+
+import jakarta.inject.Inject;
+import jakarta.inject.Singleton;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
+import org.locationtech.jts.geom.Coordinate;
+import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.service.vehiclerental.GeofencingZoneService;
+import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
+import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
+import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingZoneIndex;
+
+/**
+ * Default {@link VehicleRentalRepository}. Owns the rental places and the geofencing zone
+ * indices, and answers geofencing zone queries via {@link GeofencingZoneService}.
+ *
+ * <p>The spatial indices are {@code transient} — JTS {@code STRtree} / {@code PreparedGeometry}
+ * caches don't survive Kryo. Raw zones registered via the build-time
+ * {@link #setGeofencingZoneIndex(String, GeofencingZoneIndex, Collection)} overload are persisted
+ * and used to rebuild the indices lazily on first access.
+ */
+@Singleton
+public class DefaultVehicleRentalRepository implements VehicleRentalRepository, Serializable {
+
+  private final Map<FeedScopedId, VehicleRentalPlace> rentalPlaces = new ConcurrentHashMap<>();
+
+  /** Raw zones for build-time data sources whose state must survive serialization. */
+  private final Map<String, Set<GeofencingZone>> serializedZones = new ConcurrentHashMap<>();
+
+  /** Rebuilt lazily from {@link #serializedZones} via {@link #indexes()} after deserialization. */
+  private transient volatile Map<String, GeofencingZoneIndex> geofencingZoneIndexes;
+
+  @Inject
+  public DefaultVehicleRentalRepository() {}
+
+  @Override
+  public void addVehicleRentalStation(VehicleRentalPlace vehicleRentalStation) {
+    rentalPlaces.put(vehicleRentalStation.id(), vehicleRentalStation);
+  }
+
+  @Override
+  public void removeVehicleRentalStation(FeedScopedId vehicleRentalStationId) {
+    rentalPlaces.remove(vehicleRentalStationId);
+  }
+
+  /** Runtime registration; not persisted. Used by the GBFS rental updater. */
+  @Override
+  public void setGeofencingZoneIndex(String dataSourceName, GeofencingZoneIndex index) {
+    indexes().put(dataSourceName, index);
+  }
+
+  /** Build-time registration; the raw zones are persisted for rebuild after deserialization. */
+  public void setGeofencingZoneIndex(
+    String dataSourceName,
+    GeofencingZoneIndex index,
+    Collection<GeofencingZone> zones
+  ) {
+    indexes().put(dataSourceName, index);
+    serializedZones.put(dataSourceName, Set.copyOf(zones));
+  }
+
+  @Override
+  public Collection<VehicleRentalPlace> listRentalPlaces() {
+    return rentalPlaces.values();
+  }
+
+  @Override
+  public VehicleRentalPlace getRentalPlace(FeedScopedId id) {
+    return rentalPlaces.get(id);
+  }
+
+  @Override
+  public Set<GeofencingZone> zonesContaining(Coordinate coord) {
+    return indexes()
+      .values()
+      .stream()
+      .flatMap(idx -> idx.findZonesContaining(coord).stream())
+      .collect(Collectors.toSet());
+  }
+
+  @Override
+  public boolean hasIndexedZones() {
+    return !indexes().isEmpty();
+  }
+
+  @Override
+  public Set<GeofencingZone> allZones() {
+    var zones = new HashSet<GeofencingZone>();
+    for (var idx : indexes().values()) {
+      zones.addAll(idx.listZones());
+    }
+    return zones;
+  }
+
+  private Map<String, GeofencingZoneIndex> indexes() {
+    var indexes = this.geofencingZoneIndexes;
+    if (indexes != null) {
+      return indexes;
+    }
+    synchronized (this) {
+      if (geofencingZoneIndexes == null) {
+        var rebuilt = new ConcurrentHashMap<String, GeofencingZoneIndex>();
+        serializedZones.forEach((name, zones) -> rebuilt.put(name, new GeofencingZoneIndex(zones)));
+        geofencingZoneIndexes = rebuilt;
+      }
+      return geofencingZoneIndexes;
+    }
+  }
+}
