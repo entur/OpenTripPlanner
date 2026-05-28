@@ -231,9 +231,9 @@ public class RefetchItineraryService {
 
     if (toVertices != null) {
       var mode = routeRequest.journey().egress().mode();
-      var lastLeg = transitLegs.getFirst();
+      var lastLeg = transitLegs.getLast();
       var lastStop = findVertex(lastLeg.to());
-      var alightSlack = routeRequest.preferences().transit().boardSlack().valueOf(lastLeg.mode());
+      var alightSlack = routeRequest.preferences().transit().alightSlack().valueOf(lastLeg.mode());
       var time = lastLeg.endTime().toInstant().plus(alightSlack);
       var egress = accessEgress(
         Set.of(lastStop),

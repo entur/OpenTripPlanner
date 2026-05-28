@@ -36,7 +36,6 @@ import org.opentripplanner.transfer.regular.model.PathTransfer;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model._data.TripInput;
-import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.site.StopLocation;
@@ -53,7 +52,7 @@ class RefetchItineraryServiceTest {
   static final RegularStop STOP_D = ENV_BUILDER.stop("D");
 
   static final TransitTestEnvironment TRANSIT_ENV = ENV_BUILDER.addTrip(
-    TripInput.of("trip1").addStop(STOP_A, "10:00").addStop(STOP_B, "11:00")
+    TripInput.of("trip1").addStop(STOP_A, "10:00").addStop(STOP_B, "11:00").addStop(STOP_D, "12:00")
   )
     .addTrip(TripInput.of("trip2").addStop(STOP_B, "12:00").addStop(STOP_C, "13:00"))
     .addTrip(TripInput.of("trip3").addStop(STOP_C, "12:30").addStop(STOP_D, "13:30"))
@@ -63,14 +62,17 @@ class RefetchItineraryServiceTest {
   // Setup street
   static final GraphBuilder G = GraphBuilder.of();
   static final VertexRef V1 = G.vertex();
-  static final VertexRef V2 = G.vertex();
   static final VertexRef VA = G.linkStop(STOP_A);
   static final VertexRef VB = G.linkStop(STOP_B);
   static final VertexRef VC = G.linkStop(STOP_C);
+  static final VertexRef VD = G.linkStop(STOP_D);
+  static final VertexRef V2 = G.vertex();
 
   static {
+    // Connect street vertices to stops
     V1.street(VA).meters(10);
-    V2.street(VB).meters(10);
+    V2.street(VD).meters(10);
+    // Create transfer path
     VB.street(VC).meters(20);
   }
 
@@ -160,15 +162,15 @@ class RefetchItineraryServiceTest {
   void refetchItineraryWithAccessEgress() {
     var refetch = createRefetchService();
 
-    var start = GenericLocation.fromCoordinate(V1.coord().moveNorthMeters(10));
-    var end = GenericLocation.fromCoordinate(V2.coord().moveNorthMeters(10));
+    var start = GenericLocation.fromCoordinate(V1.coord());
+    var end = GenericLocation.fromCoordinate(V2.coord());
 
-    var leg1 = legRef("trip1", STOP_A, STOP_B);
+    var leg1 = legRef("trip1", STOP_A, STOP_D);
 
     var itinerary = refetch.refetchItinerary(start, end, List.of(leg1), routeRequest());
 
     assertEquals(
-      "Origin ~ Walk 5s ~ A ~ BUS trip1 10:00 11:00 ~ B ~ Walk 5s ~ Destination []",
+      "Origin ~ Walk 5s ~ A ~ BUS trip1 10:00 12:00 ~ D ~ Walk 5s ~ Destination []",
       itinerary.toStr()
     );
   }
@@ -183,6 +185,24 @@ class RefetchItineraryServiceTest {
     var itinerary = refetch.refetchItinerary(start, null, List.of(leg1), routeRequest());
 
     assertEquals("B ~ Walk 10s ~ C ~ BUS trip3 12:30 13:30 ~ D []", itinerary.toStr());
+  }
+
+  @Test
+  void refetchItineraryWithMultipleLegsAndAccessEgress() {
+    var refetch = createRefetchService();
+
+    var start = GenericLocation.fromCoordinate(V1.coord());
+    var end = GenericLocation.fromCoordinate(V2.coord());
+
+    var leg1 = legRef("trip1", STOP_A, STOP_B);
+    var leg2 = legRef("trip3", STOP_C, STOP_D);
+
+    var itinerary = refetch.refetchItinerary(start, end, List.of(leg1, leg2), routeRequest());
+
+    assertEquals(
+      "Origin ~ Walk 5s ~ A ~ BUS trip1 10:00 11:00 ~ B ~ Walk 10s ~ C ~ BUS trip3 12:30 13:30 ~ D ~ Walk 5s ~ Destination []",
+      itinerary.toStr()
+    );
   }
 
   @Test
@@ -221,59 +241,35 @@ class RefetchItineraryServiceTest {
   }
 
   @Test
-  void refetchWithAlightSlack() {
+  void refetchWithBoardAlightSlack() {
     var refetch = createRefetchService();
 
     var leg1 = legRef("trip1", STOP_A, STOP_B);
     var leg2 = legRef("trip3", STOP_C, STOP_D);
+    var start = GenericLocation.fromCoordinate(V1.coord());
+    var end = GenericLocation.fromCoordinate(V2.coord());
 
     var request = routeRequest()
       .copyOf()
       .withPreferences(p ->
         p.withTransit(transit ->
-          transit.withAlightSlack(x -> x.with(TransitMode.BUS, Duration.ofMinutes(2)))
+          transit.withDefaultBoardSlackSec(2 * 60).withDefaultAlightSlackSec(3 * 60)
         )
       )
       .buildRequest();
 
-    var itinerary = refetch.refetchItinerary(null, null, List.of(leg1, leg2), request);
+    var itinerary = refetch.refetchItinerary(start, end, List.of(leg1, leg2), request);
 
     assertEquals(
-      "A ~ BUS trip1 10:00 11:00 ~ B ~ Walk 10s ~ C ~ BUS trip3 12:30 13:30 ~ D []",
+      "Origin ~ Walk 5s ~ A ~ BUS trip1 10:00 11:00 ~ B ~ Walk 10s ~ C ~ BUS trip3 12:30 13:30 ~ D ~ Walk 5s ~ Destination []",
       itinerary.toStr()
     );
-    assertEquals("11:02", itinerary.legs().get(1).startTime().toLocalTime().toString());
-  }
-
-  @Test
-  void refetchWithBoardSlack() {
-    var refetch = createRefetchService();
-
-    var leg1 = legRef("trip1", STOP_A, STOP_B);
-    var start = GenericLocation.fromCoordinate(V1.coord().moveNorthMeters(10));
-    var end = GenericLocation.fromCoordinate(V2.coord().moveNorthMeters(10));
-
-    var request = routeRequest()
-      .copyOf()
-      .withPreferences(p ->
-        p.withTransit(transit ->
-          transit
-            .withBoardSlack(b -> b.with(TransitMode.BUS, Duration.ofMinutes(2)))
-            .withDefaultAlightSlackSec(2 * 60)
-        )
-      )
-      .buildRequest();
-
-    var itinerary = refetch.refetchItinerary(start, end, List.of(leg1), request);
-
-    assertEquals(
-      "Origin ~ Walk 5s ~ A ~ BUS trip1 10:00 11:00 ~ B ~ Walk 5s ~ Destination []",
-      itinerary.toStr()
-    );
-    // Verify that we arrive at the platform two minutes earlier
+    // Access should have two min board slack
     assertEquals("09:58", itinerary.legs().getFirst().endTime().toLocalTime().toString());
-    // Verify that we depart from the platform two minutes later
-    assertEquals("11:02", itinerary.legs().getLast().startTime().toLocalTime().toString());
+    // Transfer should have three min alight slack
+    assertEquals("11:03", itinerary.legs().get(2).startTime().toLocalTime().toString());
+    // Egress should have three min alight slack
+    assertEquals("13:33", itinerary.legs().getLast().startTime().toLocalTime().toString());
   }
 
   private ScheduledTransitLegReference legRef(
