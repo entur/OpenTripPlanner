@@ -454,6 +454,26 @@ public class StreetEdge
     );
   }
 
+  /**
+   * Distance in projected latitude degrees from the point {@code (lon, lat)} to this edge's
+   * geometry, using the linker's local equirectangular projection. Computed directly on the packed
+   * geometry without materializing a {@link LineString}; see {@link
+   * CompactLineStringUtils#distanceToPointEquirectangular}.
+   */
+  public double distanceToPointEquirectangular(double lon, double lat, double xscale) {
+    return CompactLineStringUtils.distanceToPointEquirectangular(
+      fromv.getLon(),
+      fromv.getLat(),
+      tov.getLon(),
+      tov.getLat(),
+      compactGeometry,
+      isBack(),
+      lon,
+      lat,
+      xscale
+    );
+  }
+
   @Override
   public double getDistanceMeters() {
     return length_mm / 1000.0;
