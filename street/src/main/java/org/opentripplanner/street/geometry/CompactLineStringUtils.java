@@ -126,15 +126,19 @@ public final class CompactLineStringUtils {
   }
 
   /**
-   * Distance from a point to an endpoint-context compacted line string, computed directly on the
-   * packed form without materializing a {@link LineString} or any {@link
+   * Squared distance from a point to an endpoint-context compacted line string, computed directly on
+   * the packed form without materializing a {@link LineString} or any {@link
    * org.locationtech.jts.geom.Coordinate}.
    * <p>
-   * This is the allocation-free equivalent of {@code VertexLinker.distance()}: it uses the same
-   * "fast somewhat inaccurate" local equirectangular projection (only the x axis is scaled by
+   * This is the allocation-free equivalent of the old {@code VertexLinker.distance()}: it uses the
+   * same "fast somewhat inaccurate" local equirectangular projection (only the x axis is scaled by
    * {@code xscale}; distances come out in latitude degrees) and the same per-segment point-to-segment
    * math JTS {@code DistanceOp} runs internally, but it streams the segments straight from the packed
    * deltas via {@link DlugoszVarLenIntPacker.Decoder} instead of decoding into an array first.
+   * <p>
+   * The <b>square</b> of the distance is returned: the linker only ever orders edges and applies
+   * thresholds, both of which are monotonic in the distance, so the per-candidate {@code sqrt} is
+   * unnecessary (callers square their thresholds instead).
    * <p>
    * The result is order-invariant, so {@code reverse} only affects which endpoint seeds the delta
    * chain (it must match the value the bytes were encoded with); the minimum distance over the
@@ -150,9 +154,9 @@ public final class CompactLineStringUtils {
    * @param px      X (longitude) of the query point
    * @param py      Y (latitude) of the query point
    * @param xscale  cos(latitude) of the projection centre, as used by the linker
-   * @return the projected distance in latitude degrees
+   * @return the squared projected distance in latitude degrees squared
    */
-  public static double distanceToPointEquirectangular(
+  public static double squaredDistanceToPointEquirectangular(
     double xa,
     double ya,
     double xb,
@@ -197,7 +201,7 @@ public final class CompactLineStringUtils {
     if (distSq < minDistSq) {
       minDistSq = distSq;
     }
-    return Math.sqrt(minDistSq);
+    return minDistSq;
   }
 
   /**
