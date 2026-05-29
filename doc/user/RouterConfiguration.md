@@ -59,6 +59,7 @@ A full list of them can be found in the [RouteRequest](RouteRequest.md).
 |    [scheduledTripBinarySearchThreshold](#transit_scheduledTripBinarySearchThreshold)      |       `integer`       | This threshold is used to determine when to perform a binary trip schedule search.                                                                                                                                   | *Optional* | `50`           |   na  |
 |    [searchThreadPoolSize](#transit_searchThreadPoolSize)                                  |       `integer`       | Split a travel search in smaller jobs and run them in parallel to improve performance.                                                                                                                               | *Optional* | `0`            |   na  |
 |    [transferCacheMaxSize](#transit_transferCacheMaxSize)                                  |       `integer`       | The maximum number of distinct transfers parameters to cache pre-calculated transfers for.                                                                                                                           | *Optional* | `25`           |   na  |
+|    [transferEarlyPruningEnabled](#transit_transferEarlyPruningEnabled)                    |       `boolean`       | Enable the Transfer Early Pruning optimization for standard RAPTOR.                                                                                                                                                  | *Optional* | `true`         |  2.10 |
 |    [dynamicSearchWindow](#transit_dynamicSearchWindow)                                    |        `object`       | The dynamic search window coefficients used to calculate the EDT, LAT and SW.                                                                                                                                        | *Optional* |                |  2.1  |
 |       [maxWindow](#transit_dynamicSearchWindow_maxWindow)                                 |       `duration`      | Upper limit for the search-window calculation.                                                                                                                                                                       | *Optional* | `"PT3H"`       |  2.2  |
 |       [minTransitTimeCoefficient](#transit_dynamicSearchWindow_minTransitTimeCoefficient) |        `double`       | The coefficient to multiply with `minTransitTime`.                                                                                                                                                                   | *Optional* | `0.5`          |  2.1  |
@@ -301,6 +302,22 @@ no extra threads are started and the search is done in one thread.
 The maximum number of distinct transfers parameters to cache pre-calculated transfers for.
 
  If too low, requests may be slower. If too high, more memory may be used then required.
+
+<h3 id="transit_transferEarlyPruningEnabled">transferEarlyPruningEnabled</h3>
+
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `true`   
+**Path:** /transit 
+
+Enable the Transfer Early Pruning optimization for standard RAPTOR.
+
+When enabled, the transfer relaxation loop breaks early once the current arrival time
+exceeds the best known destination arrival time. Transfers must be sorted by duration for
+this to be correct (which OTP ensures). This optimization only applies to Standard RAPTOR
+(not Multi-Criteria searches).
+
+See _Rohovyi, Abuaisha, Walsh — "Early Pruning for Public Transport Routing", WCTR 2026_
+in the [Bibliography](Bibliography.md).
+
 
 <h3 id="transit_dynamicSearchWindow">dynamicSearchWindow</h3>
 

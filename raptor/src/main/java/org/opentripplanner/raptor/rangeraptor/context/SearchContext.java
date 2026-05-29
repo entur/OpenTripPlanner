@@ -204,6 +204,10 @@ public class SearchContext<T extends RaptorTripSchedule> {
     return request.useConstrainedTransfers();
   }
 
+  public boolean transferEarlyPruningEnabled() {
+    return tuningParameters.transferEarlyPruningEnabled();
+  }
+
   /* private methods */
 
   public RaptorStopNameResolver stopNameResolver() {
