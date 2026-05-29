@@ -10,9 +10,10 @@ import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Point;
 
 /**
- * Verifies that {@link CompactLineStringUtils#distanceToPointEquirectangular} (the allocation-free
- * walk used by the vertex linker) returns the same projected distance as the old JTS path it
- * replaced: {@code equirectangularProject(uncompactLineString(...)).distance(point)}.
+ * Verifies that {@link CompactLineStringUtils#squaredDistanceToPointEquirectangular} (the
+ * allocation-free walk used by the vertex linker) returns the same projected distance as the old JTS
+ * path it replaced: {@code equirectangularProject(uncompactLineString(...)).distance(point)}. The
+ * method returns the squared distance, so the test compares {@code sqrt(walk)} to the JTS distance.
  */
 class CompactLineStringDistanceTest {
 
@@ -53,16 +54,18 @@ class CompactLineStringDistanceTest {
     double py,
     double xscale
   ) {
-    return CompactLineStringUtils.distanceToPointEquirectangular(
-      ax,
-      ay,
-      bx,
-      by,
-      packed,
-      reverse,
-      px,
-      py,
-      xscale
+    return Math.sqrt(
+      CompactLineStringUtils.squaredDistanceToPointEquirectangular(
+        ax,
+        ay,
+        bx,
+        by,
+        packed,
+        reverse,
+        px,
+        py,
+        xscale
+      )
     );
   }
 
