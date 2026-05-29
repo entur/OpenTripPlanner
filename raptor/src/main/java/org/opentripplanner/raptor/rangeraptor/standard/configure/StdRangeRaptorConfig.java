@@ -274,7 +274,7 @@ public class StdRangeRaptorConfig<T extends RaptorTripSchedule> {
   }
 
   private StdTransferEarlyPruning<T> createEarlyPruning() {
-    if (!ctx.transferEarlyPruningEnabled()) {
+    if (!ctx.earlyTransferPruning()) {
       return null;
     }
     return new StdTransferEarlyPruning<T>(

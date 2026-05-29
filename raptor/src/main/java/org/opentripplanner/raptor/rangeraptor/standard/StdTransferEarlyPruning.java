@@ -2,7 +2,7 @@ package org.opentripplanner.raptor.rangeraptor.standard;
 
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.LinkedHashMap;
+import java.util.HashMap;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.rangeraptor.internalapi.WorkerLifeCycle;
 import org.opentripplanner.raptor.rangeraptor.transit.RaptorTransitCalculator;
@@ -12,8 +12,9 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
  * Early Pruning optimization for Standard Range Raptor transfer relaxation.
  * <p>
  * This optimization breaks the transfer loop early when the current arrival time exceeds the best
- * known destination arrival time. It requires transfers to be sorted by duration (non-decreasing),
- * so that once a transfer exceeds the bound, all subsequent transfers will too.
+ * known destination arrival time. It requires transfers to be sorted by increasing duration, so
+ * that once a transfer exceeds the bound, all subsequent transfers will too. Transfers with equal
+ * duration are acceptable — they produce the same arrival time and are all pruned together.
  * <p>
  * The optimization is only applied to Standard RAPTOR (not Multi-Criteria). In MC-Raptor, multiple
  * Pareto-optimal arrivals at each stop must be explored; pruning based on a single best destination
@@ -49,7 +50,7 @@ public class StdTransferEarlyPruning<T extends RaptorTripSchedule> {
     RaptorTransitCalculator<T> calculator,
     WorkerLifeCycle lifeCycle
   ) {
-    var minDurationByStop = new LinkedHashMap<Integer, Integer>();
+    var minDurationByStop = new HashMap<Integer, Integer>();
     for (var egress : egressPaths) {
       minDurationByStop.merge(egress.stop(), egress.durationInSeconds(), Math::min);
     }

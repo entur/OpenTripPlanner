@@ -29,7 +29,7 @@ public final class TransitRoutingConfig implements RaptorTuningParameters, Trans
   private final int iterationDepartureStepInSeconds;
   private final int searchThreadPoolSize;
   private final int transferCacheMaxSize;
-  private final boolean transferEarlyPruningEnabled;
+  private final boolean earlyTransferPruning;
   private final List<RouteRequest> transferCacheRequests;
   private final List<Duration> pagingSearchWindowAdjustments;
 
@@ -109,8 +109,8 @@ public final class TransitRoutingConfig implements RaptorTuningParameters, Trans
         """
       )
       .asInt(0);
-    this.transferEarlyPruningEnabled = c
-      .of("transferEarlyPruningEnabled")
+    this.earlyTransferPruning = c
+      .of("earlyTransferPruning")
       .since(V2_10)
       .summary("Enable the Transfer Early Pruning optimization for standard RAPTOR.")
       .description(
@@ -124,7 +124,7 @@ public final class TransitRoutingConfig implements RaptorTuningParameters, Trans
         in the [Bibliography](Bibliography.md).
         """
       )
-      .asBoolean(dft.transferEarlyPruningEnabled());
+      .asBoolean(dft.earlyTransferPruning());
     // Dynamic Search Window
     this.stopBoardAlightDuringTransferCost = c
       .of("stopBoardAlightDuringTransferCost")
@@ -255,8 +255,8 @@ public final class TransitRoutingConfig implements RaptorTuningParameters, Trans
   }
 
   @Override
-  public boolean transferEarlyPruningEnabled() {
-    return transferEarlyPruningEnabled;
+  public boolean earlyTransferPruning() {
+    return earlyTransferPruning;
   }
 
   @Override

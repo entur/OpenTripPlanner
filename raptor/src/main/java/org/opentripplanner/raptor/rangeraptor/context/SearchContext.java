@@ -204,8 +204,8 @@ public class SearchContext<T extends RaptorTripSchedule> {
     return request.useConstrainedTransfers();
   }
 
-  public boolean transferEarlyPruningEnabled() {
-    return tuningParameters.transferEarlyPruningEnabled();
+  public boolean earlyTransferPruning() {
+    return tuningParameters.earlyTransferPruning();
   }
 
   /* private methods */

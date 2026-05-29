@@ -35,7 +35,7 @@ producing true Pareto-optimal sets of results.
   <BR>Introduces the Early Pruning optimization for the RAPTOR transfer relaxation step. By sorting
   transfers by duration and tracking the best known destination arrival time, the inner transfer
   loop can terminate early once remaining transfers cannot improve the current best. Implemented in
-  OTP as `transferEarlyPruningEnabled` (Standard RAPTOR only).
+  OTP as `earlyTransferPruning` (Standard RAPTOR only).
   <BR>https://arxiv.org/abs/2603.12592
 
 ## Techniques used in or influencing OTP1 and OTP2

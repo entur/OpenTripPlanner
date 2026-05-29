@@ -37,7 +37,7 @@ public interface RaptorTuningParameters {
    *
    * @see org.opentripplanner.standalone.config.routerconfig.TransitRoutingConfig
    */
-  default boolean transferEarlyPruningEnabled() {
+  default boolean earlyTransferPruning() {
     return true;
   }
 }

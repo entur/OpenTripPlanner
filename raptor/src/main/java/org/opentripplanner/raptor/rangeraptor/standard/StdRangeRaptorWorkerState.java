@@ -127,8 +127,8 @@ public final class StdRangeRaptorWorkerState<T extends RaptorTripSchedule>
 
   /**
    * Set the arrival time at all transit stop if time is optimal for the given list of transfers.
-   * Transfers must be sorted by duration (non-decreasing): once a transfer exceeds the time limit
-   * or the early pruning bound, all subsequent transfers will too, so the loop terminates early.
+   * Transfers must be sorted by increasing duration: once a transfer exceeds the time limit or the
+   * early pruning bound, all subsequent transfers will too, so the loop terminates early.
    */
   @Override
   public void transferToStops(int fromStop, Iterator<? extends RaptorTransfer> transfers) {
@@ -198,9 +198,9 @@ public final class StdRangeRaptorWorkerState<T extends RaptorTripSchedule>
   }
 
   /**
-   * @return {@code true} if early pruning should terminate the transfer loop — either the time
-   *     limit was exceeded or the early pruning bound was exceeded (transfers are sorted by
-   *     duration, so all subsequent transfers will also exceed the bound).
+   * @return {@code true} if the transfer loop should terminate early — either the time limit was
+   *     exceeded, or early pruning is enabled and the early pruning bound was exceeded (transfers
+   *     are sorted by duration, so all subsequent transfers will also exceed the bound).
    */
   private boolean transferToStop(int arrivalTimeTransit, int fromStop, RaptorTransfer transfer) {
     // Use the calculator to make sure the calculation is done correct for a normal
