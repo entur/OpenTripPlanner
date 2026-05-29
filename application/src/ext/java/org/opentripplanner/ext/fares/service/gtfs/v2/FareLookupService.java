@@ -9,6 +9,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -25,20 +26,27 @@ import org.opentripplanner.utils.collection.SetUtils;
  */
 class FareLookupService implements Serializable {
 
+  public static final BiPredicate<
+    TransferMatch,
+    FareProduct
+  > DEFAULT_FREE_TRANSFER_MATCH_PREDICATE = TransferMatch::matchesEligibility;
   private final List<FareLegRule> legRules;
   private final List<FareTransferRule> transferRules;
   private final AreaMatcher areaMatcher;
   private final NetworkMatcher networkMatcher;
   private final TimeframeMatcher timeframeMatcher;
+  private final BiPredicate<TransferMatch, FareProduct> freeTransferEligibility;
 
   FareLookupService(
     List<FareLegRule> legRules,
     List<FareTransferRule> fareTransferRules,
     Multimap<FeedScopedId, FeedScopedId> stopAreas,
-    Multimap<FeedScopedId, LocalDate> serviceDates
+    Multimap<FeedScopedId, LocalDate> serviceDates,
+    BiPredicate<TransferMatch, FareProduct> freeTransferEligibility
   ) {
     this.legRules = List.copyOf(legRules);
     this.transferRules = List.copyOf(fareTransferRules);
+    this.freeTransferEligibility = freeTransferEligibility;
 
     var rulePriorityMatcher = new RulePriorityMatcher(legRules);
     this.areaMatcher = new AreaMatcher(rulePriorityMatcher, legRules, stopAreas);
@@ -153,7 +161,7 @@ class FareLookupService implements Serializable {
           .fromLegRule()
           .fareProducts()
           .stream()
-          .filter(t::matchesEligibility)
+          .filter(p -> freeTransferEligibility.test(t, p))
           .map(product ->
             LegOffer.of(
               FareOffer.of(head.startTime(), product, dependencies.get(product)),
