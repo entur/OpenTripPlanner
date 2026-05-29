@@ -2,43 +2,47 @@ package org.opentripplanner.service.vehiclerental.internal;
 
 import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
+import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
+import java.util.Set;
 import java.util.stream.Stream;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
 import org.opentripplanner.service.vehiclerental.VehicleRentalService;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalStation;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalVehicle;
 import org.opentripplanner.street.model.RentalFormFactor;
 
+/** Read-side service backed by a {@link VehicleRentalRepository}. */
 @Singleton
-public class DefaultVehicleRentalService implements VehicleRentalService, VehicleRentalRepository {
+public class DefaultVehicleRentalService implements VehicleRentalService, Serializable {
+
+  private final VehicleRentalRepository repository;
 
   @Inject
-  public DefaultVehicleRentalService() {}
-
-  private final Map<FeedScopedId, VehicleRentalPlace> rentalPlaces = new ConcurrentHashMap<>();
+  public DefaultVehicleRentalService(VehicleRentalRepository repository) {
+    this.repository = repository;
+  }
 
   @Override
   public Collection<VehicleRentalPlace> getVehicleRentalPlaces() {
-    return rentalPlaces.values();
+    return repository.listRentalPlaces();
   }
 
   @Override
   public VehicleRentalPlace getVehicleRentalPlace(FeedScopedId id) {
-    return rentalPlaces.get(id);
+    return repository.getRentalPlace(id);
   }
 
   @Override
   public List<VehicleRentalVehicle> getVehicleRentalVehicles() {
-    return rentalPlaces
-      .values()
+    return repository
+      .listRentalPlaces()
       .stream()
       .filter(VehicleRentalVehicle.class::isInstance)
       .map(VehicleRentalVehicle.class::cast)
@@ -47,7 +51,7 @@ public class DefaultVehicleRentalService implements VehicleRentalService, Vehicl
 
   @Override
   public VehicleRentalVehicle getVehicleRentalVehicle(FeedScopedId id) {
-    VehicleRentalPlace vehicleRentalPlace = rentalPlaces.get(id);
+    VehicleRentalPlace vehicleRentalPlace = repository.getRentalPlace(id);
     return vehicleRentalPlace instanceof VehicleRentalVehicle vehicleRentalVehicle
       ? vehicleRentalVehicle
       : null;
@@ -60,26 +64,16 @@ public class DefaultVehicleRentalService implements VehicleRentalService, Vehicl
 
   @Override
   public VehicleRentalStation getVehicleRentalStation(FeedScopedId id) {
-    VehicleRentalPlace vehicleRentalPlace = rentalPlaces.get(id);
+    VehicleRentalPlace vehicleRentalPlace = repository.getRentalPlace(id);
     return vehicleRentalPlace instanceof VehicleRentalStation vehicleRentalStation
       ? vehicleRentalStation
       : null;
   }
 
   @Override
-  public void addVehicleRentalStation(VehicleRentalPlace vehicleRentalStation) {
-    rentalPlaces.put(vehicleRentalStation.id(), vehicleRentalStation);
-  }
-
-  @Override
-  public void removeVehicleRentalStation(FeedScopedId vehicleRentalStationId) {
-    rentalPlaces.remove(vehicleRentalStationId);
-  }
-
-  @Override
   public boolean hasRentalBikes() {
-    return rentalPlaces
-      .values()
+    return repository
+      .listRentalPlaces()
       .stream()
       .anyMatch(place -> {
         if (place instanceof VehicleRentalVehicle vehicle) {
@@ -113,20 +107,35 @@ public class DefaultVehicleRentalService implements VehicleRentalService, Vehicl
       .toList();
   }
 
+  @Override
+  public List<VehicleRentalPlace> getVehicleRentalPlacesForEnvelope(Envelope envelope) {
+    return repository
+      .listRentalPlaces()
+      .stream()
+      .filter(vr -> envelope.contains(new Coordinate(vr.longitude(), vr.latitude())))
+      .toList();
+  }
+
   private Stream<VehicleRentalStation> getVehicleRentalStationsAsStream() {
-    return rentalPlaces
-      .values()
+    return repository
+      .listRentalPlaces()
       .stream()
       .filter(VehicleRentalStation.class::isInstance)
       .map(VehicleRentalStation.class::cast);
   }
 
   @Override
-  public List<VehicleRentalPlace> getVehicleRentalPlacesForEnvelope(Envelope envelope) {
-    Stream<VehicleRentalPlace> vehicleRentalPlaceStream = getVehicleRentalPlaces()
-      .stream()
-      .filter(vr -> envelope.contains(new Coordinate(vr.longitude(), vr.latitude())));
+  public Set<GeofencingZone> zonesContaining(Coordinate coord) {
+    return repository.zonesContaining(coord);
+  }
 
-    return vehicleRentalPlaceStream.toList();
+  @Override
+  public boolean hasIndexedZones() {
+    return repository.hasIndexedZones();
+  }
+
+  @Override
+  public Set<GeofencingZone> allZones() {
+    return repository.allZones();
   }
 }

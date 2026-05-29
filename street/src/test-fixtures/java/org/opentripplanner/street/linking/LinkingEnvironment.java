@@ -8,6 +8,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.service.vehiclerental.GeofencingZoneService;
 import org.opentripplanner.street.graph.DisposableEdgeDataFetcher;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.graph.GraphDataFetcher;
@@ -38,6 +39,7 @@ public class LinkingEnvironment {
     graphFetcher = new GraphDataFetcher(graph);
     linker = new VertexLinker(
       graph,
+      GeofencingZoneService.EMPTY,
       COMPUTE_AREA_VISIBILITY_LINES,
       StreetConstants.DEFAULT_MAX_AREA_NODES,
       true
