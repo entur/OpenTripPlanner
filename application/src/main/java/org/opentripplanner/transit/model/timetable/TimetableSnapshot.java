@@ -151,6 +151,8 @@ public class TimetableSnapshot {
     TripOnServiceDate
   > realTimeAddedTripOnServiceDateForTripAndDay;
   private final DefaultTripCalendars tripCalendars;
+  private final RaptorTransitData realtimeRaptorTransitData;
+  private final TimetableUpdateMapper timetableUpdateMapper;
 
   /**
    * Boolean value indicating that timetable snapshot is read only if true. Once it is true, it
@@ -163,9 +165,6 @@ public class TimetableSnapshot {
    * the last commit if true.
    */
   private boolean dirty = false;
-
-  private final RaptorTransitData realtimeRaptorTransitData;
-  private final TimetableUpdateMapper timetableUpdateMapper;
 
   public TimetableSnapshot(
     RaptorTransitData raptorTransitData,
@@ -215,9 +214,9 @@ public class TimetableSnapshot {
     this.realTimeAddedTripOnServiceDateForTripAndDay = realTimeAddedTripOnServiceDateForTripAndDay;
     this.patternsForStop = patternsForStop;
     this.tripCalendars = tripCalendars;
-    this.readOnly = readOnly;
     this.realtimeRaptorTransitData = realtimeRaptorTransitData;
     this.timetableUpdateMapper = new TimetableUpdateMapper();
+    this.readOnly = readOnly;
   }
 
   /**

@@ -232,7 +232,7 @@ public class ConstructApplication {
   }
 
   /**
-   * Create transit layer for Raptor routing. Here we map the scheduled timetables.
+   * Create a transit layer for Raptor routing. Here we map the scheduled timetables.
    */
   public static void createRaptorTransitData(
     TimetableRepository timetableRepository,

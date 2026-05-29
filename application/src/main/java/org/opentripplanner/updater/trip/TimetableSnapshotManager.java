@@ -18,7 +18,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A class which abstracts away locking, updating, committing and purging of the timetable snapshot.
+ * A class that abstracts away locking, updating, committing, and purging of the timetable snapshot.
  */
 public final class TimetableSnapshotManager {
 
@@ -26,7 +26,7 @@ public final class TimetableSnapshotManager {
 
   /**
    * The working copy of the timetable snapshot. Should not be visible to routing threads.
-   * By design, only one thread should ever be writing to this buffer.
+   * By design, only one thread should ever be written to this buffer.
    */
   private TimetableSnapshot buffer;
 
