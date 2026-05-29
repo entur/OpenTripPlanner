@@ -75,7 +75,8 @@
         ]
       },
       "layout" : {
-        "line-cap" : "round"
+        "line-cap" : "round",
+        "visibility" : "none"
       },
       "metadata" : {
         "group" : "Transfers"

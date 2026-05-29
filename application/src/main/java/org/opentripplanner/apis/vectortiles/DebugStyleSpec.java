@@ -206,6 +206,7 @@ public class DebugStyleSpec {
         .lineWidth(LINE_WIDTH)
         .minZoom(6)
         .maxZoom(MAX_ZOOM)
+        .intiallyHidden()
     );
   }
 
