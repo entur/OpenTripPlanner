@@ -50,7 +50,7 @@ Sections follow that describe particular settings in more depth.
 | [cache](#cache)                                                                             |       `object`       | Configuration for the graph-build file cache.                                                                                                                  | *Optional* |                                   |  2.10 |
 |    [enabled](#cache_enabled)                                                                |       `boolean`      | Master switch for the graph-build cache.                                                                                                                       | *Optional* | `false`                           |  2.10 |
 |    [path](#cache_path)                                                                      |         `uri`        | Root directory for cache files.                                                                                                                                | *Optional* |                                   |  2.10 |
-|    [tasks](#cache_tasks)                                                                    |      `enum set`      | Which cache tasks to enable.                                                                                                                                   | *Optional* |                                   |  2.10 |
+|    [tasks](#cache_tasks)                                                                    |      `enum set`      | Which graph-build computations to cache between builds.                                                                                                        | *Optional* |                                   |  2.10 |
 | [dataOverlay](sandbox/DataOverlay.md)                                                       |       `object`       | Config for the DataOverlay Sandbox module                                                                                                                      | *Optional* |                                   |  2.2  |
 | [dem](#dem)                                                                                 |      `object[]`      | Specify parameters for DEM extracts.                                                                                                                           | *Optional* |                                   |  2.2  |
 |       [elevationUnitMultiplier](#dem_0_elevationUnitMultiplier)                             |       `double`       | Specify a multiplier to convert elevation units from source to meters. Overrides the value specified in `demDefaults`.                                         | *Optional* | `1.0`                             |  2.3  |
@@ -636,33 +636,13 @@ What OSM tags should be looked on for the source of matching stops to platforms 
 
 Configuration for the graph-build file cache.
 
-OTP can cache the results of expensive graph-build computations between builds. The two
-cached tasks are:
-
-- **ELEVATION** – elevation profiles sampled from the DEM for each street edge.
-- **VISIBILITY** – pre-computed visibility graphs for walkable OSM areas (e.g. squares
-  and parks).
-
-Both tasks can take a significant portion of total graph-build time. Enabling the cache
-skips their computation on subsequent builds and can cut build time considerably when
-the same OSM and DEM files are reused.
+OTP can cache the results of expensive graph-build computations between builds. Both
+cached tasks can take a significant portion of total graph-build time; enabling the cache
+skips their computation on subsequent builds and can cut build time considerably when the
+same OSM and DEM files are reused.
 
 **When to enable:** any pipeline that rebuilds the graph repeatedly from the same OSM
 and elevation data (e.g. nightly GTFS-only updates).
-
-**Cache invalidation:** the two tasks have different staleness characteristics:
-
-- *ELEVATION* – the cache key is the encoded geometry of each street edge, and on save
-  only edges present in the current build are written. OSM changes therefore take care of
-  themselves: new or modified edges produce a cache miss and are recomputed; removed edges
-  simply disappear from the next save. **Delete the elevation cache when the DEM source
-  file is replaced**, because edge geometries are unchanged but the sampled height values
-  would be stale.
-- *VISIBILITY* – the cache key is a hash of both the OSM entity IDs and all polygon
-  coordinates of an area group. Any geometry change therefore produces a cache miss and
-  triggers a recompute automatically. Deleted areas leave orphaned entries that are never
-  looked up (harmless bloat). **The visibility cache never needs to be deleted manually**;
-  clearing it only removes accumulated bloat from deleted areas.
 
 Cache files are named `<task>-cache-<version>.obj` (for example `elevation-cache-1.obj`).
 When OTP bumps the internal serialization version the old file is ignored automatically
@@ -697,20 +677,22 @@ Path to the directory where cache files are stored. Defaults to the OTP base dir
 **Path:** /cache   
 **Enum values:** `elevation` | `visibility`
 
-Which cache tasks to enable.
+Which graph-build computations to cache between builds.
 
-List of cache tasks to enable. Valid values:
+ - `elevation` Caches the elevation profile sampled for every street edge. The cache key is the encoded edge
+   geometry; OSM changes are handled automatically (new or modified edges cause a cache miss,
+   removed edges are omitted from the next save).
+   
+   **Delete the elevation cache when the DEM source file is replaced**, because edge geometries
+   are unchanged but the sampled height values would be stale.
+ - `visibility` Caches pre-computed visibility graphs for walkable OSM areas (parks, plazas, etc.). The cache
+   key is a hash of the OSM entity IDs and all polygon coordinates, so any geometry change
+   causes a cache miss automatically. Only entries accessed during a build are written back, so
+   deleted areas are pruned from the saved file automatically.
+   
+   **The visibility cache never needs to be deleted manually.**
 
-- `ELEVATION` – caches the elevation profile of every street edge. OSM changes are handled
-  automatically (the cache key is the edge geometry; on save only the current build's edges
-  are written). Delete the cache when the DEM source file is replaced.
-- `VISIBILITY` – caches pre-computed visibility graphs for walkable OSM areas. The cache
-  key includes the full polygon geometry, so OSM changes automatically cause a cache miss
-  for affected areas. This cache never needs to be deleted manually.
-
-When not set, all tasks are enabled. Omit a task from the list to skip its cache while
-keeping the others active.
-
+When not set, all tasks are enabled. Omit a task from the list to disable its cache.
 
 <h3 id="dem">dem</h3>
 
