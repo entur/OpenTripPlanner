@@ -6,6 +6,7 @@ import static org.opentripplanner.raptor.rangeraptor.path.PathParetoSetComparato
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.opentripplanner.raptor.rangeraptor.context.SearchContext;
 import org.opentripplanner.raptor.rangeraptor.internalapi.Heuristics;
 import org.opentripplanner.raptor.rangeraptor.internalapi.ParetoSetCost;
@@ -273,6 +274,7 @@ public class StdRangeRaptorConfig<T extends RaptorTripSchedule> {
     );
   }
 
+  @Nullable
   private StdTransferEarlyPruning<T> createEarlyPruning() {
     if (!ctx.earlyTransferPruning()) {
       return null;
