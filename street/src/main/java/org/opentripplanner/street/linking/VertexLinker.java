@@ -147,12 +147,9 @@ public class VertexLinker {
 
   /** projected distance from stop to edge, in latitude degrees */
   private static double distance(Vertex tstop, StreetEdge edge, double xscale) {
-    // Despite the fact that we want to use a fast somewhat inaccurate projection, still use JTS library tools
-    // for the actual distance calculations.
-    LineString transformed = equirectangularProject(edge.getGeometry(), xscale);
-    return transformed.distance(
-      GEOMETRY_FACTORY.createPoint(new Coordinate(tstop.getLon() * xscale, tstop.getLat()))
-    );
+    // Computed directly on the packed edge geometry, without materializing a LineString or going
+    // through JTS DistanceOp. This is the per-candidate hot path during linking/GBFS apply.
+    return edge.distanceToPointEquirectangular(tstop.getLon(), tstop.getLat(), xscale);
   }
 
   /** project this linestring to an equirectangular projection */

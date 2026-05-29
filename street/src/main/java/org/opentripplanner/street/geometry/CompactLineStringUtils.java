@@ -124,4 +124,107 @@ public final class CompactLineStringUtils {
     LineString out = GeometryUtils.makeLineString(c);
     return reverse ? out.reverse() : out;
   }
+
+  /**
+   * Distance from a point to an endpoint-context compacted line string, computed directly on the
+   * packed form without materializing a {@link LineString} or any {@link
+   * org.locationtech.jts.geom.Coordinate}.
+   * <p>
+   * This is the allocation-free equivalent of {@code VertexLinker.distance()}: it uses the same
+   * "fast somewhat inaccurate" local equirectangular projection (only the x axis is scaled by
+   * {@code xscale}; distances come out in latitude degrees) and the same per-segment point-to-segment
+   * math JTS {@code DistanceOp} runs internally, but it streams the segments straight from the packed
+   * deltas via {@link DlugoszVarLenIntPacker.Decoder} instead of decoding into an array first.
+   * <p>
+   * The result is order-invariant, so {@code reverse} only affects which endpoint seeds the delta
+   * chain (it must match the value the bytes were encoded with); the minimum distance over the
+   * segment set is identical regardless.
+   *
+   * @param xa      X (longitude) of end point A
+   * @param ya      Y (latitude) of end point A
+   * @param xb      X (longitude) of end point B
+   * @param yb      Y (latitude) of end point B
+   * @param packedCoords the endpoint-context packed intermediate points (may be empty/null for a
+   *                     straight line)
+   * @param reverse True if A and B are inverted (B is start, A is end) — must match compaction.
+   * @param px      X (longitude) of the query point
+   * @param py      Y (latitude) of the query point
+   * @param xscale  cos(latitude) of the projection centre, as used by the linker
+   * @return the projected distance in latitude degrees
+   */
+  public static double distanceToPointEquirectangular(
+    double xa,
+    double ya,
+    double xb,
+    double yb,
+    byte[] packedCoords,
+    boolean reverse,
+    double px,
+    double py,
+    double xscale
+  ) {
+    double x0 = reverse ? xb : xa;
+    double y0 = reverse ? yb : ya;
+    double x1 = reverse ? xa : xb;
+    double y1 = reverse ? ya : yb;
+
+    double pxs = px * xscale;
+    double prevX = x0 * xscale;
+    double prevY = y0;
+    double minDistSq = Double.POSITIVE_INFINITY;
+
+    if (packedCoords != null && packedCoords.length > 0) {
+      int oix = CompactLineString.toFixedPoint(x0);
+      int oiy = CompactLineString.toFixedPoint(y0);
+      var decoder = new DlugoszVarLenIntPacker.Decoder(packedCoords);
+      while (decoder.hasNext()) {
+        oix += decoder.next();
+        oiy += decoder.next();
+        double curX = CompactLineString.toFloatingPoint(oix) * xscale;
+        double curY = CompactLineString.toFloatingPoint(oiy);
+        double distSq = segmentDistanceSq(pxs, py, prevX, prevY, curX, curY);
+        if (distSq < minDistSq) {
+          minDistSq = distSq;
+        }
+        prevX = curX;
+        prevY = curY;
+      }
+    }
+
+    // Final implicit segment to the other endpoint (the only segment for a straight line).
+    double endX = x1 * xscale;
+    double distSq = segmentDistanceSq(pxs, py, prevX, prevY, endX, y1);
+    if (distSq < minDistSq) {
+      minDistSq = distSq;
+    }
+    return Math.sqrt(minDistSq);
+  }
+
+  /**
+   * Squared euclidean distance from point {@code (px,py)} to the segment {@code (ax,ay)-(bx,by)} in
+   * the projected plane. Same projection-and-clamp the JTS distance computation performs per segment.
+   */
+  private static double segmentDistanceSq(
+    double px,
+    double py,
+    double ax,
+    double ay,
+    double bx,
+    double by
+  ) {
+    double dx = bx - ax;
+    double dy = by - ay;
+    double lengthSq = dx * dx + dy * dy;
+    double t = lengthSq == 0.0 ? 0.0 : ((px - ax) * dx + (py - ay) * dy) / lengthSq;
+    if (t < 0.0) {
+      t = 0.0;
+    } else if (t > 1.0) {
+      t = 1.0;
+    }
+    double closestX = ax + t * dx;
+    double closestY = ay + t * dy;
+    double ex = px - closestX;
+    double ey = py - closestY;
+    return ex * ex + ey * ey;
+  }
 }
