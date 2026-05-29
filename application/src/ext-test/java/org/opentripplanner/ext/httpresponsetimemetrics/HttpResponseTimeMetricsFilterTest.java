@@ -31,7 +31,7 @@ class HttpResponseTimeMetricsFilterTest {
   private static final String TRANSMODEL_ENDPOINT = "/transmodel/v3";
   private static final String GTFS_ENDPOINT = "/gtfs/v1/";
   private static final Set<String> MONITORED_ENDPOINTS = Set.of(TRANSMODEL_ENDPOINT, GTFS_ENDPOINT);
-  private static final String METRIC_NAME = "otp_http_server_requests";
+  private static final String METRIC_NAME = "otp.http.server.requests";
   private static final Duration MIN_EXPECTED_RESPONSE_TIME = Duration.ofMillis(10);
   private static final Duration MAX_EXPECTED_RESPONSE_TIME = Duration.ofMillis(10_000);
   private SimpleMeterRegistry registry;
@@ -162,7 +162,7 @@ class HttpResponseTimeMetricsFilterTest {
 
   private Timer findTotalTimer(String client, String endpoint) {
     return registry
-      .find(METRIC_NAME + "_total_time")
+      .find(METRIC_NAME + ".total.time")
       .tag(CLIENT_TAG, client)
       .tag(URI_TAG, endpoint)
       .timer();
