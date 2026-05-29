@@ -16,7 +16,7 @@ public enum TraverseMode {
   }
 
   public boolean isInCar() {
-    return this == CAR;
+    return this == CAR || this == FLEX;
   }
 
   /**
