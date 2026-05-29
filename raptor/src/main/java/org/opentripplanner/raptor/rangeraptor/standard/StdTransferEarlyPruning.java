@@ -1,5 +1,7 @@
 package org.opentripplanner.raptor.rangeraptor.standard;
 
+import gnu.trove.set.TIntSet;
+import gnu.trove.set.hash.TIntHashSet;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -43,6 +45,7 @@ public class StdTransferEarlyPruning<T extends RaptorTripSchedule> {
   private final RaptorTransitCalculator<T> calculator;
   private int bestDestCurrentIteration;
   private int currentRound;
+  private TIntSet egressStops = new TIntHashSet();
 
   public StdTransferEarlyPruning(
     Collection<RaptorAccessEgress> egressPaths,
@@ -53,6 +56,7 @@ public class StdTransferEarlyPruning<T extends RaptorTripSchedule> {
     var minDurationByStop = new HashMap<Integer, Integer>();
     for (var egress : egressPaths) {
       minDurationByStop.merge(egress.stop(), egress.durationInSeconds(), Math::min);
+      egressStops.add(egress.stop());
     }
     this.egressStopIndices = new int[minDurationByStop.size()];
     this.egressMinDurations = new int[minDurationByStop.size()];
@@ -78,6 +82,10 @@ public class StdTransferEarlyPruning<T extends RaptorTripSchedule> {
    * destination arrival bounds are updated.
    */
   void updateArrival(int stop, int alightTime) {
+    // Early pruning is only applied to egress stops.
+    if (!egressStops.contains(stop)) {
+      return;
+    }
     for (int i = 0; i < egressStopIndices.length; i++) {
       if (egressStopIndices[i] == stop) {
         int destArrival = calculator.plusDuration(alightTime, egressMinDurations[i]);
