@@ -5,8 +5,10 @@ import dagger.Module;
 import dagger.Provides;
 import jakarta.inject.Singleton;
 import java.time.LocalDate;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.standalone.api.HttpRequestScoped;
 import org.opentripplanner.standalone.config.ConfigModel;
+import org.opentripplanner.transit.model.calendar.DefaultTripCalendars;
 import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
@@ -24,11 +26,15 @@ public abstract class TransitModule {
   @Singleton
   public static TimetableSnapshotManager timetableSnapshotManager(
     ConfigModel config,
-    TimetableRepository timetableRepository
+    TimetableRepository timetableRepository,
+    RaptorTransitData scheduledRaptorTransitData,
+    DefaultTripCalendars scheduledTripCalendars
   ) {
     return new TimetableSnapshotManager(
       config.routerConfig().updaterConfig().timetableSnapshotParameters(),
-      () -> LocalDate.now(timetableRepository.getTimeZone())
+      () -> LocalDate.now(timetableRepository.getTimeZone()),
+      scheduledRaptorTransitData,
+      scheduledTripCalendars
     );
   }
 

@@ -62,6 +62,30 @@ public final class TimetableSnapshotManager {
     this.localDateNow = Objects.requireNonNull(localDateNow);
   }
 
+  /**
+   * Creates and immediately initializes the snapshot with the provided scheduled Raptor data.
+   * <p>
+   * This constructor is intended for production use where the Raptor data is computed before
+   * Dagger constructs this instance, avoiding a separate {@link #initRaptorData} call.
+   *
+   * @param localDateNow               This supplier allows you to inject a custom lambda to
+   *                                   override what is considered 'today'. This is useful for
+   *                                   unit testing.
+   * @param scheduledRaptorTransitData The pre-computed scheduled Raptor transit data.
+   * @param tripCalendars              The trip calendars copied for real-time updates.
+   */
+  public TimetableSnapshotManager(
+    TimetableSnapshotParameters parameters,
+    Supplier<LocalDate> localDateNow,
+    RaptorTransitData scheduledRaptorTransitData,
+    DefaultTripCalendars tripCalendars
+  ) {
+    this.purgeExpiredData = parameters.purgeExpiredData();
+    this.localDateNow = Objects.requireNonNull(localDateNow);
+    this.buffer = new TimetableSnapshot(scheduledRaptorTransitData, tripCalendars);
+    commitTimetableSnapshot(true);
+  }
+
   public void initRaptorData(
     RaptorTransitData scheduledRaptorTransitData,
     DefaultTripCalendars tripCalendars
