@@ -29,10 +29,8 @@ class FareLookupService implements Serializable {
   /// The GTFS spec is underspecified about which fare products gree transfers should apply to.
   /// The interpretation of this implementation is that transfers apply to only those fare
   /// products that share the same category and fare medium.
-  static final BiPredicate<
-    TransferMatch,
-    FareProduct
-  > DEFAULT_FREE_TRANSFER_MATCH_PREDICATE = TransferMatch::matchesEligibility;
+  static final BiPredicate<TransferMatch, FareProduct> DEFAULT_FREE_TRANSFER_MATCH_PREDICATE =
+    TransferMatch::matchesEligibility;
   private final List<FareLegRule> legRules;
   private final List<FareTransferRule> transferRules;
   private final AreaMatcher areaMatcher;

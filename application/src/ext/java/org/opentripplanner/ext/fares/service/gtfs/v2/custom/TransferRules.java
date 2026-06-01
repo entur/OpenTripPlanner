@@ -11,25 +11,30 @@ import org.opentripplanner.model.fare.RiderCategory;
 class TransferRules {
 
   static BiPredicate<TransferMatch, FareProduct> predicate() {
-    return (transferMatch, product) ->
-      transferMatch
-        .transferRule()
-        .fareProducts()
-        .stream()
-        .anyMatch(transferProduct -> {
-          if (
-            transferProduct.category() == null &&
-            transferProduct.medium() == null &&
-            transferProduct.isFree()
-          ) {
-            return true;
-          } else {
-            return (
-              mediaMatches(transferProduct.medium(), product.medium()) &&
-              categoryMatches(transferProduct.category(), product.category())
-            );
-          }
-        });
+    return (transferMatch, product) -> {
+      if (transferMatch.transferRule().fareProducts().isEmpty()) {
+        return true;
+      } else {
+        return transferMatch
+          .transferRule()
+          .fareProducts()
+          .stream()
+          .anyMatch(transferProduct -> {
+            if (
+              transferProduct.category() == null &&
+              transferProduct.medium() == null &&
+              transferProduct.isFree()
+            ) {
+              return true;
+            } else {
+              return (
+                mediaMatches(transferProduct.medium(), product.medium()) &&
+                categoryMatches(transferProduct.category(), product.category())
+              );
+            }
+          });
+      }
+    };
   }
 
   private static boolean categoryMatches(RiderCategory cat1, RiderCategory cat2) {
