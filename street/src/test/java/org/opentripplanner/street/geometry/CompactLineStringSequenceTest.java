@@ -3,23 +3,21 @@ package org.opentripplanner.street.geometry;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.opentripplanner.street.geometry.GeometryUtils.makeLineString;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 
 class CompactLineStringSequenceTest {
 
-  private static final GeometryFactory GF = new GeometryFactory();
   private static final double TOLERANCE = 0.0000015;
 
   // Three hops that join end-to-end: hop[i] last coord == hop[i+1] first coord.
-  private static final LineString HOP_0 = line(10.0, 59.0, 10.1, 59.1, 10.2, 59.0);
-  private static final LineString HOP_1 = line(10.2, 59.0, 10.3, 59.1, 10.4, 59.0);
+  private static final LineString HOP_0 = makeLineString(10.0, 59.0, 10.1, 59.1, 10.2, 59.0);
+  private static final LineString HOP_1 = makeLineString(10.2, 59.0, 10.3, 59.1, 10.4, 59.0);
   // HOP_2 is a straight 2-point line.
-  private static final LineString HOP_2 = line(10.4, 59.0, 10.5, 59.0);
+  private static final LineString HOP_2 = makeLineString(10.4, 59.0, 10.5, 59.0);
 
   // length = size()+1; entry 0 is 0; arbitrary positive deltas for assertion purposes.
   private static final int[] CUMULATIVE = { 0, 100, 250, 300 };
@@ -40,7 +38,7 @@ class CompactLineStringSequenceTest {
 
     // 3 + 3 + 2 points, minus the 2 shared seam coordinates = 6.
     assertEquals(6, full.getNumPoints());
-    LineString expected = line(
+    LineString expected = makeLineString(
       10.0,
       59.0,
       10.1,
@@ -64,7 +62,7 @@ class CompactLineStringSequenceTest {
 
     // hop1 (3 pts) + hop2 (2 pts) minus 1 shared seam = 4.
     assertEquals(4, sub.getNumPoints());
-    LineString expected = line(10.2, 59.0, 10.3, 59.1, 10.4, 59.0, 10.5, 59.0);
+    LineString expected = makeLineString(10.2, 59.0, 10.3, 59.1, 10.4, 59.0, 10.5, 59.0);
     assertTrue(expected.equalsExact(sub, TOLERANCE));
   }
 
@@ -120,13 +118,5 @@ class CompactLineStringSequenceTest {
     assertThrows(IllegalArgumentException.class, () ->
       CompactLineStringSequence.of(List.of(HOP_0, HOP_1, HOP_2), new int[] { 0, 100, 80, 300 })
     );
-  }
-
-  private static LineString line(double... lonLat) {
-    Coordinate[] coords = new Coordinate[lonLat.length / 2];
-    for (int i = 0; i < coords.length; i++) {
-      coords[i] = new Coordinate(lonLat[i * 2], lonLat[i * 2 + 1]);
-    }
-    return GF.createLineString(coords);
   }
 }
