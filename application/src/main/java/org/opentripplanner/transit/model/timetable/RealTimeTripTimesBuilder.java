@@ -32,11 +32,7 @@ public class RealTimeTripTimesBuilder {
   @Nullable
   private Accessibility wheelchairAccessibility;
 
-  private boolean updated = false;
-  private boolean canceled = false;
-  private boolean added = false;
-  private boolean tripPatternModified = false;
-  private boolean deleted = false;
+  private final RealTimeTripState.Builder stateBuilder = RealTimeTripState.of();
 
   /**
    * This constructor takes a ScheduledTripTimes (not base TripTimes) to enforce creating a new
@@ -126,13 +122,13 @@ public class RealTimeTripTimesBuilder {
   }
 
   public RealTimeTripTimesBuilder withArrivalTime(int stop, int time) {
-    updated = true;
+    stateBuilder.withTimesModified();
     arrivalTimes[stop] = time;
     return this;
   }
 
   public RealTimeTripTimesBuilder withArrivalDelay(int stop, int delay) {
-    updated = true;
+    stateBuilder.withTimesModified();
     arrivalTimes[stop] = getScheduledArrivalTime(stop) + delay;
     return this;
   }
@@ -169,64 +165,64 @@ public class RealTimeTripTimesBuilder {
   }
 
   public RealTimeTripTimesBuilder withDepartureTime(int stop, int time) {
-    updated = true;
+    stateBuilder.withTimesModified();
     departureTimes[stop] = time;
     return this;
   }
 
   public RealTimeTripTimesBuilder withDepartureDelay(int stop, int delay) {
-    updated = true;
+    stateBuilder.withTimesModified();
     departureTimes[stop] = getScheduledDepartureTime(stop) + delay;
     return this;
   }
 
   public RealTimeTripTimesBuilder withRealTimeUpdated() {
-    this.updated = true;
+    stateBuilder.withTimesModified();
     return this;
   }
 
   public RealTimeTripTimesBuilder withModifiedTripPattern() {
-    this.tripPatternModified = true;
-    this.updated = true;
+    stateBuilder.withTripPatternModified();
     return this;
   }
 
   boolean isTripPatternModified() {
-    return tripPatternModified;
+    return stateBuilder.isTripPatternModified();
   }
 
   public RealTimeTripTimesBuilder withAdded() {
-    this.added = true;
-    this.updated = true;
+    stateBuilder.withAdded();
     return this;
   }
 
   boolean isAdded() {
-    return added;
+    return stateBuilder.isAdded();
   }
 
   public RealTimeTripTimesBuilder withCanceled() {
-    this.canceled = true;
-    this.updated = true;
+    stateBuilder.withCanceled();
     return this;
   }
 
   boolean isCanceled() {
-    return canceled;
+    return stateBuilder.isCanceled();
   }
 
   public RealTimeTripTimesBuilder withDeleted() {
-    this.deleted = true;
-    this.updated = true;
+    stateBuilder.withDeleted();
     return this;
   }
 
   boolean isDeleted() {
-    return deleted;
+    return stateBuilder.isDeleted();
   }
 
   boolean isUpdated() {
-    return updated;
+    return stateBuilder.isTimesModified();
+  }
+
+  RealTimeTripState state() {
+    return stateBuilder.build();
   }
 
   public StopRealTimeState getStopRealTimeState(int stop) {

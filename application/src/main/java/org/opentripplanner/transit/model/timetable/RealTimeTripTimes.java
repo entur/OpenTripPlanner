@@ -41,11 +41,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
   private final OccupancyStatus[] occupancyStatus;
   private final Accessibility wheelchairAccessibility;
 
-  private final boolean updated;
-  private final boolean canceled;
-  private final boolean added;
-  private final boolean tripPatternModified;
-  private final boolean deleted;
+  private final RealTimeTripState state;
 
   RealTimeTripTimes(RealTimeTripTimesBuilder builder) {
     scheduledTripTimes = builder.scheduledTripTimes();
@@ -59,11 +55,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     wheelchairAccessibility = builder.wheelchairAccessibility();
     hasArrived = builder.hasArrived();
     hasDeparted = builder.hasDeparted();
-    updated = builder.isUpdated();
-    canceled = builder.isCanceled();
-    added = builder.isAdded();
-    tripPatternModified = builder.isTripPatternModified();
-    deleted = builder.isDeleted();
+    state = builder.state();
     validateNonIncreasingTimes();
   }
 
@@ -82,11 +74,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     this.wheelchairAccessibility = original.wheelchairAccessibility;
     this.hasArrived = original.hasArrived;
     this.hasDeparted = original.hasDeparted;
-    this.updated = original.updated;
-    this.canceled = original.canceled;
-    this.added = original.added;
-    this.tripPatternModified = original.tripPatternModified;
-    this.deleted = original.deleted;
+    this.state = original.state;
   }
 
   /**
@@ -107,11 +95,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     this.wheelchairAccessibility = original.wheelchairAccessibility;
     this.hasArrived = original.hasArrived;
     this.hasDeparted = original.hasDeparted;
-    this.updated = original.updated;
-    this.canceled = original.canceled;
-    this.added = original.added;
-    this.tripPatternModified = original.tripPatternModified;
-    this.deleted = original.deleted;
+    this.state = original.state;
   }
 
   ScheduledTripTimes scheduledTripTimes() {
@@ -229,7 +213,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
   }
 
   public boolean isRealTimeUpdated(int stopPos) {
-    return (updated && !isStopRealTimeStates(stopPos, StopRealTimeState.NO_DATA));
+    return (state.hasAnyUpdates() && !isStopRealTimeStates(stopPos, StopRealTimeState.NO_DATA));
   }
 
   /**
@@ -262,7 +246,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
    */
   @Override
   public boolean hasAnyUpdates() {
-    return updated;
+    return state.hasAnyUpdates();
   }
 
   @Override
@@ -272,22 +256,22 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
 
   @Override
   public boolean isCanceled() {
-    return canceled;
+    return state.canceled();
   }
 
   @Override
   public boolean isDeleted() {
-    return deleted;
+    return state.deleted();
   }
 
   @Override
   public boolean isAdded() {
-    return added;
+    return state.added();
   }
 
   @Override
   public boolean isTripPatternModified() {
-    return tripPatternModified;
+    return state.tripPatternModified();
   }
 
   /**
@@ -407,11 +391,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
       Objects.deepEquals(stopHeadsigns, that.stopHeadsigns) &&
       Objects.deepEquals(occupancyStatus, that.occupancyStatus) &&
       wheelchairAccessibility == that.wheelchairAccessibility &&
-      canceled == that.canceled &&
-      deleted == that.deleted &&
-      added == that.added &&
-      tripPatternModified == that.tripPatternModified &&
-      updated == that.updated
+      Objects.equals(state, that.state)
     );
   }
 
@@ -426,11 +406,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
       Arrays.hashCode(stopHeadsigns),
       Arrays.hashCode(occupancyStatus),
       wheelchairAccessibility,
-      updated,
-      canceled,
-      added,
-      tripPatternModified,
-      deleted
+      state
     );
   }
 }

@@ -161,9 +161,7 @@ public class EstimatedCallType {
         GraphQLFieldDefinition.newFieldDefinition()
           .name("realtimeState")
           .type(new GraphQLNonNull(EnumTypes.REALTIME_STATE))
-          .dataFetcher(env ->
-            getRealtimeStateOnStop(env)
-          )
+          .dataFetcher(env -> getRealtimeStateOnStop(env))
           .build()
       )
       .field(
@@ -314,7 +312,9 @@ public class EstimatedCallType {
   /// Determines the RealTimeState for the specific stop, if NO_DATA on Stop its RealTimeState is regarded as "Scheduled"
   private static TransmodelRealTimeState getRealtimeStateOnStop(DataFetchingEnvironment env) {
     TripTimeOnDate tripTimeOnDate = env.getSource();
-    return tripTimeOnDate.isNoDataStop() ? TransmodelRealTimeState.SCHEDULED : RealtimeStateMapper.map(tripTimeOnDate.getTripTimes());
+    return tripTimeOnDate.isNoDataStop()
+      ? TransmodelRealTimeState.SCHEDULED
+      : RealtimeStateMapper.map(tripTimeOnDate.getTripTimes());
   }
 
   /// Same as [#calcTime(TripTimeOnDate, ToIntFunction)]. If the offset is `-1`, this
