@@ -59,6 +59,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Move `ElevationProfile` to street, reduce `StreetPath` API surface [#7628](https://github.com/opentripplanner/OpenTripPlanner/pull/7628)
 - Aggregate elevation lookup failures for points outside DEM coverage [#7603](https://github.com/opentripplanner/OpenTripPlanner/pull/7603)
 - Preserve real slope on edges steeper than 35% [#7616](https://github.com/opentripplanner/OpenTripPlanner/pull/7616)
+- Early pruning transfer relaxation [#7665](https://github.com/opentripplanner/OpenTripPlanner/pull/7665)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
