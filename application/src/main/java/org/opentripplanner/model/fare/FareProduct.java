@@ -99,10 +99,6 @@ public final class FareProduct implements Serializable {
     return Objects.equals(p.category, this.category) && Objects.equals(p.medium, this.medium);
   }
 
-  public boolean noEligbilityRestrictions() {
-    return category == null && medium == null;
-  }
-
   @Nullable
   public RiderCategory category() {
     return category;
