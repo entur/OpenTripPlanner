@@ -26,7 +26,10 @@ import org.opentripplanner.utils.collection.SetUtils;
  */
 class FareLookupService implements Serializable {
 
-  public static final BiPredicate<
+  /// The GTFS spec is underspecified about which fare products gree transfers should apply to.
+  /// The interpretation of this implementation is that transfers apply to only those fare
+  /// products that share the same category and fare medium.
+  static final BiPredicate<
     TransferMatch,
     FareProduct
   > DEFAULT_FREE_TRANSFER_MATCH_PREDICATE = TransferMatch::matchesEligibility;
@@ -37,6 +40,9 @@ class FareLookupService implements Serializable {
   private final TimeframeMatcher timeframeMatcher;
   private final BiPredicate<TransferMatch, FareProduct> freeTransferEligibility;
 
+  /// @param freeTransferEligibility A bi-predicate that determines if a free transfer applies
+  /// to a given transfer match and fare product. This needs to be configurable because of custom
+  /// fare services.
   FareLookupService(
     List<FareLegRule> legRules,
     List<FareTransferRule> fareTransferRules,
@@ -161,6 +167,8 @@ class FareLookupService implements Serializable {
           .fromLegRule()
           .fareProducts()
           .stream()
+          // the GTFS spec is underspecified about whether transfers apply only to specific
+          // fare products or all of them
           .filter(p -> freeTransferEligibility.test(t, p))
           .map(product ->
             LegOffer.of(
