@@ -446,47 +446,10 @@ public class OregonHopFareFactory extends GtfsFareServiceFactory {
       .withTransferRules(this.fareTransferRules)
       .withStopAreas(this.stopAreas)
       .withServiceIds(this.serviceDates)
-      .withFreeTransferMatchPredicate((transferMatch, product) -> {
-        return transferMatch
-          .transferRule()
-          .fareProducts()
-          .stream()
-          .anyMatch(transferProduct -> {
-            if (
-              transferProduct.category() == null &&
-              transferProduct.medium() == null &&
-              transferProduct.isFree()
-            ) {
-              return true;
-            } else {
-              return (
-                mediaMatches(transferProduct.medium(), product.medium()) &&
-                categoryMatches(transferProduct.category(), product.category())
-              );
-            }
-          });
-      })
+      .withFreeTransferMatchPredicate(TransferRules.predicate())
       .build();
 
     return new GtfsFaresService(fareService, faresV2Service);
-  }
-
-  private boolean categoryMatches(RiderCategory cat1, RiderCategory cat2) {
-    if (cat1 == null && cat2 == null) {
-      return true;
-    } else if (cat1 == null || cat2 == null) {
-      return false;
-    }
-    return cat1.id().getId().equals(cat2.id().getId());
-  }
-
-  private boolean mediaMatches(FareMedium medium, FareMedium medium1) {
-    if (medium == null && medium1 == null) {
-      return true;
-    } else if (medium == null || medium1 == null) {
-      return false;
-    }
-    return medium.id().getId().equals(medium1.id().getId());
   }
 
   /**
