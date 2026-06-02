@@ -24,6 +24,9 @@ import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.model.GraphBuilderModule;
+import org.opentripplanner.graph_builder.module.cache.CacheTask;
+import org.opentripplanner.graph_builder.module.cache.GraphBuildCacheManager;
+import org.opentripplanner.graph_builder.module.cache.KeyValueCache;
 import org.opentripplanner.graph_builder.module.osm.edgelevelinfo.DefaultInclinedEdgeLevelInfoProcessor;
 import org.opentripplanner.graph_builder.module.osm.edgelevelinfo.NoopInclinedEdgeLevelInfoProcessor;
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmProcessingParameters;
@@ -76,6 +79,8 @@ public class OsmModule implements GraphBuilderModule {
   private final OsmProcessingParameters params;
   private final SafetyValueNormalizer normalizer;
 
+  private final GraphBuildCacheManager cacheManager;
+
   OsmModule(
     Collection<OsmProvider> providers,
     Graph graph,
@@ -84,7 +89,8 @@ public class OsmModule implements GraphBuilderModule {
     VehicleParkingRepository parkingRepository,
     StreetRepository streetRepository,
     DataImportIssueStore issueStore,
-    OsmProcessingParameters params
+    OsmProcessingParameters params,
+    GraphBuildCacheManager cacheManager
   ) {
     this.providers = List.copyOf(providers);
     this.graph = graph;
@@ -95,6 +101,7 @@ public class OsmModule implements GraphBuilderModule {
     this.issueStore = issueStore;
     this.params = params;
     this.normalizer = new SafetyValueNormalizer(graph, issueStore);
+    this.cacheManager = cacheManager;
   }
 
   public static OsmModuleBuilder of(
@@ -272,6 +279,12 @@ public class OsmModule implements GraphBuilderModule {
       osmdb.getWalkableAreas(),
       vertexGenerator.nodesInBarrierWays()
     );
+
+    KeyValueCache<Long, double[][]> visibilityCache = null;
+    if (!skipVisibility) {
+      visibilityCache = cacheManager.loadKVCache(CacheTask.VISIBILITY);
+    }
+
     WalkableAreaBuilder walkableAreaBuilder = new WalkableAreaBuilder(
       graph,
       osmdb,
@@ -282,7 +295,8 @@ public class OsmModule implements GraphBuilderModule {
       issueStore,
       params.maxAreaNodes(),
       params.platformEntriesLinking(),
-      params.boardingAreaRefTags()
+      params.boardingAreaRefTags(),
+      visibilityCache
     );
     if (skipVisibility) {
       for (OsmAreaGroup group : areaGroups) {
@@ -301,6 +315,10 @@ public class OsmModule implements GraphBuilderModule {
         progress.step(m -> LOG.info(m));
       }
       LOG.info(progress.completeMessage());
+    }
+
+    if (visibilityCache != null) {
+      cacheManager.saveKVCache(visibilityCache);
     }
 
     if (skipVisibility) {
