@@ -5,13 +5,11 @@ import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.ext.fares.model.FareTransferRule;
 import org.opentripplanner.model.fare.FareOffer;
-import org.opentripplanner.model.fare.FareProduct;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.utils.collection.ListUtils;
 
@@ -27,7 +25,7 @@ public final class GtfsFaresV2Service implements Serializable {
     List<FareTransferRule> fareTransferRules,
     Multimap<FeedScopedId, FeedScopedId> stopAreas,
     Multimap<FeedScopedId, LocalDate> serviceDatesForServiceId,
-    BiPredicate<TransferMatch, FareProduct> freeTransferMatchPredicate
+    FreeTransferEligibility freeTransferMatchPredicate
   ) {
     this.lookup = new FareLookupService(
       legRules,

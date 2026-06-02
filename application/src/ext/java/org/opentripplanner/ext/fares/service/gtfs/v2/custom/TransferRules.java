@@ -1,16 +1,14 @@
 package org.opentripplanner.ext.fares.service.gtfs.v2.custom;
 
-import java.util.function.BiPredicate;
-import org.opentripplanner.ext.fares.service.gtfs.v2.TransferMatch;
+import org.opentripplanner.ext.fares.service.gtfs.v2.FreeTransferEligibility;
 import org.opentripplanner.model.fare.FareMedium;
-import org.opentripplanner.model.fare.FareProduct;
 import org.opentripplanner.model.fare.RiderCategory;
 
 /// Special predicate for when free transfers apply in the HOP fare calculator. They apply when
 /// the transfer rule has no category or medium specified, or when the ID (ignoring feed id) matches.
 class TransferRules {
 
-  static BiPredicate<TransferMatch, FareProduct> predicate() {
+  static FreeTransferEligibility transferEligibility() {
     return (transferMatch, product) -> {
       if (transferMatch.transferRule().fareProducts().isEmpty()) {
         return true;

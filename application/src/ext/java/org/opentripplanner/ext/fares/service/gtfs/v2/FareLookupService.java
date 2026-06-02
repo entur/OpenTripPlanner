@@ -9,7 +9,6 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiPredicate;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -30,14 +29,14 @@ class FareLookupService implements Serializable {
   /// The interpretation of this implementation is that transfers apply to only those fare
   /// products that share the same category and fare medium.
   /// - [Github issue](https://github.com/google/transit/pull/423)
-  static final BiPredicate<TransferMatch, FareProduct> DEFAULT_FREE_TRANSFER_MATCH_PREDICATE =
+  static final FreeTransferEligibility DEFAULT_FREE_TRANSFER_MATCH_PREDICATE =
     TransferMatch::matchesEligibility;
   private final List<FareLegRule> legRules;
   private final List<FareTransferRule> transferRules;
   private final AreaMatcher areaMatcher;
   private final NetworkMatcher networkMatcher;
   private final TimeframeMatcher timeframeMatcher;
-  private final BiPredicate<TransferMatch, FareProduct> freeTransferEligibility;
+  private final FreeTransferEligibility freeTransferEligibility;
 
   /// @param freeTransferEligibility A bi-predicate that determines if a free transfer applies
   /// to a given transfer match and fare product. This needs to be configurable because of custom
@@ -47,7 +46,7 @@ class FareLookupService implements Serializable {
     List<FareTransferRule> fareTransferRules,
     Multimap<FeedScopedId, FeedScopedId> stopAreas,
     Multimap<FeedScopedId, LocalDate> serviceDates,
-    BiPredicate<TransferMatch, FareProduct> freeTransferEligibility
+    FreeTransferEligibility freeTransferEligibility
   ) {
     this.legRules = List.copyOf(legRules);
     this.transferRules = List.copyOf(fareTransferRules);

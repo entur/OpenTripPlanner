@@ -8,11 +8,9 @@ import com.google.common.collect.Multimap;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.BiPredicate;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.fares.model.FareLegRule;
 import org.opentripplanner.ext.fares.model.FareTransferRule;
-import org.opentripplanner.model.fare.FareProduct;
 
 public class GtfsFaresV2ServiceBuilder {
 
@@ -20,8 +18,7 @@ public class GtfsFaresV2ServiceBuilder {
   private List<FareTransferRule> fareTransferRules = List.of();
   private Multimap<FeedScopedId, FeedScopedId> stopAreas = ImmutableMultimap.of();
   private Multimap<FeedScopedId, LocalDate> serviceDatesForServiceId = HashMultimap.create();
-  private BiPredicate<TransferMatch, FareProduct> freeTransferMatchPredicate =
-    DEFAULT_FREE_TRANSFER_MATCH_PREDICATE;
+  private FreeTransferEligibility freeTransferElibility = DEFAULT_FREE_TRANSFER_MATCH_PREDICATE;
 
   public GtfsFaresV2ServiceBuilder withLegRules(List<FareLegRule> legRules) {
     this.legRules = legRules;
@@ -59,9 +56,9 @@ public class GtfsFaresV2ServiceBuilder {
   }
 
   public GtfsFaresV2ServiceBuilder withFreeTransferMatchPredicate(
-    BiPredicate<TransferMatch, FareProduct> freeTransferMatchPredicate
+    FreeTransferEligibility freeTranferElibility
   ) {
-    this.freeTransferMatchPredicate = freeTransferMatchPredicate;
+    this.freeTransferElibility = freeTranferElibility;
     return this;
   }
 
@@ -71,7 +68,7 @@ public class GtfsFaresV2ServiceBuilder {
       fareTransferRules,
       stopAreas,
       serviceDatesForServiceId,
-      freeTransferMatchPredicate
+      freeTransferElibility
     );
   }
 }

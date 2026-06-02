@@ -446,7 +446,7 @@ public class OregonHopFareFactory extends GtfsFareServiceFactory {
       .withTransferRules(this.fareTransferRules)
       .withStopAreas(this.stopAreas)
       .withServiceIds(this.serviceDates)
-      .withFreeTransferMatchPredicate(TransferRules.predicate())
+      .withFreeTransferMatchPredicate(TransferRules.transferEligibility())
       .build();
 
     return new GtfsFaresService(fareService, faresV2Service);
