@@ -93,13 +93,13 @@ class CancellationTest implements RealtimeTestConstants {
     var siri = SiriTestHelper.of(env);
 
     assertEquals(
-      "SCHEDULED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
+      "S | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
       env.tripData(TRIP_1_ID).showTimetable()
     );
     changeQuayAndCancelTrip(siri, TRIP_1_ID);
 
     assertEquals(
-      "CANCELED UPDATED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
+      "C U | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }
@@ -112,7 +112,7 @@ class CancellationTest implements RealtimeTestConstants {
   void testChangeQuayAndCancelAddedTrip() {
     var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
 
-    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1[SCHEDULED]");
+    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1[S]");
     var siri = SiriTestHelper.of(env);
 
     var creation = new SiriEtBuilder(env.localTimeParser())
@@ -133,12 +133,12 @@ class CancellationTest implements RealtimeTestConstants {
     var creationResult = siri.applyEstimatedTimetable(creation);
     assertSuccess(creationResult);
     assertEquals(
-      "ADDED UPDATED | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
+      "A U | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
-      "F:Pattern1[SCHEDULED]",
-      "F:route-id::001:RT[ADDED UPDATED]"
+      "F:Pattern1[S]",
+      "F:route-id::001:RT[A U]"
     );
 
     changeQuayAndCancelTrip(siri, ADDED_TRIP_ID);
@@ -146,12 +146,12 @@ class CancellationTest implements RealtimeTestConstants {
     // the arrival time on first stop is adjusted to the departure time to avoid negative dwell time
     // conversely the departure time on last stop is adjusted to the arrival time
     assertEquals(
-      "CANCELED UPDATED | A 0:00:11 0:00:11 | B 0:00:20 0:00:20",
+      "C U | A 0:00:11 0:00:11 | B 0:00:20 0:00:20",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
-      "F:Pattern1[SCHEDULED]",
-      "F:route-id::001:RT[CANCELED UPDATED]"
+      "F:Pattern1[S]",
+      "F:route-id::001:RT[C U]"
     );
   }
 
@@ -173,7 +173,7 @@ class CancellationTest implements RealtimeTestConstants {
     assertSuccess(modificationResult);
     TransitTestEnvironment transitTestEnvironment = siri.realtimeTestEnvironment();
     assertEquals(
-      "PATTERN_MODIFIED UPDATED | A 0:00:15 0:00:15 | D 0:00:25 0:00:25",
+      "P U | A 0:00:15 0:00:15 | D 0:00:25 0:00:25",
       transitTestEnvironment.tripData(tripId).showTimetable()
     );
 

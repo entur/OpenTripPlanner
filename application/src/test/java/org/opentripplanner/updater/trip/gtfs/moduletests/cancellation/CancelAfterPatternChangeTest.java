@@ -61,7 +61,7 @@ class CancelAfterPatternChangeTest implements RealtimeTestConstants {
     );
 
     assertEquals(
-      "UPDATED | A 0:01 0:01:01 | B [C] 0:01:52 0:01:58 | C 0:02:50 0:02:51",
+      "U | A 0:01 0:01:01 | B [C] 0:01:52 0:01:58 | C 0:02:50 0:02:51",
       env.tripData(TRIP_1_ID).showTimetable()
     );
 
@@ -82,7 +82,7 @@ class CancelAfterPatternChangeTest implements RealtimeTestConstants {
     assertTrue(tripData.tripTimes().isCanceledOrDeleted());
 
     assertEquals(
-      "CANCELED UPDATED | A 0:01 0:01:01 | B 0:01:10 0:01:11 | C 0:01:20 0:01:21",
+      "C U | A 0:01 0:01:01 | B 0:01:10 0:01:11 | C 0:01:20 0:01:21",
       tripData.showTimetable()
     );
   }

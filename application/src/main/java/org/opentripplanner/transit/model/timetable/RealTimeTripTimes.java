@@ -120,6 +120,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
    * a pointer to its enclosing timetable or pattern.
    */
   @Nullable
+  @Override
   public I18NString getHeadsign(final int stopPos) {
     return stopHeadsigns[stopPos] != null ? stopHeadsigns[stopPos] : tripHeadsign;
   }
@@ -186,6 +187,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     return getDepartureTime(stopPos) - scheduledTripTimes.getScheduledDepartureTime(stopPos);
   }
 
+  @Override
   public boolean isCanceledStop(int stopPos) {
     return isStopRealTimeStates(stopPos, StopRealTimeState.CANCELLED);
   }
@@ -200,18 +202,22 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     return hasDeparted.get(stopPos);
   }
 
+  @Override
   public boolean isNoDataStop(int stopPos) {
     return isStopRealTimeStates(stopPos, StopRealTimeState.NO_DATA);
   }
 
+  @Override
   public boolean isPredictionInaccurate(int stopPos) {
     return isStopRealTimeStates(stopPos, StopRealTimeState.INACCURATE_PREDICTIONS);
   }
 
+  @Override
   public boolean isExtraCall(int stopPos) {
     return extraCalls.get(stopPos);
   }
 
+  @Override
   public boolean isRealTimeUpdated(int stopPos) {
     return (state.hasAnyUpdates() && !isStopRealTimeStates(stopPos, StopRealTimeState.NO_DATA));
   }
@@ -317,6 +323,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     return wheelchairAccessibility;
   }
 
+  @Override
   public int getNumStops() {
     return scheduledTripTimes.getNumStops();
   }
@@ -349,6 +356,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     return scheduledTripTimes.getServiceCode();
   }
 
+  @Override
   public RealTimeTripTimes withServiceCode(int serviceCode) {
     return new RealTimeTripTimes(
       this,
