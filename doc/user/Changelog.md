@@ -62,6 +62,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Early pruning transfer relaxation [#7665](https://github.com/opentripplanner/OpenTripPlanner/pull/7665)
 - Refetch an itinerary [#7649](https://github.com/opentripplanner/OpenTripPlanner/pull/7649)
 - Graph Build Cache — Redesign Configuration and File Layout [#7636](https://github.com/opentripplanner/OpenTripPlanner/pull/7636)
+- Clarify thread-safety documentation guidance in Codestyle [#7676](https://github.com/opentripplanner/OpenTripPlanner/pull/7676)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
