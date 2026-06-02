@@ -29,6 +29,7 @@ class FareLookupService implements Serializable {
   /// The GTFS spec is underspecified about which fare products gree transfers should apply to.
   /// The interpretation of this implementation is that transfers apply to only those fare
   /// products that share the same category and fare medium.
+  /// - [Github issue](https://github.com/google/transit/pull/423)
   static final BiPredicate<TransferMatch, FareProduct> DEFAULT_FREE_TRANSFER_MATCH_PREDICATE =
     TransferMatch::matchesEligibility;
   private final List<FareLegRule> legRules;
@@ -166,7 +167,7 @@ class FareLookupService implements Serializable {
           .fareProducts()
           .stream()
           // the GTFS spec is underspecified about whether transfers apply only to specific
-          // fare products or all of them
+          // fare products or all of them: https://github.com/google/transit/pull/423
           .filter(p -> freeTransferEligibility.test(t, p))
           .map(product ->
             LegOffer.of(
