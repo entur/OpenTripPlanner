@@ -63,6 +63,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Refetch an itinerary [#7649](https://github.com/opentripplanner/OpenTripPlanner/pull/7649)
 - Graph Build Cache — Redesign Configuration and File Layout [#7636](https://github.com/opentripplanner/OpenTripPlanner/pull/7636)
 - Clarify thread-safety documentation guidance in Codestyle [#7676](https://github.com/opentripplanner/OpenTripPlanner/pull/7676)
+- Add dark mode toggle; standardize navbar item titles [#7673](https://github.com/opentripplanner/OpenTripPlanner/pull/7673)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
