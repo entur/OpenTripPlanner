@@ -32,8 +32,6 @@ public class StateEditor {
   private long time_ms;
   private double traversalDistance_m;
 
-  private boolean defectiveTraversal = false;
-
   private boolean traversingBackward;
 
   /* CONSTRUCTORS */
@@ -108,12 +106,6 @@ public class StateEditor {
    */
   @Nullable
   public State makeState() {
-    // if something was flagged incorrect, do not make a new state
-    if (defectiveTraversal) {
-      LOG.error("Defective traversal flagged on edge " + backEdge);
-      return null;
-    }
-
     if (backState != null) {
       // check that time changes are coherent with edge traversal
       // direction
@@ -173,11 +165,9 @@ public class StateEditor {
    */
   public void incrementTimeInMilliseconds(long milliseconds) {
     if (milliseconds < 0) {
-      LOG.warn(
+      throw new IllegalArgumentException(
         "A state's time is being incremented by a negative amount while traversing edge " + backEdge
       );
-      defectiveTraversal = true;
-      return;
     }
     this.time_ms += (traversingBackward ? -milliseconds : milliseconds);
   }
