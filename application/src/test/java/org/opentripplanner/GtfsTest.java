@@ -4,7 +4,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.opentripplanner.standalone.configure.ConstructApplication.createRaptorTransitData;
 import static org.opentripplanner.street.model.StreetMode.NOT_SET;
 import static org.opentripplanner.street.model.StreetMode.WALK;
 
@@ -30,7 +29,10 @@ import org.opentripplanner.gtfs.graphbuilder.GtfsModule;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitDataTestFactory;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.TransitTuningParameters;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RaptorTransitDataMapper;
 import org.opentripplanner.routing.api.request.RequestModes;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.request.filter.SelectRequest;
@@ -223,16 +225,18 @@ public abstract class GtfsTest {
     timetableRepository.index();
     graph.index();
 
+    TransitTuningParameters tuningParameters = RouterConfig.DEFAULT.transitTuningConfig();
+    var scheduledRaptorData = RaptorTransitDataMapper.map(
+      tuningParameters,
+      timetableRepository,
+      transferRepository
+    );
+    timetableRepository.initRaptorTransitData(scheduledRaptorData);
     var snapshotManager = new TimetableSnapshotManager(
       TimetableSnapshotParameters.PUBLISH_IMMEDIATELY,
-      LocalDate::now
-    );
-
-    createRaptorTransitData(
-      timetableRepository,
-      transferRepository,
-      snapshotManager,
-      RouterConfig.DEFAULT.transitTuningConfig()
+      LocalDate::now,
+      new RaptorTransitData(scheduledRaptorData),
+      timetableRepository.copyTripCalendarForRealTimeUpdates()
     );
 
     tripUpdateAdapter = new GtfsRealTimeTripUpdateAdapter(

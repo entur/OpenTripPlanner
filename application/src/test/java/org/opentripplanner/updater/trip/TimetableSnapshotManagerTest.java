@@ -407,11 +407,11 @@ class TimetableSnapshotManagerTest {
     TimetableSnapshotParameters snapshotParameters,
     Supplier<LocalDate> dateSupplier
   ) {
-    TimetableSnapshotManager manager = new TimetableSnapshotManager(
+    return new TimetableSnapshotManager(
       snapshotParameters,
-      dateSupplier
+      dateSupplier,
+      RaptorTransitDataTestFactory.empty(),
+      new DefaultTripCalendars()
     );
-    manager.initRaptorData(RaptorTransitDataTestFactory.empty(), new DefaultTripCalendars());
-    return manager;
   }
 }

@@ -28,7 +28,7 @@ public final class TimetableSnapshotManager {
    * The working copy of the timetable snapshot. Should not be visible to routing threads.
    * By design, only one thread should ever be written to this buffer.
    */
-  private TimetableSnapshot buffer;
+  private final TimetableSnapshot buffer;
 
   /**
    * The last committed snapshot that was handed off to a routing thread. This snapshot may be given
@@ -50,23 +50,10 @@ public final class TimetableSnapshotManager {
   private LocalDate lastPurgeDate = null;
 
   /**
-   *
-   * @param localDateNow This supplier allows you to inject a custom lambda to override what is
-   *                     considered 'today'. This is useful for unit testing.
-   */
-  public TimetableSnapshotManager(
-    TimetableSnapshotParameters parameters,
-    Supplier<LocalDate> localDateNow
-  ) {
-    this.purgeExpiredData = parameters.purgeExpiredData();
-    this.localDateNow = Objects.requireNonNull(localDateNow);
-  }
-
-  /**
    * Creates and immediately initializes the snapshot with the provided scheduled Raptor data.
    * <p>
    * This constructor is intended for production use where the Raptor data is computed before
-   * Dagger constructs this instance, avoiding a separate {@link #initRaptorData} call.
+   * Dagger constructs this instance, avoiding a separate init call.
    *
    * @param localDateNow               This supplier allows you to inject a custom lambda to
    *                                   override what is considered 'today'. This is useful for
@@ -83,15 +70,6 @@ public final class TimetableSnapshotManager {
     this.purgeExpiredData = parameters.purgeExpiredData();
     this.localDateNow = Objects.requireNonNull(localDateNow);
     this.buffer = new TimetableSnapshot(scheduledRaptorTransitData, tripCalendars);
-    commitTimetableSnapshot(true);
-  }
-
-  public void initRaptorData(
-    RaptorTransitData scheduledRaptorTransitData,
-    DefaultTripCalendars tripCalendars
-  ) {
-    this.buffer = new TimetableSnapshot(scheduledRaptorTransitData, tripCalendars);
-    // Force commit so that snapshot initializes
     commitTimetableSnapshot(true);
   }
 

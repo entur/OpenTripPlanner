@@ -62,9 +62,7 @@ public final class TransitTestEnvironment {
     );
     this.snapshotManager = new TimetableSnapshotManager(
       TimetableSnapshotParameters.PUBLISH_IMMEDIATELY,
-      () -> defaultServiceDate
-    );
-    this.snapshotManager.initRaptorData(
+      () -> defaultServiceDate,
       new RaptorTransitData(timetableRepository.getRaptorTransitData()),
       timetableRepository.copyTripCalendarForRealTimeUpdates()
     );

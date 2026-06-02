@@ -1,7 +1,5 @@
 package org.opentripplanner.standalone.api;
 
-import static org.opentripplanner.standalone.configure.ConstructApplication.createRaptorTransitData;
-
 import io.micrometer.core.instrument.Metrics;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -15,7 +13,10 @@ import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
 import org.opentripplanner.ext.flex.FlexParameters;
 import org.opentripplanner.raptor.configure.RaptorConfig;
 import org.opentripplanner.routing.algorithm.filterchain.framework.spi.ItineraryDecorator;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.TransitTuningParameters;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RaptorTransitDataMapper;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.fares.FareService;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
@@ -93,31 +94,25 @@ public class TestServerContext {
     if (request == null) {
       request = routerConfig.routingRequestDefaults();
     }
-    boolean snapshotManagerProvided = snapshotManager != null;
-    if (!snapshotManagerProvided) {
-      snapshotManager = new TimetableSnapshotManager(
-        TimetableSnapshotParameters.DEFAULT,
-        LocalDate::now
-      );
-    }
-    if (request == null) {
-      request = routerConfig.routingRequestDefaults();
-    }
     if (flexParameters == null) {
       flexParameters = routerConfig.flexParameters();
     }
-
     timetableRepository.index();
-    // Only initialize raptor data when no pre-initialized snapshotManager was provided.
-    // If the caller passed one in, they are responsible for having called createRaptorTransitData
-    // already (e.g. GtfsTest applies real-time updates before calling here, so we must not
-    // reinitialize the manager and discard those updates).
-    if (!snapshotManagerProvided) {
-      createRaptorTransitData(
-        timetableRepository,
-        transferRepository,
-        snapshotManager,
-        routerConfig.transitTuningConfig()
+
+    TransitTuningParameters tuningParameters = routerConfig.transitTuningConfig();
+    var scheduledRaptorData = RaptorTransitDataMapper.map(
+      tuningParameters,
+      timetableRepository,
+      transferRepository
+    );
+    timetableRepository.initRaptorTransitData(scheduledRaptorData);
+
+    if (snapshotManager == null) {
+      snapshotManager = new TimetableSnapshotManager(
+        TimetableSnapshotParameters.DEFAULT,
+        LocalDate::now,
+        new RaptorTransitData(timetableRepository.getRaptorTransitData()),
+        timetableRepository.copyTripCalendarForRealTimeUpdates()
       );
     }
 

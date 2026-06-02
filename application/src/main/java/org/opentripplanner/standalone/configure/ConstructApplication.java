@@ -244,30 +244,6 @@ public class ConstructApplication {
     }
   }
 
-  /**
-   * Create a transit layer for Raptor routing. Here we map the scheduled timetables.
-   */
-  public static void createRaptorTransitData(
-    TimetableRepository timetableRepository,
-    TransferRepository transferRepository,
-    TimetableSnapshotManager timetableSnapshotManager,
-    TransitTuningParameters tuningParameters
-  ) {
-    if (!timetableRepository.hasTransit() || !timetableRepository.isIndexed()) {
-      LOG.warn(
-        "Cannot create Raptor data, that requires the graph to have transit data and be indexed."
-      );
-    }
-    LOG.info("Creating transit layer for Raptor routing.");
-    timetableRepository.initRaptorTransitData(
-      RaptorTransitDataMapper.map(tuningParameters, timetableRepository, transferRepository)
-    );
-    timetableSnapshotManager.initRaptorData(
-      new RaptorTransitData(timetableRepository.getRaptorTransitData()),
-      timetableRepository.copyTripCalendarForRealTimeUpdates()
-    );
-  }
-
   public static void initializeTransferCache(
     TransitTuningParameters transitTuningConfig,
     TimetableRepository timetableRepository
