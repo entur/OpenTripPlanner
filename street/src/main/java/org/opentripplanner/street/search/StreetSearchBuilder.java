@@ -126,21 +126,21 @@ public class StreetSearchBuilder {
     Objects.requireNonNull(request);
     var arriveBy = request.arriveBy();
     var originVertices = arriveBy ? toVertices : fromVertices;
-    var destinationVertices = arriveBy ? fromVertices : toVertices;
+    var goalVertices = arriveBy ? fromVertices : toVertices;
     var initialStates = State.getInitialStates(originVertices, request);
-    var heuristic = initializedHeuristic(destinationVertices);
+    var heuristic = initializedHeuristic(goalVertices);
 
     return aStarBuilder
-      .withDestination(destinationVertices)
+      .withGoalVertices(goalVertices)
       .withInitialStates(initialStates)
       .withHeuristic(heuristic)
       .build();
   }
 
   @Nullable
-  private RemainingWeightHeuristic<State> initializedHeuristic(Set<Vertex> destination) {
+  private RemainingWeightHeuristic<State> initializedHeuristic(Set<Vertex> goalVertices) {
     if (heuristic instanceof EuclideanRemainingWeightHeuristic euclideanHeuristic) {
-      euclideanHeuristic.initialize(destination, request);
+      euclideanHeuristic.initialize(goalVertices, request);
     } else if (heuristic != null) {
       throw new IllegalArgumentException("Unknown heuristic type: " + heuristic);
     }

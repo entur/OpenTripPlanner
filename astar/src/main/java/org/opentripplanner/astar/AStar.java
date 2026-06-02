@@ -37,10 +37,10 @@ public class AStar<
   private static final Logger LOG = LoggerFactory.getLogger(AStar.class);
 
   private final boolean arriveBy;
-  private final Set<Vertex> fromVertices;
+  private final Set<Vertex> initialVertices;
 
   @Nullable
-  private final Set<Vertex> toVertices;
+  private final Set<Vertex> goalVertices;
 
   @Nullable
   private final RemainingWeightHeuristic<State> heuristic;
@@ -91,11 +91,11 @@ public class AStar<
     this.heuristic = heuristic;
     this.skipEdgeStrategy = skipEdgeStrategy;
     this.traverseVisitor = traverseVisitor;
-    this.fromVertices = initialStates
+    this.initialVertices = initialStates
       .stream()
       .map(AStarState::getVertex)
       .collect(Collectors.toSet());
-    this.toVertices = goalVertices;
+    this.goalVertices = goalVertices;
     this.arriveBy = arriveBy;
     this.terminationStrategy = terminationStrategy;
     this.timeout = Objects.requireNonNull(timeout);
@@ -203,7 +203,7 @@ public class AStar<
        * expensive to fetch the current time, compared to just running one more round.
        */
       if (nVisited % 128 == 0 && System.currentTimeMillis() > abortTime) {
-        LOG.warn("Search timeout. origin={} target={}", fromVertices, toVertices);
+        LOG.warn("Search timeout. origin={} target={}", initialVertices, goalVertices);
         break;
       }
 
@@ -225,7 +225,7 @@ public class AStar<
           break;
         }
       }
-      if (toVertices != null && toVertices.contains(u.getVertex()) && u.isFinal()) {
+      if (goalVertices != null && goalVertices.contains(u.getVertex()) && u.isFinal()) {
         targetAcceptedStates.add(u);
 
         // Break out of the search if we've found the requested number of paths.
@@ -234,6 +234,6 @@ public class AStar<
       }
     }
 
-    statisticsCallback.searchFinished(fromVertices, toVertices, nVisited);
+    statisticsCallback.searchFinished(initialVertices, goalVertices, nVisited);
   }
 }
