@@ -147,13 +147,7 @@ public final class CarAccessibleVertexSnapper {
       .withMode(StreetMode.WALK)
       .withArriveBy(arriveBy)
       .build();
-    // Pin the heuristic explicitly: A* expands states in order of f = g + h, where g is the
-    // actual cost from the start, h is the heuristic's estimate of the remaining cost to the
-    // goal, and f is the resulting priority used to pick the next state. The termination
-    // strategy fires per state in cost-ascending order only when expansion is by g alone —
-    // i.e. when h = 0 and so f == g. The trivial heuristic returns 0 for every state, which
-    // satisfies that. Any other heuristic would let a state with smaller g be expanded after a
-    // state with larger g but smaller h, breaking the "first match is cheapest" guarantee.
+    // We can't use a heuristic since there isn't a fixed destination.
     var builder = StreetSearchBuilder.of()
       .withRequest(request)
       .withSkipEdgeStrategy(new DurationSkipEdgeStrategy<>(maxWalk))
