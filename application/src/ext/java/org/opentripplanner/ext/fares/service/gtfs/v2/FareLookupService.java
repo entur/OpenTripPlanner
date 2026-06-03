@@ -25,7 +25,7 @@ import org.opentripplanner.utils.collection.SetUtils;
  */
 class FareLookupService implements Serializable {
 
-  /// The GTFS spec is underspecified about which fare products gree transfers should apply to.
+  /// The GTFS spec is underspecified about which fare products free transfers should apply to.
   /// The interpretation of this implementation is that transfers apply to only those fare
   /// products that share the same category and fare medium.
   /// - [Github issue](https://github.com/google/transit/pull/423)
