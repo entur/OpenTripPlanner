@@ -15,7 +15,10 @@ public enum TraverseMode {
     return STREET_MODES.contains(this);
   }
 
-  public boolean isInCar() {
+  /**
+   * For the purposes of this check, we pretend that flex is like a car.
+   */
+  public boolean isDrivingIsh() {
     return this == CAR || this == FLEX;
   }
 
