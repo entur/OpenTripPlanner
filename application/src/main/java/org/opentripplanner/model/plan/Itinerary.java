@@ -581,8 +581,8 @@ public class Itinerary implements ItinerarySortKey {
 
   /**
    * Return {@code true} it the other object is the same object using the {@link
-   * Object#equals(Object)}. An itinerary is a temporary object and the equals method should not be
-   * used for comparision of 2 instances, only to check that to objects are the same instance.
+   * Object#equals(Object)}. An itinerary is a temporary object, and the equals method should not be
+   * used for comparison of 2 instances, only to check that two objects are the same instance.
    */
   @Override
   public final boolean equals(Object o) {
