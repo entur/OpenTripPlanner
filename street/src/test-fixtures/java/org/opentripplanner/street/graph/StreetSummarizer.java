@@ -48,9 +48,7 @@ class StreetSummarizer {
   static String summarizeVertex(Vertex v) {
     var buf = new StringBuilder();
 
-    var coord = String.format(
-      "(%s,%s)".formatted(DECIMAL_FORMAT.format(v.getLat()), DECIMAL_FORMAT.format(v.getLon()))
-    );
+    var coord = String.format("(%s,%s)".formatted(format(v.getLat()), format(v.getLon())));
     buf.append(coord);
     if (v instanceof TransitStopVertex tsv) {
       buf.append("[%s]".formatted(tsv.getId()));
@@ -67,6 +65,11 @@ class StreetSummarizer {
     }
 
     return buf.toString();
+  }
+
+  private static String format(double value) {
+    var s = DECIMAL_FORMAT.format(value);
+    return "-0".equals(s) ? "0" : s;
   }
 
   private static String summarizeBoolean(boolean b) {
