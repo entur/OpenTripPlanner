@@ -1,5 +1,7 @@
 package org.opentripplanner.raptor.rangeraptor.standard;
 
+import gnu.trove.map.TIntIntMap;
+import gnu.trove.map.hash.TIntIntHashMap;
 import java.util.Arrays;
 import java.util.Collection;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
@@ -36,17 +38,17 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
  */
 public class StdTransferEarlyPruning<T extends RaptorTripSchedule> {
 
-  /** Sentinel for stops that are not egress stops. Egress durations are always non-negative. */
+  /** Returned by the egress map for stops that are not egress stops. Durations are non-negative. */
   private static final int NOT_EGRESS = -1;
 
   /**
-   * Min egress duration indexed by stop, or {@link #NOT_EGRESS} if the stop is not an egress stop.
-   * Indexing by stop gives O(1) lookup in {@link #updateArrival(int, int)}, which is called on every
-   * best-time improvement during both the transit and transfer phases. A linear scan here would be
-   * O(number of egress stops) per update, which dominates the runtime when there are many egresses
-   * (e.g. flex searches with large taxi zones reaching thousands of stops).
+   * Minimum egress duration per egress stop. The map is sparse — it holds only egress stops, so its
+   * memory scales with the number of egress paths rather than the number of stops in the graph,
+   * which matters for large transit networks (100 000+ stops). The {@code get} lookup is O(1),
+   * keeping {@link #updateArrival(int, int)} cheap; that method is called on every best-time
+   * improvement during both the transit and transfer phases.
    */
-  private final int[] egressMinDurationByStop;
+  private final TIntIntMap egressMinDurationByStop;
   private final int[] bestDestArrivalByRound;
   private final RaptorTransitCalculator<T> calculator;
   private int bestDestCurrentIteration;
@@ -54,19 +56,17 @@ public class StdTransferEarlyPruning<T extends RaptorTripSchedule> {
 
   public StdTransferEarlyPruning(
     Collection<RaptorAccessEgress> egressPaths,
-    int nStops,
     int nRounds,
     RaptorTransitCalculator<T> calculator,
     WorkerLifeCycle lifeCycle
   ) {
-    this.egressMinDurationByStop = new int[nStops];
-    Arrays.fill(this.egressMinDurationByStop, NOT_EGRESS);
+    this.egressMinDurationByStop = new TIntIntHashMap(egressPaths.size(), 0.5f, -1, NOT_EGRESS);
     for (var egress : egressPaths) {
       int stop = egress.stop();
       int duration = egress.durationInSeconds();
-      int current = egressMinDurationByStop[stop];
+      int current = egressMinDurationByStop.get(stop);
       if (current == NOT_EGRESS || duration < current) {
-        egressMinDurationByStop[stop] = duration;
+        egressMinDurationByStop.put(stop, duration);
       }
     }
     this.calculator = calculator;
@@ -85,15 +85,12 @@ public class StdTransferEarlyPruning<T extends RaptorTripSchedule> {
    * destination arrival bounds are updated.
    */
   void updateArrival(int stop, int alightTime) {
-    int egressMinDuration = egressMinDurationByStop[stop];
+    int egressMinDuration = egressMinDurationByStop.get(stop);
     if (egressMinDuration == NOT_EGRESS) {
       return;
     }
     int destArrival = calculator.plusDuration(alightTime, egressMinDuration);
-    if (
-      currentRound < bestDestArrivalByRound.length &&
-      calculator.isBefore(destArrival, bestDestArrivalByRound[currentRound])
-    ) {
+    if (calculator.isBefore(destArrival, bestDestArrivalByRound[currentRound])) {
       bestDestArrivalByRound[currentRound] = destArrival;
     }
     if (calculator.isBefore(destArrival, bestDestCurrentIteration)) {
@@ -107,10 +104,7 @@ public class StdTransferEarlyPruning<T extends RaptorTripSchedule> {
    */
   boolean exceedsBound(int arrivalTime) {
     int bound = bestDestCurrentIteration;
-    if (
-      currentRound < bestDestArrivalByRound.length &&
-      calculator.isBefore(bestDestArrivalByRound[currentRound], bound)
-    ) {
+    if (calculator.isBefore(bestDestArrivalByRound[currentRound], bound)) {
       bound = bestDestArrivalByRound[currentRound];
     }
     return !calculator.isBefore(arrivalTime, bound);

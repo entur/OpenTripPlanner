@@ -17,7 +17,6 @@ class StdTransferEarlyPruningTest {
   private static final int EGRESS_STOP = 5;
   private static final int EGRESS_DURATION = 200;
   private static final int OTHER_STOP = 99;
-  private static final int N_STOPS = 100;
   private static final int N_ROUNDS = 5;
 
   private LifeCycleSubscriptions subscriptions;
@@ -29,7 +28,6 @@ class StdTransferEarlyPruningTest {
     subscriptions = new LifeCycleSubscriptions();
     subject = new StdTransferEarlyPruning<TestTripSchedule>(
       List.of(TestAccessEgress.walk(EGRESS_STOP, EGRESS_DURATION)),
-      N_STOPS,
       N_ROUNDS,
       RaptorTransitCalculator.testDummyCalculator(true),
       subscriptions
@@ -142,7 +140,6 @@ class StdTransferEarlyPruningTest {
         TestAccessEgress.walk(EGRESS_STOP, 200),
         TestAccessEgress.walk(EGRESS_STOP, 300)
       ),
-      N_STOPS,
       N_ROUNDS,
       RaptorTransitCalculator.testDummyCalculator(true),
       subscriptions
