@@ -118,7 +118,7 @@ public class LegImpl implements GraphQLDataFetchers.GraphQLLeg {
       if (ctx == null || loader == null) {
         return List.of();
       }
-      Itinerary itinerary = (Itinerary) ctx.get("itinerary");
+      Itinerary itinerary = (Itinerary) ctx.get(ItineraryImpl.ITINERARY_CONTEXT_KEY);
       if (itinerary == null) {
         return List.of();
       }
@@ -127,7 +127,7 @@ public class LegImpl implements GraphQLDataFetchers.GraphQLLeg {
         .load(itinerary)
         .thenApply(fare -> {
           if (fare == null || fare.isEmpty()) {
-            return (Iterable<FareOffer>) List.<FareOffer>of();
+            return List.<FareOffer>of();
           }
           var legOffers = new ArrayList<>(fare.getLegProducts().get(leg));
           // Itinerary-level products (e.g. day passes) only apply to transit legs
