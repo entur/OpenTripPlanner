@@ -10,7 +10,7 @@ import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Point;
 
 /**
- * Verifies that {@link CompactLineStringUtils#squaredDistanceToPointEquirectangular} (the
+ * Verifies that {@link CompactLineString#squaredDistanceToPointEquirectangular} (the
  * allocation-free walk used by the vertex linker) returns the same projected distance as the old JTS
  * path it replaced: {@code equirectangularProject(uncompactLineString(...)).distance(point)}. The
  * method returns the squared distance, so the test compares {@code sqrt(walk)} to the JTS distance.
@@ -31,7 +31,7 @@ class CompactLineStringDistanceTest {
     double py,
     double xscale
   ) {
-    LineString geom = CompactLineStringUtils.uncompactLineString(ax, ay, bx, by, packed, reverse);
+    LineString geom = CompactLineString.uncompactLineString(ax, ay, bx, by, packed, reverse);
     Coordinate[] coords = new Coordinate[geom.getNumPoints()];
     for (int i = 0; i < coords.length; i++) {
       Coordinate c = (Coordinate) geom.getCoordinateN(i).clone();
@@ -55,7 +55,7 @@ class CompactLineStringDistanceTest {
     double xscale
   ) {
     return Math.sqrt(
-      CompactLineStringUtils.squaredDistanceToPointEquirectangular(
+      CompactLineString.squaredDistanceToPointEquirectangular(
         ax,
         ay,
         bx,
@@ -77,7 +77,7 @@ class CompactLineStringDistanceTest {
     }
     full[full.length - 1] = new Coordinate(bx, by);
     LineString ls = GF.createLineString(full);
-    return CompactLineStringUtils.compactLineString(ax, ay, bx, by, ls, false);
+    return CompactLineString.compactLineString(ax, ay, bx, by, ls, false);
   }
 
   @Test
@@ -134,7 +134,7 @@ class CompactLineStringDistanceTest {
       new Coordinate(0.0, 0.0),
     };
     LineString ls = GF.createLineString(full);
-    byte[] packed = CompactLineStringUtils.compactLineString(0.0, 0.0, 2.0, 0.0, ls, true);
+    byte[] packed = CompactLineString.compactLineString(0.0, 0.0, 2.0, 0.0, ls, true);
     double xscale = 0.7;
     assertParity(0.0, 0.0, 2.0, 0.0, packed, true, 1.2, 0.3, xscale);
     assertParity(0.0, 0.0, 2.0, 0.0, packed, true, 0.5, 0.5, xscale);
