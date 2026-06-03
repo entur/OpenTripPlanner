@@ -80,10 +80,6 @@ public class AStarBuilder<
     return this;
   }
 
-  protected boolean arriveBy() {
-    return arriveBy;
-  }
-
   public AStarBuilder<State, Edge, Vertex> withGoalVertices(Set<Vertex> goalVertices) {
     this.goalVertices = goalVertices;
     return this;

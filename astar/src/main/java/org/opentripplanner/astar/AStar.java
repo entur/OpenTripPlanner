@@ -102,8 +102,8 @@ public class AStar<
 
     this.spt = new ShortestPathTree<>(Objects.requireNonNull(dominanceFunction));
 
-    this.statisticsCallback = statisticsCallback;
-    this.preSearchHook = preSearchHook;
+    this.preSearchHook = Objects.requireNonNull(preSearchHook);
+    this.statisticsCallback = Objects.requireNonNull(statisticsCallback);
 
     // Initialized with a reasonable size, see #4445
     this.pq = new BinHeap<>(1000);
