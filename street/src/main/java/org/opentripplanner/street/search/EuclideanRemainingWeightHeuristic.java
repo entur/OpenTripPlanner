@@ -51,11 +51,11 @@ public class EuclideanRemainingWeightHeuristic implements RemainingWeightHeurist
 
   // TODO This currently only uses the first toVertex. If there are multiple toVertices, it will
   //      not work correctly.
-  public void initialize(Set<Vertex> toVertices, boolean arriveBy, StreetSearchRequest req) {
+  public void initialize(Set<Vertex> toVertices, StreetSearchRequest req) {
     Vertex target = toVertices.iterator().next();
     minimumCostPerDistance = getMinimumCostPerDistance(req);
     walkingCostPerDistance = getWalkingCostPerDistance(req.walk());
-    this.arriveBy = arriveBy;
+    this.arriveBy = req.arriveBy();
 
     if (target.getDegreeIn() == 1) {
       Edge edge = target.getIncoming().iterator().next();

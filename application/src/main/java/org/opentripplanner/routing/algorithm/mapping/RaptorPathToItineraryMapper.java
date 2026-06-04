@@ -226,17 +226,8 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
       lastLegCost = pathLeg.nextLeg().c1();
     }
 
-    // Find stop positions in pattern where this leg boards and alights.
-    // We cannot assume every stop appears only once in a pattern, so we
-    // have to match stop and time.
-    int boardStopIndexInPattern = tripSchedule.findDepartureStopPosition(
-      pathLeg.fromTime(),
-      pathLeg.fromStop()
-    );
-    int alightStopIndexInPattern = tripSchedule.findArrivalStopPosition(
-      pathLeg.toTime(),
-      pathLeg.toStop()
-    );
+    int boardStopIndexInPattern = pathLeg.getFromStopPosition();
+    int alightStopIndexInPattern = pathLeg.getToStopPosition();
 
     if (tripSchedule.isFrequencyBasedTrip()) {
       int frequencyHeadwayInSeconds = tripSchedule.frequencyHeadwayInSeconds();
@@ -256,13 +247,13 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
         .withGeneralizedCost(toOtpDomainCost(pathLeg.c1() + lastLegCost))
         .withFromViaLocationType(
           ViaLocationTypeMapper.map(
-            request,
+            request.listViaLocations(),
             tripSchedule.getOriginalTripPattern().getStop(boardStopIndexInPattern)
           )
         )
         .withToViaLocationType(
           ViaLocationTypeMapper.map(
-            request,
+            request.listViaLocations(),
             tripSchedule.getOriginalTripPattern().getStop(alightStopIndexInPattern)
           )
         )
@@ -289,13 +280,13 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
       .withGeneralizedCost(toOtpDomainCost(pathLeg.c1() + lastLegCost))
       .withFromViaLocationType(
         ViaLocationTypeMapper.map(
-          request,
+          request.listViaLocations(),
           tripSchedule.getOriginalTripPattern().getStop(boardStopIndexInPattern)
         )
       )
       .withToViaLocationType(
         ViaLocationTypeMapper.map(
-          request,
+          request.listViaLocations(),
           tripSchedule.getOriginalTripPattern().getStop(alightStopIndexInPattern)
         )
       )

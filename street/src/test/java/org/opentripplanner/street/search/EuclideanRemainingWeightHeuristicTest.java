@@ -182,7 +182,7 @@ class EuclideanRemainingWeightHeuristicTest {
 
     var state = new State(fromVertex, req);
 
-    subject.initialize(Set.of(toVertex), false, req);
+    subject.initialize(Set.of(toVertex), req);
     Assertions.assertEquals(expected, subject.estimateRemainingWeight(state), 0.5);
   }
 }

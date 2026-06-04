@@ -1,4 +1,4 @@
-package org.opentripplanner.model.plan.leg;
+package org.opentripplanner.street.model.elevation;
 
 import java.util.ArrayList;
 import java.util.List;

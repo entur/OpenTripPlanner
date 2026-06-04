@@ -121,6 +121,16 @@ public class LinkingContextFactory {
     return new LinkingContext(verticesByLocation, fromStopVertices, toStopVertices);
   }
 
+  /// Get vertices or create a temporary vertex for a given GenericLocation
+  public Set<Vertex> getOrCreateStreetVertices(
+    TemporaryVerticesContainer container,
+    GenericLocation location,
+    LocationType locationType,
+    StreetMode streetMode
+  ) {
+    return getStreetVerticesForLocation(container, location, EnumSet.of(streetMode), locationType);
+  }
+
   private Set<Vertex> getFromVertices(
     TemporaryVerticesContainer container,
     LinkingContextRequest request
