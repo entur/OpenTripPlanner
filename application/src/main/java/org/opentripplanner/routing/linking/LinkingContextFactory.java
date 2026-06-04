@@ -288,10 +288,10 @@ public class LinkingContextFactory {
 
     var results = new HashSet<Vertex>();
     if (location.stopId() != null) {
-      if (!modes.stream().allMatch(TraverseMode::isInCar)) {
+      if (!modes.stream().allMatch(TraverseMode::isDrivingIsh)) {
         results.addAll(getStreetVerticesForStop(location));
       }
-      if (modes.stream().anyMatch(TraverseMode::isInCar)) {
+      if (modes.stream().anyMatch(TraverseMode::isDrivingIsh)) {
         // Ensure that there is a car routable vertex (that can originate from stop's coordinate).
         var carRoutableVertex = getCarRoutableStreetVertex(container, location, type);
         carRoutableVertex.ifPresent(results::add);
