@@ -64,6 +64,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Graph Build Cache — Redesign Configuration and File Layout [#7636](https://github.com/opentripplanner/OpenTripPlanner/pull/7636)
 - Add dark mode toggle; standardize navbar item titles [#7673](https://github.com/opentripplanner/OpenTripPlanner/pull/7673)
 - Refactor and optimize geometry encoding/decoding [#7668](https://github.com/opentripplanner/OpenTripPlanner/pull/7668)
+- Make FLEX behave like a car in routing [#7674](https://github.com/opentripplanner/OpenTripPlanner/pull/7674)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
