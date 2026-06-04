@@ -23,7 +23,6 @@ import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
-import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.StateEditor;
@@ -78,8 +77,11 @@ class StreetEdgeGeofencingTest {
     }
 
     @Test
-    public void leaveBusinessAreaOnFoot() {
-      // V1 is inside business area, V2 is outside → exiting at V1→V2 boundary
+    public void leavingBusinessAreaFromBoundaryVertexIsBlocked() {
+      // V1 is inside business area, V2 is outside → exiting at V1→V2 boundary.
+      // Fallback path: state starts AT the boundary vertex with no prior edge to fire
+      // forwardApproachingExit. The renting branch is blocked; the walking continuation
+      // comes from the corresponding BEFORE_RENTING branch.
       V1.addGeofencingBoundary(new GeofencingBoundaryExtension(BUSINESS_AREA_ZONE, false));
       V2.addGeofencingBoundary(new GeofencingBoundaryExtension(BUSINESS_AREA_ZONE, true));
 
@@ -88,9 +90,7 @@ class StreetEdgeGeofencingTest {
 
       var results = edge.traverse(state);
 
-      assertEquals(1, results.length);
-      assertEquals(HAVE_RENTED, results[0].getVehicleRentalState());
-      assertEquals(TraverseMode.WALK, results[0].getBackMode());
+      assertEquals(0, results.length);
     }
 
     /**

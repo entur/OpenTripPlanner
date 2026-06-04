@@ -105,48 +105,12 @@ class BusinessAreaEnforcementTest {
   class ForwardExiting {
 
     @Test
-    void forceDropAtBoundary() {
+    void blocksRentingState() {
       var state = createRentingState(BUSINESS_AREA);
       var result = ENFORCEMENT.forwardCrossingExit(BUSINESS_AREA, state, edgeTraversal);
 
       assertNotNull(result);
-      assertEquals(1, result.length, "should produce one drop branch");
-      assertEquals(
-        VehicleRentalState.HAVE_RENTED,
-        result[0].getVehicleRentalState(),
-        "should have dropped vehicle"
-      );
-    }
-
-    @Test
-    void blockedWhenDropOffBanned() {
-      // Only NO_DROP_OFF_ZONE in state (no competing BUSINESS_AREA zone)
-      var state = createRentingState(NO_DROP_OFF_ZONE);
-      var result = ENFORCEMENT.forwardCrossingExit(BUSINESS_AREA, state, edgeTraversal);
-
-      assertNotNull(result);
-      assertEquals(0, result.length, "should return empty — drop-off banned");
-    }
-
-    @Test
-    void blockedByPostTraversalVeto() {
-      // Set up boundary extensions so traversing v2→v3 enters a no-drop-off zone
-      v2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE, true));
-      v3.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_ZONE, false));
-
-      // EdgeTraversal that updates zones during traversal
-      EdgeTraversal zoneUpdatingTraversal = (s0, mode) -> {
-        var editor = s0.edit(testEdge);
-        editor.updateGeofencingZones(v2, v3, false);
-        return editor;
-      };
-
-      // State starts without no-drop-off zone — it enters one during traversal
-      var state = createRentingState();
-      var result = ENFORCEMENT.forwardCrossingExit(BUSINESS_AREA, state, zoneUpdatingTraversal);
-
-      assertNotNull(result);
-      assertEquals(0, result.length, "should block — post-traversal entered no-drop-off zone");
+      assertEquals(0, result.length);
     }
 
     @Test

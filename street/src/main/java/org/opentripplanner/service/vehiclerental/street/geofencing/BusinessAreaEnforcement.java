@@ -14,8 +14,8 @@ import org.opentripplanner.street.search.state.VehicleRentalState;
  * <h3>Overrides</h3>
  * <ul>
  *   <li>{@link #forwardApproachingExit} — ride to tov (last in-BA vertex) and drop there.</li>
- *   <li>{@link #forwardCrossingExit} — force walk past the boundary and drop (fallback for
- *       states that start at the boundary vertex).</li>
+ *   <li>{@link #forwardCrossingExit} — block renting branch (fallback for states placed at the
+ *       boundary vertex; walking continuations come from non-renting branches).</li>
  *   <li>{@link #arriveByAtBoundary} — HAVE_RENTED walker only; produce a walking branch.
  *       Renting branches are deferred by {@link DeferredForkHandler}.</li>
  * </ul>
@@ -60,20 +60,20 @@ final class BusinessAreaEnforcement implements GeofencingEnforcement {
     if (state.isRentingVehicleFromStation()) {
       return State.empty();
     }
-    return forwardExit(state, edge, state.currentMode());
+    return forwardExit(state, edge);
   }
 
   /**
    * Forward search: the current edge crosses outward across the BA boundary (fromv inside, tov
-   * outside). Fallback path for states that start at the boundary vertex with no prior edge to
-   * fire {@link #forwardApproachingExit}. The rider walks past the boundary and drops at tov.
+   * outside). Fallback path for states placed at the boundary vertex with no prior edge to fire
+   * {@link #forwardApproachingExit}. The renting branch is blocked outright — pure walking from
+   * the corresponding {@code BEFORE_RENTING} branch dominates the walk-and-drop alternative in
+   * any reasonable cost model.
    *
    * <p>Returns:
    * <ul>
    *   <li>{@code null} — state isn't renting; nothing to enforce.</li>
-   *   <li>{@code State.empty()} — station rental; drop position banned by an overlapping
-   *       no-drop-off zone (pre- or post-traversal); or edge traversal failed.</li>
-   *   <li>{@code State[1]} — walked past the boundary in {@code WALK} mode and dropped.</li>
+   *   <li>{@code State.empty()} — renting state blocked.</li>
    * </ul>
    */
   @Override
@@ -82,10 +82,7 @@ final class BusinessAreaEnforcement implements GeofencingEnforcement {
     if (!state.isRentingVehicle()) {
       return null;
     }
-    if (state.isRentingVehicleFromStation()) {
-      return State.empty();
-    }
-    return forwardExit(state, edge, TraverseMode.WALK);
+    return State.empty();
   }
 
   /**
@@ -116,15 +113,14 @@ final class BusinessAreaEnforcement implements GeofencingEnforcement {
   }
 
   /**
-   * Force a floating-vehicle drop at the BA boundary. Shared by {@link #forwardApproachingExit}
-   * (ride in {@code currentMode} to the last in-zone vertex) and {@link #forwardCrossingExit}
-   * (walk past the boundary). Only the traversal mode differs.
+   * Ride to the last in-zone vertex (tov) in the rider's current mode and drop the
+   * floating vehicle there.
    */
-  private State[] forwardExit(State state, EdgeTraversal edge, TraverseMode mode) {
+  private State[] forwardExit(State state, EdgeTraversal edge) {
     if (state.isDropOffBannedByCurrentZones()) {
       return State.empty();
     }
-    var editor = edge.traverse(state, mode);
+    var editor = edge.traverse(state, state.currentMode());
     if (editor == null) {
       return State.empty();
     }
