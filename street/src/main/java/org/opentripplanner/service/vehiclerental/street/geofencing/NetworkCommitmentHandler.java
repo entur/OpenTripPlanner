@@ -22,18 +22,13 @@ class NetworkCommitmentHandler {
 
   private NetworkCommitmentHandler() {}
 
-  /**
-   * Check if a generic arrive-by state needs network commitment at zone boundaries.
-   *
-   * @return State[] with committed + generic branches, or null if no commitment needed
-   */
+  /** Commit network branches if a generic arriveBy state crosses a zone boundary. */
   @Nullable
   public static State[] applyNetworkCommitment(
     State s0,
     List<GeofencingBoundaryExtension> fromBoundaries,
     EdgeTraversal edge
   ) {
-    // Record no-traversal zone networks in committedNetworks
     var noTraversalNetworks = collectNoTraversalNetworks(s0, fromBoundaries);
     if (!noTraversalNetworks.isEmpty()) {
       var editor = edge.traverse(s0, s0.currentMode());

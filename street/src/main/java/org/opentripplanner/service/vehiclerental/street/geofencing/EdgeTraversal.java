@@ -7,8 +7,7 @@ import org.opentripplanner.street.search.state.StateEditor;
 /**
  * Abstraction over edge traversal for geofencing enforcement. Allows enforcement implementations
  * to traverse the current edge in any mode without depending on StreetEdge or exposing its
- * private methods. In production, this wraps {@code StreetEdge.doTraverse()}. In tests, a fake
- * lambda replaces the real traversal.
+ * private methods.
  */
 @FunctionalInterface
 public interface EdgeTraversal {

@@ -10,36 +10,20 @@ import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.state.VehicleRentalState;
 
 /**
- * Handles the deferred renting fork — creates RENTING_FLOATING states one edge after a zone
- * boundary, so their backEdge is safely outside the zone in the forward itinerary.
+ * Creates the deferred RENTING_FLOATING fork one edge after a zone boundary, so the renting
+ * state's backEdge is safely outside the zone in the forward itinerary.
  *
- * <h3>Why deferral is needed</h3>
- * In arrive-by searches, when enforcement triggers a boundary fork at vertex C, we want to
- * create RENTING_FLOATING states representing "rider dropped off here in forward time." But
- * if created at C, their backEdge is C→D (pointing into the zone). When reversed to forward
- * time, the itinerary shows the drop-off at D (inside zone) instead of C.
- *
- * <h3>How it works</h3>
- * The enforcement returns only the walking branch at the boundary. On the next edge, this
- * handler detects the zone exit by comparing the backState's zone set with the current state's.
- * If restricted zones were exited, it creates renting branches here where the backEdge is
- * safely outside the zone.
- *
- * <h3>Future</h3>
- * A future fix could move this responsibility to the itinerary builder (detect that a rental
- * leg's last edge points into a restricted zone and adjust the drop-off location), eliminating
- * the deferral entirely.
+ * <p>Forking at the boundary itself would attach the drop event to an edge pointing into the
+ * zone (the renting state's backEdge would be the boundary edge), so the rendered itinerary
+ * would show the drop on the wrong side. Instead, the strategy returns only the walking branch
+ * at the boundary; this handler creates the renting branches on the next edge, where the
+ * backEdge is safely outside.
  */
 class DeferredForkHandler {
 
   private DeferredForkHandler() {}
 
-  /**
-   * Check if the previous edge's enforcement deferred renting branch creation, and if so,
-   * create those branches now.
-   *
-   * @return State[] with walking + renting branches, or null if no deferred fork needed
-   */
+  /** If the previous edge deferred a renting fork, create the branches now. */
   @Nullable
   public static State[] applyDeferredFork(State s0, EdgeTraversal edge) {
     if (!isDeferredRentingForkTrigger(s0)) {
@@ -49,14 +33,9 @@ class DeferredForkHandler {
   }
 
   /**
-   * Whether a HAVE_RENTED walker just crossed a zone boundary that requires a deferred fork.
-   * Two cases:
-   * <ul>
-   *   <li>Zone loss (restricted zones): backState had zones s0 doesn't — walker exited zone
-   *       in arrive-by, deferred fork is outside the zone.</li>
-   *   <li>Zone gain (business areas): s0 has BA zones backState didn't — walker entered BA
-   *       in arrive-by (= exited in forward time), deferred fork is inside the BA.</li>
-   * </ul>
+   * Trigger when a HAVE_RENTED walker just crossed a zone boundary the previous edge deferred:
+   * restricted-zone loss (walker exited in arriveBy) or BA gain (walker entered BA in arriveBy
+   * = exited in forward time).
    */
   private static boolean isDeferredRentingForkTrigger(State s0) {
     if (s0.getVehicleRentalState() != VehicleRentalState.HAVE_RENTED) {
@@ -85,9 +64,8 @@ class DeferredForkHandler {
   }
 
   /**
-   * Create renting branches one edge after the zone boundary. The walker just exited a
-   * restricted zone or business area. Now at the first edge outside the zone, create per-network
-   * and generic RENTING_FLOATING states with backEdges safely outside the zone.
+   * Build the walking continuation plus per-network and generic RENTING_FLOATING states for the
+   * networks the walker just exited.
    */
   private static State[] performDeferredRentingFork(State s0, EdgeTraversal edge) {
     var request = s0.getRequest();

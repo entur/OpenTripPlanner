@@ -16,8 +16,8 @@ import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
  */
 public record GeofencingBoundaryExtension(GeofencingZone zone, boolean entering) {
   /**
-   * Whether this boundary is paired with {@code other} — same zone, opposite entering flag.
-   * A paired pair (one on fromv, one on tov) indicates the edge crosses the zone boundary.
+   * Whether this boundary is paired with {@code other} — same zone, opposite entering flag. A
+   * pair on the two endpoints of an edge indicates the edge crosses the zone boundary.
    */
   public boolean isPairedWith(GeofencingBoundaryExtension other) {
     return zone.equals(other.zone) && entering != other.entering;
@@ -25,7 +25,7 @@ public record GeofencingBoundaryExtension(GeofencingZone zone, boolean entering)
 
   /**
    * Whether any boundary in the list marks an entry into a no-traversal zone for the given
-   * network. Used by {@code VehicleRentalEdge} to fork at pickup on boundary vertices.
+   * network.
    */
   public static boolean hasNoTraversalEntry(
     List<GeofencingBoundaryExtension> boundaries,

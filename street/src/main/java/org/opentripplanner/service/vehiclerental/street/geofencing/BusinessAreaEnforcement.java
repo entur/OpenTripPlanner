@@ -8,27 +8,9 @@ import org.opentripplanner.street.search.state.VehicleRentalState;
 
 /**
  * Enforcement for business area geofencing zones. The logic is inverted compared to restricted
- * zones: exiting the business area is restricted (the rider can't leave the operating area on
- * the vehicle), while entering is allowed.
- *
- * <h3>Overrides</h3>
- * <ul>
- *   <li>{@link #forwardApproachingExit} — ride to tov (last in-BA vertex) and drop there.</li>
- *   <li>{@link #forwardCrossingExit} — block renting branch (fallback for states placed at the
- *       boundary vertex; walking continuations come from non-renting branches).</li>
- *   <li>{@link #arriveByAtBoundary} — HAVE_RENTED walker only; produce a walking branch.
- *       Renting branches are deferred by {@link DeferredForkHandler}.</li>
- * </ul>
- *
- * <h3>Inherited as no-op (default {@code null})</h3>
- * <ul>
- *   <li>{@code forwardApproachingEntry} — entering a BA is allowed; nothing to enforce.</li>
- *   <li>{@code forwardCrossingEntry} — entering decision (if any) was made one edge earlier.</li>
- *   <li>{@code arriveByApproaching} — entering a BA in reverse-time is allowed.</li>
- * </ul>
- *
- * <p>Station rentals can't legally drop mid-street and are blocked outright at any BA exit.
- * Post-traversal veto: if the edge crosses into a no-drop-off zone, drops are blocked.
+ * zones: exiting the BA is restricted (the rider can't leave the operating area on the vehicle),
+ * while entering is allowed. Station rentals can't legally drop mid-street and are blocked
+ * at any BA exit.
  */
 final class BusinessAreaEnforcement implements GeofencingEnforcement {
 
@@ -37,19 +19,8 @@ final class BusinessAreaEnforcement implements GeofencingEnforcement {
   private BusinessAreaEnforcement() {}
 
   /**
-   * Forward search: the next edge from tov will exit the BA. The rider must drop the vehicle
-   * before leaving the operating area — the drop happens at tov (the last in-BA vertex), in the
-   * rider's current riding mode.
-   *
-   * <p>Returns:
-   * <ul>
-   *   <li>{@code null} — state isn't renting; nothing to enforce.</li>
-   *   <li>{@code State.empty()} — station rental (can't legally drop mid-street); or the drop
-   *       position is banned by an overlapping no-drop-off zone (pre- or post-traversal); or the
-   *       edge traversal itself failed.</li>
-   *   <li>{@code State[1]} — floating rental rode to tov in {@code currentMode} and dropped
-   *       successfully.</li>
-   * </ul>
+   * Forward search: the rider rides to the last in-BA vertex and drops the vehicle there before
+   * leaving the operating area. Station rentals are blocked (can't drop mid-street).
    */
   @Override
   @Nullable
@@ -64,17 +35,10 @@ final class BusinessAreaEnforcement implements GeofencingEnforcement {
   }
 
   /**
-   * Forward search: the current edge crosses outward across the BA boundary (fromv inside, tov
-   * outside). Fallback path for states placed at the boundary vertex with no prior edge to fire
-   * {@link #forwardApproachingExit}. The renting branch is blocked outright — pure walking from
-   * the corresponding {@code BEFORE_RENTING} branch dominates the walk-and-drop alternative in
-   * any reasonable cost model.
-   *
-   * <p>Returns:
-   * <ul>
-   *   <li>{@code null} — state isn't renting; nothing to enforce.</li>
-   *   <li>{@code State.empty()} — renting state blocked.</li>
-   * </ul>
+   * Forward search: fallback for renting states placed at the boundary vertex itself, where no
+   * prior edge could fire {@link #forwardApproachingExit}. The renting branch is blocked
+   * — pure walking from the corresponding {@code BEFORE_RENTING} branch dominates the
+   * walk-and-drop alternative in any reasonable cost model.
    */
   @Override
   @Nullable
@@ -86,18 +50,10 @@ final class BusinessAreaEnforcement implements GeofencingEnforcement {
   }
 
   /**
-   * ArriveBy search: a HAVE_RENTED walker is at a boundary where, in real time, the walker
-   * exits the BA (i.e., the bike was dropped inside the BA and the walker continued out on
-   * foot). Produce a walking continuation; renting branches for "the bike could have been
-   * ridden to here" are deferred to the next edge by {@link DeferredForkHandler}.
-   *
-   * <p>Returns:
-   * <ul>
-   *   <li>{@code null} — state isn't a HAVE_RENTED walker (e.g., still renting or never
-   *       rented); nothing to enforce here.</li>
-   *   <li>{@code State.empty()} — walking traversal failed (edge not walkable, etc.).</li>
-   *   <li>{@code State[1]} — the HAVE_RENTED walker continues walking.</li>
-   * </ul>
+   * ArriveBy search: a HAVE_RENTED walker is at a boundary they crossed in forward time
+   * (rider dropped inside the BA then walked out to the destination). Produce a walking
+   * continuation; renting branches are deferred to the next edge by
+   * {@link DeferredForkHandler}.
    */
   @Override
   @Nullable
@@ -112,10 +68,7 @@ final class BusinessAreaEnforcement implements GeofencingEnforcement {
     return State.empty();
   }
 
-  /**
-   * Ride to the last in-zone vertex (tov) in the rider's current mode and drop the
-   * floating vehicle there.
-   */
+  /** Ride to the last in-zone vertex in the rider's current mode and drop the floating vehicle there. */
   private State[] forwardExit(State state, EdgeTraversal edge) {
     if (state.isDropOffBannedByCurrentZones()) {
       return State.empty();

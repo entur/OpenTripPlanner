@@ -54,12 +54,6 @@ public class GeofencingZoneApplier {
   ) {
     var zoneIndex = new GeofencingZoneIndex(geofencingZones);
 
-    // All zones with geometry get boundary extensions, not just restricted ones.
-    // Permissive zones need boundary tracking so they enter/exit state correctly
-    // and can contribute values via per-field precedence.
-    // When applyBusinessAreas is false, business-area-only zones are excluded from
-    // boundary detection so that BusinessAreaEnforcement never triggers, but the
-    // zones remain in the index for state tracking, speed limits, and debug tiles.
     var zonesWithGeometry = geofencingZones
       .stream()
       .filter(z -> z.geometry() != null)

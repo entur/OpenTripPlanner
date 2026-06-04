@@ -8,19 +8,6 @@ import org.opentripplanner.street.search.state.State;
  * Intercepts rental edge traversals to enforce geofencing zone restrictions. Called from
  * {@code StreetEdge.traverse()} — returns {@code State[]} to override the normal traversal,
  * or {@code null} to let it proceed.
- *
- * <p>Orchestrator only. All zone-type policy lives in {@link GeofencingEnforcement}
- * implementations. The interceptor:
- * <ul>
- *   <li>Runs the set-level invariant check via
- *       {@link RestrictedZoneEnforcement#enforceInside} (blocks renting states inside a
- *       no-traversal zone).</li>
- *   <li>Iterates boundaries and dispatches to the strategy by <em>position</em>:
- *       approaching (tov, outside), at far boundary (tov, inside), at near boundary
- *       (fromv, inside).</li>
- *   <li>Delegates deferred renting forks to {@link DeferredForkHandler} and generic
- *       network commitment to {@link NetworkCommitmentHandler}.</li>
- * </ul>
  */
 public class GeofencingInterceptor {
 
@@ -61,9 +48,6 @@ public class GeofencingInterceptor {
     }
     String network = s0.getVehicleRentalNetwork();
 
-    // tov boundaries: state will arrive at tov on this edge. entering=true means tov is outside
-    // (next edge enters the zone — fork at approach). entering=false means tov is inside (next
-    // edge exits — at far boundary).
     for (var boundary : toBoundaries) {
       var zone = boundary.zone();
       if (network != null && !zone.id().getFeedId().equals(network)) {
@@ -78,19 +62,18 @@ public class GeofencingInterceptor {
       }
     }
 
-    // fromv boundaries: state at fromv is at the boundary, current edge crosses it.
-    // entering=false → fromv inside, edge exits the zone (CrossingExit, BA fallback drop).
-    // entering=true  → fromv outside, edge enters the zone (CrossingEntry, normally a no-op
-    // since the fork was made one edge earlier by ApproachingEntry).
+    // Only dispatch outward-crossing — inward-crossing entry decisions fire one edge earlier
+    // via forwardApproachingEntry.
     for (var boundary : fromBoundaries) {
+      if (boundary.entering()) {
+        continue;
+      }
       var zone = boundary.zone();
       if (network != null && !zone.id().getFeedId().equals(network)) {
         continue;
       }
       var enforcement = GeofencingEnforcement.forZone(zone);
-      var result = boundary.entering()
-        ? enforcement.forwardCrossingEntry(zone, s0, edge)
-        : enforcement.forwardCrossingExit(zone, s0, edge);
+      var result = enforcement.forwardCrossingExit(zone, s0, edge);
       if (result != null) {
         return result;
       }
@@ -117,8 +100,6 @@ public class GeofencingInterceptor {
 
     String network = s0.getVehicleRentalNetwork();
 
-    // Committed renting: when the real-time edge would enter the zone (fromv + entering=false),
-    // the committed state can't ride into a no-traversal zone — block.
     if (s0.isRentingVehicle() && network != null) {
       for (var boundary : fromBoundaries) {
         var zone = boundary.zone();
@@ -129,7 +110,7 @@ public class GeofencingInterceptor {
           continue;
         }
         var enforcement = GeofencingEnforcement.forZone(zone);
-        var result = enforcement.arriveByApproaching(zone, s0, edge);
+        var result = enforcement.arriveByCrossingExit(zone, s0, edge);
         if (result != null) {
           return result;
         }
@@ -141,7 +122,6 @@ public class GeofencingInterceptor {
       return walkerResult;
     }
 
-    // Generic states: network commitment at zone boundaries
     if (s0.isRentingFloatingVehicle() && network == null) {
       return NetworkCommitmentHandler.applyNetworkCommitment(s0, fromBoundaries, edge);
     }

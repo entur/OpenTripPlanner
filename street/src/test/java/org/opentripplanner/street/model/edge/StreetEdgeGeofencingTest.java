@@ -221,24 +221,23 @@ class StreetEdgeGeofencingTest {
 
     /**
      * When a RENTING_FLOATING state starts AT a no-traversal boundary vertex (e.g., from a
-     * VehicleRentalEdge pickup) and tries to ride into the zone, the traversal is blocked.
-     * The walking branch from the VehicleRentalEdge fork handles reaching destinations
-     * inside the zone on foot.
+     * VehicleRentalEdge pickup) and rides into the zone, the crossing edge succeeds (state lands
+     * inside with the zone in currentZones) and the next edge is blocked by enforceInside.
      */
     @Test
-    public void ridingIntoNoTraversalZoneFromBoundaryVertexShouldBeBlocked() {
+    public void ridingIntoNoTraversalZoneIsBlockedOnNextEdge() {
       // V2 is the boundary vertex (entering=true), V3 is inside the zone (entering=false)
       V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, true));
       V3.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, false));
 
-      var edge = streetEdge(V2, V3);
+      var boundaryEdge = streetEdge(V2, V3);
+      var nextEdge = streetEdge(V3, V4);
       // Start RENTING_FLOATING at V2 (as if from VehicleRentalEdge pickup)
       var state = initialState(V2, NETWORK_TIER, false);
-      var results = edge.traverse(state);
 
-      // Should be blocked: can't ride from boundary into zone.
-      // The walking branch (from VehicleRentalEdge HAVE_RENTED fork) handles this path.
-      assertEquals(0, results.length);
+      var crossed = boundaryEdge.traverse(state);
+      assertEquals(1, crossed.length);
+      assertEquals(0, nextEdge.traverse(crossed[0]).length);
     }
 
     /**
@@ -258,25 +257,6 @@ class StreetEdgeGeofencingTest {
 
       var results = edge.traverse(state);
       // Dead end: can't traverse (no-traversal ahead) and can't drop (inside no-drop-off zone)
-      assertEquals(0, results.length);
-    }
-
-    /**
-     * Same scenario but via the post-traversal trigger: a committed rider crosses a
-     * no-traversal boundary during traversal while inside a no-drop-off zone.
-     */
-    @Test
-    public void postTraversalNoTraversalEntryInsideNoDropOffZoneIsDeadEnd() {
-      // Boundary on V1/V2 for no-traversal zone — zone is entered during traversal
-      V1.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, true));
-      V2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_TRAVERSAL_ZONE, false));
-
-      var edge = streetEdge(V1, V2);
-      // Committed rider inside a no-drop-off zone
-      var state = initialStateWithZones(V1, NETWORK_TIER, false, Set.of(NO_DROP_OFF_ZONE_TIER));
-
-      var results = edge.traverse(state);
-      // Dead end: post-traversal trigger detects no-traversal entry, but drop-off is banned
       assertEquals(0, results.length);
     }
 

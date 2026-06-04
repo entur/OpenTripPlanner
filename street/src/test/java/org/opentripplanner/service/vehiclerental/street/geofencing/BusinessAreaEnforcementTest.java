@@ -161,7 +161,7 @@ class BusinessAreaEnforcementTest {
     @Test
     void passesThrough() {
       var state = createRentingState(BUSINESS_AREA);
-      var result = ENFORCEMENT.arriveByApproaching(BUSINESS_AREA, state, edgeTraversal);
+      var result = ENFORCEMENT.arriveByCrossingExit(BUSINESS_AREA, state, edgeTraversal);
       assertNull(result, "entering business area in arriveBy should pass");
     }
   }

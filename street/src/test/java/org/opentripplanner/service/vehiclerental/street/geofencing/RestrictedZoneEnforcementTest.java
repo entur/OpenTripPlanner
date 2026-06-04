@@ -304,7 +304,7 @@ class RestrictedZoneEnforcementTest {
     @Test
     void blocksCommittedRentingState() {
       var state = createRentingState();
-      var result = ENFORCEMENT.arriveByApproaching(NO_TRAVERSAL_ZONE, state, edgeTraversal);
+      var result = ENFORCEMENT.arriveByCrossingExit(NO_TRAVERSAL_ZONE, state, edgeTraversal);
 
       assertNotNull(result);
       assertEquals(0, result.length, "should block committed state entering no-traversal zone");
@@ -313,7 +313,7 @@ class RestrictedZoneEnforcementTest {
     @Test
     void passesForNonRentingState() {
       var state = createHaveRentedState();
-      var result = ENFORCEMENT.arriveByApproaching(NO_TRAVERSAL_ZONE, state, edgeTraversal);
+      var result = ENFORCEMENT.arriveByCrossingExit(NO_TRAVERSAL_ZONE, state, edgeTraversal);
 
       assertNull(result, "should pass — HAVE_RENTED is not a renting state");
     }
@@ -327,7 +327,7 @@ class RestrictedZoneEnforcementTest {
       editor.beginFloatingVehicleRenting(RentalFormFactor.SCOOTER_STANDING, null, null, false);
       var state = editor.makeState();
 
-      var result = ENFORCEMENT.arriveByApproaching(NO_TRAVERSAL_ZONE, state, edgeTraversal);
+      var result = ENFORCEMENT.arriveByCrossingExit(NO_TRAVERSAL_ZONE, state, edgeTraversal);
       assertNull(result, "null-network renting state should pass — not committed");
     }
   }
@@ -338,7 +338,7 @@ class RestrictedZoneEnforcementTest {
     @Test
     void passesThrough() {
       var state = createRentingState();
-      var result = ENFORCEMENT.arriveByApproaching(NO_DROP_OFF_ZONE, state, edgeTraversal);
+      var result = ENFORCEMENT.arriveByCrossingExit(NO_DROP_OFF_ZONE, state, edgeTraversal);
       assertNull(result, "no-drop-off zone should not block entering in arriveBy");
     }
   }
