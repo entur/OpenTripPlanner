@@ -95,11 +95,29 @@ public class HashGridSpatialIndex<T> implements SpatialIndex, Serializable {
 
   @Override
   public final List<T> query(Envelope envelope) {
-    final Set<T> ret = new HashSet<>(1024);
+    // Collect the bins the envelope touches. insert() stores each item once per bin, so a single
+    // touched bin has no duplicates: return its contents directly and skip the dedup HashSet (and
+    // its per-query allocation). Dedup is only needed when the envelope straddles bin boundaries
+    // (2+ bins), where an item indexed in several of them would otherwise be returned more than once.
+    final List<List<T>> hitBins = new ArrayList<>(4);
     visit(envelope, false, (bin, mapKey) -> {
-      ret.addAll(bin);
+      hitBins.add(bin);
       return false;
     });
+    if (hitBins.isEmpty()) {
+      return new ArrayList<>();
+    }
+    if (hitBins.size() == 1) {
+      return new ArrayList<>(hitBins.get(0));
+    }
+    int total = 0;
+    for (List<T> bin : hitBins) {
+      total += bin.size();
+    }
+    final Set<T> ret = HashSet.newHashSet(total);
+    for (List<T> bin : hitBins) {
+      ret.addAll(bin);
+    }
     return new ArrayList<>(ret);
   }
 
