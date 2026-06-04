@@ -64,7 +64,7 @@
         <geotools.version>34.3</geotools.version>
         <google.dagger.version>2.59.2</google.dagger.version>
         <jackson.version>2.21.3</jackson.version>
-        <jaxb-runtime.version>4.0.8</jaxb-runtime.version>
+        <jaxb-runtime.version>4.0.9</jaxb-runtime.version>
         <jersey.version>3.1.11</jersey.version>
         <junit.version>6.1.0</junit.version>
         <micrometer.version>1.14.1</micrometer.version>
