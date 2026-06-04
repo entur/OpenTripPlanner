@@ -35,6 +35,7 @@ import org.opentripplanner.street.search.StreetSearchBuilder;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.EdgeTraverser;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;
+import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.opentripplanner.transfer.regular.RegularTransferService;
 import org.opentripplanner.transfer.regular.model.PathTransfer;
@@ -51,10 +52,10 @@ public class RefetchItineraryService {
 
   private final TransitService transitService;
   private final RegularTransferService transferService;
-  private final float maxCarSpeed;
   private final Graph graph;
   private final LinkingContextFactory linkingContextFactory;
   private final StreetPathToLegsMapper streetPathToLegsMapper;
+  private final StreetLimitationParametersService streetLimitationParametersService;
 
   public RefetchItineraryService(OtpServerRequestContext serverContext) {
     this(
@@ -63,7 +64,7 @@ public class RefetchItineraryService {
       serverContext.transferService(),
       serverContext.streetDetailsService(),
       serverContext.linkingContextFactory(),
-      serverContext.streetLimitationParametersService().maxCarSpeed()
+      serverContext.streetLimitationParametersService()
     );
   }
 
@@ -73,13 +74,12 @@ public class RefetchItineraryService {
     RegularTransferService transferService,
     StreetDetailsService streetDetailsService,
     LinkingContextFactory linkingContextFactory,
-    float maxCarSpeed
+    StreetLimitationParametersService streetLimitationParametersService
   ) {
     this.transitService = transitService;
     this.transferService = transferService;
     this.linkingContextFactory = linkingContextFactory;
     this.graph = graph;
-    this.maxCarSpeed = maxCarSpeed;
     this.streetPathToLegsMapper = new StreetPathToLegsMapper(
       new TransitServiceResolver(transitService),
       transitService.getTimeZone(),
@@ -87,6 +87,7 @@ public class RefetchItineraryService {
       streetDetailsService,
       graph.ellipsoidToGeoidDifference
     );
+    this.streetLimitationParametersService = streetLimitationParametersService;
   }
 
   /// Refetch an itinerary
@@ -306,7 +307,7 @@ public class RefetchItineraryService {
 
     return StreetSearchBuilder.of()
       .withPreStartHook(OTPRequestTimeoutException::checkForTimeout)
-      .withHeuristic(new EuclideanRemainingWeightHeuristic(maxCarSpeed))
+      .withHeuristic(new EuclideanRemainingWeightHeuristic(streetLimitationParametersService))
       .withSkipEdgeStrategy(new DurationSkipEdgeStrategy<>(maxDuration))
       .withDominanceFunction(new DominanceFunctions.MinimumWeight())
       .withRequest(streetSearchRequest)

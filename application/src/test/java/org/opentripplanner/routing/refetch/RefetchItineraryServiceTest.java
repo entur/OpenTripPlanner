@@ -30,6 +30,7 @@ import org.opentripplanner.street.model.edge.StreetEdgeBuilder;
 import org.opentripplanner.street.model.vertex.LabelledIntersectionVertex;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
+import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.transfer.regular.RegularTransferService;
 import org.opentripplanner.transfer.regular.TransferServiceTestFactory;
 import org.opentripplanner.transfer.regular.model.PathTransfer;
@@ -303,13 +304,34 @@ class RefetchItineraryServiceTest {
       GRAPH,
       vertexCreationService
     );
+    var streetLimitationParametersService = new StreetLimitationParametersService() {
+      @Override
+      public float maxCarSpeed() {
+        return 100f;
+      }
+
+      @Override
+      public int maxAreaNodes() {
+        return 0;
+      }
+
+      @Override
+      public float getBestWalkSafety() {
+        return 0;
+      }
+
+      @Override
+      public float getBestBikeSafety() {
+        return 0;
+      }
+    };
     return new RefetchItineraryService(
       GRAPH,
       TRANSIT_ENV.transitService(),
       TRANSFER_SERVICE,
       streetDetailsService,
       linkingContextFactory,
-      100f
+      streetLimitationParametersService
     );
   }
 
