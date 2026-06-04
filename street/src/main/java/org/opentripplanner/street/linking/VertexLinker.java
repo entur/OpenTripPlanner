@@ -17,6 +17,8 @@ import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.linearref.LinearLocation;
 import org.locationtech.jts.linearref.LocationIndexedLine;
+import org.locationtech.jts.operation.relateng.RelateNG;
+import org.locationtech.jts.operation.relateng.RelatePredicate;
 import org.opentripplanner.street.Scope;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
@@ -425,7 +427,16 @@ public class VertexLinker {
         // vertex is inside the area. try connecting the vertex to the edge's split point, because
         // connections to visibility vertices may fail or do not always provide an optimal route
         // note that by definition, connection to closest edge cannot be blocked and edge can be forced
-        addVisibilityEdges(start, split, ag, scope, tempEdges, true);
+        // forced edges skip the boundary check, so the prepared geometry here is never evaluated
+        addVisibilityEdges(
+          start,
+          split,
+          ag,
+          RelateNG.prepare(ag.getGeometry()),
+          scope,
+          tempEdges,
+          true
+        );
       } else {
         // vertex is outside an area. Use split point for area connections
         start = split;
@@ -618,6 +629,9 @@ public class VertexLinker {
     boolean force
   ) {
     Geometry polygon = areaGroup.getGeometry();
+    // Prepare the area polygon once so the per-candidate contains() checks below reuse a single
+    // cached spatial index instead of rebuilding one on every call (see addVisibilityEdges).
+    RelateNG preparedArea = RelateNG.prepare(polygon);
 
     int added = 0;
 
@@ -643,7 +657,7 @@ public class VertexLinker {
       }
     }
     for (IntersectionVertex v : visibilityVertices) {
-      if (addVisibilityEdges(newVertex, v, areaGroup, scope, tempEdges, false)) {
+      if (addVisibilityEdges(newVertex, v, areaGroup, preparedArea, scope, tempEdges, false)) {
         added++;
       }
     }
@@ -667,7 +681,15 @@ public class VertexLinker {
           nearest = areaGroup.visibilityVertices().stream().findFirst();
         }
         if (nearest.isPresent()) {
-          return addVisibilityEdges(newVertex, nearest.get(), areaGroup, scope, tempEdges, true);
+          return addVisibilityEdges(
+            newVertex,
+            nearest.get(),
+            areaGroup,
+            preparedArea,
+            scope,
+            tempEdges,
+            true
+          );
         }
       }
       return false;
@@ -711,6 +733,7 @@ public class VertexLinker {
     IntersectionVertex from,
     IntersectionVertex to,
     AreaGroup ag,
+    RelateNG preparedArea,
     Scope scope,
     DisposableEdgeCollection tempEdges,
     boolean force
@@ -726,7 +749,7 @@ public class VertexLinker {
     var c1 = from.getCoordinate();
     var c2 = to.getCoordinate();
     // ensure that new edge does not leave the bounds of the area or hit any holes
-    if (!force && !ag.getGeometry().contains(createShrunkLine(c1, c2))) {
+    if (!force && !preparedArea.evaluate(createShrunkLine(c1, c2), RelatePredicate.contains())) {
       return false;
     }
     LineString line = GEOMETRY_FACTORY.createLineString(new Coordinate[] { c1, c2 });
