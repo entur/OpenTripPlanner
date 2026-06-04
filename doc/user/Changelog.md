@@ -66,6 +66,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Refactor and optimize geometry encoding/decoding [#7668](https://github.com/opentripplanner/OpenTripPlanner/pull/7668)
 - Make FLEX behave like a car in routing [#7674](https://github.com/opentripplanner/OpenTripPlanner/pull/7674)
 - Remove safety normalizer [#7634](https://github.com/opentripplanner/OpenTripPlanner/pull/7634)
+- Build scheduled transit leg geometry lazily [#7685](https://github.com/opentripplanner/OpenTripPlanner/pull/7685)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
