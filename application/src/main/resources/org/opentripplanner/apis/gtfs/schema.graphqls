@@ -1102,7 +1102,7 @@ type Pattern implements Node {
   semanticHash: String
   """
   List of stops in order in which they are visited by this pattern.
-  
+    
   If a stop is visited more than once, it will appear several times.
   """
   stops: [Stop!]

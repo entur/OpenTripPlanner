@@ -61,7 +61,6 @@ public class ScheduledTransitLeg implements TransitLeg {
 
   private final ZonedDateTime startTime;
   private final ZonedDateTime endTime;
-  private final LineString legGeometry;
   private final Set<TransitAlert> transitAlerts;
   private final ConstrainedTransfer transferFromPrevLeg;
   private final ConstrainedTransfer transferToNextLeg;
@@ -117,7 +116,6 @@ public class ScheduledTransitLeg implements TransitLeg {
 
     this.generalizedCost = builder.generalizedCost();
 
-    this.legGeometry = tripPattern.geometryBetween(boardStopPosInPattern, alightStopPosInPattern);
     this.distanceMeters = tripPattern.distanceBetween(
       boardStopPosInPattern,
       alightStopPosInPattern
@@ -315,9 +313,13 @@ public class ScheduledTransitLeg implements TransitLeg {
     return visits;
   }
 
+  /**
+   * The leg geometry is built lazily by concatenating the trip pattern's hop geometries between
+   * the board and alight stops. It is not cached: each call recomputes it.
+   */
   @Override
   public LineString legGeometry() {
-    return legGeometry;
+    return tripPattern.geometryBetween(boardStopPosInPattern, alightStopPosInPattern);
   }
 
   @Override

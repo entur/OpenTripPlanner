@@ -95,7 +95,7 @@ public abstract class DominanceFunctions implements Serializable, DominanceFunct
       a.backEdge != b.getBackEdge() &&
       (a.backEdge instanceof StreetEdge) &&
       a.getBackMode() != null &&
-      a.getBackMode().isInCar() &&
+      a.getBackMode().isDrivingIsh() &&
       a.getRequest().isCloseToStartOrEnd(a.getVertex())
     ) {
       return false;

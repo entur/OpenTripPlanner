@@ -35,8 +35,6 @@ public class StateEditor {
   private long time_ms;
   private double traversalDistance_m;
 
-  private boolean defectiveTraversal = false;
-
   private boolean traversingBackward;
 
   /* CONSTRUCTORS */
@@ -80,20 +78,22 @@ public class StateEditor {
       traversingBackward = true;
       this.vertex = fromVertex;
     } else {
-      // Parent state is not at either end of edge.
-      LOG.warn("Edge is not connected to parent state: {}", e);
-      LOG.warn("   from   vertex: {}", fromVertex);
-      LOG.warn("   to     vertex: {}", toVertex);
-      LOG.warn("   parent vertex: {}", parentVertex);
-      defectiveTraversal = true;
-      this.vertex = null;
+      throw new IllegalStateException(
+        "Edge is not connected to parent state: %s, from=%s, to=%s, parent=%s".formatted(
+          e,
+          fromVertex,
+          toVertex,
+          parentVertex
+        )
+      );
     }
 
     if (traversingBackward != parent.getRequest().arriveBy()) {
-      LOG.error(
-        "Actual traversal direction does not match traversal direction in TraverseOptions."
+      throw new IllegalStateException(
+        "Actual traversal direction does not match traversal direction in %s".formatted(
+          parent.getRequest()
+        )
       );
-      defectiveTraversal = true;
     }
   }
 
@@ -109,12 +109,6 @@ public class StateEditor {
    */
   @Nullable
   public State makeState() {
-    // if something was flagged incorrect, do not make a new state
-    if (defectiveTraversal) {
-      LOG.error("Defective traversal flagged on edge " + backEdge);
-      return null;
-    }
-
     if (backState != null) {
       // check that time changes are coherent with edge traversal
       // direction
@@ -174,11 +168,9 @@ public class StateEditor {
    */
   public void incrementTimeInMilliseconds(long milliseconds) {
     if (milliseconds < 0) {
-      LOG.warn(
+      throw new IllegalArgumentException(
         "A state's time is being incremented by a negative amount while traversing edge " + backEdge
       );
-      defectiveTraversal = true;
-      return;
     }
     this.time_ms += (traversingBackward ? -milliseconds : milliseconds);
   }
@@ -443,10 +435,6 @@ public class StateEditor {
 
   public void setTimeSeconds(long seconds) {
     this.time_ms = 1000 * seconds;
-  }
-
-  public void setTimeMilliseconds(long milliseconds) {
-    this.time_ms = milliseconds;
   }
 
   /* PUBLIC GETTER METHODS */

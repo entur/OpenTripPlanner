@@ -6,17 +6,17 @@ import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.GenericLocation;
 
-class GenericLocationMapper {
+public class GenericLocationMapper {
 
   private final FeedScopedIdMapper idMapper;
 
-  GenericLocationMapper(FeedScopedIdMapper idMapper) {
+  public GenericLocationMapper(FeedScopedIdMapper idMapper) {
     this.idMapper = idMapper;
   }
 
   /// Maps a GraphQL Location input type to a GenericLocation.
   /// Returns an empty result If the input does not contain a coordinate or an id.
-  Optional<GenericLocation> toGenericLocation(Map<String, Object> m) {
+  public Optional<GenericLocation> toGenericLocation(Map<String, Object> m) {
     Map<String, Object> coordinates = (Map<String, Object>) m.get("coordinates");
     Double lat = null;
     Double lon = null;
