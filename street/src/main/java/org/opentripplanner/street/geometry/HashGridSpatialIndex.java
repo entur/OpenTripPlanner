@@ -215,23 +215,11 @@ public class HashGridSpatialIndex<T> implements SpatialIndex, Serializable {
   }
 
   private static double clampLon(double x) {
-    if (x > 180) {
-      return 180;
-    }
-    if (x < -180) {
-      return -180;
-    }
-    return x;
+    return Math.clamp(x, -180, 180);
   }
 
   private static double clampLat(double y) {
-    if (y > 90) {
-      return 90;
-    }
-    if (y < -90) {
-      return -90;
-    }
-    return y;
+    return Math.clamp(y, -90, 90);
   }
 
   /**
