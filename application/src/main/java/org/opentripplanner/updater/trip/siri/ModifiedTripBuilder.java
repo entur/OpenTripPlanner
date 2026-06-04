@@ -43,6 +43,7 @@ class ModifiedTripBuilder {
   private final EntityResolver entityResolver;
   private final List<CallWrapper> calls;
   private final boolean cancellation;
+  private final boolean added;
   private final OccupancyEnumeration occupancy;
   private final boolean predictionInaccurate;
   private final String dataSource;
@@ -64,6 +65,7 @@ class ModifiedTripBuilder {
 
     this.calls = calls;
     cancellation = TRUE.equals(journey.isCancellation());
+    added = TRUE.equals(journey.isExtraJourney());
     predictionInaccurate = TRUE.equals(journey.isPredictionInaccurate());
     occupancy = journey.getOccupancy();
     dataSource = journey.getDataSource();
@@ -82,7 +84,8 @@ class ModifiedTripBuilder {
     boolean cancellation,
     OccupancyEnumeration occupancy,
     boolean predictionInaccurate,
-    String dataSource
+    String dataSource,
+    boolean added
   ) {
     this.existingTripTimes = existingTripTimes;
     this.pattern = pattern;
@@ -94,6 +97,7 @@ class ModifiedTripBuilder {
     this.occupancy = occupancy;
     this.predictionInaccurate = predictionInaccurate;
     this.dataSource = dataSource;
+    this.added = added;
   }
 
   /**
@@ -102,6 +106,10 @@ class ModifiedTripBuilder {
    */
   public TripUpdate build() throws UpdateException {
     RealTimeTripTimesBuilder builder = existingTripTimes.createRealTimeFromScheduledTimes();
+
+    if (added) {
+      builder.withAdded();
+    }
 
     if (cancellation) {
       return cancelTrip(builder);

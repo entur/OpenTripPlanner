@@ -53,11 +53,11 @@ class ExtraThenCanceledJourneyTest implements RealtimeTestConstants {
     assertSuccess(siri.applyEstimatedTimetable(cancelledJourney(siri)));
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[S]",
-      "F:routeId::001:RT[C U]"
+      "F:routeId::001:RT[A C U]"
     );
 
     assertEquals(
-      "C U | A 11:00 11:00 | B 11:10 11:10",
+      "A C U | A 11:00 11:00 | B 11:10 11:10",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
   }
@@ -88,7 +88,7 @@ class ExtraThenCanceledJourneyTest implements RealtimeTestConstants {
     assertSuccess(siri.applyEstimatedTimetable(updates));
     // Individual stop [C] flags remain even though the trip is implicitly cancelled
     assertEquals(
-      "C U | A [C,R] 11:00 11:00 | B [C] 11:10 11:10",
+      "A C U | A [C,R] 11:00 11:00 | B [C] 11:10 11:10",
       env.tripData(ADDED_TRIP_ID).showTimetable()
     );
   }
@@ -98,7 +98,10 @@ class ExtraThenCanceledJourneyTest implements RealtimeTestConstants {
   }
 
   private List<EstimatedTimetableDeliveryStructure> cancelledJourney(SiriTestHelper siri) {
-    return siriEtBuilder(siri).withCancellation(true).buildEstimatedTimetableDeliveries();
+    return siriEtBuilder(siri)
+      .withCancellation(true)
+      .withIsExtraJourney(true)
+      .buildEstimatedTimetableDeliveries();
   }
 
   private SiriEtBuilder siriEtBuilder(SiriTestHelper siri) {

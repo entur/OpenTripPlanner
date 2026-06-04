@@ -160,7 +160,8 @@ class ModifiedTripBuilderTest {
       false,
       null,
       false,
-      "DATASOURCE"
+      "DATASOURCE",
+      false
     );
 
     assertFailure(UpdateErrorType.TOO_FEW_STOPS, result::build);
@@ -196,7 +197,8 @@ class ModifiedTripBuilderTest {
       true,
       null,
       false,
-      "DATASOURCE"
+      "DATASOURCE",
+      false
     ).build();
 
     assertEquals(PATTERN.getStopPattern(), tripUpdate.stopPattern());
@@ -234,7 +236,8 @@ class ModifiedTripBuilderTest {
       false,
       null,
       false,
-      "DATASOURCE"
+      "DATASOURCE",
+      false
     ).build();
 
     assertEquals(PATTERN.getStopPattern(), tripUpdate.stopPattern());
@@ -278,7 +281,8 @@ class ModifiedTripBuilderTest {
       false,
       null,
       false,
-      "DATASOURCE"
+      "DATASOURCE",
+      false
     );
 
     var updateError = assertFailure(UpdateErrorType.NEGATIVE_DWELL_TIME, tripUpdate::build);
@@ -319,7 +323,8 @@ class ModifiedTripBuilderTest {
       false,
       null,
       false,
-      "DATASOURCE"
+      "DATASOURCE",
+      false
     ).build();
 
     assertEquals(PATTERN.getStopPattern(), tripUpdate.stopPattern());
@@ -363,7 +368,8 @@ class ModifiedTripBuilderTest {
       false,
       null,
       false,
-      "DATASOURCE"
+      "DATASOURCE",
+      false
     ).build();
 
     StopPattern stopPattern = tripUpdate.stopPattern();

@@ -164,7 +164,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[S]",
-      "F:routeId::001:RT[U]"
+      "F:routeId::001:RT[A U]"
     );
   }
 

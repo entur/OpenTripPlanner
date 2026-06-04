@@ -41,6 +41,7 @@ class ExtraCallTripBuilder {
   private final boolean isJourneyPredictionInaccurate;
   private final OccupancyEnumeration occupancy;
   private final boolean cancellation;
+  private final boolean added;
   private final StopTimesMapper stopTimesMapper;
   private final DeduplicatorService deduplicator;
 
@@ -64,6 +65,7 @@ class ExtraCallTripBuilder {
     isJourneyPredictionInaccurate = TRUE.equals(estimatedVehicleJourney.isPredictionInaccurate());
     occupancy = estimatedVehicleJourney.getOccupancy();
     cancellation = TRUE.equals(estimatedVehicleJourney.isCancellation());
+    added = TRUE.equals(estimatedVehicleJourney.isExtraJourney());
 
     this.calls = calls;
 
@@ -172,6 +174,9 @@ class ExtraCallTripBuilder {
 
     if (cancellation || stopPattern.isAllStopsNonRoutable()) {
       builder.withCanceled();
+    }
+    if (added) {
+      builder.withAdded();
     }
     builder.withModifiedTripPattern();
     /* Validate */
