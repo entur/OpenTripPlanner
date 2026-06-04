@@ -52,6 +52,16 @@ import org.slf4j.LoggerFactory;
  * <p>
  * See discussion in pull request #1922, follow up issue #1934, and the original issue calling for
  * replacement of the stop linker, #1305.
+ * <p>
+ * <b>Expanding-envelope search.</b> Linking searches for nearby street edges with an expanding
+ * envelope: a small radius is tried first and widened only if nothing is found. This keeps the
+ * common case cheap, because the spatial index ({@code HashGridSpatialIndex}) returns whole grid
+ * cells as candidates, so a smaller envelope touches fewer cells and yields fewer candidate edges to
+ * distance-check, filter and dedup. The real-time (GBFS rental) path in particular starts at
+ * {@link #REALTIME_INITIAL_SEARCH_RADIUS_DEGREES} (the vast majority of rental vehicles sit within
+ * ~25 m of a street) and expands to {@link #INITIAL_SEARCH_RADIUS_DEGREES}; request-time linking
+ * starts at {@code INITIAL} and expands to {@link #MAX_SEARCH_RADIUS_DEGREES}. The maximum reach per
+ * scope is unchanged, so the set of vertices that link at all is unaffected.
  */
 public class VertexLinker {
 
@@ -81,6 +91,25 @@ public class VertexLinker {
   private static final double MAX_SEARCH_RADIUS_DEGREES = SphericalDistanceLibrary.metersToDegrees(
     1000
   );
+
+  /** First-pass radius for the real-time (GBFS rental) expanding-envelope search; see class Javadoc. */
+  private static final double REALTIME_INITIAL_SEARCH_RADIUS_DEGREES =
+    SphericalDistanceLibrary.metersToDegrees(25);
+
+  /**
+   * Search radii per {@link Scope}, smallest first. {@link #link} tries each in turn and stops at the
+   * first that links; see the class Javadoc on the expanding-envelope search.
+   */
+  private static final double[] REALTIME_SEARCH_RADIUS_STEPS = {
+    REALTIME_INITIAL_SEARCH_RADIUS_DEGREES,
+    INITIAL_SEARCH_RADIUS_DEGREES,
+  };
+  private static final double[] REQUEST_SEARCH_RADIUS_STEPS = {
+    INITIAL_SEARCH_RADIUS_DEGREES,
+    MAX_SEARCH_RADIUS_DEGREES,
+  };
+  private static final double[] PERMANENT_SEARCH_RADIUS_STEPS = { INITIAL_SEARCH_RADIUS_DEGREES };
+
   private static final GeometryFactory GEOMETRY_FACTORY = GeometryUtils.getGeometryFactory();
 
   private static final Set<TraverseMode> NO_THRU_MODES = Set.of(
@@ -198,23 +227,22 @@ public class VertexLinker {
       : null;
 
     try {
-      Set<StreetVertex> streetVertices = linkToStreetEdges(
-        vertex,
-        traverseModes,
-        direction,
-        scope,
-        INITIAL_SEARCH_RADIUS_DEGREES,
-        tempEdges
-      );
-      if (streetVertices.isEmpty() && scope == Scope.REQUEST) {
+      // Expanding-envelope search: try each radius step (smallest first) and stop at the first that
+      // links, so a wider — and more expensive — search only runs when the smaller one finds nothing.
+      // The maximum reach per scope is unchanged, so anything linkable before still links.
+      Set<StreetVertex> streetVertices = Set.of();
+      for (double radius : searchRadiusSteps(scope)) {
         streetVertices = linkToStreetEdges(
           vertex,
           traverseModes,
           direction,
           scope,
-          MAX_SEARCH_RADIUS_DEGREES,
+          radius,
           tempEdges
         );
+        if (!streetVertices.isEmpty()) {
+          break;
+        }
       }
 
       for (StreetVertex streetVertex : streetVertices) {
@@ -304,6 +332,14 @@ public class VertexLinker {
 
   private static double getXscale(Vertex vertex) {
     return Math.cos((vertex.getLat() * Math.PI) / 180);
+  }
+
+  private static double[] searchRadiusSteps(Scope scope) {
+    return switch (scope) {
+      case REALTIME -> REALTIME_SEARCH_RADIUS_STEPS;
+      case REQUEST -> REQUEST_SEARCH_RADIUS_STEPS;
+      case PERMANENT -> PERMANENT_SEARCH_RADIUS_STEPS;
+    };
   }
 
   private Set<StreetVertex> linkToCandidateEdges(
