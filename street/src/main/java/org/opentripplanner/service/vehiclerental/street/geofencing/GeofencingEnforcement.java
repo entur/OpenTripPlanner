@@ -1,5 +1,6 @@
 package org.opentripplanner.service.vehiclerental.street.geofencing;
 
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.street.search.state.State;
@@ -81,6 +82,18 @@ sealed interface GeofencingEnforcement permits BusinessAreaEnforcement, Restrict
    */
   @Nullable
   default State[] forwardCrossingEntry(GeofencingZone zone, State state, EdgeTraversal edge) {
+    return null;
+  }
+
+  /**
+   * Set-level invariant check on the state's resolved zone context. Unlike the position methods,
+   * this isn't dispatched per zone — it's called once per traversal per strategy, with the full
+   * set of zones the state is currently inside. Used by strategies whose invariants span the
+   * whole set (e.g., "no traversal-banned zone is currently active" — a per-network
+   * priority-resolved check, not a per-zone field inspection).
+   */
+  @Nullable
+  default State[] enforceInside(Set<GeofencingZone> currentZones, State state, EdgeTraversal edge) {
     return null;
   }
 

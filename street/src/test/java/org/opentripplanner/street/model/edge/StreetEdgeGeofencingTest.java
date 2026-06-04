@@ -357,8 +357,9 @@ class StreetEdgeGeofencingTest {
     }
 
     /**
-     * When a committed rider already has a no-traversal zone in state (from a previous
-     * boundary crossing), subsequent edges force drop+walk via isTraversalBannedByCurrentZones.
+     * When a renting state already has a no-traversal zone in {@code currentZones} (e.g., from
+     * a pickup inside the zone or a prior boundary crossing), subsequent traversals are blocked
+     * by {@code RestrictedZoneEnforcement.enforceInside}.
      */
     @Test
     public void forwardTraversalBanWhenZoneAlreadyInState() {
@@ -367,9 +368,7 @@ class StreetEdgeGeofencingTest {
       var state = initialStateWithZones(V1, NETWORK_TIER, false, Set.of(NO_TRAVERSAL_ZONE));
 
       var results = edge.traverse(state);
-      assertEquals(1, results.length);
-      assertEquals(HAVE_RENTED, results[0].getVehicleRentalState());
-      assertEquals(WALK, results[0].getBackMode());
+      assertEquals(0, results.length);
     }
 
     /**

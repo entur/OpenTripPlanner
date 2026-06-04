@@ -2,7 +2,6 @@ package org.opentripplanner.service.vehiclerental.street.geofencing;
 
 import java.util.List;
 import javax.annotation.Nullable;
-import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.state.State;
 
 /**
@@ -10,10 +9,12 @@ import org.opentripplanner.street.search.state.State;
  * {@code StreetEdge.traverse()} — returns {@code State[]} to override the normal traversal,
  * or {@code null} to let it proceed.
  *
- * <p>Orchestrator only. Per-zone decisions live in {@link GeofencingEnforcement}
+ * <p>Orchestrator only. All zone-type policy lives in {@link GeofencingEnforcement}
  * implementations. The interceptor:
  * <ul>
- *   <li>Runs a pre-guard for renting states inside a no-traversal zone (force drop or block).</li>
+ *   <li>Runs the set-level invariant check via
+ *       {@link RestrictedZoneEnforcement#enforceInside} (blocks renting states inside a
+ *       no-traversal zone).</li>
  *   <li>Iterates boundaries and dispatches to the strategy by <em>position</em>:
  *       approaching (tov, outside), at far boundary (tov, inside), at near boundary
  *       (fromv, inside).</li>
@@ -32,13 +33,13 @@ public class GeofencingInterceptor {
     List<GeofencingBoundaryExtension> toBoundaries,
     EdgeTraversal edge
   ) {
-    // Pre-guard: renting states inside no-traversal zones must drop or be blocked.
-    // Station rentals can't legally drop mid-street, so they're blocked outright.
-    if (s0.isRentingVehicle() && s0.isTraversalBannedByCurrentZones()) {
-      if (s0.isRentingVehicleFromStation() || s0.isDropOffBannedByCurrentZones()) {
-        return State.empty();
-      }
-      return forceDrop(s0, edge);
+    var result = RestrictedZoneEnforcement.INSTANCE.enforceInside(
+      s0.getCurrentGeofencingZones(),
+      s0,
+      edge
+    );
+    if (result != null) {
+      return result;
     }
 
     if (s0.getRequest().arriveBy()) {
@@ -146,22 +147,5 @@ public class GeofencingInterceptor {
     }
 
     return null;
-  }
-
-  private static State[] forceDrop(State s0, EdgeTraversal edge) {
-    var editor = edge.traverse(s0, TraverseMode.WALK);
-    if (editor != null) {
-      if (editor.isDropOffBannedByCurrentZones()) {
-        return State.empty();
-      }
-      editor.dropFloatingVehicle(
-        s0.vehicleRentalFormFactor(),
-        s0.rentalVehiclePropulsionType(),
-        s0.getVehicleRentalNetwork(),
-        s0.getRequest().arriveBy()
-      );
-      return State.ofNullable(editor.makeState());
-    }
-    return State.empty();
   }
 }

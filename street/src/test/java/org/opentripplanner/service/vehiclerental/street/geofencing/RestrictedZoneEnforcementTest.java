@@ -209,6 +209,75 @@ class RestrictedZoneEnforcementTest {
   }
 
   @Nested
+  class EnforceInside {
+
+    @Test
+    void blocksRentingStateWhenTraversalBanned() {
+      var state = createRentingState(NO_TRAVERSAL_ZONE);
+      var result = ENFORCEMENT.enforceInside(
+        state.getCurrentGeofencingZones(),
+        state,
+        edgeTraversal
+      );
+
+      assertNotNull(result);
+      assertEquals(0, result.length, "should block — renting state inside no-traversal zone");
+    }
+
+    @Test
+    void passesWhenNotRenting() {
+      var state = createHaveRentedState(NO_TRAVERSAL_ZONE);
+      var result = ENFORCEMENT.enforceInside(
+        state.getCurrentGeofencingZones(),
+        state,
+        edgeTraversal
+      );
+
+      assertNull(result, "HAVE_RENTED walker is not renting; pass through");
+    }
+
+    @Test
+    void passesWhenNoTraversalBannedZone() {
+      var state = createRentingState(NO_DROP_OFF_ZONE);
+      var result = ENFORCEMENT.enforceInside(
+        state.getCurrentGeofencingZones(),
+        state,
+        edgeTraversal
+      );
+
+      assertNull(result, "no traversal-banned zone in set; pass through");
+    }
+
+    @Test
+    void passesWhenHigherPriorityZoneOverridesTraversalBan() {
+      // Low-priority zone says traversal banned; higher-priority overlapping zone (lower
+      // priority number) says explicitly not banned. Per-network priority resolution should
+      // pick the override → state is not effectively traversal-banned.
+      var lowPriorityBanned = TestGeofencingZoneBuilder.of(NETWORK, "low-banned")
+        .withGeometry(Polygons.OSLO)
+        .withTraversalBanned(true)
+        .withPriority(10)
+        .build();
+      var highPriorityAllowed = TestGeofencingZoneBuilder.of(NETWORK, "high-allowed")
+        .withGeometry(Polygons.OSLO)
+        .withTraversalBanned(false)
+        .withPriority(1)
+        .build();
+      var state = createRentingState(lowPriorityBanned, highPriorityAllowed);
+      var result = ENFORCEMENT.enforceInside(
+        state.getCurrentGeofencingZones(),
+        state,
+        edgeTraversal
+      );
+
+      assertNull(
+        result,
+        "higher-priority traversalBanned=false should override lower-priority true"
+      );
+    }
+  }
+
+  @Nested
   class StationRentalForwardEntering {
 
     @Test

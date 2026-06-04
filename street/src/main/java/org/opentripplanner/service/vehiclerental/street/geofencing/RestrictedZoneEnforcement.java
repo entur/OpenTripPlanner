@@ -1,5 +1,6 @@
 package org.opentripplanner.service.vehiclerental.street.geofencing;
 
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.street.search.TraverseMode;
@@ -15,12 +16,16 @@ import org.opentripplanner.street.search.state.VehicleRentalState;
  *   <li>{@link #forwardApproachingEntry} — entering a restricted zone in forward search:
  *       <ul>
  *         <li>no-traversal: fork — drop here, or ride into the zone (ride branch will be killed
- *             at the next edge by the pre-guard).</li>
+ *             at the next edge by {@link #enforceInside}).</li>
  *         <li>no-drop-off: fork — drop here, or ride through. Post-traversal veto removes the
  *             drop branch if the edge entered a no-drop-off zone during traversal.</li>
  *       </ul></li>
- *   <li>{@link #forwardApproachingExit} — defensive block for no-traversal zones (the state
- *       shouldn't normally reach this position; the pre-guard usually catches it).</li>
+ *   <li>{@link #forwardApproachingExit} — block immediately at the inside-side boundary vertex
+ *       of a no-traversal zone (catches the ride branch from
+ *       {@link #forwardApproachingEntry} the instant it lands inside).</li>
+ *   <li>{@link #enforceInside} — defense in depth: block any renting state currently inside a
+ *       no-traversal zone. Catches pickups inside the zone and any placement that bypassed the
+ *       boundary methods.</li>
  *   <li>{@link #arriveByApproaching} — block committed renting states from entering a
  *       no-traversal zone in reverse-time.</li>
  *   <li>{@link #arriveByAtBoundary} — HAVE_RENTED walker only; produce a walking branch.
@@ -30,7 +35,7 @@ import org.opentripplanner.street.search.state.VehicleRentalState;
  * <h3>Inherited as no-op (default {@code null})</h3>
  * <ul>
  *   <li>{@code forwardCrossingExit} — exiting a restricted zone in forward is fine; the
- *       restriction is on being <em>inside</em>, not on leaving.</li>
+ *       restriction is on being <em>inside</em>.</li>
  *   <li>{@code forwardCrossingEntry} — entering decision was made one edge earlier via
  *       {@link #forwardApproachingEntry}.</li>
  * </ul>
@@ -51,7 +56,8 @@ final class RestrictedZoneEnforcement implements GeofencingEnforcement {
    * <p>Behavior depends on zone restriction and rental type:
    * <ul>
    *   <li><b>No-traversal, floating</b> — fork: drop branch + ride branch. The ride branch
-   *       will be killed at the next edge by the pre-guard once the state lands inside.</li>
+   *       will be killed at the next edge by {@link #enforceInside} once the state lands
+   *       inside.</li>
    *   <li><b>No-drop-off, floating</b> — fork: drop branch + ride branch. The drop branch is
    *       post-veto'd if the edge itself crossed into a no-drop-off zone.</li>
    *   <li><b>No-traversal, station</b> — block (station rentals can't drop mid-street).</li>
@@ -93,23 +99,46 @@ final class RestrictedZoneEnforcement implements GeofencingEnforcement {
   }
 
   /**
-   * Forward search: state is inside a restricted zone (tov is the inside boundary; next edge
-   * exits). Normally a restricted zone is fine to exit, but for a no-traversal zone, the state
-   * shouldn't be here at all — the pre-guard catches renting states inside no-traversal zones
-   * before enforcement runs. This method is a defensive backstop in case the pre-guard misses.
+   * Forward search: tov is the inside-side boundary vertex of a no-traversal zone. Block the
+   * renting state immediately when crossing onto an inside vertex of a no-traversal zone, before
+   * {@link #enforceInside} would catch it on the next edge.
    *
    * <p>Returns:
    * <ul>
-   *   <li>{@code null} — no-drop-off (exit is fine), or any non-restricted zone. No
-   *       enforcement.</li>
-   *   <li>{@code State.empty()} — no-traversal zone reached here despite the pre-guard. Block
-   *       defensively.</li>
+   *   <li>{@code null} — zone isn't no-traversal (no-drop-off doesn't block here).</li>
+   *   <li>{@code State.empty()} — no-traversal zone. Block.</li>
    * </ul>
    */
   @Override
   @Nullable
   public State[] forwardApproachingExit(GeofencingZone zone, State state, EdgeTraversal edge) {
     if (Boolean.TRUE.equals(zone.traversalBanned())) {
+      return State.empty();
+    }
+    return null;
+  }
+
+  /**
+   * Set-level invariant: a renting state cannot be inside a no-traversal zone. The check uses
+   * {@link State#isTraversalBannedByCurrentZones()} which resolves the field across the state's
+   * current zones with per-network priority precedence — a higher-priority overlapping zone
+   * with {@code traversalBanned=false} correctly overrides a lower-priority {@code true}.
+   *
+   * <p>Catches: pickups inside a no-traversal zone, the ride branch from
+   * {@link #forwardApproachingEntry} once it lands inside (defense in depth — usually caught at
+   * the inside-side vertex by {@link #forwardApproachingExit}), and any other anomalous
+   * placement.
+   *
+   * <p>Returns:
+   * <ul>
+   *   <li>{@code null} — not renting, or no traversal-banned zone resolves true for the state.</li>
+   *   <li>{@code State.empty()} — renting state inside a (resolved) no-traversal zone. Block.</li>
+   * </ul>
+   */
+  @Override
+  @Nullable
+  public State[] enforceInside(Set<GeofencingZone> currentZones, State state, EdgeTraversal edge) {
+    if (state.isRentingVehicle() && state.isTraversalBannedByCurrentZones()) {
       return State.empty();
     }
     return null;

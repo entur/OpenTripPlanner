@@ -273,35 +273,24 @@ class GeofencingInterceptorTest {
   }
 
   @Nested
-  class PreGuard {
+  class EnforceInside {
 
     @Test
-    void forceDropsRentingStateInsideNoTraversalZone() {
+    void blocksRentingStateInsideNoTraversalZone() {
       var state = createRentingState(NO_TRAVERSAL_ZONE);
       var result = GeofencingInterceptor.apply(state, List.of(), List.of(), edgeTraversal);
 
       assertNotNull(result);
-      assertEquals(1, result.length, "should force drop — state is inside no-traversal zone");
-      assertEquals(
-        VehicleRentalState.HAVE_RENTED,
-        result[0].getVehicleRentalState(),
-        "should transition to walking"
-      );
+      assertEquals(0, result.length, "should block — state is inside no-traversal zone");
     }
 
     @Test
     void blocksStationRentalInsideNoTraversalZone() {
-      // Station rentals can't legally drop mid-street, so the pre-guard must block
-      // rather than force-drop.
       var state = createStationRentingState(NO_TRAVERSAL_ZONE);
       var result = GeofencingInterceptor.apply(state, List.of(), List.of(), edgeTraversal);
 
       assertNotNull(result);
-      assertEquals(
-        0,
-        result.length,
-        "station rental inside no-traversal zone must be blocked, not force-dropped"
-      );
+      assertEquals(0, result.length, "station rental inside no-traversal zone must be blocked");
     }
 
     @Test
@@ -321,7 +310,7 @@ class GeofencingInterceptorTest {
       var result = GeofencingInterceptor.apply(state, List.of(), List.of(), edgeTraversal);
 
       assertNotNull(result);
-      assertEquals(0, result.length, "should block — both traversal and drop-off banned");
+      assertEquals(0, result.length, "should block — traversal-banned zone in current set");
     }
   }
 }
