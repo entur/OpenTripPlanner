@@ -25,7 +25,6 @@ import org.opentripplanner.apis.transmodel.mapping.TripRequestMapper;
 import org.opentripplanner.apis.transmodel.model.DefaultRouteRequestType;
 import org.opentripplanner.apis.transmodel.model.ModeInputType;
 import org.opentripplanner.apis.transmodel.model.TransportModeSlack;
-import org.opentripplanner.apis.transmodel.model.framework.LocationInputType;
 import org.opentripplanner.apis.transmodel.model.framework.TransmodelDirectives;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.plan.Itinerary;
@@ -48,7 +47,8 @@ public class RefetchTripPatternQuery {
   public GraphQLFieldDefinition create(
     DefaultRouteRequestType routing,
     GraphQLOutputType tripPatternType,
-    GraphQLInputObjectType durationPerStreetModeType
+    GraphQLInputObjectType durationPerStreetModeType,
+    GraphQLInputObjectType locationInputType
   ) {
     RoutingPreferences preferences = routing.request.preferences();
 
@@ -76,7 +76,7 @@ public class RefetchTripPatternQuery {
           .description(
             "The start location, if null the trip pattern will start with the first provided leg"
           )
-          .type(LocationInputType.INPUT_TYPE)
+          .type(locationInputType)
           .build()
       )
       .argument(
@@ -85,7 +85,7 @@ public class RefetchTripPatternQuery {
           .description(
             "The destination location, if null the trip pattern will end with the last provided leg"
           )
-          .type(LocationInputType.INPUT_TYPE)
+          .type(locationInputType)
           .build()
       )
       .argument(

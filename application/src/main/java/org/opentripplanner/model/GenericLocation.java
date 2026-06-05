@@ -67,11 +67,11 @@ public class GenericLocation {
   }
 
   public static GenericLocation fromCoordinate(WgsCoordinate coordinate) {
-    return new GenericLocation(null, null, coordinate);
+    return new GenericLocation(null, null, coordinate, null);
   }
 
   public static GenericLocation fromCoordinate(WgsCoordinate coordinate, @Nullable String label) {
-    return new GenericLocation(label, null, coordinate);
+    return new GenericLocation(label, null, coordinate, null);
   }
 
   /**

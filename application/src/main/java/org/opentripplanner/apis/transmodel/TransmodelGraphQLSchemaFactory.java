@@ -442,7 +442,8 @@ public class TransmodelGraphQLSchemaFactory {
     GraphQLFieldDefinition refetchTripPatternQuery = refetchTripPatternQueryFactory.create(
       routing,
       tripPatternType,
-      durationPerStreetModeInput
+      durationPerStreetModeInput,
+      locationInputType
     );
 
     GraphQLOutputType viaTripType = ViaTripType.create(tripPatternType, routingErrorType);
