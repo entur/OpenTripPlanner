@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
@@ -67,16 +68,23 @@ public class GeofencingZoneApplier {
 
   /**
    * Pre-resolves the initial geofencing zones for each vehicle rental vertex by querying the
-   * spatial index. All containing zones are stored on the vertex so that the routing state is
-   * correctly initialized when a rental begins.
+   * spatial index.
+   *
+   * <p>BAs are excluded when {@code applyBusinessAreas} is false. Without boundary markers
+   * a BA never leaves {@code currentZones}; left in the set, its permissive flags can win
+   * {@code resolveField} and mask lower-priority restrictive zones.
    */
   public static void preResolveVertexZones(
     Collection<VehicleRentalPlaceVertex> vertices,
-    GeofencingZoneIndex zoneIndex
+    GeofencingZoneIndex zoneIndex,
+    boolean applyBusinessAreas
   ) {
     for (var vertex : vertices) {
       var zones = zoneIndex.findZonesContaining(vertex.getCoordinate());
-      vertex.setInitialGeofencingZones(Set.copyOf(zones));
+      Set<GeofencingZone> initial = applyBusinessAreas
+        ? Set.copyOf(zones)
+        : zones.stream().filter(z -> !z.isBusinessArea()).collect(Collectors.toUnmodifiableSet());
+      vertex.setInitialGeofencingZones(initial);
     }
   }
 
