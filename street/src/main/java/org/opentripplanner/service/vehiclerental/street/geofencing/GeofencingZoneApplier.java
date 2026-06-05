@@ -83,7 +83,10 @@ public class GeofencingZoneApplier {
       var zones = zoneIndex.findZonesContaining(vertex.getCoordinate());
       Set<GeofencingZone> initial = applyBusinessAreas
         ? Set.copyOf(zones)
-        : zones.stream().filter(z -> !z.isBusinessArea()).collect(Collectors.toUnmodifiableSet());
+        : zones
+            .stream()
+            .filter(z -> !z.isBusinessArea())
+            .collect(Collectors.toUnmodifiableSet());
       vertex.setInitialGeofencingZones(initial);
     }
   }
