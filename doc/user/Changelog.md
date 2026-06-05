@@ -68,6 +68,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Remove safety normalizer [#7634](https://github.com/opentripplanner/OpenTripPlanner/pull/7634)
 - Build scheduled transit leg geometry lazily [#7685](https://github.com/opentripplanner/OpenTripPlanner/pull/7685)
 - Sort trip's active dates in GTFS API [#7672](https://github.com/opentripplanner/OpenTripPlanner/pull/7672)
+- Implement on-board access in Transmodel trip API [#7429](https://github.com/opentripplanner/OpenTripPlanner/pull/7429)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
