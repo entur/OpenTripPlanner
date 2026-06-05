@@ -29,7 +29,6 @@ import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.site.FareZone;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.booking.BookingInfo;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
@@ -204,12 +203,6 @@ public class CarpoolLeg implements Leg {
   @Override
   public boolean isRealTimeUpdated() {
     return Leg.super.isRealTimeUpdated();
-  }
-
-  @Nullable
-  @Override
-  public RealTimeState realTimeState() {
-    return Leg.super.realTimeState();
   }
 
   @Override

@@ -25,7 +25,6 @@ import org.opentripplanner.transit.model.network.BikeAccess;
 import org.opentripplanner.transit.model.site.StopTransferPriority;
 import org.opentripplanner.transit.model.timetable.Direction;
 import org.opentripplanner.transit.model.timetable.OccupancyStatus;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.TripAlteration;
 import org.opentripplanner.transit.model.timetable.booking.BookingMethod;
 import org.opentripplanner.transit.service.ArrivalDeparture;
@@ -247,27 +246,27 @@ public class EnumTypes {
     .name("RealtimeState")
     .value(
       "scheduled",
-      RealTimeState.SCHEDULED,
+      TransmodelRealTimeState.SCHEDULED,
       "The service journey information comes from the regular time table, i.e. no real-time update has been applied."
     )
     .value(
       "updated",
-      RealTimeState.UPDATED,
+      TransmodelRealTimeState.UPDATED,
       "The service journey information has been updated, but the journey pattern stayed the same as the journey pattern of the scheduled service journey."
     )
     .value(
       "canceled",
-      RealTimeState.CANCELED,
+      TransmodelRealTimeState.CANCELED,
       "The service journey has been canceled by a real-time update."
     )
     .value(
       "Added",
-      RealTimeState.ADDED,
+      TransmodelRealTimeState.ADDED,
       "The service journey has been added using a real-time update, i.e. the service journey was not present in the regular time table."
     )
     .value(
       "modified",
-      RealTimeState.MODIFIED,
+      TransmodelRealTimeState.MODIFIED,
       "The service journey information has been updated and resulted in a different journey pattern compared to the journey pattern of the scheduled service journey."
     )
     .build();

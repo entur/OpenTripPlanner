@@ -279,7 +279,7 @@ class GraphQLIntegrationTest {
     timetableSnapshot.update(
       RealTimeTripUpdate.of(
         pattern,
-        tripTimes2.createRealTimeFromScheduledTimes().cancelTrip().build(),
+        tripTimes2.createRealTimeFromScheduledTimes().withCanceled().build(),
         secondDate
       ).build()
     );
