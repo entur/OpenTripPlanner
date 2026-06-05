@@ -56,6 +56,18 @@ public class LinkingEnvironment {
     return disposable;
   }
 
+  public DisposableEdgeCollection linkVertexForRealTime(double lat, double lon) {
+    var split = new TemporaryStreetLocation(new Coordinate(lon, lat), I18NString.of("split"));
+    disposable = linker.linkVertexForRealTime(
+      split,
+      TraverseModeSet.allModes(),
+      BIDIRECTIONAL,
+      (v1, v2) ->
+        List.of(TemporaryFreeEdge.createTemporaryFreeEdge((TemporaryStreetLocation) v1, v2))
+    );
+    return disposable;
+  }
+
   public void disposeEdges() {
     if (disposable != null) {
       disposable.disposeEdges();
