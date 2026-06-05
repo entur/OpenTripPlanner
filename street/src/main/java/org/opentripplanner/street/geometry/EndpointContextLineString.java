@@ -4,17 +4,17 @@ import org.locationtech.jts.geom.CoordinateSequence;
 import org.locationtech.jts.geom.LineString;
 
 /**
- * Endpoint-context glue around {@link CompactLineString} for callers (e.g. {@code StreetEdge}) whose
- * endpoints come from external context and are <i>omitted</i> from the packed form to save memory.
- * The Dlugosz/delta engine lives in {@link CompactLineString}; this class only handles the endpoint
- * splice/strip + the stick-to-endpoint check at compaction time.
+ * Endpoint-context packed line strings: the first and last coordinates are <i>omitted</i> from the
+ * packed bytes and re-supplied at decode time from external context (e.g. a street edge's from/to
+ * vertices). Only the intermediate points are delta-packed, which keeps both the per-edge heap
+ * footprint and the serialized graph minimal.
  * <p>
- * For the self-contained contract (endpoints baked into the packed form) use {@link CompactLineString}
- * directly.
- *
- * @author laurent
+ * This is the stateless companion to {@link CompactLineString}. It operates on a raw {@code byte[]}
+ * supplied by the caller plus the externally-held endpoints &mdash; {@code StreetEdge} stores the
+ * bytes directly and supplies its from/to vertex coordinates per call, so there is no wrapper
+ * object per edge.
  */
-public final class CompactLineStringUtils {
+public final class EndpointContextLineString {
 
   /**
    * Constant to check that line string end points are sticking to given points. 0.000001 is around
@@ -24,18 +24,19 @@ public final class CompactLineStringUtils {
   private static final double EPS = 0.000001;
 
   /**
-   * Singleton representation of a straight-line (where nothing has to be stored). Shares its
-   * underlying byte array with {@link CompactLineString#STRAIGHT_LINE} so there is exactly one
-   * empty-byte-array instance in the JVM.
+   * Empty packed byte array for a straight line. Shares the underlying array with
+   * {@link CompactLineString#STRAIGHT_LINE} so there is exactly one empty-byte-array instance in
+   * the JVM.
    */
   static final byte[] STRAIGHT_LINE_PACKED = CompactLineString.STRAIGHT_LINE.packed();
 
-  private CompactLineStringUtils() {}
+  private EndpointContextLineString() {}
 
   /**
    * Pack a line string into the endpoint-context form: the first and last coordinates are
    * <i>omitted</i> (they must equal the supplied {@code (xa,ya)} and {@code (xb,yb)} endpoints up
-   * to {@link #EPS}) and only the intermediate points are stored, delta-coded against the start
+   * to
+   * {@link #EPS}) and only the intermediate points are stored, delta-coded against the start
    * endpoint.
    *
    * @param xa         X coordinate of end point A
@@ -46,7 +47,7 @@ public final class CompactLineStringUtils {
    *                   (or, when {@code reverse} is true, B and A).
    * @param reverse    True if A and B are inverted (B is start, A is end).
    */
-  public static byte[] compactLineString(
+  public static byte[] compact(
     double xa,
     double ya,
     double xb,
@@ -77,7 +78,7 @@ public final class CompactLineStringUtils {
       Math.abs(y1 - seq.getY(n - 1)) > EPS
     ) {
       throw new IllegalArgumentException(
-        "CompactLineStringUtils geometry must stick to given end points. If you need to relax this, please read source code."
+        "EndpointContextLineString geometry must stick to given end points. If you need to relax this, please read source code."
       );
     }
     int oix = CompactLineString.toFixedPoint(x0);
@@ -87,8 +88,8 @@ public final class CompactLineStringUtils {
 
   /**
    * Decode a line string previously produced by
-   * {@link #compactLineString(double, double, double, double, LineString, boolean)}, splicing the
-   * supplied endpoints back around the decoded intermediate points.
+   * {@link #compact(double, double, double, double, LineString, boolean)}, splicing the supplied
+   * endpoints back around the decoded intermediate points.
    *
    * @param xa           X coordinate of end point A
    * @param ya           Y coordinate of end point A
@@ -96,7 +97,7 @@ public final class CompactLineStringUtils {
    * @param yb           Y coordinate of end point B
    * @param packedCoords The byte array to uncompact
    */
-  public static LineString uncompactLineString(
+  public static LineString uncompact(
     double xa,
     double ya,
     double xb,
@@ -126,15 +127,16 @@ public final class CompactLineStringUtils {
   }
 
   /**
-   * Squared distance from a point to an endpoint-context compacted line string, computed directly on
-   * the packed form without materializing a {@link LineString} or any {@link
-   * org.locationtech.jts.geom.Coordinate}.
+   * Squared distance from a point to an endpoint-context compacted line string, computed directly
+   * on the packed form without materializing a {@link LineString} or any
+   * {@link org.locationtech.jts.geom.Coordinate}.
    * <p>
-   * This is the allocation-free equivalent of the old {@code VertexLinker.distance()}: it uses the
-   * same "fast somewhat inaccurate" local equirectangular projection (only the x axis is scaled by
-   * {@code xscale}; distances come out in latitude degrees) and the same per-segment point-to-segment
-   * math JTS {@code DistanceOp} runs internally, but it streams the segments straight from the packed
-   * deltas via {@link DlugoszVarLenIntPacker.Decoder} instead of decoding into an array first.
+   * This uses the "fast somewhat inaccurate" local equirectangular projection (only the x axis is
+   * scaled by {@code xscale}; distances come out in latitude degrees) and computes the same
+   * per-segment point-to-segment distance JTS {@code DistanceOp} produces &mdash; mathematically
+   * equivalent up to floating-point rounding &mdash; but it streams the segments straight from the
+   * packed deltas via {@link DlugoszVarLenIntPacker.Decoder} instead of decoding into an array
+   * first.
    * <p>
    * The <b>square</b> of the distance is returned: the linker only ever orders edges and applies
    * thresholds, both of which are monotonic in the distance, so the per-candidate {@code sqrt} is
@@ -206,7 +208,8 @@ public final class CompactLineStringUtils {
 
   /**
    * Squared euclidean distance from point {@code (px,py)} to the segment {@code (ax,ay)-(bx,by)} in
-   * the projected plane. Same projection-and-clamp the JTS distance computation performs per segment.
+   * the projected plane. Computes the same minimum distance JTS produces per segment, via the
+   * project-onto-segment-and-clamp formula (equivalent to JTS up to floating-point rounding).
    */
   private static double segmentDistanceSq(
     double px,

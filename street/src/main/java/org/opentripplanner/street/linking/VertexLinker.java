@@ -148,9 +148,9 @@ public class VertexLinker {
   /**
    * Squared projected distance from stop to edge, in latitude degrees squared. Computed directly on
    * the packed edge geometry, without materializing a LineString or going through JTS DistanceOp.
-   * This is the per-candidate hot path during linking/GBFS apply. The square is returned because the
-   * linker only orders and thresholds by distance (both monotonic), so the per-candidate sqrt is
-   * unnecessary; callers compare against squared thresholds.
+   * The square is returned because the linker only orders and thresholds by distance (both
+   * monotonic), so the per-candidate sqrt is unnecessary; callers compare against squared
+   * thresholds.
    */
   private static double squaredDistance(Vertex tstop, StreetEdge edge, double xscale) {
     return edge.squaredDistanceToPointEquirectangular(tstop.getLon(), tstop.getLat(), xscale);
