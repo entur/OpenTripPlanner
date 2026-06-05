@@ -4,6 +4,8 @@ This package contains the geofencing zone enforcement system for vehicle rental 
 It intercepts edge traversals to enforce zone restrictions (no-drop-off, no-traversal,
 business area boundaries) during A* street searches.
 
+See also [geofencing-state-diagrams.md](geofencing-state-diagrams.md).
+
 ## Architecture
 
 The system uses an interceptor pattern with strategy-based enforcement:
