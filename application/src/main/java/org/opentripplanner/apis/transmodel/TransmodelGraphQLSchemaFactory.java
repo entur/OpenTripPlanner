@@ -82,6 +82,7 @@ import org.opentripplanner.apis.transmodel.model.plan.ElevationProfileStepType;
 import org.opentripplanner.apis.transmodel.model.plan.LegType;
 import org.opentripplanner.apis.transmodel.model.plan.PathGuidanceType;
 import org.opentripplanner.apis.transmodel.model.plan.PlanPlaceType;
+import org.opentripplanner.apis.transmodel.model.plan.RefetchTripPatternQuery;
 import org.opentripplanner.apis.transmodel.model.plan.RoutingErrorType;
 import org.opentripplanner.apis.transmodel.model.plan.TripPatternTimePenaltyType;
 import org.opentripplanner.apis.transmodel.model.plan.TripPatternType;
@@ -167,6 +168,7 @@ public class TransmodelGraphQLSchemaFactory {
   private final ServiceJourneyType serviceJourneyTypeFactory;
   private final DatedServiceJourneyType datedServiceJourneyTypeFactory;
   private final TripQuery tripQueryFactory;
+  private final RefetchTripPatternQuery refetchTripPatternQueryFactory;
   private final ViaTripQuery viaTripQueryFactory;
   private final GroupOfLinesType groupOfLinesTypeFactory;
   private final DatedServiceJourneyQuery datedServiceJourneyQueryFactory;
@@ -201,6 +203,7 @@ public class TransmodelGraphQLSchemaFactory {
     this.serviceJourneyTypeFactory = new ServiceJourneyType(idMapper);
     this.datedServiceJourneyTypeFactory = new DatedServiceJourneyType(idMapper);
     this.tripQueryFactory = new TripQuery(idMapper);
+    this.refetchTripPatternQueryFactory = new RefetchTripPatternQuery(idMapper);
     this.viaTripQueryFactory = new ViaTripQuery(idMapper);
     this.groupOfLinesTypeFactory = new GroupOfLinesType(idMapper);
     this.datedServiceJourneyQueryFactory = new DatedServiceJourneyQuery(idMapper);
@@ -436,6 +439,12 @@ public class TransmodelGraphQLSchemaFactory {
       locationInputType
     );
 
+    GraphQLFieldDefinition refetchTripPatternQuery = refetchTripPatternQueryFactory.create(
+      routing,
+      tripPatternType,
+      durationPerStreetModeInput
+    );
+
     GraphQLOutputType viaTripType = ViaTripType.create(tripPatternType, routingErrorType);
     GraphQLInputObjectType viaLocationInputType = ViaLocationInputType.create();
     GraphQLInputObjectType viaSegmentInputType = ViaSegmentInputType.create();
@@ -491,6 +500,7 @@ public class TransmodelGraphQLSchemaFactory {
     GraphQLObjectType queryType = GraphQLObjectType.newObject()
       .name("QueryType")
       .field(tripQuery)
+      .field(refetchTripPatternQuery)
       .field(viaTripQuery)
       .field(
         GraphQLFieldDefinition.newFieldDefinition()

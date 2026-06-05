@@ -220,6 +220,13 @@
       "labels": ["+Skip Changelog", "+Bump Serialization Id"]
     },
     {
+      "description": "Some projects need some time to publish a release",
+      "matchPackageNames": [
+        "org.glassfish.jaxb:jaxb-runtime"
+      ],
+      "minimumReleaseAge": "1 week"
+    },
+    {
       "groupName": "Azure dependencies",
       "matchPackageNames": [
         "com.azure:{/,}**"

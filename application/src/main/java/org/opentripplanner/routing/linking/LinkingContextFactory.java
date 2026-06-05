@@ -121,6 +121,16 @@ public class LinkingContextFactory {
     return new LinkingContext(verticesByLocation, fromStopVertices, toStopVertices);
   }
 
+  /// Get vertices or create a temporary vertex for a given GenericLocation
+  public Set<Vertex> getOrCreateStreetVertices(
+    TemporaryVerticesContainer container,
+    GenericLocation location,
+    LocationType locationType,
+    StreetMode streetMode
+  ) {
+    return getStreetVerticesForLocation(container, location, EnumSet.of(streetMode), locationType);
+  }
+
   private Set<Vertex> getFromVertices(
     TemporaryVerticesContainer container,
     LinkingContextRequest request
@@ -278,10 +288,10 @@ public class LinkingContextFactory {
 
     var results = new HashSet<Vertex>();
     if (location.stopId() != null) {
-      if (!modes.stream().allMatch(TraverseMode::isInCar)) {
+      if (!modes.stream().allMatch(TraverseMode::isDrivingIsh)) {
         results.addAll(getStreetVerticesForStop(location));
       }
-      if (modes.stream().anyMatch(TraverseMode::isInCar)) {
+      if (modes.stream().anyMatch(TraverseMode::isDrivingIsh)) {
         // Ensure that there is a car routable vertex (that can originate from stop's coordinate).
         var carRoutableVertex = getCarRoutableStreetVertex(container, location, type);
         carRoutableVertex.ifPresent(results::add);

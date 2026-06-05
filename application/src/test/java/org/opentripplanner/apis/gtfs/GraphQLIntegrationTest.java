@@ -198,7 +198,7 @@ class GraphQLIntegrationTest {
   static void setup() {
     PARKING_REPOSITORY.updateVehicleParking(
       List.of(
-        VehicleParking.builder()
+        VehicleParking.of()
           .id(id("parking-1"))
           .coordinate(WgsCoordinate.GREENWICH)
           .name(NonLocalizedString.ofNullable("parking"))
