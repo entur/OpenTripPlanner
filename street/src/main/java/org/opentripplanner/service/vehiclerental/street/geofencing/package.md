@@ -11,6 +11,7 @@ The system uses an interceptor pattern with strategy-based enforcement:
 ```
 StreetEdge.traverse()
   └─ GeofencingInterceptor.apply()
+       ├─ TraversalBanHandler          — set-level: block renting inside traversal-banned zones
        ├─ GeofencingEnforcement       — strategy interface, dispatched per zone type
        │    ├─ RestrictedZoneEnforcement
        │    └─ BusinessAreaEnforcement
@@ -23,9 +24,12 @@ StreetEdge.traverse()
 `State[]` to override normal traversal, or `null` to let it proceed.
 
 **GeofencingEnforcement** is the strategy interface. Implementations are stateless singletons
-resolved via `GeofencingEnforcement.forZone(zone)`. The interface has two flavors of method:
-per-boundary-position methods dispatched when the edge has boundary markers, and a set-level
-`enforceInside` check dispatched on every traversal.
+resolved via `GeofencingEnforcement.forZone(zone)`. Methods are per-boundary-position and
+dispatched when the edge has boundary markers for a specific zone.
+
+**TraversalBanHandler** runs first on every traversal and blocks renting states whose resolved
+`currentZones` ban traversal. Lives outside `GeofencingEnforcement` because the check is
+set-level (priority-resolved across the state's network), not per-zone.
 
 **DeferredForkHandler** creates the deferred RENTING_FLOATING fork one edge after a zone
 boundary, so the renting state's backEdge is safely outside the zone when the itinerary is

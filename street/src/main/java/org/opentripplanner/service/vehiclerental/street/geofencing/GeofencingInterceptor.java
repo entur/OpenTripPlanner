@@ -20,11 +20,7 @@ public class GeofencingInterceptor {
     List<GeofencingBoundaryExtension> toBoundaries,
     EdgeTraversal edge
   ) {
-    var result = RestrictedZoneEnforcement.INSTANCE.enforceInside(
-      s0.getCurrentGeofencingZones(),
-      s0,
-      edge
-    );
+    var result = TraversalBanHandler.apply(s0);
     if (result != null) {
       return result;
     }

@@ -1,6 +1,5 @@
 package org.opentripplanner.service.vehiclerental.street.geofencing;
 
-import java.util.Set;
 import javax.annotation.Nullable;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.street.search.TraverseMode;
@@ -39,20 +38,6 @@ final class RestrictedZoneEnforcement implements GeofencingEnforcement {
     }
     if (Boolean.TRUE.equals(zone.dropOffBanned())) {
       return forwardEnteringNoDropOff(state, edge);
-    }
-    return null;
-  }
-
-  /**
-   * Block any renting state currently inside a no-traversal zone. Uses
-   * {@link State#isTraversalBannedByCurrentZones()} which applies per-network priority
-   * precedence across the current zone set.
-   */
-  @Override
-  @Nullable
-  public State[] enforceInside(Set<GeofencingZone> currentZones, State state, EdgeTraversal edge) {
-    if (state.isRentingVehicle() && state.isTraversalBannedByCurrentZones()) {
-      return State.empty();
     }
     return null;
   }
@@ -101,7 +86,7 @@ final class RestrictedZoneEnforcement implements GeofencingEnforcement {
   /**
    * Fork at a no-traversal zone entry: drop branch + ride branch. The ride branch keeps the
    * renting option open so the search can route AROUND the zone; if it enters the zone it
-   * dies on the next edge in {@link #enforceInside}. The drop is vetoed if the landing
+   * dies on the next edge in {@link TraversalBanHandler}. The drop is vetoed if the landing
    * vertex is itself drop-banned (e.g. a no-drop-off boundary coinciding with this one).
    */
   private State[] forwardEnteringNoTraversal(State state, EdgeTraversal edge) {
