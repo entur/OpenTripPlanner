@@ -99,8 +99,10 @@ final class RestrictedZoneEnforcement implements GeofencingEnforcement {
   }
 
   /**
-   * Fork at a no-traversal zone entry: drop branch + ride branch. The ride branch lands inside
-   * the zone and is killed on the next edge by {@link #enforceInside}.
+   * Fork at a no-traversal zone entry: drop branch + ride branch. The ride branch keeps the
+   * renting option open so the search can route AROUND the zone; if it enters the zone it
+   * dies on the next edge in {@link #enforceInside}. The drop is vetoed if the landing
+   * vertex is itself drop-banned (e.g. a no-drop-off boundary coinciding with this one).
    */
   private State[] forwardEnteringNoTraversal(State state, EdgeTraversal edge) {
     if (state.isDropOffBannedByCurrentZones()) {
@@ -109,7 +111,7 @@ final class RestrictedZoneEnforcement implements GeofencingEnforcement {
 
     var dropEditor = edge.traverse(state, state.currentMode());
     State dropState = null;
-    if (dropEditor != null) {
+    if (dropEditor != null && !dropEditor.isDropOffBannedByCurrentZones()) {
       dropEditor.dropFloatingVehicle(
         state.vehicleRentalFormFactor(),
         state.rentalVehiclePropulsionType(),
