@@ -10,8 +10,8 @@ import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.impl.PackedCoordinateSequence;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
-import org.opentripplanner.street.geometry.CompactLineStringUtils;
 import org.opentripplanner.street.geometry.DirectionUtils;
+import org.opentripplanner.street.geometry.EndpointContextLineString;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.street.geometry.SplitLineString;
@@ -444,13 +444,34 @@ public class StreetEdge
 
   @Override
   public LineString getGeometry() {
-    return CompactLineStringUtils.uncompactLineString(
+    return EndpointContextLineString.uncompact(
       fromv.getLon(),
       fromv.getLat(),
       tov.getLon(),
       tov.getLat(),
       compactGeometry,
       isBack()
+    );
+  }
+
+  /**
+   * Squared distance (in projected latitude degrees squared) from the point {@code (lon, lat)} to
+   * this edge's geometry, using the linker's local equirectangular projection. Computed directly on
+   * the packed geometry without materializing a {@link LineString}; see {@link
+   * EndpointContextLineString#squaredDistanceToPointEquirectangular}. The square is returned because
+   * the linker only orders and thresholds by distance, so the per-candidate {@code sqrt} is avoided.
+   */
+  public double squaredDistanceToPointEquirectangular(double lon, double lat, double xscale) {
+    return EndpointContextLineString.squaredDistanceToPointEquirectangular(
+      fromv.getLon(),
+      fromv.getLat(),
+      tov.getLon(),
+      tov.getLat(),
+      compactGeometry,
+      isBack(),
+      lon,
+      lat,
+      xscale
     );
   }
 
@@ -930,7 +951,7 @@ public class StreetEdge
   }
 
   private void setGeometry(LineString geometry) {
-    this.compactGeometry = CompactLineStringUtils.compactLineString(
+    this.compactGeometry = EndpointContextLineString.compact(
       fromv.getLon(),
       fromv.getLat(),
       tov.getLon(),
