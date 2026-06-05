@@ -9,7 +9,7 @@ import org.opentripplanner.street.search.state.VehicleRentalState;
 /**
  * Enforcement for restricted geofencing zones (no-drop-off and no-traversal).
  */
-final class RestrictedZoneEnforcement implements GeofencingEnforcement {
+final class RestrictedZoneEnforcement implements GeofencingBoundaryEnforcement {
 
   static final RestrictedZoneEnforcement INSTANCE = new RestrictedZoneEnforcement();
 

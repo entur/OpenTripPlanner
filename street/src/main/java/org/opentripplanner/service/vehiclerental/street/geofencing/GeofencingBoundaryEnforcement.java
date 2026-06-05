@@ -29,7 +29,8 @@ import org.opentripplanner.street.search.state.State;
  *       position means exploration starts already inside the zone.</li>
  * </ul>
  */
-sealed interface GeofencingEnforcement permits BusinessAreaEnforcement, RestrictedZoneEnforcement {
+sealed interface GeofencingBoundaryEnforcement
+  permits BusinessAreaEnforcement, RestrictedZoneEnforcement {
   /** Forward search: current edge ends at the outside vertex; next edge will enter the zone. */
   @Nullable
   default State[] forwardApproachingEntry(GeofencingZone zone, State state, EdgeTraversal edge) {
@@ -64,7 +65,7 @@ sealed interface GeofencingEnforcement permits BusinessAreaEnforcement, Restrict
   }
 
   /** Resolve the enforcement implementation for a zone. */
-  static GeofencingEnforcement forZone(GeofencingZone zone) {
+  static GeofencingBoundaryEnforcement forZone(GeofencingZone zone) {
     if (zone.isBusinessArea()) {
       return BusinessAreaEnforcement.INSTANCE;
     }

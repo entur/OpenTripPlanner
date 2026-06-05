@@ -48,7 +48,7 @@ GeofencingInterceptor.apply()
        └─ enforcement.forwardCrossingExit        — block at BA exit, fallback path (scenario 4)
 ```
 
-`GeofencingEnforcement` is the per-zone strategy interface. `forZone(zone)` returns
+`GeofencingBoundaryEnforcement` is the per-zone strategy interface. `forZone(zone)` returns
 `BusinessAreaEnforcement` or `RestrictedZoneEnforcement`. Strategies override only the
 positions they care about.
 
@@ -68,7 +68,7 @@ drop branch — was already produced upstream at scenario 2.
 **Why a handler, not a strategy.** The check is **set-level**: it depends on the
 priority-resolved view of `currentZones` for the state's network
 (`isTraversalBannedByCurrentZones`), not on any one zone. That doesn't fit
-per-zone `GeofencingEnforcement` dispatch.
+per-zone `GeofencingBoundaryEnforcement` dispatch.
 
 **Code references.**
 - Entry point: `GeofencingInterceptor.java:23` → `TraversalBanHandler.apply(s0)`

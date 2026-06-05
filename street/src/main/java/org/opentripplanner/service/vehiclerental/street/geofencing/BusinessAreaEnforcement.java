@@ -12,7 +12,7 @@ import org.opentripplanner.street.search.state.VehicleRentalState;
  * while entering is allowed. Station rentals can't legally drop mid-street and are blocked
  * at any BA exit.
  */
-final class BusinessAreaEnforcement implements GeofencingEnforcement {
+final class BusinessAreaEnforcement implements GeofencingBoundaryEnforcement {
 
   static final BusinessAreaEnforcement INSTANCE = new BusinessAreaEnforcement();
 

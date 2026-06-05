@@ -11,7 +11,7 @@ import org.opentripplanner.street.search.state.VehicleRentalState;
  * destination.
  *
  * <p>At a paired boundary the walker actually crossed in forward time, dispatches to
- * {@link GeofencingEnforcement#arriveByAtBoundary} to produce a walking continuation. Renting
+ * {@link GeofencingBoundaryEnforcement#arriveByAtBoundary} to produce a walking continuation. Renting
  * branches for "the rental could have been picked up here" are deferred to the next edge by
  * {@link DeferredForkHandler}.
  *
@@ -60,7 +60,7 @@ public class WalkerBoundaryHandler {
       if (!walkerCrossedThisBoundary) {
         continue;
       }
-      var enforcement = GeofencingEnforcement.forZone(zone);
+      var enforcement = GeofencingBoundaryEnforcement.forZone(zone);
       var result = enforcement.arriveByAtBoundary(zone, s0, edge);
       if (result != null) {
         return result;

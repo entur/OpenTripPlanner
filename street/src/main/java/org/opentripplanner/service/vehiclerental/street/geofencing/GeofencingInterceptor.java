@@ -49,7 +49,7 @@ public class GeofencingInterceptor {
       if (network != null && !zone.id().getFeedId().equals(network)) {
         continue;
       }
-      var enforcement = GeofencingEnforcement.forZone(zone);
+      var enforcement = GeofencingBoundaryEnforcement.forZone(zone);
       var result = boundary.entering()
         ? enforcement.forwardApproachingEntry(zone, s0, edge)
         : enforcement.forwardApproachingExit(zone, s0, edge);
@@ -68,7 +68,7 @@ public class GeofencingInterceptor {
       if (network != null && !zone.id().getFeedId().equals(network)) {
         continue;
       }
-      var enforcement = GeofencingEnforcement.forZone(zone);
+      var enforcement = GeofencingBoundaryEnforcement.forZone(zone);
       var result = enforcement.forwardCrossingExit(zone, s0, edge);
       if (result != null) {
         return result;
@@ -105,7 +105,7 @@ public class GeofencingInterceptor {
         if (boundary.entering()) {
           continue;
         }
-        var enforcement = GeofencingEnforcement.forZone(zone);
+        var enforcement = GeofencingBoundaryEnforcement.forZone(zone);
         var result = enforcement.arriveByCrossingExit(zone, s0, edge);
         if (result != null) {
           return result;
