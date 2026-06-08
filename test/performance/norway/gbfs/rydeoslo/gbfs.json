@@ -1,0 +1,37 @@
+{
+  "last_updated": "2026-06-07T03:33:54.000+00:00",
+  "ttl": 0,
+  "version": "3.0",
+  "data": {
+    "feeds": [
+      {
+        "name": "system_information",
+        "url": "file:test/performance/norway/gbfs/rydeoslo/system_information.json"
+      },
+      {
+        "name": "vehicle_status",
+        "url": "file:test/performance/norway/gbfs/rydeoslo/vehicle_status.json"
+      },
+      {
+        "name": "vehicle_types",
+        "url": "file:test/performance/norway/gbfs/rydeoslo/vehicle_types.json"
+      },
+      {
+        "name": "system_pricing_plans",
+        "url": "file:test/performance/norway/gbfs/rydeoslo/system_pricing_plans.json"
+      },
+      {
+        "name": "geofencing_zones",
+        "url": "file:test/performance/norway/gbfs/rydeoslo/geofencing_zones.json"
+      },
+      {
+        "name": "station_information",
+        "url": "file:test/performance/norway/gbfs/rydeoslo/station_information.json"
+      },
+      {
+        "name": "station_status",
+        "url": "file:test/performance/norway/gbfs/rydeoslo/station_status.json"
+      }
+    ]
+  }
+}

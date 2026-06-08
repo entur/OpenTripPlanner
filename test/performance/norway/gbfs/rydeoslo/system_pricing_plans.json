@@ -1,0 +1,1 @@
+{"last_updated":"2026-06-08T18:17:33.000+00:00","ttl":1800,"version":"3.0","data":{"plans":[{"plan_id":"YRY:PricingPlan:1","name":[{"text":"Oslo","language":"no"}],"currency":"NOK","price":10.9,"is_taxable":false,"description":[{"text":"Åpning koster kr 10.9, etter det kr 2.5 per minutt","language":"no"}],"per_min_pricing":[{"start":1,"rate":2.5,"interval":1}]}]}}

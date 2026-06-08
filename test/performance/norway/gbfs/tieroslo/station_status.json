@@ -1,0 +1,1881 @@
+{
+  "last_updated": 1670236163,
+  "ttl": 0,
+  "version": "2.3",
+  "data": {
+    "stations": [
+      {
+        "station_id": "YTI:Station:2dec3dbb-27cc-43b7-9506-fe6aee4b9b85",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:b80a0c6c-11f3-4411-bf59-870b1156314f",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:25b1836e-3956-4ee1-af89-3779a6e7248b",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:c7f896bd-146d-4202-b128-82d2b8a33d99",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:9e92bffc-f45d-4ce3-99d6-6fc8525ae443",
+        "num_bikes_available": 5,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 4
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 1
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:600848b8-f660-41fb-9be0-40cd4f13ea97",
+        "num_bikes_available": 7,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 7
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:7459fb7e-c21e-4f20-a424-804e0d150a7c",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:9be5f101-4473-4ebd-9d86-794790f55787",
+        "num_bikes_available": 3,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 3
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:398b4263-9f72-497a-8376-be9535e5eaff",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:de8fd040-4be7-4a36-92dc-009021f8a58b",
+        "num_bikes_available": 2,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 2
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:ee0dd44f-08ee-4aff-9883-28cd73514cb0",
+        "num_bikes_available": 2,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 2
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:cae91700-2382-434d-b51e-718f00aaba94",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:c3692bed-9ee1-4999-9777-6f8844256114",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:b1c35e3e-5875-438b-bb06-6c360fd6a8e0",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:04a82443-45db-41fe-8366-4c8b8b6038de",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:21bbfa69-e06f-42a3-835f-040b5751c28e",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:f6475ba0-2d13-4498-ada3-92251a095376",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:9f685e69-50d2-4c30-8477-d150bb70593a",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:9deacbd9-9f28-46db-ba50-ada19dd5902a",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:7f826fa7-3ad7-407b-ab3c-600cba28cef0",
+        "num_bikes_available": 4,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 4
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:deebd77d-c21d-48fc-afaa-18b7a30ce9bf",
+        "num_bikes_available": 3,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 3
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:ef0ada9a-256d-48c5-991d-1cb9b57cc0be",
+        "num_bikes_available": 2,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 2
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:6442e570-d289-4dae-890d-07099b7f3ca6",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:1594f4eb-834f-493c-bb01-37c5c5a58d40",
+        "num_bikes_available": 4,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 4
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:f88b335a-cb52-4d8e-ae17-98b445b4b0e6",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:3f48a89d-19e5-4b15-ae91-7e88d622b2d3",
+        "num_bikes_available": 2,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 2
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:e9867be1-3fec-4f03-8c65-5aa7bcfcdd51",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:55da364b-5c79-484e-b993-842f6aefd0c2",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:42cdd3a7-e3e0-4da2-a78f-96afb1a95756",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:19f7d5f0-7e97-4dd2-b350-e5166682db1f",
+        "num_bikes_available": 3,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 2
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 1
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:3f61005d-d18a-46c3-860d-74eb26b977d7",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:65b4b4a4-9e69-45b5-974b-c5d8a8b546ef",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:b9f3c282-a9b6-4c44-b98b-b8848888b7b2",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:3d7471ce-ae0f-4d9b-82c9-4765c30a81e0",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:3518fd5c-985f-4768-b4e4-afe7d83b243b",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:31792363-1c66-4f56-a68d-c2b77fe1ead7",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:dc99ba77-59a3-4287-b2e3-f74193b07d37",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 1
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:1694a705-d3ce-4f8c-bf0e-429575cc3663",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:3e510acc-9a9b-4b00-9cdb-43ae8dee1433",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:c2846fb6-0153-49d2-9001-a6bbbd4fd71e",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:205cb310-4efc-4981-aba2-577329a83ab4",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:1f900ac9-2ea9-41db-89fd-b62c6be5c746",
+        "num_bikes_available": 3,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 3
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:f29a2abc-add9-4f30-b374-111093159d4a",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:2327c8e8-60ca-467e-9e5c-d131f1bc5c2f",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:579fc802-9e56-4bd1-8a8b-49882627e4b6",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:5fa023c3-0960-4d93-91f8-b123ec93cded",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:ae13a8e9-031e-4d15-b5c9-b6310259f808",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:a91454af-5880-49c2-b459-0e92a68d4d61",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:ac4ffbf7-b4e7-419c-9151-a2918a08f743",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:6b3c21da-0ad8-4ec7-ab63-007c4ab41cc6",
+        "num_bikes_available": 3,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 3
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:deb8021a-1295-4b39-8cec-89e657da7079",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:c0c7674a-78c8-4417-a244-8f4a9cec3368",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:ba0649cb-3d4e-4203-a353-9402ae7293e2",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:a219ae2c-73ac-4ce7-89ba-4f2e140a46a1",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:6e7a32dd-8ff8-4217-8920-ab352c4154b3",
+        "num_bikes_available": 6,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 6
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:ba09a092-4daf-42b4-bf08-6abcd1ba54e0",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:a5e2e0e0-8895-4630-a91b-259e418b9dc9",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:cd69bc8a-af60-4fdd-9f0c-9d3f3760aae5",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:d955b861-39f2-46fd-a1bf-5bea2821f883",
+        "num_bikes_available": 2,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 1
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:7335ac73-f62b-4b19-ba54-733820c7343f",
+        "num_bikes_available": 3,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 3
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:8546ebcb-73d9-4c62-b30c-857e3c434943",
+        "num_bikes_available": 5,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 5
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:b266a974-224d-42f9-9a80-16032e32c9d3",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:57e1bb41-07ee-4ed7-82ed-4dd7b27ba9b9",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:109d5551-9ce5-4638-9b5d-00bb6fa43fc4",
+        "num_bikes_available": 4,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 4
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:6b63685d-9170-49f3-ba43-f479fe244c22",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:c8a4f9fa-f228-4d6e-be29-39f9fa9684b8",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:fdc35dba-c438-4611-aca8-1f8e18398441",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:3ff993a9-9e60-4a47-b4b1-106a5c0bf4cb",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:1c47874c-0e3d-42a8-8567-b03c15ceaffa",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:9ae1e919-ab24-414f-810b-cfb22c59da73",
+        "num_bikes_available": 3,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 3
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:40e8867f-86d7-4b52-8157-feecdf5465d2",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:629307fc-ba4f-4d65-a082-dec8ae078915",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:583687f1-d943-4a4a-9a1e-857f42626ca5",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:74c3058d-9317-456b-a7f9-6dccac5584fe",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:49d8f11a-b62b-46dd-bac0-1f909a69548d",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:3affa935-ba35-455e-a04c-fe3ef15f26e3",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:f9dbfac2-1469-4705-9607-b6cebd8353d0",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:1f56650b-79e9-4d4f-9f74-5b04a0e9ec36",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:6c278d9c-130e-4413-ac0d-5d8a77e89f2c",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:0b66d535-3e18-40b3-8117-218487e1d33e",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:5217bc91-f1c5-4fd6-bfe5-bfa7284531ee",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:e86adb57-9f1a-418e-9ccf-3e63e7ea2860",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:7c078d2b-77e6-42c5-ab52-ea0b4efc3412",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:3399440c-be3d-419d-a811-11341c265354",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:90ac12b1-fcaf-47ec-9318-2d16ebd595df",
+        "num_bikes_available": 3,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 3
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:8f4d1470-c9a4-4fae-a04e-804959f513a5",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:c77e2070-ce48-482c-8f65-2de45a6e6928",
+        "num_bikes_available": 3,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 3
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:3f35fc1f-bb0e-4c76-963a-98a5552e2d17",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:218c5c9e-29e7-45a9-a52d-f3c134c1056a",
+        "num_bikes_available": 7,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 7
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:ad01f123-7c29-49ed-81c8-3a5f07576787",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:b5ec6573-d202-4d84-b5d4-b29c7189e83c",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:3830f16f-57ed-40b3-bc2b-79194342b268",
+        "num_bikes_available": 4,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 4
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:7ad0060f-a651-43a5-9dd4-212f68c7c680",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:1632e954-6f00-41ff-9035-6fcf9ae253f9",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:24a79ee4-1065-4e84-b57c-e8b285464a32",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:9fbdb5ea-2811-4c6e-bccb-7734e9da57a6",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:2d463db4-fe2a-43a9-af4a-d8bfba552446",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:4b77efab-a8c8-4d26-9623-7284f337956a",
+        "num_bikes_available": 2,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 2
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:57dae9c0-35e8-49d1-8b35-d1824a2f41c2",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:23f81076-8a91-43ff-8d05-d494d4c32326",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:56e46e4f-86bd-430b-96cd-d4ea41a8e823",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:691ba9ba-bdb4-483c-931f-7fec5040206f",
+        "num_bikes_available": 1,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 1
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:b439dfd9-aae9-451e-a92d-f0bb72e771e2",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      },
+      {
+        "station_id": "YTI:Station:da162ab4-61c7-406d-83a8-4a171ee8959e",
+        "num_bikes_available": 0,
+        "vehicle_types_available": [
+          {
+            "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+            "count": 0
+          },
+          {
+            "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+            "count": 0
+          }
+        ],
+        "is_installed": true,
+        "is_renting": true,
+        "is_returning": true,
+        "last_reported": 1670236163
+      }
+    ]
+  }
+}

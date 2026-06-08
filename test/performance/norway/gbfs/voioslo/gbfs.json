@@ -1,0 +1,45 @@
+{
+  "last_updated": "2026-06-07T03:34:05.000+00:00",
+  "ttl": 3600,
+  "version": "3.0",
+  "data": {
+    "feeds": [
+      {
+        "name": "system_information",
+        "url": "file:test/performance/norway/gbfs/voioslo/system_information.json"
+      },
+      {
+        "name": "vehicle_types",
+        "url": "file:test/performance/norway/gbfs/voioslo/vehicle_types.json"
+      },
+      {
+        "name": "station_information",
+        "url": "file:test/performance/norway/gbfs/voioslo/station_information.json"
+      },
+      {
+        "name": "station_status",
+        "url": "file:test/performance/norway/gbfs/voioslo/station_status.json"
+      },
+      {
+        "name": "vehicle_status",
+        "url": "file:test/performance/norway/gbfs/voioslo/vehicle_status.json"
+      },
+      {
+        "name": "system_regions",
+        "url": "file:test/performance/norway/gbfs/voioslo/system_regions.json"
+      },
+      {
+        "name": "system_pricing_plans",
+        "url": "file:test/performance/norway/gbfs/voioslo/system_pricing_plans.json"
+      },
+      {
+        "name": "system_alerts",
+        "url": "file:test/performance/norway/gbfs/voioslo/system_alerts.json"
+      },
+      {
+        "name": "geofencing_zones",
+        "url": "file:test/performance/norway/gbfs/voioslo/geofencing_zones.json"
+      }
+    ]
+  }
+}

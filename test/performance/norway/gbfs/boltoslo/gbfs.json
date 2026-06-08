@@ -1,0 +1,29 @@
+{
+  "last_updated": "2026-06-07T03:33:54.000+00:00",
+  "ttl": 0,
+  "version": "3.0",
+  "data": {
+    "feeds": [
+      {
+        "name": "system_information",
+        "url": "file:test/performance/norway/gbfs/boltoslo/system_information.json"
+      },
+      {
+        "name": "vehicle_status",
+        "url": "file:test/performance/norway/gbfs/boltoslo/vehicle_status.json"
+      },
+      {
+        "name": "system_pricing_plans",
+        "url": "file:test/performance/norway/gbfs/boltoslo/system_pricing_plans.json"
+      },
+      {
+        "name": "vehicle_types",
+        "url": "file:test/performance/norway/gbfs/boltoslo/vehicle_types.json"
+      },
+      {
+        "name": "geofencing_zones",
+        "url": "file:test/performance/norway/gbfs/boltoslo/geofencing_zones.json"
+      }
+    ]
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "last_updated": 1670236135,
+  "ttl": 0,
+  "version": "2.3",
+  "data": {
+    "vehicle_types": [
+      {
+        "vehicle_type_id": "YTI:VehicleType:escooter_oslo",
+        "form_factor": "scooter",
+        "propulsion_type": "electric",
+        "max_range_meters": 55000.0,
+        "name": "Electric Scooter"
+      },
+      {
+        "vehicle_type_id": "YTI:VehicleType:ebicycle_oslo",
+        "form_factor": "bicycle",
+        "propulsion_type": "electric_assist",
+        "max_range_meters": 90000.0,
+        "name": "Electric Bicycle"
+      }
+    ]
+  }
+}
