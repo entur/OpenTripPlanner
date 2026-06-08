@@ -63,10 +63,14 @@ public class StateData implements Cloneable {
   protected Set<GeofencingZone> currentGeofencingZones = Set.of();
 
   /**
-   * Networks for which this generic (null-network) RENTING_FLOATING state has already forked
-   * committed branches at zone boundaries. Prevents duplicate forking at subsequent boundary
-   * crossings for the same network. Participates in dominance: a state whose committedNetworks
-   * is a superset dominates one with a subset (it has already explored more network options).
+   * Tracks networks for which forking a committed branch from this generic state would be
+   * illegal (the path crossed the network's no-traversal zone), redundant with an existing
+   * fork at this boundary, or duplicate the deferred BA fork. Read by NetworkCommitmentHandler
+   * and VehicleRentalEdge to skip the redundant work.
+   *
+   * <p>Not consulted by {@link
+   * org.opentripplanner.street.search.strategy.DominanceFunctions} for performance: treating
+   * differing sets as incomparable would split the SPT into a plane per subset.
    */
   protected Set<String> committedNetworks = Set.of();
 
