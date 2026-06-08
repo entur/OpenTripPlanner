@@ -206,6 +206,23 @@ public class SpeedTest {
 
       assertTestDateHasData(timetableRepository, config, buildConfig);
 
+      // Wait for every updater to finish its initial poll and for the graph-writer queue
+      // to drain. Without this, geofencing zones may still be applying during the first
+      // iterations, polluting the numbers.
+      var updaterManager = timetableRepository.getUpdaterManager();
+      if (updaterManager != null) {
+        long t0 = System.currentTimeMillis();
+        while (!updaterManager.listUnprimedUpdaters().isEmpty()) {
+          Thread.sleep(50);
+        }
+        // Single-threaded graph-writer is FIFO, so this sentinel completing means every
+        // mutation submitted by the now-primed updaters has run.
+        updaterManager.execute(ctx -> {}).get();
+        System.err.println(
+          "Waited " + (System.currentTimeMillis() - t0) + "ms for updaters to finish."
+        );
+      }
+
       // and run it
       speedTest.runTest();
 
