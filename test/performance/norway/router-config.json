@@ -167,11 +167,56 @@
   },
   "updaters": [
     {
-      "type" : "vehicle-rental",
-      "sourceType" : "gbfs",
-      "frequency" : "1h",
-      "url" : "https://otp-performance.leonard.io/data/norway/tieroslo/gbfs.json",
+      "type": "vehicle-rental",
+      "sourceType": "gbfs",
+      "frequency": "1h",
+      "url": "file:test/performance/norway/gbfs/tieroslo/gbfs.json",
       "geofencingZones": true
+    },
+    {
+      "type": "vehicle-rental",
+      "network": "voioslo",
+      "sourceType": "gbfs",
+      "frequency": "1h",
+      "allowKeepingRentedVehicleAtDestination": false,
+      "geofencingZones": true,
+      "url": "file:test/performance/norway/gbfs/voioslo/gbfs.json"
+    },
+    {
+      "type": "vehicle-rental",
+      "network": "voilillestrom",
+      "sourceType": "gbfs",
+      "frequency": "1h",
+      "allowKeepingRentedVehicleAtDestination": false,
+      "geofencingZones": true,
+      "url": "file:test/performance/norway/gbfs/voilillestrom/gbfs.json"
+    },
+    {
+      "type": "vehicle-rental",
+      "network": "boltoslo",
+      "sourceType": "gbfs",
+      "frequency": "1h",
+      "allowKeepingRentedVehicleAtDestination": false,
+      "geofencingZones": true,
+      "url": "file:test/performance/norway/gbfs/boltoslo/gbfs.json"
+    },
+    {
+      "type": "vehicle-rental",
+      "network": "boltlillestrom",
+      "sourceType": "gbfs",
+      "frequency": "1h",
+      "allowKeepingRentedVehicleAtDestination": false,
+      "geofencingZones": true,
+      "url": "file:test/performance/norway/gbfs/boltlillestrom/gbfs.json"
+    },
+    {
+      "type": "vehicle-rental",
+      "network": "rydeoslo",
+      "sourceType": "gbfs",
+      "frequency": "1h",
+      "allowKeepingRentedVehicleAtDestination": false,
+      "geofencingZones": true,
+      "url": "file:test/performance/norway/gbfs/rydeoslo/gbfs.json"
     }
   ]
 }
