@@ -207,7 +207,7 @@ class NetworkCommitmentHandlerTest {
     }
 
     @Test
-    void genericStateGetsCommittedNetworks() {
+    void genericStateDoesNotGetCommittedAfterBoundaryFork() {
       v2.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_A, true));
       v3.addGeofencingBoundary(new GeofencingBoundaryExtension(NO_DROP_OFF_A, false));
 
@@ -224,8 +224,8 @@ class NetworkCommitmentHandlerTest {
       for (var s : result) {
         if (s.getVehicleRentalNetwork() == null) {
           assertTrue(
-            s.getCommittedNetworks().contains(NETWORK_A),
-            "generic branch should have " + NETWORK_A + " in committedNetworks"
+            s.getCommittedNetworks().isEmpty(),
+            "generic branch should not accumulate boundary-fork networks"
           );
         }
       }

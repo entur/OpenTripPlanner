@@ -143,9 +143,6 @@ class NetworkCommitmentHandler {
 
     var generic = edge.traverse(s0, s0.currentMode());
     if (generic != null) {
-      for (String network : forkNetworks) {
-        generic.addCommittedNetwork(network);
-      }
       for (String network : commitOnlyNetworks) {
         generic.addCommittedNetwork(network);
       }

@@ -64,9 +64,8 @@ public class StateData implements Cloneable {
 
   /**
    * Tracks networks for which forking a committed branch from this generic state would be
-   * illegal (the path crossed the network's no-traversal zone), redundant with an existing
-   * fork at this boundary, or duplicate the deferred BA fork. Read by NetworkCommitmentHandler
-   * and VehicleRentalEdge to skip the redundant work.
+   * illegal (the path crossed the network's no-traversal zone) or duplicate the deferred BA
+   * fork. Read by NetworkCommitmentHandler and VehicleRentalEdge to skip the redundant work.
    *
    * <p>Not consulted by {@link
    * org.opentripplanner.street.search.strategy.DominanceFunctions} for performance: treating
