@@ -221,15 +221,15 @@ public class GraphQLDataFetchers {
     public DataFetcher<Iterable<CanceledTripsSummaryRoute>> routes();
   }
 
-  /** Contains pattern and the information for how many canceled trips there for the pattern. */
+  /** Contains pattern and the information for how many canceled trips there are for the pattern. */
   public interface GraphQLCanceledTripsSummaryPattern {
     public DataFetcher<Integer> cancellationCount();
     public DataFetcher<TripPattern> pattern();
   }
 
   /**
-   * Contains route, how many canceled trips there for the route and cancellation statistics grouped by
-   * patterns.
+   * Contains route, how many canceled trips there are for the route and cancellation statistics grouped
+   * by patterns.
    */
   public interface GraphQLCanceledTripsSummaryRoute {
     public DataFetcher<Integer> cancellationCount();

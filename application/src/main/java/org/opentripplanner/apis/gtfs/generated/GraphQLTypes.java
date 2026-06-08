@@ -537,6 +537,7 @@ public class GraphQLTypes {
   public static class GraphQLCanceledTripsFilterSelectInput {
 
     private List<GraphQLTransitMode> modes;
+    private List<GraphQLLocalDateRangeInput> serviceDateRanges;
 
     public GraphQLCanceledTripsFilterSelectInput(Map<String, Object> args) {
       if (args != null) {
@@ -548,6 +549,13 @@ public class GraphQLTypes {
             .map(GraphQLTransitMode.class::cast)
             .collect(Collectors.toList());
         }
+        if (args.get("serviceDateRanges") != null) {
+          this.serviceDateRanges = ((List<Map<String, Object>>) args.get(
+              "serviceDateRanges"
+            )).stream()
+            .map(o -> o == null ? null : new GraphQLLocalDateRangeInput(o))
+            .collect(Collectors.toList());
+        }
       }
     }
 
@@ -555,8 +563,16 @@ public class GraphQLTypes {
       return this.modes;
     }
 
+    public List<GraphQLLocalDateRangeInput> getGraphQLServiceDateRanges() {
+      return this.serviceDateRanges;
+    }
+
     public void setGraphQLModes(List<GraphQLTransitMode> modes) {
       this.modes = modes;
+    }
+
+    public void setGraphQLServiceDateRanges(List<GraphQLLocalDateRangeInput> serviceDateRanges) {
+      this.serviceDateRanges = serviceDateRanges;
     }
   }
 
