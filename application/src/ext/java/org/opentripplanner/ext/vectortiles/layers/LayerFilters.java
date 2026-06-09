@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
-import org.opentripplanner.core.model.time.LocalDateInterval;
+import org.opentripplanner.core.model.time.LocalDateRange;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.timetable.Trip;
@@ -41,7 +41,7 @@ public class LayerFilters {
 
     var filter = new PatternByServiceDatesFilter(
       // reminder, the end of the date range is exclusive so it's the next Sunday plus one day
-      LocalDateInterval.ofExclusiveEnd(lastSunday, nextSundayPlusOne),
+      LocalDateRange.ofExclusiveEnd(lastSunday, nextSundayPlusOne),
       // not used
       route -> List.of(),
       getServiceDatesForTrip

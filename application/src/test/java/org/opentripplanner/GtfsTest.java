@@ -22,7 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.core.model.time.LocalDateInterval;
+import org.opentripplanner.core.model.time.LocalDateRange;
 import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
 import org.opentripplanner.gtfs.graphbuilder.GtfsBundle;
 import org.opentripplanner.gtfs.graphbuilder.GtfsBundleTestFactory;
@@ -211,7 +211,7 @@ public abstract class GtfsTest {
       gtfsBundleList,
       timetableRepository,
       graph,
-      LocalDateInterval.ofUnbounded()
+      LocalDateRange.ofUnbounded()
     );
 
     gtfsGraphBuilderImpl.buildGraph();

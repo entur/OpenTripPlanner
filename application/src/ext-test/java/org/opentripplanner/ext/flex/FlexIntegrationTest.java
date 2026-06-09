@@ -18,7 +18,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.TestOtpModel;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.core.model.time.LocalDateInterval;
+import org.opentripplanner.core.model.time.LocalDateRange;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.module.TestStreetLinkerModule;
@@ -205,7 +205,7 @@ public class FlexIntegrationTest {
       gtfsBundles,
       timetableRepository,
       graph,
-      LocalDateInterval.ofUnbounded()
+      LocalDateRange.ofUnbounded()
     );
     gtfsModule.buildGraph();
 

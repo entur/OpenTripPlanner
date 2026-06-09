@@ -1,7 +1,7 @@
 package org.opentripplanner.apis.gtfs.support.time;
 
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
-import org.opentripplanner.core.model.time.LocalDateInterval;
+import org.opentripplanner.core.model.time.LocalDateRange;
 
 public class LocalDateRangeUtil {
 
@@ -12,7 +12,7 @@ public class LocalDateRangeUtil {
   public static boolean hasServiceDateFilter(GraphQLTypes.GraphQLLocalDateRangeInput dateRange) {
     return (
       dateRange != null &&
-      !LocalDateInterval.ofExclusiveEnd(
+      !LocalDateRange.ofExclusiveEnd(
         dateRange.getGraphQLStart(),
         dateRange.getGraphQLEnd()
       ).isUnbounded()

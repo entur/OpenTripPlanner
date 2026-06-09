@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Function;
-import org.opentripplanner.core.model.time.LocalDateInterval;
+import org.opentripplanner.core.model.time.LocalDateRange;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Trip;
@@ -20,14 +20,14 @@ public class PatternByServiceDatesFilter {
 
   private final Function<Route, Collection<TripPattern>> getPatternsForRoute;
   private final Function<Trip, Collection<LocalDate>> getServiceDatesForTrip;
-  private final LocalDateInterval range;
+  private final LocalDateRange range;
 
   /**
    * This method is not private to enable unit testing.
    * <p>
    */
   public PatternByServiceDatesFilter(
-    LocalDateInterval range,
+    LocalDateRange range,
     Function<Route, Collection<TripPattern>> getPatternsForRoute,
     Function<Trip, Collection<LocalDate>> getServiceDatesForTrip
   ) {
