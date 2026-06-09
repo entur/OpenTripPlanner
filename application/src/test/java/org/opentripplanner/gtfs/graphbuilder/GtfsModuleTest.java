@@ -29,7 +29,7 @@ class GtfsModuleTest {
       List.of(bundle),
       model.timetableRepository,
       model.graph,
-      LocalDateInterval.unbounded()
+      LocalDateInterval.ofUnbounded()
     );
 
     module.buildGraph();
@@ -60,7 +60,7 @@ class GtfsModuleTest {
       bundles,
       model.timetableRepository,
       model.graph,
-      LocalDateInterval.unbounded()
+      LocalDateInterval.ofUnbounded()
     );
     assertThrows(IllegalArgumentException.class, module::buildGraph);
   }
@@ -108,7 +108,7 @@ class GtfsModuleTest {
         bundles,
         model.timetableRepository,
         model.graph,
-        LocalDateInterval.unbounded()
+        LocalDateInterval.ofUnbounded()
       );
 
       module.buildGraph();

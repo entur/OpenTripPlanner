@@ -118,7 +118,7 @@ public class TransitDataImportBuilderLimitPeriodTest {
     assertEquals(1, patternInT2.getScheduledTimetable().getTripTimes().size());
 
     // Limit service to last half of month
-    subject.limitServiceDays(new LocalDateInterval(D2, D3));
+    subject.limitServiceDays(LocalDateInterval.ofInclusiveEnd(D2, D3));
 
     // Verify calendar
     List<ServiceCalendar> calendars = subject.getCalendars();
@@ -174,7 +174,7 @@ public class TransitDataImportBuilderLimitPeriodTest {
     LocalDate end
   ) {
     ServiceCalendar calendar = new ServiceCalendar();
-    calendar.setPeriod(new LocalDateInterval(start, end));
+    calendar.setPeriod(LocalDateInterval.ofInclusiveEnd(start, end));
     calendar.setAllDays(1);
     calendar.setServiceId(serviceId);
     return calendar;

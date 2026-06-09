@@ -21,7 +21,7 @@ public class OpeningHoursCalendarService implements Serializable {
     @TransitServicePeriod LocalDateInterval transitServicePeriod
   ) {
     this.deduplicator = deduplicator;
-    this.startOfPeriod = transitServicePeriod.getStart();
+    this.startOfPeriod = transitServicePeriod.getInclusiveStart();
     this.daysInPeriod = transitServicePeriod.daysInPeriod();
   }
 
@@ -30,7 +30,7 @@ public class OpeningHoursCalendarService implements Serializable {
     LocalDate startOfPeriod,
     LocalDate endOfPeriod
   ) {
-    this(deduplicator, new LocalDateInterval(startOfPeriod, endOfPeriod));
+    this(deduplicator, LocalDateInterval.ofInclusiveEnd(startOfPeriod, endOfPeriod));
   }
 
   public OHCalendarBuilder newBuilder(ZoneId zoneId) {

@@ -699,7 +699,7 @@ public class BuildConfig implements OtpDataStoreConfig {
   }
 
   public LocalDateInterval getTransitServicePeriod() {
-    return new LocalDateInterval(transitServiceStart, transitServiceEnd);
+    return LocalDateInterval.ofInclusiveEnd(transitServiceStart, transitServiceEnd);
   }
 
   public List<FeedScopedId> transitRouteToStationCentroid() {

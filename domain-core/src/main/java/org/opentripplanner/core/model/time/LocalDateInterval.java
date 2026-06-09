@@ -6,99 +6,160 @@ import static java.time.LocalDate.MIN;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Objects;
+import javax.annotation.Nullable;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
 /**
- * Value object which represent a service date interval from a starting date until an end date.
- * Both start and end is inclusive.
+ * Value object representing a service date interval from a starting date until an end date.
  * <p>
- * The {@code start} must be equals or before the {@code end} to form a valid period.
+ * Internally the interval is always stored as [startInclusive, endExclusive). Use the factory
+ * methods {@link #ofInclusiveEnd(LocalDate, LocalDate)} and
+ * {@link #ofExclusiveEnd(LocalDate, LocalDate)} to construct instances according to the need, but
+ * preferable use the exclusive end version unless the inclusivity comes from the input data.
+ * {@link #toString()} output mirrors the convention used at construction time.
  * <p>
- * {@code null} is used to represent an unbounded interval. One or both the of the {@code start} and
- * {@code end} can be {@code null} (unbounded).
+ * {@code null} is accepted in all factory method parameters and is treated as unbounded (equivalent
+ * to {@link LocalDate#MIN} / {@link LocalDate#MAX}).
  */
 public final class LocalDateInterval {
 
-  private static final LocalDateInterval UNBOUNDED = new LocalDateInterval(MIN, MAX);
+  private static final LocalDateInterval UNBOUNDED = new LocalDateInterval(MIN, MAX, true);
 
-  private final LocalDate start;
-  private final LocalDate end;
+  private final LocalDate inclusiveStart;
+  private final LocalDate exclusiveEnd;
+  private final boolean inclusiveEnd;
 
-  public LocalDateInterval(LocalDate start, LocalDate end) {
-    this.start = start == null ? MIN : start;
-    this.end = end == null ? MAX : end;
-
-    // Guarantee that the start is before or equal the end.
-    if (this.end.isBefore(this.start)) {
+  private LocalDateInterval(
+    LocalDate inclusiveStart,
+    LocalDate exclusiveEnd,
+    boolean inclusiveEnd
+  ) {
+    this.inclusiveStart = inclusiveStart;
+    this.exclusiveEnd = exclusiveEnd;
+    this.inclusiveEnd = inclusiveEnd;
+    if (exclusiveEnd.isBefore(inclusiveStart)) {
       throw new IllegalArgumentException(
-        "Invalid interval, the end " + end + " is before the start " + start
+        "Invalid interval, the end is before the start: start=" +
+          inclusiveStart +
+          ", endExclusive=" +
+          exclusiveEnd
       );
     }
   }
 
   /**
-   * Return a interval with start or end unbounded ({@code null}).
+   * Create an interval with an inclusive start and an inclusive end.
+   *
+   * @param start inclusive start, or {@code null} for unbounded start
+   * @param end   inclusive end, or {@code null} for unbounded end
    */
-  public static LocalDateInterval unbounded() {
+  public static LocalDateInterval ofInclusiveEnd(
+    @Nullable LocalDate start,
+    @Nullable LocalDate end
+  ) {
+    var startInclusive = start == null ? MIN : start;
+    var endInclusive = end == null ? MAX : end;
+    if (endInclusive.isBefore(startInclusive)) {
+      throw new IllegalArgumentException(
+        "Invalid interval, the end " + end + " is before the start " + start
+      );
+    }
+    var endExclusive = endInclusive.equals(MAX) ? MAX : endInclusive.plusDays(1);
+    return new LocalDateInterval(startInclusive, endExclusive, true);
+  }
+
+  /**
+   * Create an interval with an inclusive start and an exclusive end.
+   *
+   * @param start inclusive start, or {@code null} for unbounded start
+   * @param end   exclusive end (first date outside the interval), or {@code null} for unbounded
+   *              end
+   */
+  public static LocalDateInterval ofExclusiveEnd(
+    @Nullable LocalDate start,
+    @Nullable LocalDate end
+  ) {
+    var startInclusive = start == null ? MIN : start;
+    var endExclusive = end == null ? MAX : end;
+    return new LocalDateInterval(startInclusive, endExclusive, false);
+  }
+
+  /**
+   * Return the interval that covers all dates (both start and end unbounded).
+   */
+  public static LocalDateInterval ofUnbounded() {
     return UNBOUNDED;
   }
 
+  /**
+   * Inclusive start date. Returns {@link LocalDate#MIN} when unbounded.
+   */
+  public LocalDate getInclusiveStart() {
+    return inclusiveStart;
+  }
+
+  /**
+   * Inclusive end date. Returns {@link LocalDate#MAX} when unbounded.
+   */
+  public LocalDate getEndInclusive() {
+    return exclusiveEnd.equals(MAX) ? MAX : exclusiveEnd.minusDays(1);
+  }
+
+  /**
+   * Exclusive end date (first date outside the interval). Returns {@link LocalDate#MAX} when
+   * unbounded.
+   */
+  public LocalDate getEndExclusive() {
+    return exclusiveEnd;
+  }
+
   public boolean isUnbounded() {
-    return start.equals(MIN) && end.equals(MAX);
+    return inclusiveStart.equals(MIN) && exclusiveEnd.equals(MAX);
   }
 
   /**
-   * Return the interval start, inclusive. If the period start is unbounded the {@link
-   * LocalDate#MIN} is returned.
+   * Return {@code true} if the given {@code date} falls within this interval.
    */
-  public LocalDate getStart() {
-    return start;
+  public boolean contains(LocalDate date) {
+    return !inclusiveStart.isAfter(date) && date.isBefore(exclusiveEnd);
   }
 
   /**
-   * Return the interval end, inclusive. If the period start is unbounded the {@link
-   * LocalDate#MAX} is returned.
-   */
-  public LocalDate getEnd() {
-    return end;
-  }
-
-  /**
-   * The intervals have at least one day in common.
+   * Returns {@code true} if this interval and {@code other} share at least one day.
    *
    * @see #intersection(LocalDateInterval)
    */
   public boolean overlap(LocalDateInterval other) {
-    if (!start.isAfter(other.end)) {
-      return !end.isBefore(other.start);
-    }
-    return false;
-  }
-
-  /**
-   * Return a new service interval that contains the period with all dates that exist in both
-   * periods (intersection of {@code this} and {@code other}).
-   *
-   * @throws IllegalArgumentException it the to periods do not overlap.
-   * @see #overlap(LocalDateInterval) for checking an intersection exist.
-   */
-  public LocalDateInterval intersection(LocalDateInterval other) {
-    return new LocalDateInterval(
-      ServiceDateUtils.max(start, other.start),
-      ServiceDateUtils.min(end, other.end)
+    return (
+      inclusiveStart.isBefore(other.exclusiveEnd) && other.inclusiveStart.isBefore(exclusiveEnd)
     );
   }
 
   /**
-   * Return {@code true} is the given {@code date} exist in this period.
+   * Return a new interval containing all dates present in both intervals.
+   *
+   * @throws IllegalArgumentException if the two intervals do not overlap
+   * @see #overlap(LocalDateInterval)
    */
-  public boolean include(LocalDate date) {
-    return !start.isAfter(date) && !end.isBefore(date);
+  public LocalDateInterval intersection(LocalDateInterval other) {
+    LocalDate newStart = ServiceDateUtils.max(inclusiveStart, other.inclusiveStart);
+    LocalDate newEnd = ServiceDateUtils.min(exclusiveEnd, other.exclusiveEnd);
+    if (!newStart.isBefore(newEnd)) {
+      throw new IllegalArgumentException("Intervals do not overlap: " + this + " and " + other);
+    }
+    return new LocalDateInterval(newStart, newEnd, inclusiveEnd);
+  }
+
+  /**
+   * Number of days in the interval (inclusive on both sides).
+   */
+  public int daysInPeriod() {
+    return (int) ChronoUnit.DAYS.between(inclusiveStart, exclusiveEnd);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(start, end);
+    return Objects.hash(inclusiveStart, exclusiveEnd);
   }
 
   @Override
@@ -110,18 +171,19 @@ public final class LocalDateInterval {
       return false;
     }
     LocalDateInterval that = (LocalDateInterval) o;
-    return start.equals(that.start) && end.equals(that.end);
+    return inclusiveStart.equals(that.inclusiveStart) && exclusiveEnd.equals(that.exclusiveEnd);
   }
 
   @Override
   public String toString() {
-    return "[" + ServiceDateUtils.toString(start) + ", " + ServiceDateUtils.toString(end) + "]";
-  }
-
-  /**
-   * Number of days in a period from start to end, both stat and end is included.
-   */
-  public int daysInPeriod() {
-    return (int) ChronoUnit.DAYS.between(start, end) + 1;
+    var start = ServiceDateUtils.toString(inclusiveStart);
+    String end;
+    if (exclusiveEnd.equals(MAX)) {
+      end = ServiceDateUtils.toString(MAX);
+    } else {
+      end = ServiceDateUtils.toString(inclusiveEnd ? exclusiveEnd.minusDays(1) : exclusiveEnd);
+    }
+    var endMarker = inclusiveEnd ? "]" : ")";
+    return ("[" + start + ", " + end + endMarker);
   }
 }

@@ -211,7 +211,7 @@ public abstract class GtfsTest {
       gtfsBundleList,
       timetableRepository,
       graph,
-      LocalDateInterval.unbounded()
+      LocalDateInterval.ofUnbounded()
     );
 
     gtfsGraphBuilderImpl.buildGraph();

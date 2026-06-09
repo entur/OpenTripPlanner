@@ -4,7 +4,7 @@ import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Objects;
 import java.util.function.Function;
-import org.opentripplanner.apis.gtfs.model.LocalDateRange;
+import org.opentripplanner.core.model.time.LocalDateInterval;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Trip;
@@ -20,14 +20,14 @@ public class PatternByServiceDatesFilter {
 
   private final Function<Route, Collection<TripPattern>> getPatternsForRoute;
   private final Function<Trip, Collection<LocalDate>> getServiceDatesForTrip;
-  private final LocalDateRange range;
+  private final LocalDateInterval range;
 
   /**
    * This method is not private to enable unit testing.
    * <p>
    */
   public PatternByServiceDatesFilter(
-    LocalDateRange range,
+    LocalDateInterval range,
     Function<Route, Collection<TripPattern>> getPatternsForRoute,
     Function<Trip, Collection<LocalDate>> getServiceDatesForTrip
   ) {
@@ -35,10 +35,8 @@ public class PatternByServiceDatesFilter {
     this.getServiceDatesForTrip = Objects.requireNonNull(getServiceDatesForTrip);
     this.range = range;
 
-    if (range.unlimited()) {
+    if (range.isUnbounded()) {
       throw new IllegalArgumentException("start and end cannot be both null");
-    } else if (range.startBeforeEnd()) {
-      throw new IllegalArgumentException("start must be before end");
     }
   }
 

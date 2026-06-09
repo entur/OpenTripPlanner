@@ -69,7 +69,7 @@ public class CalendarServiceBuilder {
   public ServiceCalendar createEmptyCalendar() {
     ServiceCalendar emptyCalendar = new ServiceCalendar();
     emptyCalendar.setServiceId(EMPTY_SERVICE_ID);
-    emptyCalendar.setPeriod(LocalDateInterval.unbounded());
+    emptyCalendar.setPeriod(LocalDateInterval.ofUnbounded());
     return emptyCalendar;
   }
 

@@ -205,7 +205,7 @@ public class FlexIntegrationTest {
       gtfsBundles,
       timetableRepository,
       graph,
-      LocalDateInterval.unbounded()
+      LocalDateInterval.ofUnbounded()
     );
     gtfsModule.buildGraph();
 

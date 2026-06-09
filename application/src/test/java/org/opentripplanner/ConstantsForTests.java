@@ -332,7 +332,7 @@ public class ConstantsForTests {
       graph,
       new Deduplicator(),
       DataImportIssueStore.NOOP,
-      LocalDateInterval.unbounded(),
+      LocalDateInterval.ofUnbounded(),
       fareServiceFactory,
       150.0,
       DurationUtils.durationInSeconds("2m")
