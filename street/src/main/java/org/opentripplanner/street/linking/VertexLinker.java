@@ -465,11 +465,17 @@ public class VertexLinker {
     var projection = ll.getCoordinate(geom);
 
     // if we're very close to one end of the edge, don't split
-    var startDistance = SphericalDistanceLibrary.fastDistance(projection, edge.getFromVertex().getCoordinate());
+    var startDistance = SphericalDistanceLibrary.fastDistance(
+      projection,
+      edge.getFromVertex().getCoordinate()
+    );
     if (startDistance < 0.1) {
       return (IntersectionVertex) edge.getFromVertex();
     }
-    var toDistance = SphericalDistanceLibrary.fastDistance(projection, edge.getToVertex().getCoordinate());
+    var toDistance = SphericalDistanceLibrary.fastDistance(
+      projection,
+      edge.getToVertex().getCoordinate()
+    );
     if (toDistance < 0.1) {
       return (IntersectionVertex) edge.getToVertex();
     }

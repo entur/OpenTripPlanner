@@ -24,41 +24,38 @@ import org.opentripplanner.street.search.TraverseModeSet;
  * Test that linking very near the end of the edge doesn't split but uses the endpoint instead.
  */
 public class LinkingNearEndTest {
+
   /* An edge with a very short first segment which caused problems in production. */
-  private static final Coordinate[] points = {
+  private static final Coordinate[] POINTS = {
     new Coordinate(25.007039006519058, 60.140565999664084),
     new Coordinate(25.007039, 60.140566),
-    new Coordinate(25.006999800000003, 60.1403405)
+    new Coordinate(25.006999800000003, 60.1403405),
   };
 
-  private static final WgsCoordinate stop = new WgsCoordinate(60.1405804,25.007042);
+  private static final WgsCoordinate STOP = new WgsCoordinate(60.1405804, 25.007042);
 
   @Test
   void linkingNearStart() {
-    var v1 = intersectionVertex(points[0]);
-    var v2 = intersectionVertex(points[points.length - 1]);
+    var v1 = intersectionVertex(POINTS[0]);
+    var v2 = intersectionVertex(POINTS[POINTS.length - 1]);
     var sequence = new CoordinateArrayListSequence();
-    sequence.extend(points);
+    sequence.extend(POINTS);
     linking(v1, v2, sequence);
   }
 
   @Test
   void linkingNearEnd() {
-    var v2 = intersectionVertex(points[points.length - 1]);
-    var v1 = intersectionVertex(points[0]);
+    var v2 = intersectionVertex(POINTS[POINTS.length - 1]);
+    var v1 = intersectionVertex(POINTS[0]);
     var sequence = new CoordinateArrayListSequence();
-    for (int i = points.length - 1; i >= 0; i--) {
-      sequence.add(points[i]);
+    for (int i = POINTS.length - 1; i >= 0; i--) {
+      sequence.add(POINTS[i]);
     }
     linking(v2, v1, sequence);
   }
 
   private void linking(StreetVertex v1, StreetVertex v2, CoordinateArrayListSequence sequence) {
-
-    var stopVertex = TransitStopVertex.of()
-      .withCoordinate(stop)
-      .withId(id("stop"))
-      .build();
+    var stopVertex = TransitStopVertex.of().withCoordinate(STOP).withId(id("stop")).build();
 
     var geom = new LineString(sequence, GeometryUtils.getGeometryFactory());
 
@@ -67,7 +64,9 @@ public class LinkingNearEndTest {
       v2,
       SphericalDistanceLibrary.distance(v1.getCoordinate(), v2.getCoordinate()),
       StreetTraversalPermission.ALL
-    ).withGeometry(geom).buildAndConnect();
+    )
+      .withGeometry(geom)
+      .buildAndConnect();
     var env = new LinkingEnvironment(v1, v2);
 
     env
@@ -87,5 +86,4 @@ public class LinkingNearEndTest {
 
     assertThat(env.graph().listStreetEdges()).hasSize(1);
   }
-
 }
