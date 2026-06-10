@@ -4378,7 +4378,7 @@ input CanceledTripsFilterSelectInput {
   "Canceled trips from these transit modes should be included/excluded."
   modes: [TransitMode!]
   """
-  Canceled trips are included/excluded based on if their service date is within any of these time
+  Canceled trips are included/excluded based on if their service date (but not necessarily their running date)  is within any of these time
   ranges.
   """
   serviceDateRanges: [LocalDateRangeInput!]
