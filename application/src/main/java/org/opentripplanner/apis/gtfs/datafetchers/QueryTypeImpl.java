@@ -832,8 +832,8 @@ public class QueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryType {
   public DataFetcher<CanceledTripsSummary> canceledTripsSummary() {
     return environment -> {
       var request = CanceledTripsFilterMapper.mapToTripOnServiceDateRequest(environment);
-      var trips = getTransitService(environment).findCanceledTrips(request);
       var transitService = getTransitService(environment);
+      var trips = transitService.findCanceledTrips(request);
       var patternTripCounts = trips
         .stream()
         .collect(

@@ -3,6 +3,7 @@ package org.opentripplanner.apis.gtfs.mapping;
 import graphql.schema.DataFetchingEnvironment;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -195,7 +196,7 @@ public class CanceledTripsFilterMapper {
   }
 
   private static Map<String, Object> stringObjectMap(Map<?, ?> source, String path) {
-    var result = new java.util.LinkedHashMap<String, Object>(source.size());
+    var result = new LinkedHashMap<String, Object>(source.size());
     for (var entry : source.entrySet()) {
       if (!(entry.getKey() instanceof String key)) {
         throw new InvalidInputException("Expected string keys in object at '" + path + "'.");
