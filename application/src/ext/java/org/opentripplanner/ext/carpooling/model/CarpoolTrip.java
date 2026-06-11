@@ -72,8 +72,8 @@ public class CarpoolTrip
 
   public CarpoolTrip(CarpoolTripBuilder builder) {
     super(builder.getId());
-    this.startTime = builder.startTime();
-    this.endTime = builder.endTime();
+    this.startTime = Objects.requireNonNull(builder.startTime());
+    this.endTime = Objects.requireNonNull(builder.endTime());
     this.provider = builder.provider();
     this.totalCapacity = builder.totalCapacity();
     this.stops = Collections.unmodifiableList(builder.stops());

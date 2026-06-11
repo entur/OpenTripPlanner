@@ -66,7 +66,8 @@ public class CarpoolSiriMapper {
    * 2 non-cancelled calls remain.
    *
    * @throws IllegalArgumentException if the raw message is malformed (fewer than 2 calls
-   *         before filtering, calls out of order, missing flexible areas, etc.)
+   *         before filtering, calls out of order, missing flexible areas, no departure time
+   *         on the first call or no arrival time on the last call, etc.)
    */
   @Nullable
   public CarpoolTrip mapSiriToCarpoolTrip(EstimatedVehicleJourney journey) {
@@ -116,6 +117,17 @@ public class CarpoolSiriMapper {
     var endTime = lastStop.getExpectedArrivalTime() != null
       ? lastStop.getExpectedArrivalTime()
       : lastStop.getAimedArrivalTime();
+
+    if (startTime == null) {
+      throw new IllegalArgumentException(
+        "Trip " + tripId + ": first call has neither expected nor aimed departure time."
+      );
+    }
+    if (endTime == null) {
+      throw new IllegalArgumentException(
+        "Trip " + tripId + ": last call has neither expected nor aimed arrival time."
+      );
+    }
 
     int totalCapacity = extractTotalCapacity(tripId, activeCalls);
 
