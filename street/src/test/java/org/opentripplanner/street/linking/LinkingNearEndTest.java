@@ -4,7 +4,6 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.opentripplanner.core.model.id.FeedScopedIdFactory.id;
 import static org.opentripplanner.street.model.StreetModelFactory.intersectionVertex;
 
-import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
@@ -14,11 +13,8 @@ import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.StreetModelFactory;
 import org.opentripplanner.street.model.StreetTraversalPermission;
-import org.opentripplanner.street.model.edge.StreetTransitStopLink;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
-import org.opentripplanner.street.search.TraverseMode;
-import org.opentripplanner.street.search.TraverseModeSet;
 
 /**
  * Test that linking very near the end of the edge doesn't split but uses the endpoint instead.
@@ -69,21 +65,12 @@ public class LinkingNearEndTest {
       .buildAndConnect();
     var env = new LinkingEnvironment(v1, v2);
 
-    env
-      .linker()
-      .linkVertexPermanently(
-        stopVertex,
-        new TraverseModeSet(TraverseMode.WALK),
-        LinkingDirection.BIDIRECTIONAL,
-        ((vertex, streetVertex) -> {
-          var s = (TransitStopVertex) vertex;
-          return List.of(
-            StreetTransitStopLink.createStreetTransitStopLink(s, streetVertex),
-            StreetTransitStopLink.createStreetTransitStopLink(streetVertex, s)
-          );
-        })
-      );
+    env.linkVertexPermanently(stopVertex);
 
     assertThat(env.graph().listStreetEdges()).hasSize(1);
+    assertThat(env.graph().summarizeEdges()).containsAtLeast(
+      "(60.140566,25.007039) linked to (60.14058,25.007042)[street:stop]",
+      "(60.14058,25.007042)[street:stop] linked to (60.140566,25.007039)"
+    );
   }
 }
