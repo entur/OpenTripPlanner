@@ -83,6 +83,12 @@ public class VertexLinker {
     TraverseMode.CAR
   );
 
+  /**
+   * If vertex linking tries to split an edge very close to the endpoint, do not split the edge,
+   * use the existing edge endpoint instead. This is the limit of how far we still use the endpoint.
+   */
+  private static final double EDGE_SPLIT_END_TOLERANCE_METERS = 0.1;
+
   private final Graph graph;
 
   private final VisibilityMode visibilityMode;
@@ -469,14 +475,14 @@ public class VertexLinker {
       projection,
       edge.getFromVertex().getCoordinate()
     );
-    if (startDistance < 0.1) {
+    if (startDistance < EDGE_SPLIT_END_TOLERANCE_METERS) {
       return (IntersectionVertex) edge.getFromVertex();
     }
     var toDistance = SphericalDistanceLibrary.fastDistance(
       projection,
       edge.getToVertex().getCoordinate()
     );
-    if (toDistance < 0.1) {
+    if (toDistance < EDGE_SPLIT_END_TOLERANCE_METERS) {
       return (IntersectionVertex) edge.getToVertex();
     }
 
