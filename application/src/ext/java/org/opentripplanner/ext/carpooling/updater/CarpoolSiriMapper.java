@@ -110,13 +110,9 @@ public class CarpoolSiriMapper {
     var firstStop = stops.getFirst();
     var lastStop = stops.getLast();
 
-    var startTime = firstStop.getExpectedDepartureTime() != null
-      ? firstStop.getExpectedDepartureTime()
-      : firstStop.getAimedDepartureTime();
+    var startTime = firstStop.getScheduledDepartureTime();
 
-    var endTime = lastStop.getExpectedArrivalTime() != null
-      ? lastStop.getExpectedArrivalTime()
-      : lastStop.getAimedArrivalTime();
+    var endTime = lastStop.getScheduledArrivalTime();
 
     if (startTime == null) {
       throw new IllegalArgumentException(
