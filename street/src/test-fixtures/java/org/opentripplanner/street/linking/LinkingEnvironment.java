@@ -12,9 +12,12 @@ import org.opentripplanner.street.graph.DisposableEdgeDataFetcher;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.graph.GraphDataFetcher;
 import org.opentripplanner.street.model.StreetConstants;
+import org.opentripplanner.street.model.edge.StreetTransitStopLink;
 import org.opentripplanner.street.model.edge.TemporaryFreeEdge;
 import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
+import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
+import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
 
 /**
@@ -54,6 +57,21 @@ public class LinkingEnvironment {
         List.of(TemporaryFreeEdge.createTemporaryFreeEdge((TemporaryStreetLocation) v1, v2))
     );
     return disposable;
+  }
+
+  public void linkVertexPermanently(Vertex linkedVertex) {
+    linker.linkVertexPermanently(
+      linkedVertex,
+      new TraverseModeSet(TraverseMode.WALK),
+      BIDIRECTIONAL,
+      ((vertex, streetVertex) -> {
+        var s = (TransitStopVertex) vertex;
+        return List.of(
+          StreetTransitStopLink.createStreetTransitStopLink(s, streetVertex),
+          StreetTransitStopLink.createStreetTransitStopLink(streetVertex, s)
+        );
+      })
+    );
   }
 
   public void disposeEdges() {

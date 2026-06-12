@@ -83,6 +83,12 @@ public class VertexLinker {
     TraverseMode.CAR
   );
 
+  /**
+   * If vertex linking tries to split an edge very close to the endpoint, do not split the edge,
+   * use the existing edge endpoint instead. This is the limit of how far we still use the endpoint.
+   */
+  private static final double EDGE_SPLIT_END_TOLERANCE_METERS = 0.1;
+
   private final Graph graph;
 
   private final VisibilityMode visibilityMode;
@@ -462,24 +468,26 @@ public class VertexLinker {
     LineString transformed = equirectangularProject(geom, xScale);
     LocationIndexedLine il = new LocationIndexedLine(transformed);
     LinearLocation ll = il.project(new Coordinate(vertex.getLon() * xScale, vertex.getLat()));
-    double length = SphericalDistanceLibrary.length(geom);
+    var projection = ll.getCoordinate(geom);
 
     // if we're very close to one end of the edge, don't split
-    if (
-      ll.getSegmentIndex() == 0 &&
-      (ll.getSegmentFraction() < 1e-8 || ll.getSegmentFraction() * length < 0.1)
-    ) {
+    var startDistance = SphericalDistanceLibrary.fastDistance(
+      projection,
+      edge.getFromVertex().getCoordinate()
+    );
+    if (startDistance < EDGE_SPLIT_END_TOLERANCE_METERS) {
       return (IntersectionVertex) edge.getFromVertex();
-    } else if (ll.getSegmentIndex() == geom.getNumPoints() - 1) {
-      return (IntersectionVertex) edge.getToVertex();
-    } else if (
-      ll.getSegmentIndex() == geom.getNumPoints() - 2 &&
-      (ll.getSegmentFraction() > 1 - 1e-8 || (1 - ll.getSegmentFraction()) * length < 0.1)
-    ) {
+    }
+    var toDistance = SphericalDistanceLibrary.fastDistance(
+      projection,
+      edge.getToVertex().getCoordinate()
+    );
+    if (toDistance < EDGE_SPLIT_END_TOLERANCE_METERS) {
       return (IntersectionVertex) edge.getToVertex();
     }
+
     // split the edge and return the split vertex
-    return split(edge, ll.getCoordinate(geom), scope, direction, tempEdges);
+    return split(edge, projection, scope, direction, tempEdges);
   }
 
   /**
