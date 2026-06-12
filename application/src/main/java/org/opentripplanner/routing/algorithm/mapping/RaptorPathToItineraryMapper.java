@@ -22,6 +22,7 @@ import org.opentripplanner.model.plan.leg.ScheduledTransitLegBuilder;
 import org.opentripplanner.model.plan.leg.StreetLeg;
 import org.opentripplanner.model.plan.leg.UnknownPathLeg;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
+import org.opentripplanner.raptor.api.model.RaptorStartOnBoardAccess;
 import org.opentripplanner.raptor.api.path.AccessPathLeg;
 import org.opentripplanner.raptor.api.path.EgressPathLeg;
 import org.opentripplanner.raptor.api.path.PathLeg;
@@ -247,13 +248,13 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
         .withGeneralizedCost(toOtpDomainCost(pathLeg.c1() + lastLegCost))
         .withFromViaLocationType(
           ViaLocationTypeMapper.map(
-            request,
+            request.listViaLocations(),
             tripSchedule.getOriginalTripPattern().getStop(boardStopIndexInPattern)
           )
         )
         .withToViaLocationType(
           ViaLocationTypeMapper.map(
-            request,
+            request.listViaLocations(),
             tripSchedule.getOriginalTripPattern().getStop(alightStopIndexInPattern)
           )
         )
@@ -280,13 +281,13 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
       .withGeneralizedCost(toOtpDomainCost(pathLeg.c1() + lastLegCost))
       .withFromViaLocationType(
         ViaLocationTypeMapper.map(
-          request,
+          request.listViaLocations(),
           tripSchedule.getOriginalTripPattern().getStop(boardStopIndexInPattern)
         )
       )
       .withToViaLocationType(
         ViaLocationTypeMapper.map(
-          request,
+          request.listViaLocations(),
           tripSchedule.getOriginalTripPattern().getStop(alightStopIndexInPattern)
         )
       )
@@ -486,6 +487,9 @@ public class RaptorPathToItineraryMapper<T extends TripSchedule> {
   }
 
   private TimeAndCost mapAccessEgressPenalty(RaptorAccessEgress accessEgress) {
+    if (accessEgress instanceof RaptorStartOnBoardAccess) {
+      return TimeAndCost.ZERO;
+    }
     return accessEgress
       .findOriginal(RoutingAccessEgress.class)
       .map(RoutingAccessEgress::penalty)
