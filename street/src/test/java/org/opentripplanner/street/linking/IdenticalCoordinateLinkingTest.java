@@ -28,7 +28,7 @@ class IdenticalCoordinateLinkingTest {
     assertThat(env.graph().listStreetEdges()).hasSize(1);
 
     var stopVertex = TransitStopVertex.of()
-      .withCoordinate(v1.getLat() + offset, v1.getLat() + offset)
+      .withCoordinate(v1.getLat() + offset, v1.getLon() + offset)
       .withId(id("stop"))
       .build();
     env.linkVertexPermanently(stopVertex);
