@@ -147,7 +147,9 @@ public class DefaultCarpoolingService implements CarpoolingService {
     this.preFilters = TripPreFilters.defaults();
     this.postFilters = ItineraryPostFilters.defaults();
     this.itineraryMapper = new CarpoolItineraryMapper();
-    this.positionFinder = new InsertionPositionFinder(new BeelineEstimator());
+    this.positionFinder = new InsertionPositionFinder(
+      new BeelineEstimator(streetLimitationParametersService.maxCarSpeed())
+    );
     this.vertexCreationService = vertexCreationService;
   }
 
