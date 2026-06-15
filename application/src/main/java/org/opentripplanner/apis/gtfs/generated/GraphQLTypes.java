@@ -3357,6 +3357,25 @@ public class GraphQLTypes {
     }
   }
 
+  public static class GraphQLQueryTypePatternsByCodesArgs {
+
+    private List<String> codes;
+
+    public GraphQLQueryTypePatternsByCodesArgs(Map<String, Object> args) {
+      if (args != null) {
+        this.codes = (List<String>) args.get("codes");
+      }
+    }
+
+    public List<String> getGraphQLCodes() {
+      return this.codes;
+    }
+
+    public void setGraphQLCodes(List<String> codes) {
+      this.codes = codes;
+    }
+  }
+
   public static class GraphQLQueryTypePlanArgs {
 
     private Integer alightSlack;

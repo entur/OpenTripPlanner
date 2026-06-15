@@ -502,6 +502,21 @@ public class QueryTypeImpl implements GraphQLDataFetchers.GraphQLQueryType {
   }
 
   @Override
+  public DataFetcher<Iterable<TripPattern>> patternsByCodes() {
+    return environment -> {
+      var args = new GraphQLTypes.GraphQLQueryTypePatternsByCodesArgs(environment.getArguments());
+      TransitService transitService = getTransitService(environment);
+      return args
+        .getGraphQLCodes()
+        .stream()
+        .flatMap(code -> FeedScopedId.parseOptional(code).stream())
+        .map(transitService::getTripPattern)
+        .filter(Objects::nonNull)
+        .toList();
+    };
+  }
+
+  @Override
   public DataFetcher<DataFetcherResult<RoutingResponse>> plan() {
     return environment -> {
       GraphQLRequestContext context = environment.<GraphQLRequestContext>getContext();

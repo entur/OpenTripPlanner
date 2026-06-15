@@ -1101,7 +1101,7 @@ type Pattern implements Node {
   """
   Get canceled trips for this pattern. Planned cancellations are not currently supported, so
   only real-time canceled trips are returned.
-  
+    
   Avoid using this when fetching all patterns at once.
   """
   canceledTrips(
@@ -1552,6 +1552,16 @@ type QueryType {
   pattern(id: String!): Pattern @timingData
   "Get all patterns"
   patterns: [Pattern] @timingData
+  """
+  Get the patterns for the given pattern codes (the value of a pattern's `code` field).
+    
+  **Note**: Pattern codes can change quite often, for example whenever the underlying transit
+  data is updated. Therefore they should not be persisted for a long time.
+  """
+  patternsByCodes(
+    "Return the patterns with these codes, i.e. values of the field `code`."
+    codes: [String!]!
+  ): [Pattern] @timingData
   "Plans an itinerary from point A to point B based on the given arguments"
   plan(
     "Invariant: `boardSlack + alightSlack <= transferSlack`. Default value: 0"
