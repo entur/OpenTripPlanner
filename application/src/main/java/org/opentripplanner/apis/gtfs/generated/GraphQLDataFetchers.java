@@ -568,6 +568,7 @@ public class GraphQLDataFetchers {
    */
   public interface GraphQLPattern {
     public DataFetcher<Iterable<TransitAlert>> alerts();
+    public DataFetcher<Iterable<TripOnServiceDate>> canceledTrips();
     public DataFetcher<String> code();
     public DataFetcher<Integer> directionId();
     public DataFetcher<Iterable<Coordinate>> geometry();

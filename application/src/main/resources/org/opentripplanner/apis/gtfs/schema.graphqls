@@ -1098,6 +1098,20 @@ type Pattern implements Node {
     """
     types: [PatternAlertType]
   ): [Alert]
+  """
+  Get canceled trips for this pattern. Planned cancellations are not currently supported, so
+  only real-time canceled trips are returned.
+  
+  Avoid using this when fetching all patterns at once.
+  """
+  canceledTrips(
+    """
+    Only return canceled trips whose service date falls within one of these ranges.
+    An empty list or a list containing `null` is forbidden.  If this argument is not provided or its
+    value is `null`, no filtering is applied.
+    """
+    serviceDateRanges: [LocalDateRangeInput!]
+  ): [TripOnServiceDate!]!
   "ID of the pattern"
   code: String!
   """
@@ -1379,10 +1393,10 @@ type QueryType {
         
     An empty list of filters or no value means that all trips should be included. Multiple filters
     are allowed.
-    
+        
     Filter order does not matter. Each filter entry is evaluated independently and the final result
     is the union (OR) of all matching filter entries.
-    
+        
     Inside one filter entry, selectors in `include` are combined with OR, selectors in `exclude`
     are combined with OR, and the final match is `include AND NOT(exclude)`.
     """
