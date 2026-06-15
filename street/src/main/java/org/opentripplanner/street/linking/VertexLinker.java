@@ -35,8 +35,6 @@ import org.opentripplanner.street.model.vertex.TemporarySplitterVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class links transit stops to streets by splitting the streets (unless the stop is extremely
@@ -63,8 +61,6 @@ import org.slf4j.LoggerFactory;
  * within ~25 m of a street — and expands to 100 m).
  */
 public class VertexLinker {
-
-  private static final Logger LOG = LoggerFactory.getLogger(VertexLinker.class);
 
   /**
    * if there are two ways and the distances to them differ by less than this value, we link to both
@@ -782,26 +778,8 @@ public class VertexLinker {
     Scope scope,
     DisposableEdgeCollection tempEdges
   ) {
-    Area hit = null;
-    var areas = ag.getAreas();
-    if (areas.size() == 1) {
-      hit = areas.getFirst();
-    } else {
-      // If more than one area intersects, we pick first one for the name & properties
-      for (Area area : areas) {
-        Geometry polygon = area.getGeometry();
-        Geometry intersection = polygon.intersection(line);
-        if (intersection.getLength() > 0.000001) {
-          hit = area;
-          break;
-        }
-      }
-    }
-    // hit may be null when force linking a point from outside
-    if (hit == null) {
-      LOG.warn("No intersecting area found. This may indicate a bug.");
-      hit = areas.getFirst();
-    }
+    // Pick the area that owns this edge for its name, permission and safety factors.
+    Area hit = AreaEdgeSelector.resolve(ag.getAreas(), line);
     double length = SphericalDistanceLibrary.distance(to.getCoordinate(), from.getCoordinate());
     // apply consistent NoThru restrictions
     // if all joining edges are nothru, then the new edge should be as well
