@@ -1027,6 +1027,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<String> gtfsId();
     public DataFetcher<graphql.relay.Relay.ResolvedGlobalId> id();
     public DataFetcher<Boolean> isReplacement();
+    public DataFetcher<Iterable<org.opentripplanner.transit.model.basic.Notice>> notices();
     public DataFetcher<TripOccupancy> occupancy();
     public DataFetcher<TripPattern> pattern();
     public DataFetcher<Boolean> replacementsExist();

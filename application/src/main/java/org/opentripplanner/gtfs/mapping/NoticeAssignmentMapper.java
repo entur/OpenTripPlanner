@@ -4,6 +4,7 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.onebusaway.gtfs.model.NoticeAssignment;
@@ -48,15 +49,16 @@ class NoticeAssignmentMapper {
       .collect(Collectors.toMap(Trip::getId, Function.identity()));
     var routes = routeMapper.mappedRoutes();
     for (var assignment : assignments) {
-      mapOne(noticeMapper.mappedNotices(), assignment, result, trips, routes);
+      mapOne(noticeMapper.mappedNotices(), assignment, trips, routes).ifPresent(entry ->
+        result.put(entry.getKey(), entry.getValue())
+      );
     }
     return result;
   }
 
-  private void mapOne(
+  private Optional<Map.Entry<AbstractTransitEntity, Notice>> mapOne(
     Map<FeedScopedId, Notice> notices,
     NoticeAssignment assignment,
-    Multimap<AbstractTransitEntity, Notice> result,
     Map<FeedScopedId, Trip> trips,
     Map<FeedScopedId, Route> routes
   ) {
@@ -69,7 +71,7 @@ class NoticeAssignmentMapper {
         "Notice in notice assignment is missing for assignment %s",
         assignment
       );
-      return;
+      return Optional.empty();
     }
 
     var recordId = idFactory.createId(assignment.getRecordId(), "NoticeAssignment.recordId");
@@ -87,9 +89,9 @@ class NoticeAssignmentMapper {
         assignment.getTableName(),
         assignment.getRecordId()
       );
-      return;
+      return Optional.empty();
     }
 
-    result.put(entity, notice);
+    return Optional.of(Map.entry(entity, notice));
   }
 }
