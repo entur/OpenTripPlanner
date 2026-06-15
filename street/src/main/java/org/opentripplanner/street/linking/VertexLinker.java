@@ -149,14 +149,15 @@ public class VertexLinker {
     }
   }
 
-  /** projected distance from stop to edge, in latitude degrees */
-  private static double distance(Vertex tstop, StreetEdge edge, double xscale) {
-    // Despite the fact that we want to use a fast somewhat inaccurate projection, still use JTS library tools
-    // for the actual distance calculations.
-    LineString transformed = equirectangularProject(edge.getGeometry(), xscale);
-    return transformed.distance(
-      GEOMETRY_FACTORY.createPoint(new Coordinate(tstop.getLon() * xscale, tstop.getLat()))
-    );
+  /**
+   * Squared projected distance from stop to edge, in latitude degrees squared. Computed directly on
+   * the packed edge geometry, without materializing a LineString or going through JTS DistanceOp.
+   * The square is returned because the linker only orders and thresholds by distance (both
+   * monotonic), so the per-candidate sqrt is unnecessary; callers compare against squared
+   * thresholds.
+   */
+  private static double squaredDistance(Vertex tstop, StreetEdge edge, double xscale) {
+    return edge.squaredDistanceToPointEquirectangular(tstop.getLon(), tstop.getLat(), xscale);
   }
 
   /** project this linestring to an equirectangular projection */
@@ -258,7 +259,7 @@ public class VertexLinker {
       null,
       edges
         .stream()
-        .map(e -> new DistanceTo<>(e, distance(vertex, e, xscale)))
+        .map(e -> new DistanceTo<>(e, squaredDistance(vertex, e, xscale)))
         .toList(),
       xscale
     );
@@ -284,14 +285,16 @@ public class VertexLinker {
     // street edges traversable by at least one of the given modes and are still present in the
     // graph. Calculate a distance to each of those edges, and keep only the ones within the search
     // radius.
+    // Distances are squared (see squaredDistance), so compare against the squared radius.
+    final double radiusDegSq = radiusDeg * radiusDeg;
     var candidateEdges = graph.findEdges(env, scope);
     List<DistanceTo<StreetEdge>> candidateDistanceToEdges = candidateEdges
       .stream()
       .filter(StreetEdge.class::isInstance)
       .map(StreetEdge.class::cast)
       .filter(e -> e.canTraverse(traverseModes) && e.isReachableFromGraph())
-      .map(e -> new DistanceTo<>(e, distance(vertex, e, xscale)))
-      .filter(ead -> ead.distanceDegreesLat < radiusDeg)
+      .map(e -> new DistanceTo<>(e, squaredDistance(vertex, e, xscale)))
+      .filter(ead -> ead.squaredDistanceDegreesLat < radiusDegSq)
       .toList();
 
     return linkToCandidateEdges(
@@ -402,18 +405,24 @@ public class VertexLinker {
         continue;
       }
 
-      double closestDistance = candidateEdgesForMode
+      double closestSquaredDistance = candidateEdgesForMode
         .stream()
-        .mapToDouble(ce -> ce.distanceDegreesLat)
+        .mapToDouble(ce -> ce.squaredDistanceDegreesLat)
         .min()
         .getAsDouble();
+
+      // The duplicate-way epsilon is an additive tolerance on the (non-squared) distance, which is
+      // not preserved by squaring. Recover the closest distance with a single sqrt per mode and
+      // compare against the squared band: dSq <= (closest + eps)^2 is exactly d <= closest + eps.
+      double band = Math.sqrt(closestSquaredDistance) + DUPLICATE_WAY_EPSILON_DEGREES;
+      double bandSquared = band * band;
 
       // Because this is a set, each instance of DistanceTo<StreetEdge> will only be added once
       // Note: add only closest edges of each mode
       closestEdges.addAll(
         candidateEdgesForMode
           .stream()
-          .filter(ce -> ce.distanceDegreesLat <= closestDistance + DUPLICATE_WAY_EPSILON_DEGREES)
+          .filter(ce -> ce.squaredDistanceDegreesLat <= bandSquared)
           .collect(Collectors.toSet())
       );
     }
@@ -603,11 +612,11 @@ public class VertexLinker {
   private static class DistanceTo<T> {
 
     T item;
-    double distanceDegreesLat;
+    double squaredDistanceDegreesLat;
 
-    public DistanceTo(T item, double distanceDegreesLat) {
+    public DistanceTo(T item, double squaredDistanceDegreesLat) {
       this.item = item;
-      this.distanceDegreesLat = distanceDegreesLat;
+      this.squaredDistanceDegreesLat = squaredDistanceDegreesLat;
     }
 
     @Override
