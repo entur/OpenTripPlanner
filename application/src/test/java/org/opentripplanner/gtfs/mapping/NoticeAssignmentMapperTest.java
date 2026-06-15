@@ -2,8 +2,6 @@ package org.opentripplanner.gtfs.mapping;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.route;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.trip;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -13,7 +11,6 @@ import org.opentripplanner.graph_builder.issue.api.DataImportIssue;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issue.service.DefaultDataImportIssueStore;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
-import org.opentripplanner.transit.model.framework.DefaultEntityById;
 
 class NoticeAssignmentMapperTest {
 
@@ -23,6 +20,8 @@ class NoticeAssignmentMapperTest {
   private static final String NOTICE_ID = "N1";
   private static final String NOTICE_TEXT = "Platform change";
 
+  private static final GtfsTestData DATA = new GtfsTestData();
+
   private static final org.onebusaway.gtfs.model.Notice GTFS_NOTICE;
 
   static {
@@ -31,19 +30,39 @@ class NoticeAssignmentMapperTest {
     GTFS_NOTICE.setDisplayText(NOTICE_TEXT);
   }
 
+  private static RouteMapper createRouteMapper() {
+    return new RouteMapper(
+      ID_FACTORY,
+      new AgencyMapper(ID_FACTORY),
+      new RouteNetworkAssignmentMapper(ID_FACTORY),
+      DataImportIssueStore.NOOP,
+      new TranslationHelper()
+    );
+  }
+
+  private static TripMapper createTripMapper(RouteMapper routeMapper) {
+    return new TripMapper(
+      ID_FACTORY,
+      routeMapper,
+      new DirectionMapper(DataImportIssueStore.NOOP),
+      new TranslationHelper()
+    );
+  }
+
   @Test
   void mapNoticeAssignmentOnRoute() {
-    var route = route("R1").build();
+    var routeMapper = createRouteMapper();
+    var route = routeMapper.map(DATA.route);
 
-    var routesById = new DefaultEntityById<org.opentripplanner.transit.model.network.Route>();
-    routesById.add(route);
+    var noticeMapper = new NoticeMapper(ID_FACTORY);
+    noticeMapper.map(GTFS_NOTICE);
 
     var mapper = new NoticeAssignmentMapper(
       ID_FACTORY,
       DataImportIssueStore.NOOP,
-      List.of(GTFS_NOTICE),
-      routesById,
-      new DefaultEntityById<>()
+      noticeMapper,
+      createTripMapper(routeMapper),
+      routeMapper
     );
 
     var assignment = new NoticeAssignment();
@@ -61,17 +80,19 @@ class NoticeAssignmentMapperTest {
 
   @Test
   void mapNoticeAssignmentOnTrip() {
-    var trip = trip("T1").build();
+    var routeMapper = createRouteMapper();
+    var tripMapper = createTripMapper(routeMapper);
+    var trip = tripMapper.map(DATA.trip);
 
-    var tripsById = new DefaultEntityById<org.opentripplanner.transit.model.timetable.Trip>();
-    tripsById.add(trip);
+    var noticeMapper = new NoticeMapper(ID_FACTORY);
+    noticeMapper.map(GTFS_NOTICE);
 
     var mapper = new NoticeAssignmentMapper(
       ID_FACTORY,
       DataImportIssueStore.NOOP,
-      List.of(GTFS_NOTICE),
-      new DefaultEntityById<>(),
-      tripsById
+      noticeMapper,
+      tripMapper,
+      routeMapper
     );
 
     var assignment = new NoticeAssignment();
@@ -89,12 +110,14 @@ class NoticeAssignmentMapperTest {
   @Test
   void missingNoticeLogsIssue() {
     var issues = new DefaultDataImportIssueStore();
+    var noticeMapper = new NoticeMapper(ID_FACTORY);
+
     var mapper = new NoticeAssignmentMapper(
       ID_FACTORY,
       issues,
-      List.of(),
-      new DefaultEntityById<>(),
-      new DefaultEntityById<>()
+      noticeMapper,
+      createTripMapper(createRouteMapper()),
+      createRouteMapper()
     );
 
     var assignment = new NoticeAssignment();
@@ -114,12 +137,15 @@ class NoticeAssignmentMapperTest {
   @Test
   void missingRouteEntityLogsIssue() {
     var issues = new DefaultDataImportIssueStore();
+    var noticeMapper = new NoticeMapper(ID_FACTORY);
+    noticeMapper.map(GTFS_NOTICE);
+
     var mapper = new NoticeAssignmentMapper(
       ID_FACTORY,
       issues,
-      List.of(GTFS_NOTICE),
-      new DefaultEntityById<>(),
-      new DefaultEntityById<>()
+      noticeMapper,
+      createTripMapper(createRouteMapper()),
+      createRouteMapper()
     );
 
     var assignment = new NoticeAssignment();
@@ -139,12 +165,15 @@ class NoticeAssignmentMapperTest {
   @Test
   void missingTripEntityLogsIssue() {
     var issues = new DefaultDataImportIssueStore();
+    var noticeMapper = new NoticeMapper(ID_FACTORY);
+    noticeMapper.map(GTFS_NOTICE);
+
     var mapper = new NoticeAssignmentMapper(
       ID_FACTORY,
       issues,
-      List.of(GTFS_NOTICE),
-      new DefaultEntityById<>(),
-      new DefaultEntityById<>()
+      noticeMapper,
+      createTripMapper(createRouteMapper()),
+      createRouteMapper()
     );
 
     var assignment = new NoticeAssignment();
@@ -163,20 +192,21 @@ class NoticeAssignmentMapperTest {
 
   @Test
   void multipleAssignmentsMappedTogether() {
-    var route = route("R1").build();
-    var trip = trip("T1").build();
+    var routeMapper = createRouteMapper();
+    var tripMapper = createTripMapper(routeMapper);
 
-    var routesById = new DefaultEntityById<org.opentripplanner.transit.model.network.Route>();
-    routesById.add(route);
-    var tripsById = new DefaultEntityById<org.opentripplanner.transit.model.timetable.Trip>();
-    tripsById.add(trip);
+    var route = routeMapper.map(DATA.route);
+    var trip = tripMapper.map(DATA.trip);
+
+    var noticeMapper = new NoticeMapper(ID_FACTORY);
+    noticeMapper.map(GTFS_NOTICE);
 
     var mapper = new NoticeAssignmentMapper(
       ID_FACTORY,
       DataImportIssueStore.NOOP,
-      List.of(GTFS_NOTICE),
-      routesById,
-      tripsById
+      noticeMapper,
+      tripMapper,
+      routeMapper
     );
 
     var routeAssignment = new NoticeAssignment();
