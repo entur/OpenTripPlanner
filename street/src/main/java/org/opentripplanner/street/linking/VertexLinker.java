@@ -74,12 +74,6 @@ public class VertexLinker {
     SphericalDistanceLibrary.metersToDegrees(0.001);
 
   /**
-   * Edge - area intersection often tests edges which start/end at area edge.
-   * Shrink egde slightly to avoid accuracy errors
-   */
-  private static final double AREA_INTERSECTION_SHRINKING = 0.0001;
-
-  /**
    * Minimal distance for considering two nodes the same
    */
   private static final double DUPLICATE_NODE_EPSILON_DEGREES_SQUARED =
@@ -92,6 +86,12 @@ public class VertexLinker {
     TraverseMode.BICYCLE,
     TraverseMode.CAR
   );
+
+  /**
+   * If vertex linking tries to split an edge very close to the endpoint, do not split the edge,
+   * use the existing edge endpoint instead. This is the limit of how far we still use the endpoint.
+   */
+  private static final double EDGE_SPLIT_END_TOLERANCE_METERS = 0.1;
 
   private final Graph graph;
 
@@ -463,7 +463,7 @@ public class VertexLinker {
         // vertex is inside the area. try connecting the vertex to the edge's split point, because
         // connections to visibility vertices may fail or do not always provide an optimal route
         // note that by definition, connection to closest edge cannot be blocked and edge can be forced
-        addVisibilityEdges(start, split, ag, scope, tempEdges, true);
+        addVisibilityEdges(start, split, new PreparedAreaGroup(ag), scope, tempEdges, true);
       } else {
         // vertex is outside an area. Use split point for area connections
         start = split;
@@ -506,24 +506,26 @@ public class VertexLinker {
     LineString transformed = equirectangularProject(geom, xScale);
     LocationIndexedLine il = new LocationIndexedLine(transformed);
     LinearLocation ll = il.project(new Coordinate(vertex.getLon() * xScale, vertex.getLat()));
-    double length = SphericalDistanceLibrary.length(geom);
+    var projection = ll.getCoordinate(geom);
 
     // if we're very close to one end of the edge, don't split
-    if (
-      ll.getSegmentIndex() == 0 &&
-      (ll.getSegmentFraction() < 1e-8 || ll.getSegmentFraction() * length < 0.1)
-    ) {
+    var startDistance = SphericalDistanceLibrary.fastDistance(
+      projection,
+      edge.getFromVertex().getCoordinate()
+    );
+    if (startDistance < EDGE_SPLIT_END_TOLERANCE_METERS) {
       return (IntersectionVertex) edge.getFromVertex();
-    } else if (ll.getSegmentIndex() == geom.getNumPoints() - 1) {
-      return (IntersectionVertex) edge.getToVertex();
-    } else if (
-      ll.getSegmentIndex() == geom.getNumPoints() - 2 &&
-      (ll.getSegmentFraction() > 1 - 1e-8 || (1 - ll.getSegmentFraction()) * length < 0.1)
-    ) {
+    }
+    var toDistance = SphericalDistanceLibrary.fastDistance(
+      projection,
+      edge.getToVertex().getCoordinate()
+    );
+    if (toDistance < EDGE_SPLIT_END_TOLERANCE_METERS) {
       return (IntersectionVertex) edge.getToVertex();
     }
+
     // split the edge and return the split vertex
-    return split(edge, ll.getCoordinate(geom), scope, direction, tempEdges);
+    return split(edge, projection, scope, direction, tempEdges);
   }
 
   /**
@@ -656,6 +658,8 @@ public class VertexLinker {
     boolean force
   ) {
     Geometry polygon = areaGroup.getGeometry();
+    // Reused across all candidate contains() checks below so the spatial index is built only once.
+    var area = new PreparedAreaGroup(areaGroup);
 
     int added = 0;
 
@@ -681,7 +685,7 @@ public class VertexLinker {
       }
     }
     for (IntersectionVertex v : visibilityVertices) {
-      if (addVisibilityEdges(newVertex, v, areaGroup, scope, tempEdges, false)) {
+      if (addVisibilityEdges(newVertex, v, area, scope, tempEdges, false)) {
         added++;
       }
     }
@@ -705,7 +709,7 @@ public class VertexLinker {
           nearest = areaGroup.visibilityVertices().stream().findFirst();
         }
         if (nearest.isPresent()) {
-          return addVisibilityEdges(newVertex, nearest.get(), areaGroup, scope, tempEdges, true);
+          return addVisibilityEdges(newVertex, nearest.get(), area, scope, tempEdges, true);
         }
       }
       return false;
@@ -730,25 +734,11 @@ public class VertexLinker {
     return modes;
   }
 
-  /**
-   * Create a slightly shortened line between two coordinates.
-   * This is used when testing if a polygon contains a line between two
-   * of its boundary points. Floating point math cannot represent boundaries
-   * precisely, so we need to shrink the line to ensure robust testing.
-   */
-  private LineString createShrunkLine(Coordinate from, Coordinate to) {
-    var dx = AREA_INTERSECTION_SHRINKING * (to.x - from.x);
-    var dy = AREA_INTERSECTION_SHRINKING * (to.y - from.y);
-    var c1 = new Coordinate(from.x + dx, from.y + dy);
-    var c2 = new Coordinate(to.x - dx, to.y - dy);
-    return GEOMETRY_FACTORY.createLineString(new Coordinate[] { c1, c2 });
-  }
-
   /* Check if an edge candiate does not cross the area boundary and add it if it does not */
   private boolean addVisibilityEdges(
     IntersectionVertex from,
     IntersectionVertex to,
-    AreaGroup ag,
+    PreparedAreaGroup area,
     Scope scope,
     DisposableEdgeCollection tempEdges,
     boolean force
@@ -764,12 +754,12 @@ public class VertexLinker {
     var c1 = from.getCoordinate();
     var c2 = to.getCoordinate();
     // ensure that new edge does not leave the bounds of the area or hit any holes
-    if (!force && !ag.getGeometry().contains(createShrunkLine(c1, c2))) {
+    if (!force && !area.containsSegment(c1, c2)) {
       return false;
     }
     LineString line = GEOMETRY_FACTORY.createLineString(new Coordinate[] { c1, c2 });
     // add connecting edges
-    createEdges(line, from, to, ag, scope, tempEdges);
+    createEdges(line, from, to, area.areaGroup(), scope, tempEdges);
 
     return true;
   }
