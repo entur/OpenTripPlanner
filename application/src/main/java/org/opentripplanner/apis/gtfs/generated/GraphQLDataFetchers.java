@@ -548,6 +548,10 @@ public class GraphQLDataFetchers {
     }
   }
 
+  public interface GraphQLNotice {
+    public DataFetcher<String> text();
+  }
+
   public interface GraphQLOpeningHours {
     public DataFetcher<Iterable<Object>> dates();
     public DataFetcher<String> osm();
@@ -834,6 +838,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<Boolean> isReplacement();
     public DataFetcher<String> longName();
     public DataFetcher<GraphQLTransitMode> mode();
+    public DataFetcher<Iterable<org.opentripplanner.transit.model.basic.Notice>> notices();
     public DataFetcher<Iterable<TripPattern>> patterns();
     public DataFetcher<Boolean> replacementsExist();
     public DataFetcher<String> shortName();
