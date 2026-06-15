@@ -1,5 +1,6 @@
 package org.opentripplanner.street.linking;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -52,6 +53,14 @@ import org.slf4j.LoggerFactory;
  * <p>
  * See discussion in pull request #1922, follow up issue #1934, and the original issue calling for
  * replacement of the stop linker, #1305.
+ * <p>
+ * <b>Expanding-envelope search.</b> Linking searches for nearby street edges with an expanding
+ * envelope: a small radius is tried first and widened only if nothing is found. This keeps the
+ * common case cheap, because the spatial index ({@code HashGridSpatialIndex}) returns whole grid
+ * cells as candidates, so a smaller envelope touches fewer cells and yields fewer candidate edges to
+ * distance-check, filter and dedup. The per-scope radius steps are defined in {@link SearchPlan}
+ * (e.g. real-time GBFS rental linking starts at 25 m — the vast majority of rental vehicles sit
+ * within ~25 m of a street — and expands to 100 m).
  */
 public class VertexLinker {
 
@@ -70,11 +79,6 @@ public class VertexLinker {
   private static final double DUPLICATE_NODE_EPSILON_DEGREES_SQUARED =
     SphericalDistanceLibrary.metersToDegrees(1) * SphericalDistanceLibrary.metersToDegrees(1);
 
-  private static final double INITIAL_SEARCH_RADIUS_DEGREES =
-    SphericalDistanceLibrary.metersToDegrees(100);
-  private static final double MAX_SEARCH_RADIUS_DEGREES = SphericalDistanceLibrary.metersToDegrees(
-    1000
-  );
   private static final GeometryFactory GEOMETRY_FACTORY = GeometryUtils.getGeometryFactory();
 
   private static final Set<TraverseMode> NO_THRU_MODES = Set.of(
@@ -198,23 +202,22 @@ public class VertexLinker {
       : null;
 
     try {
-      Set<StreetVertex> streetVertices = linkToStreetEdges(
-        vertex,
-        traverseModes,
-        direction,
-        scope,
-        INITIAL_SEARCH_RADIUS_DEGREES,
-        tempEdges
-      );
-      if (streetVertices.isEmpty() && scope == Scope.REQUEST) {
+      // Expanding-envelope search: try each radius step (smallest first) and stop at the first that
+      // links, so a wider — and more expensive — search only runs when the smaller one finds nothing.
+      // The maximum reach per scope is unchanged, so anything linkable before still links.
+      Set<StreetVertex> streetVertices = Set.of();
+      for (double radius : SearchPlan.forScope(scope).radiusStepsDegrees()) {
         streetVertices = linkToStreetEdges(
           vertex,
           traverseModes,
           direction,
           scope,
-          MAX_SEARCH_RADIUS_DEGREES,
+          radius,
           tempEdges
         );
+        if (!streetVertices.isEmpty()) {
+          break;
+        }
       }
 
       for (StreetVertex streetVertex : streetVertices) {
@@ -306,6 +309,41 @@ public class VertexLinker {
     return Math.cos((vertex.getLat() * Math.PI) / 180);
   }
 
+  /**
+   * Expanding-envelope search: the radius steps (smallest first) to try per linking {@link Scope}.
+   * {@link #link} tries each step in turn and stops at the first that links, so a wider (more
+   * expensive) search only runs when the smaller one finds nothing; the largest step is that scope's
+   * maximum reach, so the set of vertices that link at all is unchanged.
+   */
+  private enum SearchPlan {
+    /** GBFS rental — the vast majority of rental vehicles sit within ~25 m of a street. */
+    REALTIME(25, 100),
+    /** Request-time access/egress linking. */
+    REQUEST(100, 1000),
+    /** Graph build — a single pass, no expansion. */
+    PERMANENT(100);
+
+    private final double[] radiusStepsDegrees;
+
+    SearchPlan(double... radiusStepsMetres) {
+      this.radiusStepsDegrees = Arrays.stream(radiusStepsMetres)
+        .map(SphericalDistanceLibrary::metersToDegrees)
+        .toArray();
+    }
+
+    static SearchPlan forScope(Scope scope) {
+      return switch (scope) {
+        case REALTIME -> REALTIME;
+        case REQUEST -> REQUEST;
+        case PERMANENT -> PERMANENT;
+      };
+    }
+
+    double[] radiusStepsDegrees() {
+      return radiusStepsDegrees;
+    }
+  }
+
   private Set<StreetVertex> linkToCandidateEdges(
     Vertex vertex,
     TraverseModeSet traverseModes,
@@ -342,7 +380,7 @@ public class VertexLinker {
     // The following logic has gone through several different versions using different approaches.
     // The core idea is to find all edges that are roughly the same distance from the given vertex, which will
     // catch things like superimposed edges going in opposite directions.
-    // First, all edges within INITIAL_SEARCH_RADIUS_DEGREES of of the best distance were selected.
+    // First, all edges within the initial search radius of the best distance were selected.
     // More recently, the edges were sorted in order of increasing distance, and all edges in the list were selected
     // up to the point where a distance increase of DUPLICATE_WAY_EPSILON_DEGREES from one edge to the next.
     // This was in response to concerns about arbitrary cutoff distances: at any distance, it's always possible
