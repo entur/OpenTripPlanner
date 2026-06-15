@@ -786,6 +786,7 @@ public class VertexLinker {
       .withPermission(hit.permission())
       .withBicycleSafetyFactor(hit.bicycleSafety())
       .withWalkSafetyFactor(hit.walkSafety())
+      .withWheelchairAccessible(hit.wheelchairAccessible())
       .withBack(false)
       .withArea(ag);
     for (TraverseMode tm : outgoingNoThruModes) {
@@ -805,6 +806,7 @@ public class VertexLinker {
       .withPermission(hit.permission())
       .withBicycleSafetyFactor(hit.bicycleSafety())
       .withWalkSafetyFactor(hit.walkSafety())
+      .withWheelchairAccessible(hit.wheelchairAccessible())
       .withBack(true)
       .withArea(ag);
     for (TraverseMode tm : incomingNoThruModes) {
