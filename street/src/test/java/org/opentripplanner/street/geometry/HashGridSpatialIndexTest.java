@@ -11,7 +11,7 @@ import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.index.SpatialIndex;
 import org.locationtech.jts.index.strtree.STRtree;
 
-public class HashGridTest {
+public class HashGridSpatialIndexTest {
 
   /**
    * We perform a non-regression random test. We insert many random-envelop objects into both a hash

@@ -1,17 +1,18 @@
-package org.opentripplanner.transit.model.timetable;
+package org.opentripplanner.transit.model._data;
 
 import java.util.ArrayList;
 import org.opentripplanner.transit.model.network.TripPattern;
+import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.utils.time.TimeUtils;
 
 public class TripTimesStringBuilder {
 
   /**
    * This encodes the trip times and information about stops in a readable way in order to simplify
-   * testing/debugging. The format of the outputput string is:
+   * testing/debugging. The format of the output string is:
    *
    * <pre>
-   * REALTIME_STATE | stop1 [FLAGS] arrivalTime departureTime | stop2 ...
+   * REALTIME_STATES... | stop1 [FLAGS] arrivalTime departureTime | stop2 ...
    *
    * Where flags are:
    * C: Canceled
@@ -32,12 +33,12 @@ public class TripTimesStringBuilder {
       );
     }
 
-    StringBuilder s = new StringBuilder(tripTimes.getRealTimeState().toString());
+    StringBuilder s = new StringBuilder(TripTimesStateDecoder.summarizeFromTripTimes(tripTimes));
     for (int i = 0; i < tripTimes.getNumStops(); i++) {
       var depart = tripTimes.getDepartureTime(i);
       var arrive = tripTimes.getArrivalTime(i);
       var flags = new ArrayList<String>();
-      if (tripTimes.isCancelledStop(i)) {
+      if (tripTimes.isCanceledStop(i)) {
         flags.add("C");
       }
       if (tripTimes.hasArrived(i)) {
