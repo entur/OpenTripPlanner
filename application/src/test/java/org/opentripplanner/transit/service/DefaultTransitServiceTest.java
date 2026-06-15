@@ -162,7 +162,7 @@ class DefaultTransitServiceTest {
     var canceledStopTimes = TEST_MODEL.stopTimesEvery5Minutes(3, TRIP, "11:30");
     var canceledTripTimes = TripTimesFactory.tripTimes(TRIP, canceledStopTimes, deduplicator)
       .createRealTimeFromScheduledTimes()
-      .cancelTrip()
+      .withCanceled()
       .build();
     timetableRepository.addTripPattern(RAIL_PATTERN.getId(), RAIL_PATTERN);
 

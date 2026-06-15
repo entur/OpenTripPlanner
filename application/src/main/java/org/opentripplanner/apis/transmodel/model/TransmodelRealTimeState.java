@@ -1,9 +1,6 @@
-package org.opentripplanner.transit.model.timetable;
+package org.opentripplanner.apis.transmodel.model;
 
-/**
- * The real-time state of a trip
- */
-public enum RealTimeState {
+public enum TransmodelRealTimeState {
   /**
    * The trip information comes from the GTFS feed, i.e. no real-time update has been applied.
    */
@@ -31,10 +28,4 @@ public enum RealTimeState {
    * trip pattern of the scheduled trip.
    */
   MODIFIED,
-
-  /**
-   * The trip should not be visible to the end user. Either it has been set as deleted in the
-   * real-time feed, or it has been replaced by another trip on another pattern.
-   */
-  DELETED,
 }
