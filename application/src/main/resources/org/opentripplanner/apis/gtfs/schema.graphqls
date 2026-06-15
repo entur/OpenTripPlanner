@@ -1400,8 +1400,8 @@ type QueryType {
     last: Int
   ): TripOnServiceDateConnection @timingData
   """
-  Summary of canceled trips. Can be used as a preliminary query before `canceledTrips` to get an idea of how many canceled
-  trips there are and what filters to use.
+  Summary of canceled trips. Can be used as a preliminary query before using other
+  queries to fetch the details of the canceled trips.
   """
   canceledTripsSummary(
     """
