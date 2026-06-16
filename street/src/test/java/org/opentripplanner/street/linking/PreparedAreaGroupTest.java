@@ -9,7 +9,6 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.LinearRing;
 import org.locationtech.jts.geom.Polygon;
 import org.opentripplanner.core.model.i18n.I18NString;
@@ -62,7 +61,10 @@ class PreparedAreaGroupTest {
     var only = area(square(0, 10));
     var g = new AreaGroup(square(0, 10));
     g.addArea(only);
-    assertEquals(List.of(only), new PreparedAreaGroup(g).areasCrossedBy(line(1, 5, 4, 5)));
+    assertEquals(
+      List.of(only),
+      new PreparedAreaGroup(g).areasCrossedBy(GeometryUtils.makeLineString(1, 5, 4, 5))
+    );
   }
 
   @Test
@@ -72,7 +74,10 @@ class PreparedAreaGroupTest {
     var friendly = area(square(0, 10));
     var steps = area(square(6, 16));
     var g = group(friendly, steps);
-    assertEquals(List.of(friendly), new PreparedAreaGroup(g).areasCrossedBy(line(1, 5, 4, 5)));
+    assertEquals(
+      List.of(friendly),
+      new PreparedAreaGroup(g).areasCrossedBy(GeometryUtils.makeLineString(1, 5, 4, 5))
+    );
   }
 
   @Test
@@ -83,7 +88,7 @@ class PreparedAreaGroupTest {
     var g = group(friendly, steps);
     assertEquals(
       List.of(friendly, steps),
-      new PreparedAreaGroup(g).areasCrossedBy(line(2, 5, 12, 5))
+      new PreparedAreaGroup(g).areasCrossedBy(GeometryUtils.makeLineString(2, 5, 12, 5))
     );
   }
 
@@ -98,7 +103,10 @@ class PreparedAreaGroupTest {
     var g = new AreaGroup(square(0, 20));
     g.addArea(a);
     g.addArea(b);
-    assertEquals(List.of(a), new PreparedAreaGroup(g).areasCrossedBy(line(5, 5, 10, 5)));
+    assertEquals(
+      List.of(a),
+      new PreparedAreaGroup(g).areasCrossedBy(GeometryUtils.makeLineString(5, 5, 10, 5))
+    );
   }
 
   private static AreaGroup group(Area... areas) {
@@ -127,10 +135,6 @@ class PreparedAreaGroupTest {
         new Coordinate(minX, 0),
       }
     );
-  }
-
-  private static LineString line(double x1, double y1, double x2, double y2) {
-    return GF.createLineString(new Coordinate[] { new Coordinate(x1, y1), new Coordinate(x2, y2) });
   }
 
   private static Polygon squareWithHole() {
