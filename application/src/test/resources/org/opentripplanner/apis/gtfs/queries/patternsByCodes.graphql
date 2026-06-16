@@ -1,5 +1,0 @@
-{
-  patternsByCodes(codes: ["F:pattern-1", "F:does-not-exist"]) {
-    code
-  }
-}

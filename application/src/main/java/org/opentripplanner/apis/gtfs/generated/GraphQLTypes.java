@@ -3357,22 +3357,22 @@ public class GraphQLTypes {
     }
   }
 
-  public static class GraphQLQueryTypePatternsByCodesArgs {
+  public static class GraphQLQueryTypePatternsByIdsArgs {
 
-    private List<String> codes;
+    private List<String> ids;
 
-    public GraphQLQueryTypePatternsByCodesArgs(Map<String, Object> args) {
+    public GraphQLQueryTypePatternsByIdsArgs(Map<String, Object> args) {
       if (args != null) {
-        this.codes = (List<String>) args.get("codes");
+        this.ids = (List<String>) args.get("ids");
       }
     }
 
-    public List<String> getGraphQLCodes() {
-      return this.codes;
+    public List<String> getGraphQLIds() {
+      return this.ids;
     }
 
-    public void setGraphQLCodes(List<String> codes) {
-      this.codes = codes;
+    public void setGraphQLIds(List<String> ids) {
+      this.ids = ids;
     }
   }
 

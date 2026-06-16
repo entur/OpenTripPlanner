@@ -1558,9 +1558,9 @@ type QueryType {
   **Note**: Pattern codes can change quite often, for example whenever the underlying transit
   data is updated. Therefore they should not be persisted for a long time.
   """
-  patternsByCodes(
+  patternsByIds(
     "Return the patterns with these codes, i.e. values of the field `code`."
-    codes: [String!]!
+    ids: [String!]!
   ): [Pattern] @timingData
   "Plans an itinerary from point A to point B based on the given arguments"
   plan(

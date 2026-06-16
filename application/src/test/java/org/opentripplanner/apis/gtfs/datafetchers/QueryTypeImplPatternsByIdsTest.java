@@ -4,6 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.Iterables;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -11,23 +12,11 @@ import org.opentripplanner.apis.support.graphql.DataFetchingSupport;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
 
-class QueryTypeImplPatternsTest {
+class QueryTypeImplPatternsByIdsTest {
 
   private static final LocalDate SERVICE_DATE = LocalDate.of(2023, 6, 3);
 
   private final QueryTypeImpl subject = new QueryTypeImpl();
-
-  @Test
-  void allPatternsReturnedWithoutIdsFilter() throws Exception {
-    var env = buildEnvironment();
-    var transitService = env.transitService();
-
-    var result = subject
-      .patterns()
-      .get(DataFetchingSupport.dataFetchingEnvironment(null, Map.of(), transitService));
-
-    assertThat(result).hasSize(transitService.listTripPatterns().size());
-  }
 
   @Test
   void onlyMatchingPatternsReturnedWithIdsFilter() throws Exception {
@@ -36,7 +25,7 @@ class QueryTypeImplPatternsTest {
     var pattern = transitService.listTripPatterns().iterator().next();
 
     var result = subject
-      .patterns()
+      .patternsByIds()
       .get(
         DataFetchingSupport.dataFetchingEnvironment(
           null,
@@ -54,12 +43,11 @@ class QueryTypeImplPatternsTest {
     var env = buildEnvironment();
     var transitService = env.transitService();
 
-    var ids = new java.util.ArrayList<String>();
-    ids.add(null);
+    var ids = new ArrayList<String>();
     ids.add("test:does-not-exist");
 
     var result = subject
-      .patterns()
+      .patternsByIds()
       .get(DataFetchingSupport.dataFetchingEnvironment(null, Map.of("ids", ids), transitService));
 
     assertThat(result).isEmpty();

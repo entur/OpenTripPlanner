@@ -702,7 +702,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<Object> node();
     public DataFetcher<TripPattern> pattern();
     public DataFetcher<Iterable<TripPattern>> patterns();
-    public DataFetcher<Iterable<TripPattern>> patternsByCodes();
+    public DataFetcher<Iterable<TripPattern>> patternsByIds();
     public DataFetcher<
       graphql.execution.DataFetcherResult<org.opentripplanner.routing.api.response.RoutingResponse>
     > plan();
