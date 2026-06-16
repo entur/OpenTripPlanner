@@ -54,10 +54,24 @@ final class PreparedAreaGroup {
    * indexed {@link #areasCrossedBy} crossing test on this same group.
    */
   boolean containsSegment(Coordinate from, Coordinate to) {
+    return preparedGroup().contains(createShrunkLine(from, to));
+  }
+
+  /**
+   * Whether the area group polygon contains the given point. Reuses the same lazily built prepared
+   * index as {@link #containsSegment}, so the point-in-area test and the per-candidate segment tests
+   * share a single index build instead of each rebuilding a sweep-line index over the polygon
+   * boundary.
+   */
+  boolean containsPoint(Coordinate point) {
+    return preparedGroup().contains(GEOMETRY_FACTORY.createPoint(point));
+  }
+
+  private PreparedGeometry preparedGroup() {
     if (preparedGroup == null) {
       preparedGroup = PreparedGeometryFactory.prepare(areaGroup.getGeometry());
     }
-    return preparedGroup.contains(createShrunkLine(from, to));
+    return preparedGroup;
   }
 
   /**
