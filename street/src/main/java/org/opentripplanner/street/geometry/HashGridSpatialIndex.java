@@ -50,6 +50,16 @@ public class HashGridSpatialIndex<T> implements SpatialIndex, Serializable {
    */
   private static final double DEFAULT_X_BIN_SIZE = 0.0035;
 
+  /**
+   * Initial capacity hint for the per-query dedup set. Per-query candidate counts are bimodal:
+   * tens of entries in rural bins, but ~2,500+ in dense city tiles (where real-time rentals link).
+   * 1024 — the historical default — avoids resizing for most dense single-tile queries without
+   * grossly over-allocating; the densest tiles still resize, which is cheap for an open-addressed
+   * identity set. The dominant win is removing the per-candidate {@code HashMap.Node}/value-hash
+   * cost, which is independent of this hint.
+   */
+  private static final int RESULT_SIZE_HINT = 1024;
+
   /* Size of bin in X and Y direction, in coordinates units. */
   private final double xBinSize;
   private final double yBinSize;
@@ -113,14 +123,9 @@ public class HashGridSpatialIndex<T> implements SpatialIndex, Serializable {
     return HashSet.newHashSet(sizeHint);
   }
 
-  /** A cheap, allocation-free result-size estimate, bounded so a large index never over-sizes. */
-  private int resultSizeHint() {
-    return Math.min(nEntries, 256);
-  }
-
   @Override
   public final List<T> query(Envelope envelope) {
-    final Set<T> ret = newResultSet(resultSizeHint());
+    final Set<T> ret = newResultSet(RESULT_SIZE_HINT);
     visit(envelope, false, (bin, mapKey) -> {
       ret.addAll(bin);
       return false;
@@ -189,7 +194,7 @@ public class HashGridSpatialIndex<T> implements SpatialIndex, Serializable {
    * their shared endpoint).
    */
   public Set<T> queryAlongLineStrings(Collection<LineString> lineStrings) {
-    Set<T> result = newResultSet(resultSizeHint());
+    Set<T> result = newResultSet(RESULT_SIZE_HINT);
     TLongSet keys = new TLongHashSet(256);
     for (LineString ls : lineStrings) {
       CoordinateSequence seq = ls.getCoordinateSequence();
