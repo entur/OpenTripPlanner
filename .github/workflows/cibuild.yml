@@ -58,18 +58,19 @@ jobs:
 
       - name: Send coverage data to codecov.io
         if: github.repository_owner == 'opentripplanner' && github.event_name != 'merge_group'
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           verbose: true
 
       - name: Upload test results to Codecov
         # always upload test results, even when failed
-        if: ${{ !cancelled() }} && github.event_name != 'merge_group'
-        uses: codecov/test-results-action@v1
+        if: ${{ !cancelled() && github.event_name != 'merge_group' }}
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           files: "*TEST-*.xml"
+          report_type: "test_results"
 
       - name: Deploy to Github Package Registry
         if: github.event_name == 'push' && (github.ref == 'refs/heads/master' || github.ref == 'refs/heads/dev-2.x')
