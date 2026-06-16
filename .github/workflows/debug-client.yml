@@ -38,7 +38,7 @@ jobs:
           fetch-depth: 0
 
       # for a simple PR where we don't push, we don't need any credentials
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         if: github.event_name == 'pull_request' || github.event_name == 'merge_group'
 
       - uses: actions/setup-node@v6
