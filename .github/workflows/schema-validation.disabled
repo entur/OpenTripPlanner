@@ -29,7 +29,7 @@ jobs:
 
       - name: Install GraphQL Inspector
         run: |
-          npm i --global @graphql-inspector/ci graphql @graphql-inspector/diff-command @graphql-inspector/graphql-loader @graphql-inspector/git-loader
+          npm i --global @graphql-inspector/ci@5.0.7 graphql@16.14.2 @graphql-inspector/diff-command@6.0.8 @graphql-inspector/graphql-loader@5.0.1 @graphql-inspector/git-loader@5.0.1
 
       - name: Validate GTFS GraphQL schema changes
         run: |
@@ -54,7 +54,7 @@ jobs:
 
       - name: Install GraphQL Inspector
         run: |
-          npm i --global @graphql-inspector/ci graphql @graphql-inspector/diff-command @graphql-inspector/graphql-loader @graphql-inspector/git-loader
+          npm i --global @graphql-inspector/ci@5.0.7 graphql@16.14.2 @graphql-inspector/diff-command@6.0.8 @graphql-inspector/graphql-loader@5.0.1 @graphql-inspector/git-loader@5.0.1
 
       - name: Validate Transmodel GraphQL schema changes
         run: |
