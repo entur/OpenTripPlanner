@@ -95,9 +95,32 @@ public class HashGridSpatialIndex<T> implements SpatialIndex, Serializable {
     nObjects++;
   }
 
+  /**
+   * Factory for the accumulator that deduplicates the (cross-bin and within-bin) duplicates while
+   * collecting query results. The default deduplicates by {@code equals}/{@code hashCode} (value
+   * semantics), which is correct for every element type — including the id-based-equals transit
+   * stop indexes.
+   * <p>
+   * {@code sizeHint} is a cheap upper-bound estimate, not an exact count: the returned set may
+   * resize once or be slightly over-allocated, both of which are acceptable. We deliberately avoid
+   * pre-traversing the bins to size it exactly, because a second read pass would double the bin
+   * reads and — since routing threads read the index while the graph-writer inserts (see
+   * {@code EdgeSpatialIndex} and #3351) — widen that benign read-during-write race.
+   *
+   * @see EdgeHashGridSpatialIndex
+   */
+  protected Set<T> newResultSet(int sizeHint) {
+    return HashSet.newHashSet(sizeHint);
+  }
+
+  /** A cheap, allocation-free result-size estimate, bounded so a large index never over-sizes. */
+  private int resultSizeHint() {
+    return Math.min(nEntries, 256);
+  }
+
   @Override
   public final List<T> query(Envelope envelope) {
-    final Set<T> ret = new HashSet<>(1024);
+    final Set<T> ret = newResultSet(resultSizeHint());
     visit(envelope, false, (bin, mapKey) -> {
       ret.addAll(bin);
       return false;
@@ -166,7 +189,7 @@ public class HashGridSpatialIndex<T> implements SpatialIndex, Serializable {
    * their shared endpoint).
    */
   public Set<T> queryAlongLineStrings(Collection<LineString> lineStrings) {
-    Set<T> result = new HashSet<>(1024);
+    Set<T> result = newResultSet(resultSizeHint());
     TLongSet keys = new TLongHashSet(256);
     for (LineString ls : lineStrings) {
       CoordinateSequence seq = ls.getCoordinateSequence();
