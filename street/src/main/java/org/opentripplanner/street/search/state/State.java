@@ -361,16 +361,6 @@ public final class State implements AStarState<State, Edge, Vertex> {
   }
 
   /**
-   * Whether we know or don't know the rental network (yet).
-   * <p>
-   * When doing a arriveBy search it is possible to be in a renting state without knowing which
-   * network it is.
-   */
-  public boolean unknownRentalNetwork() {
-    return stateData.vehicleRentalNetwork == null;
-  }
-
-  /**
    * Reverse the path implicit in the given state, the path will be reversed but will have the same
    * duration. This is the result of combining the functions from GraphPath optimize and reverse.
    *
