@@ -25,7 +25,6 @@ import org.opentripplanner.street.Scope;
 import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.street.graph.Graph;
-import org.opentripplanner.street.model.edge.Area;
 import org.opentripplanner.street.model.edge.AreaEdge;
 import org.opentripplanner.street.model.edge.AreaEdgeBuilder;
 import org.opentripplanner.street.model.edge.AreaGroup;
@@ -38,8 +37,6 @@ import org.opentripplanner.street.model.vertex.TemporarySplitterVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.TraverseModeSet;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class links transit stops to streets by splitting the streets (unless the stop is extremely
@@ -66,8 +63,6 @@ import org.slf4j.LoggerFactory;
  * within ~25 m of a street — and expands to 100 m).
  */
 public class VertexLinker {
-
-  private static final Logger LOG = LoggerFactory.getLogger(VertexLinker.class);
 
   /**
    * if there are two ways and the distances to them differ by less than this value, we link to both
@@ -456,10 +451,13 @@ public class VertexLinker {
       edge instanceof AreaEdge aEdge
     ) {
       AreaGroup ag = aEdge.getArea();
+      // Prepared once and reused for the point-in-area test, the forced split-point edge and the
+      // visibility fan-out below, so the area's spatial index is built a single time.
+      var area = new PreparedAreaGroup(ag);
       // is area already linked ?
       start = linkedAreas.get(ag);
       if (start == null) {
-        if (ag.getGeometry().contains(GEOMETRY_FACTORY.createPoint(vertex.getCoordinate()))) {
+        if (area.containsPoint(vertex.getCoordinate())) {
           // vertex is inside an area
           if (distSquared(vertex, split) <= DUPLICATE_NODE_EPSILON_DEGREES_SQUARED) {
             // vertex is so close to the edge that we can use the split point directly
@@ -478,14 +476,14 @@ public class VertexLinker {
         // vertex is inside the area. try connecting the vertex to the edge's split point, because
         // connections to visibility vertices may fail or do not always provide an optimal route
         // note that by definition, connection to closest edge cannot be blocked and edge can be forced
-        addVisibilityEdges(start, split, new PreparedAreaGroup(ag), scope, tempEdges, true);
+        addVisibilityEdges(start, split, area, scope, tempEdges, true);
       } else {
         // vertex is outside an area. Use split point for area connections
         start = split;
       }
       // connect start point to area visibility points to achieve optimal paths
       if (!ag.visibilityVertices().contains(start)) {
-        addAreaVertex(start, ag, scope, tempEdges, false);
+        addAreaVertex(start, area, scope, tempEdges, false);
       }
     } else {
       start = split;
@@ -666,7 +664,7 @@ public class VertexLinker {
    * Link a new vertex permanently with area geometry
    */
   public boolean addPermanentAreaVertex(IntersectionVertex newVertex, AreaGroup areaGroup) {
-    return addAreaVertex(newVertex, areaGroup, Scope.PERMANENT, null, true);
+    return addAreaVertex(newVertex, new PreparedAreaGroup(areaGroup), Scope.PERMANENT, null, true);
   }
 
   /**
@@ -686,14 +684,13 @@ public class VertexLinker {
    */
   private boolean addAreaVertex(
     IntersectionVertex newVertex,
-    AreaGroup areaGroup,
+    PreparedAreaGroup area,
     Scope scope,
     DisposableEdgeCollection tempEdges,
     boolean force
   ) {
+    AreaGroup areaGroup = area.areaGroup();
     Geometry polygon = areaGroup.getGeometry();
-    // Reused across all candidate contains() checks below so the spatial index is built only once.
-    var area = new PreparedAreaGroup(areaGroup);
 
     int added = 0;
 
@@ -793,7 +790,7 @@ public class VertexLinker {
     }
     LineString line = GEOMETRY_FACTORY.createLineString(new Coordinate[] { c1, c2 });
     // add connecting edges
-    createEdges(line, from, to, area.areaGroup(), scope, tempEdges);
+    createEdges(line, from, to, area, scope, tempEdges);
 
     return true;
   }
@@ -803,30 +800,13 @@ public class VertexLinker {
     LineString line,
     IntersectionVertex from,
     IntersectionVertex to,
-    AreaGroup ag,
+    PreparedAreaGroup area,
     Scope scope,
     DisposableEdgeCollection tempEdges
   ) {
-    Area hit = null;
-    var areas = ag.getAreas();
-    if (areas.size() == 1) {
-      hit = areas.getFirst();
-    } else {
-      // If more than one area intersects, we pick first one for the name & properties
-      for (Area area : areas) {
-        Geometry polygon = area.getGeometry();
-        Geometry intersection = polygon.intersection(line);
-        if (intersection.getLength() > 0.000001) {
-          hit = area;
-          break;
-        }
-      }
-    }
-    // hit may be null when force linking a point from outside
-    if (hit == null) {
-      LOG.warn("No intersecting area found. This may indicate a bug.");
-      hit = areas.getFirst();
-    }
+    AreaGroup ag = area.areaGroup();
+    // The edge borrows the worst-case name/permission/safety over every sub-area it crosses.
+    var hit = AreaEdgeProperties.merge(area.areasCrossedBy(line));
     double length = SphericalDistanceLibrary.distance(to.getCoordinate(), from.getCoordinate());
     // apply consistent NoThru restrictions
     // if all joining edges are nothru, then the new edge should be as well
@@ -837,11 +817,12 @@ public class VertexLinker {
       .withFromVertex(from)
       .withToVertex(to)
       .withGeometry(line)
-      .withName(hit.getName())
+      .withName(hit.name())
       .withMeterLength(length)
-      .withPermission(hit.getPermission())
-      .withBicycleSafetyFactor(hit.getBicycleSafety())
-      .withWalkSafetyFactor(hit.getWalkSafety())
+      .withPermission(hit.permission())
+      .withBicycleSafetyFactor(hit.bicycleSafety())
+      .withWalkSafetyFactor(hit.walkSafety())
+      .withWheelchairAccessible(hit.wheelchairAccessible())
       .withBack(false)
       .withArea(ag);
     for (TraverseMode tm : outgoingNoThruModes) {
@@ -856,11 +837,12 @@ public class VertexLinker {
       .withFromVertex(to)
       .withToVertex(from)
       .withGeometry(line.reverse())
-      .withName(hit.getName())
+      .withName(hit.name())
       .withMeterLength(length)
-      .withPermission(hit.getPermission())
-      .withBicycleSafetyFactor(hit.getBicycleSafety())
-      .withWalkSafetyFactor(hit.getWalkSafety())
+      .withPermission(hit.permission())
+      .withBicycleSafetyFactor(hit.bicycleSafety())
+      .withWalkSafetyFactor(hit.walkSafety())
+      .withWheelchairAccessible(hit.wheelchairAccessible())
       .withBack(true)
       .withArea(ag);
     for (TraverseMode tm : incomingNoThruModes) {
