@@ -26,9 +26,9 @@ import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.spi.UpdateSuccess;
-import org.opentripplanner.updater.trip.GtfsRtTestHelper;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
-import org.opentripplanner.updater.trip.TripUpdateBuilder;
+import org.opentripplanner.updater.trip.gtfs.GtfsRtTestHelper;
+import org.opentripplanner.updater.trip.gtfs.TripUpdateBuilder;
 import org.opentripplanner.utils.time.TimeUtils;
 
 class AddedTest implements RealtimeTestConstants {
