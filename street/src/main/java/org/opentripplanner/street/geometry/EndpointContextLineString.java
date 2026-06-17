@@ -158,7 +158,7 @@ public final class EndpointContextLineString {
    * @param xscale  cos(latitude) of the projection centre, as used by the linker
    * @return the squared projected distance in latitude degrees squared
    */
-  public static double squaredDistanceToPointEquirectangular(
+  public static double squaredEquirectangularDistanceToPoint(
     double xa,
     double ya,
     double xb,

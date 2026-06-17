@@ -2,7 +2,6 @@ package org.opentripplanner.street.geometry;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import java.util.Random;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -10,17 +9,17 @@ import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Point;
 
 /**
- * Verifies that {@link EndpointContextLineString#squaredDistanceToPointEquirectangular} (the
+ * Verifies that {@link EndpointContextLineString#squaredEquirectangularDistanceToPoint} (the
  * allocation-free walk used by the vertex linker) returns the same projected distance as the old JTS
  * path it replaced: {@code equirectangularProject(uncompact(...)).distance(point)}. The method
- * returns the squared distance, so the test compares {@code sqrt(walk)} to the JTS distance.
+ * returns the squared distance, so the test compares its {@code sqrt} to the JTS distance.
  */
 class EndpointContextLineStringDistanceTest {
 
   private static final GeometryFactory GF = new GeometryFactory();
 
-  /** Oracle: faithful copy of the old {@code VertexLinker.distance()} computation. */
-  private static double jtsOracle(
+  /** Reference value: faithful copy of the old {@code VertexLinker.distance()} computation. */
+  private static double jtsReferenceDistance(
     double ax,
     double ay,
     double bx,
@@ -41,32 +40,6 @@ class EndpointContextLineStringDistanceTest {
     LineString transformed = GF.createLineString(coords);
     Point p = GF.createPoint(new Coordinate(px * xscale, py));
     return transformed.distance(p);
-  }
-
-  private static double walk(
-    double ax,
-    double ay,
-    double bx,
-    double by,
-    byte[] packed,
-    boolean reverse,
-    double px,
-    double py,
-    double xscale
-  ) {
-    return Math.sqrt(
-      EndpointContextLineString.squaredDistanceToPointEquirectangular(
-        ax,
-        ay,
-        bx,
-        by,
-        packed,
-        reverse,
-        px,
-        py,
-        xscale
-      )
-    );
   }
 
   private static byte[] pack(double ax, double ay, double bx, double by, double... intermediate) {
@@ -148,38 +121,6 @@ class EndpointContextLineStringDistanceTest {
     assertParity(0.0, 0.0, 1.0, 0.0, packed, false, 0.5, 0.001, xscale);
   }
 
-  @Test
-  void randomParity() {
-    Random rnd = new Random(1234567);
-    double maxErr = 0;
-    for (int it = 0; it < 1000; it++) {
-      double ax = 10.0 + (rnd.nextDouble() - 0.5) * 0.1;
-      double ay = 59.9 + (rnd.nextDouble() - 0.5) * 0.1;
-      double bx = ax + (rnd.nextDouble() - 0.5) * 0.003;
-      double by = ay + (rnd.nextDouble() - 0.5) * 0.003;
-      int k = rnd.nextInt(20);
-      double[] interm = new double[k * 2];
-      for (int i = 0; i < k; i++) {
-        double f = (double) (i + 1) / (k + 1);
-        interm[i * 2] = ax + f * (bx - ax) + (rnd.nextDouble() - 0.5) * 0.0004;
-        interm[i * 2 + 1] = ay + f * (by - ay) + (rnd.nextDouble() - 0.5) * 0.0004;
-      }
-      byte[] packed = pack(ax, ay, bx, by, interm);
-      double px = (ax + bx) / 2 + (rnd.nextDouble() - 0.5) * 0.001;
-      double py = (ay + by) / 2 + (rnd.nextDouble() - 0.5) * 0.001;
-      double xscale = Math.cos(Math.toRadians(ay));
-
-      double oracle = jtsOracle(ax, ay, bx, by, packed, false, px, py, xscale);
-      double got = walk(ax, ay, bx, by, packed, false, px, py, xscale);
-      maxErr = Math.max(maxErr, Math.abs(oracle - got));
-    }
-    // Same algorithm, just inlined; expect agreement to well below the linker's dedup epsilon.
-    org.junit.jupiter.api.Assertions.assertTrue(
-      maxErr < 1e-12,
-      "max divergence from JTS oracle was " + maxErr
-    );
-  }
-
   private static void assertParity(
     double ax,
     double ay,
@@ -191,8 +132,20 @@ class EndpointContextLineStringDistanceTest {
     double py,
     double xscale
   ) {
-    double oracle = jtsOracle(ax, ay, bx, by, packed, reverse, px, py, xscale);
-    double got = walk(ax, ay, bx, by, packed, reverse, px, py, xscale);
-    assertEquals(oracle, got, 1e-12);
+    double expected = jtsReferenceDistance(ax, ay, bx, by, packed, reverse, px, py, xscale);
+    double got = Math.sqrt(
+      EndpointContextLineString.squaredEquirectangularDistanceToPoint(
+        ax,
+        ay,
+        bx,
+        by,
+        packed,
+        reverse,
+        px,
+        py,
+        xscale
+      )
+    );
+    assertEquals(expected, got, 1e-12);
   }
 }

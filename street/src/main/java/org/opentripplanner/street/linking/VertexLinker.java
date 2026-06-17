@@ -163,7 +163,7 @@ public class VertexLinker {
    * thresholds.
    */
   private static double squaredDistance(Vertex tstop, StreetEdge edge, double xscale) {
-    return edge.squaredDistanceToPointEquirectangular(tstop.getLon(), tstop.getLat(), xscale);
+    return edge.squaredEquirectangularDistanceToPoint(tstop.getLon(), tstop.getLat(), xscale);
   }
 
   /** project this linestring to an equirectangular projection */
