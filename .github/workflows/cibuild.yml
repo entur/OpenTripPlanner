@@ -36,7 +36,7 @@ jobs:
       # Example: https://github.com/opentripplanner/OpenTripPlanner/actions/runs/4490450225/jobs/7897533439
       - uses: actions/setup-node@v6
         with:
-          node-version: 18
+          node-version: 24
 
       # Java setup step completes very fast, no need to run in a preconfigured docker container
       - name: Set up JDK 25
@@ -227,7 +227,7 @@ jobs:
           cache: maven
       - uses: actions/setup-node@v6
         with:
-          node-version: 18
+          node-version: 24
       - name: Build container image with Jib, push to Dockerhub
         env:
           CONTAINER_REPO: docker.io/opentripplanner/opentripplanner
