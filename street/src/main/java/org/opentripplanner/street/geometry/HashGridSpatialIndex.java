@@ -50,6 +50,16 @@ public class HashGridSpatialIndex<T> implements SpatialIndex, Serializable {
    */
   private static final double DEFAULT_X_BIN_SIZE = 0.0035;
 
+  /**
+   * Initial capacity hint for the per-query dedup set. Per-query candidate counts are bimodal:
+   * tens of entries in rural bins, but ~2,500+ in dense city tiles (where real-time rentals link).
+   * 1024 — the historical default — avoids resizing for most dense single-tile queries without
+   * grossly over-allocating; the densest tiles still resize, which is cheap for an open-addressed
+   * identity set. The dominant win is removing the per-candidate {@code HashMap.Node}/value-hash
+   * cost, which is independent of this hint.
+   */
+  private static final int RESULT_SIZE_HINT = 1024;
+
   /* Size of bin in X and Y direction, in coordinates units. */
   private final double xBinSize;
   private final double yBinSize;
@@ -95,9 +105,27 @@ public class HashGridSpatialIndex<T> implements SpatialIndex, Serializable {
     nObjects++;
   }
 
+  /**
+   * Factory for the accumulator that deduplicates the (cross-bin and within-bin) duplicates while
+   * collecting query results. The default deduplicates by {@code equals}/{@code hashCode} (value
+   * semantics), which is correct for every element type — including the id-based-equals transit
+   * stop indexes.
+   * <p>
+   * {@code sizeHint} is a cheap upper-bound estimate, not an exact count: the returned set may
+   * resize once or be slightly over-allocated, both of which are acceptable. We deliberately avoid
+   * pre-traversing the bins to size it exactly, because a second read pass would double the bin
+   * reads and — since routing threads read the index while the graph-writer inserts (see
+   * {@code EdgeSpatialIndex} and #3351) — widen that benign read-during-write race.
+   *
+   * @see EdgeHashGridSpatialIndex
+   */
+  protected Set<T> newResultSet(int sizeHint) {
+    return HashSet.newHashSet(sizeHint);
+  }
+
   @Override
   public final List<T> query(Envelope envelope) {
-    final Set<T> ret = new HashSet<>(1024);
+    final Set<T> ret = newResultSet(RESULT_SIZE_HINT);
     visit(envelope, false, (bin, mapKey) -> {
       ret.addAll(bin);
       return false;
@@ -166,7 +194,7 @@ public class HashGridSpatialIndex<T> implements SpatialIndex, Serializable {
    * their shared endpoint).
    */
   public Set<T> queryAlongLineStrings(Collection<LineString> lineStrings) {
-    Set<T> result = new HashSet<>(1024);
+    Set<T> result = newResultSet(RESULT_SIZE_HINT);
     TLongSet keys = new TLongHashSet(256);
     for (LineString ls : lineStrings) {
       CoordinateSequence seq = ls.getCoordinateSequence();
