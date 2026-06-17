@@ -26,6 +26,7 @@ import org.opentripplanner.ext.sorlandsbanen.SorlandsbanenNorwayService;
 import org.opentripplanner.ext.sorlandsbanen.configure.SorlandsbanenNorwayModule;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.ext.stopconsolidation.configure.StopConsolidationServiceModule;
+import org.opentripplanner.framework.transaction.configure.TransactionModule;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueSummary;
 import org.opentripplanner.raptor.configure.RaptorConfig;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
@@ -105,6 +106,7 @@ import org.opentripplanner.warmup.configure.WarmupModule;
     ViaModule.class,
     WarmupModule.class,
     WorldEnvelopeServiceModule.class,
+    TransactionModule.class,
   }
 )
 public interface ConstructApplicationFactory {
