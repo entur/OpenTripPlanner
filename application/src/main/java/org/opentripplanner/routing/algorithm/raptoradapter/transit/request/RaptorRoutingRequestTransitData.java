@@ -1,7 +1,9 @@
 package org.opentripplanner.routing.algorithm.raptoradapter.transit.request;
 
 import java.time.ZonedDateTime;
+import java.util.Arrays;
 import java.util.BitSet;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -270,5 +272,10 @@ public class RaptorRoutingRequestTransitData implements RaptorTransitDataProvide
   @Override
   public RaptorTripScheduleReference tripScheduleReference(TripSchedule trip) {
     return new RaptorTripScheduleReference(trip.pattern().patternIndex(), trip.tripScheduleIndex());
+  }
+
+  public Collection<TripPatternForDates> activeTripPatternsPerStop(int stopIndex) {
+    var routeIndices = activeTripPatternsPerStop.get(stopIndex);
+    return Arrays.stream(routeIndices).mapToObj(patternIndex::get).toList();
   }
 }

@@ -3,8 +3,10 @@ package org.opentripplanner.transit.api.request;
 import java.time.LocalDate;
 import java.util.List;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.core.model.time.LocalDateRange;
 import org.opentripplanner.transit.api.model.FilterValues;
-import org.opentripplanner.transit.model.basic.TransitMode;
+import org.opentripplanner.transit.model.filter.selector.FilterRequest;
+import org.opentripplanner.transit.model.filter.transit.TripOnServiceDateSelectRequest;
 import org.opentripplanner.transit.model.timetable.TripAlteration;
 
 public class TripOnServiceDateRequestBuilder {
@@ -37,14 +39,11 @@ public class TripOnServiceDateRequestBuilder {
     "includeServiceDates",
     List.of()
   );
-  private FilterValues<TransitMode> includeModes = FilterValues.ofEmptyIsEverything(
-    "modes",
+  private FilterValues<LocalDateRange> includeServiceDateRanges = FilterValues.ofEmptyIsEverything(
+    "includeServiceDateRanges",
     List.of()
   );
-  private FilterValues<TransitMode> excludeModes = FilterValues.ofEmptyIsEverything(
-    "excludeModes",
-    List.of()
-  );
+  private List<FilterRequest<TripOnServiceDateSelectRequest>> filters = List.of();
 
   public TripOnServiceDateRequestBuilder withIncludeAgencies(FilterValues<FeedScopedId> agencies) {
     this.includeAgencies = agencies;
@@ -91,27 +90,31 @@ public class TripOnServiceDateRequestBuilder {
     return this;
   }
 
-  public TripOnServiceDateRequestBuilder withIncludeModes(FilterValues<TransitMode> modes) {
-    this.includeModes = modes;
+  public TripOnServiceDateRequestBuilder withIncludeServiceDateRanges(
+    FilterValues<LocalDateRange> serviceDateRanges
+  ) {
+    this.includeServiceDateRanges = serviceDateRanges;
     return this;
   }
 
-  public TripOnServiceDateRequestBuilder withExcludeModes(FilterValues<TransitMode> modes) {
-    this.excludeModes = modes;
+  public TripOnServiceDateRequestBuilder withFilters(
+    List<FilterRequest<TripOnServiceDateSelectRequest>> filters
+  ) {
+    this.filters = filters;
     return this;
   }
 
   public TripOnServiceDateRequest build() {
     return new TripOnServiceDateRequest(
       includeServiceDates,
+      includeServiceDateRanges,
       includeAgencies,
       includeRoutes,
       includeServiceJourneys,
       includeReplacementFor,
       includeNetexInternalPlanningCodes,
       includeAlterations,
-      includeModes,
-      excludeModes
+      filters
     );
   }
 }

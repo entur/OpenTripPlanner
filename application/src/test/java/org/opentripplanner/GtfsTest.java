@@ -269,6 +269,7 @@ public abstract class GtfsTest {
       transferRepository,
       new DefaultFareService(),
       snapshotManager,
+      null,
       null
     );
   }
