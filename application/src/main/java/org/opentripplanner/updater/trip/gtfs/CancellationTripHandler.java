@@ -14,6 +14,11 @@ import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 
+/**
+ * Handles GTFS-RT TripUpdates for trips with schedule relationship {@code CANCELED} or
+ * {@code DELETED}. For differential feeds, first checks whether a previously added trip should be
+ * canceled; otherwise cancels the matching scheduled trip in the timetable snapshot buffer.
+ */
 class CancellationTripHandler {
 
   private final TransitEditorService transitEditorService;

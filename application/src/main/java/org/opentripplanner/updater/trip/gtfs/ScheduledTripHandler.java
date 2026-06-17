@@ -16,9 +16,16 @@ import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
+import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 
+/**
+ * Handles GTFS-RT TripUpdates for trips with schedule relationship {@code SCHEDULED}.
+ * Applies real-time delay and stop-change patches on top of the static
+ * timetable.
+ */
 class ScheduledTripHandler {
 
   private final TransitEditorService transitEditorService;

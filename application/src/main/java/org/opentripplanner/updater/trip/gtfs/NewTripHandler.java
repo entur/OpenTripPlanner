@@ -25,6 +25,11 @@ import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 
+/**
+ * Handles GTFS-RT TripUpdates for trips with schedule relationship {@code NEW}, {@code ADDED}, or
+ * {@code REPLACEMENT}. Builds a new {@link org.opentripplanner.transit.model.timetable.Trip} (and
+ * route, if needed) from the feed message and maps its stop-time updates to known stops.
+ */
 class NewTripHandler {
 
   private final TransitEditorService transitEditorService;
