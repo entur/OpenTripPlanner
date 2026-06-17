@@ -1,4 +1,4 @@
-package org.opentripplanner.transit.model._data;
+package org.opentripplanner.transit.model;
 
 import java.util.ArrayList;
 import org.opentripplanner.transit.model.network.TripPattern;

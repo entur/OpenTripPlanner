@@ -1,4 +1,4 @@
-package org.opentripplanner.transit.model._data;
+package org.opentripplanner.transit.model;
 
 import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 
