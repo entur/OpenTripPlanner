@@ -2,7 +2,6 @@ package org.opentripplanner.street.search.state;
 
 import java.util.HashSet;
 import java.util.Set;
-import javax.annotation.Nullable;
 import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
 import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingBoundaryExtension;
@@ -97,7 +96,6 @@ public class StateEditor {
   /**
    * Builds a new state from the current state editor.
    */
-  @Nullable
   public State makeState() {
     if (backState != null) {
       // check that time changes are coherent with edge traversal
