@@ -581,16 +581,4 @@ public final class State implements AStarState<State, Edge, Vertex> {
     newStateData.backMode = null;
     return new State(this.vertex, getTime(), newStateData, reversedRequest);
   }
-
-  /**
-   * This exception is thrown when an edge has a negative weight. Dijkstra's algorithm (and A*) don't
-   * work on graphs that have negative weights.  This exception almost always indicates a programming
-   * error, but could be caused by bad GTFS data.
-   */
-  private static class NegativeWeightException extends RuntimeException {
-
-    public NegativeWeightException(String message) {
-      super(message);
-    }
-  }
 }
