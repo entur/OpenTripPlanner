@@ -2528,7 +2528,7 @@ input TripFilterSelectInput {
   "Set of ids for lines that should be included in/excluded from search"
   lines: [ID!]
   "Set of ids for service journeys that should be included in/excluded from search"
-  serviceJourneys: [ID!]
+  serviceJourneys: [ID!] @deprecated(reason : "This field is not implemented and has no effect.")
   "The allowed modes for the transit part of the trip. Use an empty list to disallow transit for this search. If the element is not present or null, it will default to all transport modes."
   transportModes: [TransportModes!]
 }
