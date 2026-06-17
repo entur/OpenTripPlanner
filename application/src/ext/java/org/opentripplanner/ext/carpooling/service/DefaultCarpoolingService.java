@@ -108,9 +108,10 @@ public class DefaultCarpoolingService implements CarpoolingService {
   private static final Logger LOG = LoggerFactory.getLogger(DefaultCarpoolingService.class);
 
   /**
-   * Caps the radius of the nearby-stop search used in access/egress routing. Required to keep
-   * computational complexity bounded; remove or widen only after the nearby-stop search is made
-   * smarter.
+   * Hard ceiling on the nearby-stop search radius used in access/egress routing. The search uses
+   * the request's {@code accessEgress} max duration for {@link StreetMode#CARPOOL}, but never more
+   * than this, so an unusually large preference cannot blow up the search. Lower or remove only
+   * once the nearby-stop search is made smarter.
    */
   public static final Duration MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS =
     Duration.ofMinutes(60);
@@ -421,11 +422,22 @@ public class DefaultCarpoolingService implements CarpoolingService {
         return List.of();
       }
 
-      var streetNearbyStopFinder = StreetNearbyStopFinder.of(
-        null,
-        MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS,
-        0
+      // A carpool access/egress leg is an access/egress leg, so the search may not exceed the
+      // request's accessEgress max duration: stops beyond that reach only yield legs that violate
+      // the cap. Bound it further by MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS so an
+      // unusually large preference cannot blow up the search.
+      var preferredSearchDuration = request
+        .preferences()
+        .street()
+        .accessEgress()
+        .maxDuration()
+        .valueOf(StreetMode.CARPOOL);
+      var nearbyStopSearchDuration = min(
+        preferredSearchDuration,
+        MAX_SEARCH_DURATION_FOR_NEARBY_STOPS_FOR_ACCESS_EGRESS
       );
+
+      var streetNearbyStopFinder = StreetNearbyStopFinder.of(null, nearbyStopSearchDuration, 0);
 
       // CAR_PICKUP models a walk → drive → walk chain inside a single A*. Using it here (instead
       // of plain CAR) lets the search find transit stops whose link endpoint is only walk-reachable
@@ -565,6 +577,10 @@ public class DefaultCarpoolingService implements CarpoolingService {
         )
         .toList();
     }
+  }
+
+  private static Duration min(Duration a, Duration b) {
+    return a.compareTo(b) <= 0 ? a : b;
   }
 
   private void validateRequest(RouteRequest request) throws RoutingValidationException {
