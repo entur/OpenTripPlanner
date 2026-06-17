@@ -19,12 +19,12 @@ import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
  * {@code DELETED}. For differential feeds, first checks whether a previously added trip should be
  * canceled; otherwise cancels the matching scheduled trip in the timetable snapshot buffer.
  */
-class CancellationTripHandler {
+class CanceledTripHandler {
 
   private final TransitEditorService transitEditorService;
   private final TimetableSnapshotManager snapshotManager;
 
-  CancellationTripHandler(
+  CanceledTripHandler(
     TransitEditorService transitEditorService,
     TimetableSnapshotManager snapshotManager
   ) {

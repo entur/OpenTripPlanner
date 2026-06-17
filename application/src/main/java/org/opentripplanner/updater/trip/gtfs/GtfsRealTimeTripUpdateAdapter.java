@@ -37,7 +37,7 @@ public class GtfsRealTimeTripUpdateAdapter {
   private final Supplier<LocalDate> localDateNow;
   private final ScheduledTripHandler scheduledTripHandler;
   private final NewTripHandler addedTripHandler;
-  private final CancellationTripHandler cancellationTripHandler;
+  private final CanceledTripHandler canceledTripHandler;
 
   /**
    * Constructor to allow tests to provide their own clock, not using system time.
@@ -73,10 +73,7 @@ public class GtfsRealTimeTripUpdateAdapter {
       tripTimesUpdater,
       tripPatternCache
     );
-    this.cancellationTripHandler = new CancellationTripHandler(
-      transitEditorService,
-      snapshotManager
-    );
+    this.canceledTripHandler = new CanceledTripHandler(transitEditorService, snapshotManager);
   }
 
   /**
@@ -160,8 +157,8 @@ public class GtfsRealTimeTripUpdateAdapter {
         backwardsDelayPropagationType
       );
       case NEW, ADDED -> addedTripHandler.handleNew(tripUpdate);
-      case CANCELED -> cancellationTripHandler.cancel(tripUpdate, updateIncrementality);
-      case DELETED -> cancellationTripHandler.delete(tripUpdate, updateIncrementality);
+      case CANCELED -> canceledTripHandler.cancel(tripUpdate, updateIncrementality);
+      case DELETED -> canceledTripHandler.delete(tripUpdate, updateIncrementality);
       case REPLACEMENT -> addedTripHandler.handleReplacement(tripUpdate);
       case UNSCHEDULED -> throw UpdateException.of(
         tripUpdate.tripId(),
