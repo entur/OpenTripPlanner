@@ -6,7 +6,7 @@ import java.util.stream.Stream;
 import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.street.Scope;
-import org.opentripplanner.street.geometry.HashGridSpatialIndex;
+import org.opentripplanner.street.geometry.EdgeHashGridSpatialIndex;
 import org.opentripplanner.street.model.edge.Edge;
 
 /**
@@ -34,9 +34,9 @@ import org.opentripplanner.street.model.edge.Edge;
  */
 class EdgeSpatialIndex {
 
-  private final HashGridSpatialIndex<Edge> permanentEdgeIndex = new HashGridSpatialIndex<>();
+  private final EdgeHashGridSpatialIndex permanentEdgeIndex = new EdgeHashGridSpatialIndex();
 
-  private final HashGridSpatialIndex<Edge> realTimeEdgeIndex = new HashGridSpatialIndex<>();
+  private final EdgeHashGridSpatialIndex realTimeEdgeIndex = new EdgeHashGridSpatialIndex();
 
   public void insert(Edge edge, Scope scope) {
     if (edge.hasGeometry()) {

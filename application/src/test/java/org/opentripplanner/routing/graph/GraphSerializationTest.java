@@ -48,6 +48,7 @@ import org.opentripplanner.service.worldenvelope.internal.DefaultWorldEnvelopeRe
 import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.street.StreetRepository;
+import org.opentripplanner.street.geometry.EdgeHashGridSpatialIndex;
 import org.opentripplanner.street.geometry.HashGridSpatialIndex;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.internal.DefaultStreetRepository;
@@ -85,6 +86,10 @@ public class GraphSerializationTest {
     org.slf4j.Logger.class,
     ch.qos.logback.classic.Logger.class,
     HashGridSpatialIndex.class,
+    // EdgeHashGridSpatialIndex is a HashGridSpatialIndex subclass; the differ matches by exact
+    // class, so it must be listed separately. Like its base it holds unordered bin lists that are
+    // rebuilt after deserialization.
+    EdgeHashGridSpatialIndex.class,
     Deduplicator.class
   ).toArray(Class[]::new);
 
