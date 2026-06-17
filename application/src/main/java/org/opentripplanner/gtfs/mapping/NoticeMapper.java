@@ -20,8 +20,8 @@ class NoticeMapper {
     this.idFactory = idFactory;
   }
 
-  Collection<Notice> map(Collection<org.onebusaway.gtfs.model.Notice> gtfsNotices) {
-    return gtfsNotices.stream().map(this::map).toList();
+  Collection<Notice> map(Collection<org.onebusaway.gtfs.model.Notice> notices) {
+    return notices.stream().map(this::map).toList();
   }
 
   Notice map(org.onebusaway.gtfs.model.Notice gtfsNotice) {

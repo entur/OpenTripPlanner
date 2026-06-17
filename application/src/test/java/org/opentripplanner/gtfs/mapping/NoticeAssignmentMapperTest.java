@@ -2,10 +2,10 @@ package org.opentripplanner.gtfs.mapping;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.onebusaway.gtfs.model.AgencyAndIdFactory.obaId;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.onebusaway.gtfs.model.AgencyAndId;
 import org.onebusaway.gtfs.model.NoticeAssignment;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssue;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
@@ -26,7 +26,7 @@ class NoticeAssignmentMapperTest {
 
   static {
     GTFS_NOTICE = new org.onebusaway.gtfs.model.Notice();
-    GTFS_NOTICE.setId(new AgencyAndId(FEED_ID, NOTICE_ID));
+    GTFS_NOTICE.setId(obaId(NOTICE_ID));
     GTFS_NOTICE.setDisplayText(NOTICE_TEXT);
   }
 
@@ -66,9 +66,9 @@ class NoticeAssignmentMapperTest {
     );
 
     var assignment = new NoticeAssignment();
-    assignment.setNoticeId(new AgencyAndId(FEED_ID, NOTICE_ID));
+    assignment.setNoticeId(obaId(NOTICE_ID));
     assignment.setTableName(NoticeAssignment.TableName.routes);
-    assignment.setRecordId(new AgencyAndId(FEED_ID, "R1"));
+    assignment.setRecordId(obaId("R1"));
 
     var result = mapper.map(List.of(assignment));
 
@@ -96,9 +96,9 @@ class NoticeAssignmentMapperTest {
     );
 
     var assignment = new NoticeAssignment();
-    assignment.setNoticeId(new AgencyAndId(FEED_ID, NOTICE_ID));
+    assignment.setNoticeId(obaId(NOTICE_ID));
     assignment.setTableName(NoticeAssignment.TableName.trips);
-    assignment.setRecordId(new AgencyAndId(FEED_ID, "T1"));
+    assignment.setRecordId(obaId("T1"));
 
     var result = mapper.map(List.of(assignment));
 
@@ -121,9 +121,9 @@ class NoticeAssignmentMapperTest {
     );
 
     var assignment = new NoticeAssignment();
-    assignment.setNoticeId(new AgencyAndId(FEED_ID, "NONEXISTENT"));
+    assignment.setNoticeId(obaId("NONEXISTENT"));
     assignment.setTableName(NoticeAssignment.TableName.routes);
-    assignment.setRecordId(new AgencyAndId(FEED_ID, "R1"));
+    assignment.setRecordId(obaId("R1"));
 
     var result = mapper.map(List.of(assignment));
 
@@ -149,9 +149,9 @@ class NoticeAssignmentMapperTest {
     );
 
     var assignment = new NoticeAssignment();
-    assignment.setNoticeId(new AgencyAndId(FEED_ID, NOTICE_ID));
+    assignment.setNoticeId(obaId(NOTICE_ID));
     assignment.setTableName(NoticeAssignment.TableName.routes);
-    assignment.setRecordId(new AgencyAndId(FEED_ID, "NONEXISTENT"));
+    assignment.setRecordId(obaId("NONEXISTENT"));
 
     var result = mapper.map(List.of(assignment));
 
@@ -177,9 +177,9 @@ class NoticeAssignmentMapperTest {
     );
 
     var assignment = new NoticeAssignment();
-    assignment.setNoticeId(new AgencyAndId(FEED_ID, NOTICE_ID));
+    assignment.setNoticeId(obaId(NOTICE_ID));
     assignment.setTableName(NoticeAssignment.TableName.trips);
-    assignment.setRecordId(new AgencyAndId(FEED_ID, "NONEXISTENT"));
+    assignment.setRecordId(obaId("NONEXISTENT"));
 
     var result = mapper.map(List.of(assignment));
 
@@ -210,14 +210,14 @@ class NoticeAssignmentMapperTest {
     );
 
     var routeAssignment = new NoticeAssignment();
-    routeAssignment.setNoticeId(new AgencyAndId(FEED_ID, NOTICE_ID));
+    routeAssignment.setNoticeId(obaId(NOTICE_ID));
     routeAssignment.setTableName(NoticeAssignment.TableName.routes);
-    routeAssignment.setRecordId(new AgencyAndId(FEED_ID, "R1"));
+    routeAssignment.setRecordId(obaId("R1"));
 
     var tripAssignment = new NoticeAssignment();
-    tripAssignment.setNoticeId(new AgencyAndId(FEED_ID, NOTICE_ID));
+    tripAssignment.setNoticeId(obaId(NOTICE_ID));
     tripAssignment.setTableName(NoticeAssignment.TableName.trips);
-    tripAssignment.setRecordId(new AgencyAndId(FEED_ID, "T1"));
+    tripAssignment.setRecordId(obaId("T1"));
 
     var result = mapper.map(List.of(routeAssignment, tripAssignment));
 
