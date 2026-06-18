@@ -252,7 +252,10 @@ public class GraphBuilder implements Runnable {
 
     graphBuilder.addModuleOptional(ctx.get(DataImportIssueReporter.class), config.dataImportReport);
 
-    graphBuilder.addModuleOptional(ctx.getNullable(EdgeUpdaterModule.class), OTPFeature.DataOverlay);
+    graphBuilder.addModuleOptional(
+      ctx.getNullable(EdgeUpdaterModule.class),
+      OTPFeature.DataOverlay
+    );
 
     graphBuilder.addModule(ctx.get(CalculateWorldEnvelopeModule.class));
 

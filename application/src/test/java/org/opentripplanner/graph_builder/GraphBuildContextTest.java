@@ -62,10 +62,7 @@ class GraphBuildContextTest {
     var ctx = new PhaseContext(true)
       .registerInstance(BuildConfig.class, BuildConfig.DEFAULT)
       .registerInstance(Graph.class, new Graph())
-      .registerInstance(
-        OsmInfoGraphBuildRepository.class,
-        new DefaultOsmInfoGraphBuildRepository()
-      )
+      .registerInstance(OsmInfoGraphBuildRepository.class, new DefaultOsmInfoGraphBuildRepository())
       .registerInstance(StreetDetailsRepository.class, new DefaultStreetDetailsRepository())
       .registerInstance(StreetRepository.class, new DefaultStreetRepository())
       .registerInstance(TimetableRepository.class, new TimetableRepository())

@@ -91,9 +91,7 @@ public class LoadApplication {
   }
 
   public DataSource getInputGraphDataStore() {
-    return cli.doLoadGraph()
-      ? datastore().getGraph()
-      : datastore().getStreetGraph();
+    return cli.doLoadGraph() ? datastore().getGraph() : datastore().getStreetGraph();
   }
 
   /** Construct application from serialized graph */
