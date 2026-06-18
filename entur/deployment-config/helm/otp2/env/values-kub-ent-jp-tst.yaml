@@ -62,6 +62,7 @@ configuration:
   optimizeTransfers: true
   parallelRouting: false
   siriETUpdater: http://anshar.tst.entur.internal/anshar/services
+  siriETCarpoolingUpdater: http://subula.tst.entur.internal/siri/et
   siriETPubsubUpdater:
     enabled: true
     topicProjectName: ent-anshar-tst
