@@ -2762,7 +2762,8 @@ type Trip implements Node {
   link in a DatedServiceJourney.
   """
   isReplacement: Boolean!
-  notices: [Notice!]!
+  "Notices of the trip that are known ahead of time."
+  notices: [Notice!]! @deprecated(reason : "Experimental API that can be changed without notice.")
   """
   The latest real-time occupancy information for the latest occurance of this
   trip.
