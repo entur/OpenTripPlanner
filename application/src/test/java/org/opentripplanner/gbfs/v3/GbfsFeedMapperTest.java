@@ -271,7 +271,7 @@ class GbfsFeedMapperTest {
 
     GBFSVehicleType valid = new GBFSVehicleType();
     valid.setVehicleTypeId("valid");
-    valid.setFormFactor(GBFSVehicleType.FormFactor.BICYCLE);
+    valid.setFormFactor(GBFSVehicleType.FormFactor.SCOOTER_STANDING);
     valid.setPropulsionType(GBFSVehicleType.PropulsionType.ELECTRIC);
 
     // A feed that omits the required form_factor / propulsion_type (or sends an unrecognized value
@@ -284,7 +284,7 @@ class GbfsFeedMapperTest {
 
     GBFSVehicleType missingPropulsion = new GBFSVehicleType();
     missingPropulsion.setVehicleTypeId("missingPropulsion");
-    missingPropulsion.setFormFactor(GBFSVehicleType.FormFactor.BICYCLE);
+    missingPropulsion.setFormFactor(GBFSVehicleType.FormFactor.SCOOTER_STANDING);
     missingPropulsion.setPropulsionType(null);
 
     Map<String, RentalVehicleType> vehicleTypes = assertDoesNotThrow(() ->
