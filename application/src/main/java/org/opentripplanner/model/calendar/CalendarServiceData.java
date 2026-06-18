@@ -1,7 +1,6 @@
 /* This file is based on code copied from project OneBusAway, see the LICENSE file for further information. */
 package org.opentripplanner.model.calendar;
 
-import jakarta.validation.constraints.NotNull;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Collection;
@@ -52,7 +51,6 @@ public class CalendarServiceData implements Serializable {
    * TODO OTP2 - This is NOT THREAD-SAFE and is used in the real-time updaters, we need to fix
    *           - this when doing the issue #3030.
    */
-  @NotNull
   public FeedScopedId getOrCreateServiceIdForDate(LocalDate serviceDate) {
     FeedScopedId serviceId = new FeedScopedId(
       CAL_SERVICE_FEED_ID,
