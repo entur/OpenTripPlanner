@@ -4,7 +4,6 @@ import static com.google.common.truth.Truth.assertThat;
 
 import com.google.common.collect.Iterables;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -43,8 +42,7 @@ class QueryTypeImplPatternsByIdsTest {
     var env = buildEnvironment();
     var transitService = env.transitService();
 
-    var ids = new ArrayList<String>();
-    ids.add("test:does-not-exist");
+    var ids = List.of("test:does-not-exist");
 
     var result = subject
       .patternsByIds()

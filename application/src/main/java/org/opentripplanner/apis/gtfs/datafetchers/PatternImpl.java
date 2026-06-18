@@ -248,7 +248,7 @@ public class PatternImpl implements GraphQLDataFetchers.GraphQLPattern {
       );
       if (serviceDateRanges != null) {
         requestBuilder.withIncludeServiceDateRanges(
-          FilterValues.ofEmptyIsEverything("serviceDateRanges", serviceDateRanges)
+          FilterValues.ofRequired("serviceDateRanges", serviceDateRanges)
         );
       }
 
