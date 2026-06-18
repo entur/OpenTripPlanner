@@ -91,7 +91,7 @@ public final class LocalDateRange {
   /**
    * Inclusive start date. Returns {@link LocalDate#MIN} when unbounded.
    */
-  public LocalDate getInclusiveStart() {
+  public LocalDate getStartInclusive() {
     return inclusiveStart;
   }
 

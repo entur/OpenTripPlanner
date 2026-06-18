@@ -76,7 +76,7 @@ public class ServiceCalendarMapperTest {
     assertEquals(SUNDAY, result.getSunday());
     assertEquals(
       START_DATE.getAsString(),
-      ServiceDateUtils.asCompactString(result.getPeriod().getInclusiveStart())
+      ServiceDateUtils.asCompactString(result.getPeriod().getStartInclusive())
     );
     assertEquals(
       END_DATE.getAsString(),
@@ -97,7 +97,7 @@ public class ServiceCalendarMapperTest {
     assertEquals(0, result.getFriday());
     assertEquals(0, result.getSaturday());
     assertEquals(0, result.getSunday());
-    assertEquals(LocalDate.MIN, result.getPeriod().getInclusiveStart());
+    assertEquals(LocalDate.MIN, result.getPeriod().getStartInclusive());
     assertEquals(LocalDate.MAX, result.getPeriod().getEndInclusive());
   }
 

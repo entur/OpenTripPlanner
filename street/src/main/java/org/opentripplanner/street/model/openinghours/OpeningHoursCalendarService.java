@@ -21,7 +21,7 @@ public class OpeningHoursCalendarService implements Serializable {
     @TransitServicePeriod LocalDateRange transitServicePeriod
   ) {
     this.deduplicator = deduplicator;
-    this.startOfPeriod = transitServicePeriod.getInclusiveStart();
+    this.startOfPeriod = transitServicePeriod.getStartInclusive();
     this.daysInPeriod = transitServicePeriod.daysInPeriod();
   }
 

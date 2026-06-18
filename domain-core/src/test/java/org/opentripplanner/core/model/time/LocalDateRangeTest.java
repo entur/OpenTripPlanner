@@ -51,13 +51,13 @@ public class LocalDateRangeTest {
   }
 
   @Test
-  public void getStart() {
-    assertEquals(d1, LocalDateRange.ofInclusiveEnd(d1, d2).getInclusiveStart());
-    assertEquals(LocalDate.MIN, LocalDateRange.ofUnbounded().getInclusiveStart());
+  public void getStartInclusive() {
+    assertEquals(d1, LocalDateRange.ofInclusiveEnd(d1, d2).getStartInclusive());
+    assertEquals(LocalDate.MIN, LocalDateRange.ofUnbounded().getStartInclusive());
   }
 
   @Test
-  public void getEnd() {
+  public void getEndInclusive() {
     assertEquals(d2, LocalDateRange.ofInclusiveEnd(d1, d2).getEndInclusive());
     assertEquals(LocalDate.MAX, LocalDateRange.ofUnbounded().getEndInclusive());
   }
