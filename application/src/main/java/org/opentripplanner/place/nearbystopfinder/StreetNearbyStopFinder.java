@@ -58,7 +58,7 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
     Set<Vertex> ignoreVertices
   ) {
     // This is temporarily nullable as we don't need it when we don't link coordinates, but soon
-    // setting this everywhere will be easier once construction is moved to dagger
+    // setting this everywhere will be easier once construction is moved to dependency injection
     this.linkingContextFactory = linkingContextFactory;
     // TODO move request specific parameters to method
     this.durationLimit = requireNonNull(durationLimit);

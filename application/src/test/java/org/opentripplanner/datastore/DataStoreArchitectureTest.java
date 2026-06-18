@@ -1,7 +1,6 @@
 package org.opentripplanner.datastore;
 
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
-import static org.opentripplanner.OtpArchitectureModules.DAGGER;
 import static org.opentripplanner.OtpArchitectureModules.DATASTORE;
 import static org.opentripplanner.OtpArchitectureModules.FRAMEWORK;
 import static org.opentripplanner.OtpArchitectureModules.FRAMEWORK_UTILS;
@@ -59,7 +58,7 @@ public class DataStoreArchitectureTest {
 
   @Test
   void enforceConfigureDependencies() {
-    CONFIGURE.dependsOn(API, BASE, FILE, HTTPS, SERVICE, DAGGER, SPRING).verify();
+    CONFIGURE.dependsOn(API, BASE, FILE, HTTPS, SERVICE, SPRING).verify();
   }
 
   @Test

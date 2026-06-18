@@ -50,8 +50,6 @@ public class Package implements ArchComponent {
     ArchRule rule = classes()
       .that()
       .resideInAPackage(packageIdentifier)
-      .and()
-      .doNotImplement(dagger.internal.Factory.class)
       .should()
       .onlyDependOnClassesThat()
       .resideInAnyPackage(allAllowedPackages());
