@@ -53,6 +53,7 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.updater.GraphUpdaterManager;
 import org.opentripplanner.updater.configure.UpdaterConfigurator;
 import org.opentripplanner.utils.lang.ObjectUtils;
+import org.opentripplanner.utils.logging.PowerOfTwoThrottle;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -80,6 +81,7 @@ import org.slf4j.LoggerFactory;
 public class TimetableRepository implements Serializable {
 
   private static final Logger LOG = LoggerFactory.getLogger(TimetableRepository.class);
+  private static final PowerOfTwoThrottle FREEZE_LOG_THROTTLE = new PowerOfTwoThrottle();
 
   private final Collection<Agency> agencies = new ArrayList<>();
   private final Collection<Operator> operators = new ArrayList<>();
@@ -191,7 +193,6 @@ public class TimetableRepository implements Serializable {
    */
   @Deprecated
   public void setRealtimeRaptorTransitData(RaptorTransitData realtimeRaptorTransitData) {
-    assertModificationsAllowed();
     this.realtimeRaptorTransitData.publish(realtimeRaptorTransitData);
   }
 
@@ -630,12 +631,16 @@ public class TimetableRepository implements Serializable {
 
   private void assertModificationsAllowed() {
     if (frozen) {
-      LOG.error(
-        """
-        THIS SHOULD NOT HAPPEN
-        Attempting to modify TimetableRepository after it has been frozen.
-        """,
-        new RuntimeException("StackTrace included to trace the source of the error.")
+      FREEZE_LOG_THROTTLE.throttle(n ->
+        LOG.warn(
+          """
+          THIS SHOULD NOT HAPPEN
+          Attempting to modify TimetableRepository after it has been frozen.
+          Count: {}
+          """,
+          n,
+          new RuntimeException("StackTrace included to trace the source of the error.")
+        )
       );
     }
   }
