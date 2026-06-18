@@ -133,7 +133,12 @@ public class ConstructApplication {
     this.graphBuilderDataSources = graphBuilderDataSources;
     this.osmInfoGraphBuildRepository = osmInfoGraphBuildRepository;
 
-    this.context = new PhaseContext()
+    // Lazy init: like Dagger, beans are created on first access, not eagerly at refresh(). Required
+    // because some construct-phase singletons have construction-time side effects needing an indexed
+    // transit model (e.g. TimetableSnapshotManager commits an initial snapshot). During a graph build
+    // the model is empty/unindexed and these beans are never accessed, so they must not be eagerly
+    // instantiated; at serve time the explicit accessors below create them once the model is indexed.
+    this.context = new PhaseContext(true)
       // Pre-built, non-null instances handed off from the prior phases (= @BindsInstance).
       .registerInstance(ConfigModel.class, config)
       .registerInstance(Graph.class, graph)
