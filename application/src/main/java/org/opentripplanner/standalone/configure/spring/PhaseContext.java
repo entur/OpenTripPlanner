@@ -4,6 +4,7 @@ import jakarta.annotation.Nullable;
 import java.util.List;
 import java.util.function.Supplier;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.core.ResolvableType;
 
 /**
  * A thin wrapper around a Spring {@link AnnotationConfigApplicationContext} that mirrors one
@@ -127,6 +128,17 @@ public class PhaseContext implements AutoCloseable {
   /** Retrieve all beans of the given type (the {@code List<T>} injection equivalent). */
   public <T> List<T> getAll(Class<T> type) {
     return context.getBeanProvider(type).stream().toList();
+  }
+
+  /**
+   * Retrieve a single bean whose type is {@code List<elementType>} (e.g. a {@code @Bean} method
+   * returning {@code List<ElevationModule>}). This is distinct from {@link #getAll}, which collects
+   * individual element beans; here a factory method produced the list itself.
+   */
+  @SuppressWarnings("unchecked")
+  public <T> List<T> getListBean(Class<T> elementType) {
+    var type = ResolvableType.forClassWithGenerics(List.class, elementType);
+    return (List<T>) context.getBeanProvider(type).getObject();
   }
 
   @Override

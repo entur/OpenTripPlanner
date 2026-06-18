@@ -1,8 +1,5 @@
 package org.opentripplanner.ext.emission.configure;
 
-import dagger.Module;
-import dagger.Provides;
-import jakarta.inject.Singleton;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.emission.internal.graphbuilder.EmissionGraphBuilder;
@@ -10,14 +7,15 @@ import org.opentripplanner.graph_builder.GraphBuilderDataSources;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.transit.service.TimetableRepository;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@Module
+@Configuration(proxyBeanMethods = false)
 public class EmissionGraphBuilderModule {
 
-  @Provides
-  @Singleton
+  @Bean
   @Nullable
-  static EmissionGraphBuilder provideEmissionGraphBuilder(
+  EmissionGraphBuilder provideEmissionGraphBuilder(
     GraphBuilderDataSources dataSources,
     BuildConfig config,
     @Nullable EmissionRepository emissionRepository,

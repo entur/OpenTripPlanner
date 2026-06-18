@@ -1,19 +1,18 @@
 package org.opentripplanner.routing.linking.configure;
 
-import dagger.Module;
-import dagger.Provides;
-import jakarta.inject.Singleton;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.service.vehiclerental.GeofencingZoneService;
 import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.linking.VertexLinker;
 import org.opentripplanner.street.linking.VisibilityMode;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * Provides the vertex linker for the graph build.
  */
-@Module
+@Configuration(proxyBeanMethods = false)
 public class VertexLinkerGraphBuildingModule {
 
   /**
@@ -22,9 +21,8 @@ public class VertexLinkerGraphBuildingModule {
    * <p>Geofencing zones are registered at runtime by the vehicle-rental updater, so the build-phase
    * linker uses an empty zone lookup.
    */
-  @Provides
-  @Singleton
-  static VertexLinker linker(Graph graph, BuildConfig config) {
+  @Bean
+  VertexLinker linker(Graph graph, BuildConfig config) {
     var mode = VisibilityMode.ofBoolean(config.areaVisibility);
     return new VertexLinker(
       graph,

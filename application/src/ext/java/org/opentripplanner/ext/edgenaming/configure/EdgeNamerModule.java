@@ -1,18 +1,16 @@
 package org.opentripplanner.ext.edgenaming.configure;
 
-import dagger.Module;
-import dagger.Provides;
-import jakarta.inject.Singleton;
 import org.opentripplanner.ext.edgenaming.EdgeNamerFactory;
 import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.standalone.config.BuildConfig;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@Module
+@Configuration(proxyBeanMethods = false)
 public class EdgeNamerModule {
 
-  @Provides
-  @Singleton
-  public static EdgeNamer provideNamer(BuildConfig config) {
+  @Bean
+  public EdgeNamer provideNamer(BuildConfig config) {
     return EdgeNamerFactory.fromConfig(config.edgeNamer);
   }
 }

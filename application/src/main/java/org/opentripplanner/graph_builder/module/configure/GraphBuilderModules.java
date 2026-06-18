@@ -2,9 +2,6 @@ package org.opentripplanner.graph_builder.module.configure;
 
 import static org.opentripplanner.datastore.api.FileType.DEM;
 
-import dagger.Module;
-import dagger.Provides;
-import jakarta.inject.Singleton;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -56,25 +53,25 @@ import org.opentripplanner.street.linking.VertexLinker;
 import org.opentripplanner.transfer.regular.TransferRepository;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.service.TimetableRepository;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * Configure all modules that are not simple enough to be injected.
  */
-@Module
+@Configuration(proxyBeanMethods = false)
 public class GraphBuilderModules {
 
-  @Provides
-  @Singleton
-  static GraphBuildCacheManager provideGraphBuildCacheManager(
+  @Bean
+  GraphBuildCacheManager provideGraphBuildCacheManager(
     BuildConfig config,
     GraphBuilderDataSources dataSources
   ) {
     return new GraphBuildCacheManager(config.cache(), dataSources.listCachedDataSources());
   }
 
-  @Provides
-  @Singleton
-  static OsmModule provideOsmModule(
+  @Bean
+  OsmModule provideOsmModule(
     GraphBuilderDataSources dataSources,
     BuildConfig config,
     Graph graph,
@@ -122,9 +119,8 @@ public class GraphBuilderModules {
       .build();
   }
 
-  @Provides
-  @Singleton
-  static GtfsModule provideGtfsModule(
+  @Bean
+  GtfsModule provideGtfsModule(
     GraphBuilderDataSources dataSources,
     BuildConfig config,
     Graph graph,
@@ -152,9 +148,8 @@ public class GraphBuilderModules {
     );
   }
 
-  @Provides
-  @Singleton
-  static NetexModule provideNetexModule(
+  @Bean
+  NetexModule provideNetexModule(
     GraphBuilderDataSources dataSources,
     BuildConfig config,
     Graph graph,
@@ -175,9 +170,8 @@ public class GraphBuilderModules {
     );
   }
 
-  @Provides
-  @Singleton
-  static StreetLinkerModule provideStreetLinkerModule(
+  @Bean
+  StreetLinkerModule provideStreetLinkerModule(
     Graph graph,
     VehicleParkingRepository parkingRepository,
     TimetableRepository timetableRepository,
@@ -193,18 +187,16 @@ public class GraphBuilderModules {
     );
   }
 
-  @Provides
-  @Singleton
-  static StopConnectivityModule provideStopConnectivityModule(
+  @Bean
+  StopConnectivityModule provideStopConnectivityModule(
     Graph graph,
     DataImportIssueStore issueStore
   ) {
     return new StopConnectivityModule(graph, issueStore);
   }
 
-  @Provides
-  @Singleton
-  static PruneIslands providePruneIslands(
+  @Bean
+  PruneIslands providePruneIslands(
     BuildConfig config,
     Graph graph,
     VehicleParkingRepository parkingRepository,
@@ -229,9 +221,8 @@ public class GraphBuilderModules {
     return pruneIslands;
   }
 
-  @Provides
-  @Singleton
-  static List<ElevationModule> provideElevationModules(
+  @Bean
+  List<ElevationModule> provideElevationModules(
     BuildConfig config,
     GraphBuilderDataSources dataSources,
     Graph graph,
@@ -259,9 +250,8 @@ public class GraphBuilderModules {
     return result;
   }
 
-  @Provides
-  @Singleton
-  static DirectTransferGenerator provideDirectTransferGenerator(
+  @Bean
+  DirectTransferGenerator provideDirectTransferGenerator(
     BuildConfig config,
     Graph graph,
     TimetableRepository timetableRepository,
@@ -277,9 +267,8 @@ public class GraphBuilderModules {
     );
   }
 
-  @Provides
-  @Singleton
-  static DirectTransferAnalyzer provideDirectTransferAnalyzer(
+  @Bean
+  DirectTransferAnalyzer provideDirectTransferAnalyzer(
     BuildConfig config,
     Graph graph,
     VertexLinker linker,
@@ -295,22 +284,19 @@ public class GraphBuilderModules {
     );
   }
 
-  @Provides
-  @Singleton
+  @Bean
   @Nullable
-  static EdgeUpdaterModule provideDataOverlayFactory(BuildConfig config, Graph graph) {
+  EdgeUpdaterModule provideDataOverlayFactory(BuildConfig config, Graph graph) {
     return DataOverlayFactory.create(graph, config.dataOverlay);
   }
 
-  @Provides
-  @Singleton
-  static DataImportIssueStore provideDataImportIssuesStore() {
+  @Bean
+  DataImportIssueStore provideDataImportIssuesStore() {
     return new DefaultDataImportIssueStore();
   }
 
-  @Provides
-  @Singleton
-  static DataImportIssueReporter provideDataImportIssuesToHTML(
+  @Bean
+  DataImportIssueReporter provideDataImportIssuesToHTML(
     GraphBuilderDataSources dataSources,
     BuildConfig config,
     DataImportIssueStore issueStore
@@ -322,25 +308,22 @@ public class GraphBuilderModules {
     );
   }
 
-  @Provides
-  @Singleton
-  static DataImportIssueSummary providesDataImportIssueSummary(DataImportIssueStore issueStore) {
+  @Bean
+  DataImportIssueSummary providesDataImportIssueSummary(DataImportIssueStore issueStore) {
     return new DataImportIssueSummary(issueStore.listIssues());
   }
 
-  @Provides
-  @Singleton
-  static TurnRestrictionModule provideTurnRestrictionModule(
+  @Bean
+  TurnRestrictionModule provideTurnRestrictionModule(
     Graph graph,
     OsmInfoGraphBuildRepository osmInfoGraphBuildRepository
   ) {
     return new TurnRestrictionModule(graph, osmInfoGraphBuildRepository);
   }
 
-  @Provides
-  @Singleton
+  @Bean
   @Nullable
-  static StopConsolidationModule providesStopConsolidationModule(
+  StopConsolidationModule providesStopConsolidationModule(
     TimetableRepository timetableRepository,
     @Nullable StopConsolidationRepository repo,
     GraphBuilderDataSources dataSources
@@ -351,10 +334,9 @@ public class GraphBuilderModules {
       .orElse(null);
   }
 
-  @Provides
-  @Singleton
+  @Bean
   @Nullable
-  static RouteToCentroidStationIdsValidator routeToCentroidStationIdValidator(
+  RouteToCentroidStationIdsValidator routeToCentroidStationIdValidator(
     DataImportIssueStore issueStore,
     BuildConfig config,
     TimetableRepository timetableRepository
@@ -365,8 +347,7 @@ public class GraphBuilderModules {
       : new RouteToCentroidStationIdsValidator(issueStore, ids, timetableRepository);
   }
 
-  @Provides
-  @Singleton
+  @Bean
   DeduplicatorService provideDeduplicator() {
     return new Deduplicator();
   }
