@@ -44,12 +44,7 @@
             <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
-        <dependency>
-            <groupId>com.google.dagger</groupId>
-            <artifactId>dagger</artifactId>
-            <version>${google.dagger.version}</version>
-        </dependency>
-        <!-- Spring Framework DI container (migration from Dagger in progress; both coexist). -->
+        <!-- Dependency injection -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>

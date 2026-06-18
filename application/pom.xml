@@ -70,13 +70,7 @@
             <version>9.0</version>
         </dependency>
 
-        <!-- dependency injection -->
-        <dependency>
-            <groupId>com.google.dagger</groupId>
-            <artifactId>dagger</artifactId>
-            <version>${google.dagger.version}</version>
-        </dependency>
-        <!-- Spring Framework DI container (migration from Dagger in progress; both coexist). -->
+        <!-- Dependency injection -->
         <dependency>
             <groupId>org.springframework</groupId>
             <artifactId>spring-context</artifactId>
@@ -421,19 +415,6 @@
         </testResources>
         <plugins>
             <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <configuration>
-                    <annotationProcessorPaths>
-                        <path>
-                            <groupId>com.google.dagger</groupId>
-                            <artifactId>dagger-compiler</artifactId>
-                            <version>${google.dagger.version}</version>
-                        </path>
-                    </annotationProcessorPaths>
-                </configuration>
-            </plugin>
-            <plugin>
                 <groupId>org.codehaus.mojo</groupId>
                 <artifactId>build-helper-maven-plugin</artifactId>
                 <version>3.6.1</version>
@@ -448,7 +429,6 @@
                             <sources>
                                 <source>src/main/java</source>
                                 <source>src/ext/java</source>
-                                <source>${project.build.directory}/generated-sources/annotations</source>
                             </sources>
                         </configuration>
                     </execution>

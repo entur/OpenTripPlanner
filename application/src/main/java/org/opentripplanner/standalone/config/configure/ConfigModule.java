@@ -1,8 +1,5 @@
 package org.opentripplanner.standalone.config.configure;
 
-import dagger.Module;
-import dagger.Provides;
-import jakarta.inject.Singleton;
 import java.util.Set;
 import org.opentripplanner.raptor.api.request.RaptorEnvironment;
 import org.opentripplanner.raptor.configure.RaptorConfig;
@@ -21,22 +18,17 @@ import org.springframework.context.annotation.Scope;
 
 /**
  * Map {@link ConfigModel} into more specific types like {@link BuildConfig} to simplify
- * DI in other modules.
- * <p>
- * This module is dual-bridged during the Dagger&rarr;Spring migration: the config-load phase
- * (Dagger {@code LoadConfigModule}/{@code LoadApplicationFactory}) still reads its Dagger
- * annotations while the construct/serve phase reads the Spring ones.
+ * dependency injection in other configurations.
  */
-@Module
 @Configuration(proxyBeanMethods = false)
 public class ConfigModule {
 
   /**
-   * Spring 7 only recognizes {@code org.springframework.beans.factory.annotation.Qualifier} and
+   * Spring only recognizes {@code org.springframework.beans.factory.annotation.Qualifier} and
    * {@code jakarta.inject.Qualifier} as qualifier meta-annotations out of the box. Several OTP
-   * qualifier annotations (e.g. {@code @GtfsSchema}, {@code @TransmodelSchema}) are still
-   * meta-annotated with the legacy {@code javax.inject.Qualifier}; register it here so Spring
-   * resolves them like Dagger did. (Spring-only; Dagger ignores non-{@code @Provides} methods.)
+   * qualifier annotations (e.g. {@code @GtfsSchema}, {@code @TransmodelSchema}, {@code @OtpBaseDirectory})
+   * are meta-annotated with the legacy {@code javax.inject.Qualifier}; register it here so Spring
+   * resolves them.
    */
   @Bean
   static CustomAutowireConfigurer customAutowireConfigurer() {
@@ -45,37 +37,31 @@ public class ConfigModule {
     return configurer;
   }
 
-  @Provides
   @Bean
   @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
   static OtpConfig provideOtpConfig(ConfigModel model) {
     return model.otpConfig();
   }
 
-  @Provides
   @Bean
   @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
   static BuildConfig provideBuildConfig(ConfigModel model) {
     return model.buildConfig();
   }
 
-  @Provides
   @Bean
   @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
   static RouterConfig provideRouterConfig(ConfigModel model) {
     return model.routerConfig();
   }
 
-  @Provides
   @Bean
   @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
   static DebugUiConfig provideDebugUiConfig(ConfigModel model) {
     return model.debugUiConfig();
   }
 
-  @Provides
   @Bean
-  @Singleton
   static RaptorConfig<TripSchedule> providesRaptorConfig(
     RouterConfig routerConfig,
     RaptorEnvironment environment
@@ -83,9 +69,7 @@ public class ConfigModule {
     return new RaptorConfig<>(routerConfig.transitTuningConfig(), environment);
   }
 
-  @Provides
   @Bean
-  @Singleton
   static RaptorEnvironment providesRaptorEnvironment(RouterConfig routerConfig) {
     int searchThreadPoolSize = routerConfig.transitTuningConfig().searchThreadPoolSize();
     return RaptorEnvironmentFactory.create(searchThreadPoolSize);
