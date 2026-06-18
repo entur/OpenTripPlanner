@@ -23,20 +23,17 @@ import org.opentripplanner.utils.time.ServiceDateUtils;
  */
 public final class LocalDateRange {
 
-  private static final LocalDateRange UNBOUNDED = new LocalDateRange(MIN, MAX, true);
+  private static final LocalDateRange UNBOUNDED = new LocalDateRange(MIN, MAX);
 
   private final LocalDate inclusiveStart;
   private final LocalDate exclusiveEnd;
-  private final boolean inclusiveEnd;
 
   private LocalDateRange(
     LocalDate inclusiveStart,
-    LocalDate exclusiveEnd,
-    boolean inclusiveEnd
+    LocalDate exclusiveEnd
   ) {
     this.inclusiveStart = inclusiveStart;
     this.exclusiveEnd = exclusiveEnd;
-    this.inclusiveEnd = inclusiveEnd;
     if (exclusiveEnd.isBefore(inclusiveStart)) {
       throw new IllegalArgumentException(
         "Invalid range, the end is before the start: start=" +
@@ -65,7 +62,7 @@ public final class LocalDateRange {
       );
     }
     var endExclusive = endInclusive.equals(MAX) ? MAX : endInclusive.plusDays(1);
-    return new LocalDateRange(startInclusive, endExclusive, true);
+    return new LocalDateRange(startInclusive, endExclusive);
   }
 
   /**
@@ -81,7 +78,7 @@ public final class LocalDateRange {
   ) {
     var startInclusive = start == null ? MIN : start;
     var endExclusive = end == null ? MAX : end;
-    return new LocalDateRange(startInclusive, endExclusive, false);
+    return new LocalDateRange(startInclusive, endExclusive);
   }
 
   /**
@@ -147,7 +144,7 @@ public final class LocalDateRange {
     if (!newStart.isBefore(newEnd)) {
       throw new IllegalArgumentException("ranges do not overlap: " + this + " and " + other);
     }
-    return new LocalDateRange(newStart, newEnd, inclusiveEnd);
+    return new LocalDateRange(newStart, newEnd);
   }
 
   /**
@@ -177,13 +174,7 @@ public final class LocalDateRange {
   @Override
   public String toString() {
     var start = ServiceDateUtils.toString(inclusiveStart);
-    String end;
-    if (exclusiveEnd.equals(MAX)) {
-      end = ServiceDateUtils.toString(MAX);
-    } else {
-      end = ServiceDateUtils.toString(inclusiveEnd ? exclusiveEnd.minusDays(1) : exclusiveEnd);
-    }
-    var endMarker = inclusiveEnd ? "]" : ")";
-    return ("[" + start + ", " + end + endMarker);
+    var end = ServiceDateUtils.toString(exclusiveEnd);
+    return ("[" + start + ", " + end + ")");
   }
 }

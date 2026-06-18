@@ -186,16 +186,7 @@ public class LocalDateRangeTest {
   }
 
   @Test
-  public void testToStringInclusiveFormat() {
-    assertEquals("[2020-01-07, 2020-01-15]", LocalDateRange.ofInclusiveEnd(d1, d2).toString());
-    assertEquals("[MIN, 2020-01-15]", LocalDateRange.ofInclusiveEnd(null, d2).toString());
-    assertEquals("[2020-01-07, MAX]", LocalDateRange.ofInclusiveEnd(d1, null).toString());
-    assertEquals("[MIN, MAX]", LocalDateRange.ofInclusiveEnd(null, null).toString());
-    assertEquals("[MIN, MAX]", LocalDateRange.ofUnbounded().toString());
-  }
-
-  @Test
-  public void testToStringExclusiveFormat() {
+  public void testToString() {
     assertEquals(
       "[2020-01-07, 2020-01-16)",
       LocalDateRange.ofExclusiveEnd(d1, d2.plusDays(1)).toString()
