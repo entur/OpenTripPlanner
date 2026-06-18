@@ -76,6 +76,11 @@
             <artifactId>dagger</artifactId>
             <version>${google.dagger.version}</version>
         </dependency>
+        <!-- Spring Framework DI container (migration from Dagger in progress; both coexist). -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+        </dependency>
 
         <!-- Lucene is used by the Debug Client Geocode API -->
         <dependency>
