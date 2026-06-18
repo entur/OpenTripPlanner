@@ -1,7 +1,7 @@
 package org.opentripplanner.updater;
 
 import org.opentripplanner.street.graph.Graph;
-import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
+import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
@@ -15,10 +15,26 @@ public class DefaultRealTimeUpdateContext implements RealTimeUpdateContext {
   private final TransitService transitService;
   private SiriFuzzyTripMatcher siriFuzzyTripMatcher;
 
+  /**
+   * The context needs the mutable snapshot so that entity lookups (trips, routes, patterns) see
+   * all in-progress real-time additions that have not yet been committed to a published snapshot.
+   * <p>
+   * A {@link MutableTimetableSnapshot} cannot be used directly for these lookups, because every
+   * lookup must also fall back to scheduled data in the {@link TimetableRepository} when an entity
+   * is not found in the real-time snapshot. The {@link DefaultTransitService} combines both: it
+   * checks the snapshot first, then falls back to the static index.
+   * <p>
+   * {@link DefaultTransitService} accepts a {@link org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot},
+   * because in request scope it must never receive a mutable snapshot. The cast here is safe as
+   * long as {@link MutableTimetableSnapshot} and {@link org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot}
+   * share a single implementation — which is enforced by {@link MutableTimetableSnapshot} extending
+   * {@link org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot}. A cleaner separation
+   * would require merging scheduled and real-time data into a single unified store.
+   */
   public DefaultRealTimeUpdateContext(
     Graph graph,
     TimetableRepository timetableRepository,
-    TimetableSnapshot timetableSnapshotBuffer
+    MutableTimetableSnapshot timetableSnapshotBuffer
   ) {
     this.graph = graph;
     this.transitService = new DefaultTransitService(timetableRepository, timetableSnapshotBuffer);

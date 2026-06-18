@@ -13,6 +13,8 @@ import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Timetable;
 import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
+import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
+import org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +81,7 @@ public final class TimetableSnapshotManager {
    * provided a consistent view of all TripTimes. The routing thread need only release its reference
    * to the snapshot to release resources.
    */
-  public TimetableSnapshot getTimetableSnapshot() {
+  public ReadOnlyTimetableSnapshot getTimetableSnapshot() {
     return snapshot.get();
   }
 
@@ -89,7 +91,7 @@ public final class TimetableSnapshotManager {
    * This should be used in the context of an updater to build a TransitEditorService that sees all
    * the changes applied so far by real-time updates.
    */
-  public TimetableSnapshot getTimetableSnapshotBuffer() {
+  public MutableTimetableSnapshot getTimetableSnapshotBuffer() {
     return buffer;
   }
 

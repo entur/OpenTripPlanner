@@ -27,9 +27,9 @@ import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
-import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
+import org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot;
 
 class TimetableSnapshotManagerTest {
 
@@ -149,7 +149,7 @@ class TimetableSnapshotManagerTest {
     snapshotManager.updateBuffer(RealTimeTripUpdate.of(PATTERN, TRIP_TIMES, YESTERDAY).build());
 
     snapshotManager.commitTimetableSnapshot(true);
-    final TimetableSnapshot snapshotA = snapshotManager.getTimetableSnapshot();
+    final ReadOnlyTimetableSnapshot snapshotA = snapshotManager.getTimetableSnapshot();
 
     // Turn the clock to tomorrow
     clock.set(TOMORROW);
@@ -158,7 +158,7 @@ class TimetableSnapshotManagerTest {
 
     snapshotManager.purgeAndCommit();
 
-    final TimetableSnapshot snapshotB = snapshotManager.getTimetableSnapshot();
+    final ReadOnlyTimetableSnapshot snapshotB = snapshotManager.getTimetableSnapshot();
 
     expSnapshots.test(snapshotA, snapshotB);
     expPatternAeqB.test(

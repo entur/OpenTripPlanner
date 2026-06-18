@@ -18,7 +18,7 @@ import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.linking.VertexLinker;
 import org.opentripplanner.street.model.openinghours.OpeningHoursCalendarService;
-import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
+import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.GraphUpdaterManager;
@@ -122,7 +122,7 @@ public class UpdaterConfigurator {
       )
     );
 
-    TimetableSnapshot timetableSnapshotBuffer = snapshotManager.getTimetableSnapshotBuffer();
+    MutableTimetableSnapshot timetableSnapshotBuffer = snapshotManager.getTimetableSnapshotBuffer();
     GraphUpdaterManager updaterManager = new GraphUpdaterManager(
       new DefaultRealTimeUpdateContext(graph, timetableRepository, timetableSnapshotBuffer),
       updaters

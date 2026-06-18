@@ -14,7 +14,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.Rapto
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.transfer.regular.TransferRepository;
 import org.opentripplanner.transit.model.network.grouppriority.TransitGroupPriorityService;
-import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
+import org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
@@ -103,7 +103,7 @@ public final class TransitTestEnvironment {
     return snapshotManager;
   }
 
-  public TimetableSnapshot timetableSnapshot() {
+  public ReadOnlyTimetableSnapshot timetableSnapshot() {
     return snapshotManager.getTimetableSnapshot();
   }
 

@@ -44,10 +44,10 @@ public abstract class TransitModule {
   }
 
   /**
-   * Provides the currently published, immutable {@link TimetableSnapshot}.
+   * Provides the currently published, immutable timetable snapshot.
    */
   @Provides
-  public static TimetableSnapshot timetableSnapshot(TimetableSnapshotManager manager) {
+  public static ReadOnlyTimetableSnapshot timetableSnapshot(TimetableSnapshotManager manager) {
     return manager.getTimetableSnapshot();
   }
 

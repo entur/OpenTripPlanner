@@ -54,4 +54,9 @@ public interface ReadOnlyTimetableSnapshot {
   Collection<TripPattern> getPatternsForStop(StopLocation stop);
 
   RaptorTransitData getRealtimeRaptorTransitData();
+
+  /**
+   * Does this snapshot contain any realtime data or is it completely empty?
+   */
+  boolean isEmpty();
 }
