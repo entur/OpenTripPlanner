@@ -1,9 +1,6 @@
 package org.opentripplanner.apis.transmodel.configure;
 
-import dagger.Module;
-import dagger.Provides;
 import graphql.schema.GraphQLSchema;
-import jakarta.inject.Singleton;
 import javax.annotation.Nullable;
 import org.opentripplanner.api.model.transit.DefaultFeedIdMapper;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
@@ -14,12 +11,13 @@ import org.opentripplanner.framework.time.ZoneIdFallback;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.transit.service.TimetableRepository;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@Module
+@Configuration(proxyBeanMethods = false)
 public class TransmodelSchemaModule {
 
-  @Provides
-  @Singleton
+  @Bean
   @Nullable
   @TransmodelSchema
   public GraphQLSchema provideTransmodelSchema(

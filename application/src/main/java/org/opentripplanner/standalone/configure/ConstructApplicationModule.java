@@ -1,10 +1,7 @@
 package org.opentripplanner.standalone.configure;
 
-import dagger.Module;
-import dagger.Provides;
 import graphql.schema.GraphQLSchema;
 import io.micrometer.core.instrument.Metrics;
-import jakarta.inject.Singleton;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.apis.gtfs.configure.GtfsSchema;
@@ -34,16 +31,24 @@ import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.standalone.config.DebugUiConfig;
 import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.standalone.server.DefaultServerRequestContext;
+import org.opentripplanner.standalone.server.MetricsLogging;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.linking.VertexLinker;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.transfer.regular.RegularTransferService;
 import org.opentripplanner.transit.service.TransitService;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Scope;
 
-@Module
+@Configuration(proxyBeanMethods = false)
+@Import(MetricsLogging.class)
 public class ConstructApplicationModule {
 
-  @Provides
+  @Bean
+  @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
   OtpServerRequestContext providesServerContext(
     RouterConfig routerConfig,
     DebugUiConfig debugUiConfig,
@@ -122,8 +127,7 @@ public class ConstructApplicationModule {
     );
   }
 
-  @Singleton
-  @Provides
+  @Bean
   public FareService fareService(FareServiceFactory fareServiceFactory) {
     return fareServiceFactory.makeFareService();
   }

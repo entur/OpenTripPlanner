@@ -1,22 +1,20 @@
 package org.opentripplanner.ext.ridehailing.configure;
 
-import dagger.Module;
-import dagger.Provides;
-import jakarta.inject.Singleton;
 import java.util.List;
 import org.opentripplanner.ext.ridehailing.RideHailingService;
 import org.opentripplanner.ext.ridehailing.service.uber.UberService;
 import org.opentripplanner.standalone.config.RouterConfig;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * This module converts the ride hailing configurations into ride hailing services to be used by the
  * application context.
  */
-@Module
+@Configuration(proxyBeanMethods = false)
 public class RideHailingServicesModule {
 
-  @Provides
-  @Singleton
+  @Bean
   List<RideHailingService> services(RouterConfig config) {
     return config
       .rideHailingServiceParameters()

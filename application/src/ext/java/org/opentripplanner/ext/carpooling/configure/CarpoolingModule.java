@@ -1,8 +1,5 @@
 package org.opentripplanner.ext.carpooling.configure;
 
-import dagger.Module;
-import dagger.Provides;
-import jakarta.inject.Singleton;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
@@ -12,12 +9,15 @@ import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.transit.service.TransitService;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 
-@Module
+@Configuration(proxyBeanMethods = false)
 public class CarpoolingModule {
 
-  @Provides
-  @Singleton
+  @Bean
   @Nullable
   public CarpoolingRepository provideCarpoolingRepository() {
     if (OTPFeature.CarPooling.isOff()) {
@@ -26,9 +26,10 @@ public class CarpoolingModule {
     return new DefaultCarpoolingRepository();
   }
 
-  @Provides
+  @Bean
+  @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
   @Nullable
-  public static CarpoolingService provideCarpoolingService(
+  public CarpoolingService provideCarpoolingService(
     @Nullable CarpoolingRepository repository,
     StreetLimitationParametersService streetLimitationParametersService,
     TransitService transitService,

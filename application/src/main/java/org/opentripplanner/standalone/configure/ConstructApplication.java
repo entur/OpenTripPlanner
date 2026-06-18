@@ -2,12 +2,24 @@ package org.opentripplanner.standalone.configure;
 
 import jakarta.ws.rs.core.Application;
 import javax.annotation.Nullable;
+import org.opentripplanner.apis.gtfs.configure.SchemaModule;
+import org.opentripplanner.apis.transmodel.configure.TransmodelSchemaModule;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.datastore.api.DataSource;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
+import org.opentripplanner.ext.carpooling.configure.CarpoolingModule;
+import org.opentripplanner.ext.dataoverlay.configure.DataOverlayParameterBindingsModule;
 import org.opentripplanner.ext.emission.EmissionRepository;
+import org.opentripplanner.ext.emission.configure.EmissionServiceModule;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
+import org.opentripplanner.ext.empiricaldelay.configure.EmpiricalDelayServiceModule;
+import org.opentripplanner.ext.geocoder.LuceneIndex;
+import org.opentripplanner.ext.geocoder.configure.GeocoderModule;
+import org.opentripplanner.ext.interactivelauncher.configuration.InteractiveLauncherModule;
+import org.opentripplanner.ext.ridehailing.configure.RideHailingServicesModule;
+import org.opentripplanner.ext.sorlandsbanen.configure.SorlandsbanenNorwayModule;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
+import org.opentripplanner.ext.stopconsolidation.configure.StopConsolidationServiceModule;
 import org.opentripplanner.framework.application.LogMDCSupport;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.GraphBuilder;
@@ -18,15 +30,26 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransit
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TransitTuningParameters;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.RaptorTransitDataMapper;
+import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.fares.FareServiceFactory;
+import org.opentripplanner.routing.linking.configure.LinkingServiceModule;
 import org.opentripplanner.routing.util.EllipsoidUtils;
+import org.opentripplanner.routing.via.configure.ViaModule;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
+import org.opentripplanner.service.realtimevehicles.configure.RealtimeVehicleRepositoryModule;
+import org.opentripplanner.service.realtimevehicles.configure.RealtimeVehicleServiceModule;
 import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
+import org.opentripplanner.service.streetdetails.configure.StreetDetailsServiceModule;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingService;
+import org.opentripplanner.service.vehicleparking.configure.VehicleParkingServiceModule;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
+import org.opentripplanner.service.vehiclerental.configure.VehicleRentalRepositoryModule;
+import org.opentripplanner.service.vehiclerental.configure.VehicleRentalServiceModule;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
+import org.opentripplanner.service.worldenvelope.WorldEnvelopeService;
+import org.opentripplanner.service.worldenvelope.configure.WorldEnvelopeServiceModule;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.standalone.config.CommandLineParameters;
@@ -34,16 +57,25 @@ import org.opentripplanner.standalone.config.ConfigModel;
 import org.opentripplanner.standalone.config.DebugUiConfig;
 import org.opentripplanner.standalone.config.OtpConfig;
 import org.opentripplanner.standalone.config.RouterConfig;
+import org.opentripplanner.standalone.config.configure.ConfigModule;
+import org.opentripplanner.standalone.config.configure.DeduplicatorServiceModule;
+import org.opentripplanner.standalone.configure.spring.PhaseContext;
 import org.opentripplanner.standalone.server.GrizzlyServer;
+import org.opentripplanner.standalone.server.MetricsLogging;
 import org.opentripplanner.standalone.server.OTPWebApplication;
 import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.linking.VertexLinker;
+import org.opentripplanner.street.service.StreetLimitationParametersServiceModule;
 import org.opentripplanner.transfer.regular.TransferRepository;
+import org.opentripplanner.transfer.regular.configure.TransferServiceModule;
+import org.opentripplanner.transit.configure.TransitModule;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.configure.UpdaterConfigurator;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.utils.logging.ProgressTracker;
+import org.opentripplanner.warmup.WarmupLauncher;
+import org.opentripplanner.warmup.configure.WarmupModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -74,7 +106,7 @@ public class ConstructApplication {
    * the application context.
    */
   private final OsmInfoGraphBuildRepository osmInfoGraphBuildRepository;
-  private final ConstructApplicationFactory factory;
+  private final PhaseContext context;
 
   /**
    * Create a new OTP configuration instance for a given directory.
@@ -101,27 +133,54 @@ public class ConstructApplication {
     this.graphBuilderDataSources = graphBuilderDataSources;
     this.osmInfoGraphBuildRepository = osmInfoGraphBuildRepository;
 
-    ConstructApplicationFactory.Builder builder = DaggerConstructApplicationFactory.builder();
-    this.factory = builder
-      .configModel(config)
-      .graph(graph)
-      .streetDetailsRepository(streetDetailsRepository)
-      .timetableRepository(timetableRepository)
-      .transferRepository(transferRepository)
-      .worldEnvelopeRepository(worldEnvelopeRepository)
-      .vehicleParkingRepository(vehicleParkingRepository)
-      .emissionRepository(emissionRepository)
-      .empiricalDelayRepository(empiricalDelayRepository)
-      .dataImportIssueSummary(issueSummary)
-      .stopConsolidationRepository(stopConsolidationRepository)
-      .streetStreetRepository(streetRepository)
-      .schema(config.routerConfig().routingRequestDefaults())
-      .fareServiceFactory(fareServiceFactory)
-      .build();
-  }
-
-  public ConstructApplicationFactory getFactory() {
-    return factory;
+    this.context = new PhaseContext()
+      // Pre-built, non-null instances handed off from the prior phases (= @BindsInstance).
+      .registerInstance(ConfigModel.class, config)
+      .registerInstance(Graph.class, graph)
+      .registerInstance(TimetableRepository.class, timetableRepository)
+      .registerInstance(TransferRepository.class, transferRepository)
+      .registerInstance(WorldEnvelopeRepository.class, worldEnvelopeRepository)
+      .registerInstance(VehicleParkingRepository.class, vehicleParkingRepository)
+      .registerInstance(DataImportIssueSummary.class, issueSummary)
+      .registerInstance(StreetDetailsRepository.class, streetDetailsRepository)
+      .registerInstance(EmissionRepository.class, emissionRepository)
+      .registerInstance(StreetRepository.class, streetRepository)
+      .registerInstance(FareServiceFactory.class, fareServiceFactory)
+      .registerInstance(RouteRequest.class, config.routerConfig().routingRequestDefaults())
+      // Pre-built, nullable instances (= @Nullable @BindsInstance).
+      .registerNullableInstance(StopConsolidationRepository.class, stopConsolidationRepository)
+      .registerNullableInstance(EmpiricalDelayRepository.class, empiricalDelayRepository)
+      // @Configuration classes replacing the Dagger @Component modules.
+      .registerConfig(
+        CarpoolingModule.class,
+        ConfigModule.class,
+        ConstructApplicationModule.class,
+        DataOverlayParameterBindingsModule.class,
+        EmissionServiceModule.class,
+        EmpiricalDelayServiceModule.class,
+        DeduplicatorServiceModule.class,
+        GeocoderModule.class,
+        InteractiveLauncherModule.class,
+        StreetDetailsServiceModule.class,
+        LinkingServiceModule.class,
+        RealtimeVehicleServiceModule.class,
+        RealtimeVehicleRepositoryModule.class,
+        RideHailingServicesModule.class,
+        SchemaModule.class,
+        TransmodelSchemaModule.class,
+        SorlandsbanenNorwayModule.class,
+        StopConsolidationServiceModule.class,
+        StreetLimitationParametersServiceModule.class,
+        TransitModule.class,
+        TransferServiceModule.class,
+        VehicleParkingServiceModule.class,
+        VehicleRentalRepositoryModule.class,
+        VehicleRentalServiceModule.class,
+        ViaModule.class,
+        WarmupModule.class,
+        WorldEnvelopeServiceModule.class
+      )
+      .refresh();
   }
 
   /**
@@ -146,16 +205,16 @@ public class ConstructApplication {
       graphBuilderDataSources,
       graph(),
       osmInfoGraphBuildRepository,
-      factory.streetDetailsRepository(),
+      streetDetailsRepository(),
       fareServiceFactory(),
-      factory.streetRepository(),
-      factory.timetableRepository(),
-      factory.transferRepository(),
-      factory.worldEnvelopeRepository(),
-      factory.vehicleParkingRepository(),
-      factory.emissionRepository(),
-      factory.empiricalDelayRepository(),
-      factory.stopConsolidationRepository(),
+      streetRepository(),
+      timetableRepository(),
+      transferRepository(),
+      worldEnvelopeRepository(),
+      vehicleParkingRepository(),
+      emissionRepository(),
+      empiricalDelayRepository(),
+      stopConsolidationRepository(),
       cli.doLoadStreetGraph(),
       cli.doSaveStreetGraph()
     );
@@ -207,7 +266,7 @@ public class ConstructApplication {
     );
 
     // Start application warmup — runs routing queries to warm up the application
-    factory.warmupLauncher().start();
+    context.get(WarmupLauncher.class).start();
 
     initEllipsoidToGeoidDifference();
 
@@ -216,13 +275,13 @@ public class ConstructApplication {
     if (OTPFeature.SandboxAPIGeocoder.isOn()) {
       LOG.info("Initializing geocoder");
       // eagerly initialize the geocoder
-      this.factory.luceneIndex();
+      context.getNullable(LuceneIndex.class);
     }
   }
 
   private void initEllipsoidToGeoidDifference() {
     try {
-      var c = factory.worldEnvelopeService().envelope().orElseThrow().center();
+      var c = context.get(WorldEnvelopeService.class).envelope().orElseThrow().center();
       double value = EllipsoidUtils.computeEllipsoidToGeoidDifference(c.latitude(), c.longitude());
       graph().initEllipsoidToGeoidDifference(value, c.latitude(), c.longitude());
     } catch (Exception e) {
@@ -278,91 +337,93 @@ public class ConstructApplication {
   }
 
   public TimetableRepository timetableRepository() {
-    return factory.timetableRepository();
+    return context.get(TimetableRepository.class);
   }
 
   public TransferRepository transferRepository() {
-    return factory.transferRepository();
+    return context.get(TransferRepository.class);
   }
 
+  @Nullable
   public CarpoolingRepository carpoolingRepository() {
-    return factory.carpoolingRepository();
+    return context.getNullable(CarpoolingRepository.class);
   }
 
   public DataImportIssueSummary dataImportIssueSummary() {
-    return factory.dataImportIssueSummary();
+    return context.get(DataImportIssueSummary.class);
   }
 
   public OsmInfoGraphBuildRepository osmInfoGraphBuildRepository() {
     return osmInfoGraphBuildRepository;
   }
 
+  @Nullable
   public StopConsolidationRepository stopConsolidationRepository() {
-    return factory.stopConsolidationRepository();
+    return context.getNullable(StopConsolidationRepository.class);
   }
 
   public StreetRepository streetRepository() {
-    return factory.streetRepository();
+    return context.get(StreetRepository.class);
   }
 
   public RealtimeVehicleRepository realtimeVehicleRepository() {
-    return factory.realtimeVehicleRepository();
+    return context.get(RealtimeVehicleRepository.class);
   }
 
   public VehicleRentalRepository vehicleRentalRepository() {
-    return factory.vehicleRentalRepository();
+    return context.get(VehicleRentalRepository.class);
   }
 
   private TimetableSnapshotManager snapshotManager() {
-    return factory.timetableSnapshotManager();
+    return context.get(TimetableSnapshotManager.class);
   }
 
   public VehicleParkingService vehicleParkingService() {
-    return factory.vehicleParkingService();
+    return context.get(VehicleParkingService.class);
   }
 
   public VehicleParkingRepository vehicleParkingRepository() {
-    return factory.vehicleParkingRepository();
+    return context.get(VehicleParkingRepository.class);
   }
 
   public Graph graph() {
-    return factory.graph();
+    return context.get(Graph.class);
   }
 
   public VertexLinker vertexLinker() {
-    return factory.vertexLinker();
+    return context.get(VertexLinker.class);
   }
 
   public DeduplicatorService deduplicatorService() {
-    return factory.deduplicatorService();
+    return context.get(DeduplicatorService.class);
   }
 
   public WorldEnvelopeRepository worldEnvelopeRepository() {
-    return factory.worldEnvelopeRepository();
+    return context.get(WorldEnvelopeRepository.class);
   }
 
   public OtpConfig otpConfig() {
-    return factory.config().otpConfig();
+    return context.get(ConfigModel.class).otpConfig();
   }
 
   public RouterConfig routerConfig() {
-    return factory.config().routerConfig();
+    return context.get(ConfigModel.class).routerConfig();
   }
 
   public BuildConfig buildConfig() {
-    return factory.config().buildConfig();
+    return context.get(ConfigModel.class).buildConfig();
   }
 
   public DebugUiConfig debugUiConfig() {
-    return factory.config().debugUiConfig();
+    return context.get(ConfigModel.class).debugUiConfig();
   }
 
   public RaptorConfig<TripSchedule> raptorConfig() {
-    return factory.raptorConfig();
+    return context.get(RaptorConfig.class);
   }
 
   private OtpServerRequestContext createServerContext() {
-    return factory.createServerContext();
+    return context.get(OtpServerRequestContext.class);
   }
 
   private void enableRequestTraceLogging() {
@@ -372,23 +433,23 @@ public class ConstructApplication {
   }
 
   private void createMetricsLogging() {
-    factory.metricsLogging();
+    context.get(MetricsLogging.class);
   }
 
   public EmissionRepository emissionRepository() {
-    return factory.emissionRepository();
+    return context.get(EmissionRepository.class);
   }
 
   public StreetDetailsRepository streetDetailsRepository() {
-    return factory.streetDetailsRepository();
+    return context.get(StreetDetailsRepository.class);
   }
 
   @Nullable
   public EmpiricalDelayRepository empiricalDelayRepository() {
-    return factory.empiricalDelayRepository();
+    return context.getNullable(EmpiricalDelayRepository.class);
   }
 
   public FareServiceFactory fareServiceFactory() {
-    return factory.fareServiceFactory();
+    return context.get(FareServiceFactory.class);
   }
 }

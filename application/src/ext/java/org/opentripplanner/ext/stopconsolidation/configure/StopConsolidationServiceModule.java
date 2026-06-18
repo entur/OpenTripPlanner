@@ -1,19 +1,17 @@
 package org.opentripplanner.ext.stopconsolidation.configure;
 
-import dagger.Module;
-import dagger.Provides;
-import jakarta.inject.Singleton;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationService;
 import org.opentripplanner.ext.stopconsolidation.internal.DefaultStopConsolidationService;
 import org.opentripplanner.transit.service.TimetableRepository;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@Module
+@Configuration(proxyBeanMethods = false)
 public class StopConsolidationServiceModule {
 
-  @Provides
-  @Singleton
+  @Bean
   @Nullable
   StopConsolidationService service(
     @Nullable StopConsolidationRepository repo,

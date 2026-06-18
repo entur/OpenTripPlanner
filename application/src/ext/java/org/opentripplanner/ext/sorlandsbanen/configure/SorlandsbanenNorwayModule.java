@@ -1,15 +1,18 @@
 package org.opentripplanner.ext.sorlandsbanen.configure;
 
-import dagger.Module;
-import dagger.Provides;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.sorlandsbanen.SorlandsbanenNorwayService;
 import org.opentripplanner.framework.application.OTPFeature;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Scope;
 
-@Module
+@Configuration(proxyBeanMethods = false)
 public class SorlandsbanenNorwayModule {
 
-  @Provides
+  @Bean
+  @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
   @Nullable
   SorlandsbanenNorwayService providesSorlandsbanenNorwayService() {
     return OTPFeature.Sorlandsbanen.isOn() ? new SorlandsbanenNorwayService() : null;

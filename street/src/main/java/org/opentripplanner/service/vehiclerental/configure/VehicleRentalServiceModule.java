@@ -1,16 +1,28 @@
 package org.opentripplanner.service.vehiclerental.configure;
 
-import dagger.Binds;
-import dagger.Module;
 import org.opentripplanner.service.vehiclerental.VehicleRentalService;
 import org.opentripplanner.service.vehiclerental.internal.DefaultVehicleRentalService;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
 /**
  * The service is used during application serve phase, not loading, so we need to provide
  * a module for the service without the repository, which is injected from the loading phase.
  */
-@Module
-public interface VehicleRentalServiceModule {
-  @Binds
-  VehicleRentalService bindService(DefaultVehicleRentalService service);
+@Configuration(proxyBeanMethods = false)
+@Import(DefaultVehicleRentalService.class)
+public class VehicleRentalServiceModule {
+
+  /**
+   * {@code @Primary} disambiguates between this interface binding and the {@code @Import}-ed
+   * implementation bean (which also matches the interface type). The single {@code @Singleton}
+   * implementation is shared with {@link VehicleRentalRepositoryModule}.
+   */
+  @Bean
+  @Primary
+  VehicleRentalService bindService(DefaultVehicleRentalService service) {
+    return service;
+  }
 }
