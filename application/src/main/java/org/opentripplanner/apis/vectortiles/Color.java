@@ -1,5 +1,8 @@
 package org.opentripplanner.apis.vectortiles;
 
+/**
+ * Debug layer colors for drawing shapes on top of the map.
+ */
 public enum Color {
   MAGENTA("#f21d52"),
   LIGHT_MAGENTA("#f783a0"),

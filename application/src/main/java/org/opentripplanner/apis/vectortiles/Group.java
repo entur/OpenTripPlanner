@@ -1,5 +1,8 @@
 package org.opentripplanner.apis.vectortiles;
 
+/**
+ * Enum for debug layer groups. In the debug UI they are shown on the layer selection menu.
+ */
 public enum Group {
   EDGES("Edges"),
   ELEVATION("Elevation"),
