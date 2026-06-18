@@ -7,7 +7,6 @@ import com.google.common.util.concurrent.Futures;
 import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Disabled;
@@ -15,11 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.framework.io.HttpHeaders;
 import org.opentripplanner.service.vehiclerental.internal.DefaultVehicleRentalService;
 import org.opentripplanner.service.vehiclerental.model.VehicleRentalPlace;
-import org.opentripplanner.street.graph.Graph;
-import org.opentripplanner.transit.service.TimetableRepository;
-import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.GraphUpdaterManager;
-import org.opentripplanner.updater.GraphWriterRunnable;
 import org.opentripplanner.updater.spi.UpdaterConstructionException;
 import org.opentripplanner.updater.vehicle_rental.datasources.VehicleRentalDataSource;
 import org.opentripplanner.updater.vehicle_rental.datasources.params.RentalPickupType;
@@ -68,15 +63,7 @@ class VehicleRentalUpdaterTest {
   static class MockManager extends GraphUpdaterManager {
 
     public MockManager(VehicleRentalUpdater updater) {
-      super(
-        new DefaultRealTimeUpdateContext(new Graph(), new TimetableRepository()),
-        List.of(updater)
-      );
-    }
-
-    @Override
-    public Future<?> execute(GraphWriterRunnable runnable) {
-      return Futures.immediateVoidFuture();
+      super(_ -> Futures.immediateVoidFuture(), List.of(updater));
     }
   }
 

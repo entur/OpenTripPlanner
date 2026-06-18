@@ -79,7 +79,7 @@ public class MetricsLogging {
       ).bindTo(Metrics.globalRegistry);
 
       new ExecutorServiceMetrics(
-        timetableRepository.getUpdaterManager().getScheduler(),
+        timetableRepository.getGraphWriterService().getScheduler(),
         "graphUpdateScheduler",
         List.of(Tag.of("pool", "graphUpdateScheduler"))
       ).bindTo(Metrics.globalRegistry);

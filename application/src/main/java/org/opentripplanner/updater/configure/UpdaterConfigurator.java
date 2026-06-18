@@ -22,6 +22,7 @@ import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.GraphUpdaterManager;
+import org.opentripplanner.updater.GraphWriterService;
 import org.opentripplanner.updater.UpdatersParameters;
 import org.opentripplanner.updater.alert.gtfs.GtfsRealtimeAlertsUpdater;
 import org.opentripplanner.updater.spi.GraphUpdater;
@@ -123,22 +124,24 @@ public class UpdaterConfigurator {
     );
 
     MutableTimetableSnapshot timetableSnapshotBuffer = snapshotManager.getTimetableSnapshotBuffer();
-    GraphUpdaterManager updaterManager = new GraphUpdaterManager(
-      new DefaultRealTimeUpdateContext(graph, timetableRepository, timetableSnapshotBuffer),
-      updaters
+    var graphWriterService = new GraphWriterService(
+      new DefaultRealTimeUpdateContext(graph, timetableRepository, timetableSnapshotBuffer)
     );
+    GraphUpdaterManager updaterManager = new GraphUpdaterManager(graphWriterService, updaters);
 
-    configureTimetableSnapshotFlush(updaterManager, snapshotManager);
+    configureTimetableSnapshotFlush(graphWriterService, snapshotManager);
 
     updaterManager.startUpdaters();
 
     // Stop the updater manager if it contains nothing
     if (updaterManager.numberOfUpdaters() == 0) {
       updaterManager.stop();
+      graphWriterService.stop();
     }
     // Otherwise add it to the graph
     else {
       timetableRepository.setUpdaterManager(updaterManager);
+      timetableRepository.setGraphWriterService(graphWriterService);
     }
   }
 
@@ -146,6 +149,10 @@ public class UpdaterConfigurator {
     GraphUpdaterManager updaterManager = timetableRepository.getUpdaterManager();
     if (updaterManager != null) {
       updaterManager.stop();
+    }
+    GraphWriterService graphWriterService = timetableRepository.getGraphWriterService();
+    if (graphWriterService != null) {
+      graphWriterService.stop();
     }
   }
 
@@ -265,10 +272,10 @@ public class UpdaterConfigurator {
    * snapshot.
    */
   private void configureTimetableSnapshotFlush(
-    GraphUpdaterManager updaterManager,
+    GraphWriterService graphWriterService,
     TimetableSnapshotManager snapshotManager
   ) {
-    updaterManager
+    graphWriterService
       .getScheduler()
       .scheduleWithFixedDelay(
         new TimetableSnapshotFlush(snapshotManager),

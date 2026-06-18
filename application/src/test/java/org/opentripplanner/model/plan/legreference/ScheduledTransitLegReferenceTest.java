@@ -33,6 +33,7 @@ import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.GraphUpdaterManager;
+import org.opentripplanner.updater.GraphWriterService;
 
 class ScheduledTransitLegReferenceTest {
 
@@ -74,10 +75,12 @@ class ScheduledTransitLegReferenceTest {
     TimetableRepository timetableRepository = new TimetableRepository(siteRepository);
     timetableRepository.setUpdaterManager(
       new GraphUpdaterManager(
-        new DefaultRealTimeUpdateContext(
-          new Graph(),
-          timetableRepository,
-          new TimetableSnapshot(RaptorTransitDataTestFactory.empty(), new DefaultTripCalendars())
+        new GraphWriterService(
+          new DefaultRealTimeUpdateContext(
+            new Graph(),
+            timetableRepository,
+            new TimetableSnapshot(RaptorTransitDataTestFactory.empty(), new DefaultTripCalendars())
+          )
         ),
         List.of()
       )

@@ -55,6 +55,7 @@ import org.opentripplanner.transit.service.SiteRepository;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.GraphUpdaterManager;
+import org.opentripplanner.updater.GraphWriterService;
 import org.opentripplanner.updater.alert.gtfs.AlertsUpdateHandler;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
@@ -204,10 +205,12 @@ public abstract class GtfsTest {
     timetableRepository = new TimetableRepository(new SiteRepository());
     timetableRepository.setUpdaterManager(
       new GraphUpdaterManager(
-        new DefaultRealTimeUpdateContext(
-          new Graph(),
-          timetableRepository,
-          new TimetableSnapshot(RaptorTransitDataTestFactory.empty(), new DefaultTripCalendars())
+        new GraphWriterService(
+          new DefaultRealTimeUpdateContext(
+            new Graph(),
+            timetableRepository,
+            new TimetableSnapshot(RaptorTransitDataTestFactory.empty(), new DefaultTripCalendars())
+          )
         ),
         List.of()
       )
