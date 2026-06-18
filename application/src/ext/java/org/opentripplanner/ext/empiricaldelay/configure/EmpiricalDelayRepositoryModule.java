@@ -1,19 +1,17 @@
 package org.opentripplanner.ext.empiricaldelay.configure;
 
-import dagger.Module;
-import dagger.Provides;
-import jakarta.inject.Singleton;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
 import org.opentripplanner.ext.empiricaldelay.internal.DefaultEmpiricalDelayRepository;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@Module
+@Configuration(proxyBeanMethods = false)
 public class EmpiricalDelayRepositoryModule {
 
-  @Provides
-  @Singleton
+  @Bean
   @Nullable
-  static EmpiricalDelayRepository provideEmpiricalDelayRepository() {
+  EmpiricalDelayRepository provideEmpiricalDelayRepository() {
     return new DefaultEmpiricalDelayRepository();
   }
 }

@@ -1,16 +1,23 @@
 package org.opentripplanner.ext.stopconsolidation.configure;
 
-import dagger.Binds;
-import dagger.Module;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.ext.stopconsolidation.internal.DefaultStopConsolidationRepository;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
 /**
  * The repository is used during application loading phase, so we need to provide
  * a module for the repository.
  */
-@Module
-public interface StopConsolidationRepositoryModule {
-  @Binds
-  StopConsolidationRepository bindRepository(DefaultStopConsolidationRepository repo);
+@Configuration(proxyBeanMethods = false)
+@Import(DefaultStopConsolidationRepository.class)
+public class StopConsolidationRepositoryModule {
+
+  @Bean
+  @Primary
+  StopConsolidationRepository bindRepository(DefaultStopConsolidationRepository repo) {
+    return repo;
+  }
 }

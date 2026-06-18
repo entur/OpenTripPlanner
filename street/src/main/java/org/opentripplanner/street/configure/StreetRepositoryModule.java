@@ -1,12 +1,19 @@
 package org.opentripplanner.street.configure;
 
-import dagger.Binds;
-import dagger.Module;
 import org.opentripplanner.street.StreetRepository;
 import org.opentripplanner.street.internal.DefaultStreetRepository;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
 
-@Module
-public interface StreetRepositoryModule {
-  @Binds
-  StreetRepository bindStreetRepository(DefaultStreetRepository repository);
+@Configuration(proxyBeanMethods = false)
+@Import(DefaultStreetRepository.class)
+public class StreetRepositoryModule {
+
+  @Bean
+  @Primary
+  StreetRepository bindStreetRepository(DefaultStreetRepository repository) {
+    return repository;
+  }
 }

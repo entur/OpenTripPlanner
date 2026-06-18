@@ -37,7 +37,27 @@ public class PhaseContext implements AutoCloseable {
   private boolean refreshed = false;
 
   public PhaseContext() {
+    this(false);
+  }
+
+  /**
+   * @param lazyInit when {@code true}, every bean is created on first access rather than eagerly at
+   *   {@link #refresh()}. This mirrors Dagger's lazy instance creation and is required for the load
+   *   phase, where construction must stay cheap and side-effecting IO (e.g. opening the data store,
+   *   reading config) must be deferred to an explicit, controlled access point — not run in the
+   *   {@code LoadApplication} constructor.
+   */
+  public PhaseContext(boolean lazyInit) {
     this.context = new AnnotationConfigApplicationContext();
+    if (lazyInit) {
+      // Marks all (regular) bean definitions lazy after the @Configuration classes have been
+      // processed. BeanFactoryPostProcessors/BeanPostProcessors are still created eagerly by Spring.
+      context.addBeanFactoryPostProcessor(beanFactory -> {
+        for (String name : beanFactory.getBeanDefinitionNames()) {
+          beanFactory.getBeanDefinition(name).setLazyInit(true);
+        }
+      });
+    }
   }
 
   /**

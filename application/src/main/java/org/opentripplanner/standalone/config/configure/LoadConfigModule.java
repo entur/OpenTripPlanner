@@ -1,8 +1,5 @@
 package org.opentripplanner.standalone.config.configure;
 
-import dagger.Module;
-import dagger.Provides;
-import jakarta.inject.Singleton;
 import java.io.File;
 import org.opentripplanner.core.framework.di.TransitServicePeriod;
 import org.opentripplanner.core.model.time.LocalDateInterval;
@@ -12,6 +9,12 @@ import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.standalone.config.CommandLineParameters;
 import org.opentripplanner.standalone.config.ConfigModel;
 import org.opentripplanner.standalone.config.OtpConfigLoader;
+import org.springframework.beans.factory.config.ConfigurableBeanFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Import;
+import org.springframework.context.annotation.Primary;
+import org.springframework.context.annotation.Scope;
 
 /**
  * Load and create the {@link ConfigModel} using the provided configuration file
@@ -25,34 +28,44 @@ import org.opentripplanner.standalone.config.OtpConfigLoader;
  * here, not in the {@link ConfigModel}, because they are only needed at load time - if this change,
  * then move the binding to the {@link ConfigModule}.
  */
-@Module(includes = ConfigModule.class)
+@Configuration(proxyBeanMethods = false)
+@Import(ConfigModule.class)
 public class LoadConfigModule {
 
-  @Provides
-  static OtpConfigLoader providesConfigLoader(@OtpBaseDirectory File configDirectory) {
+  @Bean
+  @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+  OtpConfigLoader providesConfigLoader(@OtpBaseDirectory File configDirectory) {
     return new OtpConfigLoader(configDirectory);
   }
 
-  @Provides
-  @Singleton
-  static ConfigModel providesModel(OtpConfigLoader loader) {
+  @Bean
+  ConfigModel providesModel(OtpConfigLoader loader) {
     return new ConfigModel(loader);
   }
 
-  @Provides
-  static OtpDataStoreConfig providesDataStoreConfig(BuildConfig buildConfig) {
+  /**
+   * {@code @Primary} disambiguates {@link OtpDataStoreConfig} injection: {@link BuildConfig} also
+   * implements {@link OtpDataStoreConfig}, so without this both this bean and the {@code BuildConfig}
+   * bean would match. Dagger had no such ambiguity (its keys are exact types).
+   */
+  @Bean
+  @Primary
+  @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
+  OtpDataStoreConfig providesDataStoreConfig(BuildConfig buildConfig) {
     return buildConfig;
   }
 
-  @Provides
+  @Bean
+  @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
   @TransitServicePeriod
-  static LocalDateInterval providesTransitServicePeriod(BuildConfig buildConfig) {
+  LocalDateInterval providesTransitServicePeriod(BuildConfig buildConfig) {
     return buildConfig.getTransitServicePeriod();
   }
 
-  @Provides
+  @Bean
+  @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
   @OtpBaseDirectory
-  static File baseDirectory(CommandLineParameters cli) {
+  File baseDirectory(CommandLineParameters cli) {
     return cli.getBaseDirectory();
   }
 }

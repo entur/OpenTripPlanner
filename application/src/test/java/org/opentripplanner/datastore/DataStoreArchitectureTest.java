@@ -6,6 +6,7 @@ import static org.opentripplanner.OtpArchitectureModules.DATASTORE;
 import static org.opentripplanner.OtpArchitectureModules.FRAMEWORK;
 import static org.opentripplanner.OtpArchitectureModules.FRAMEWORK_UTILS;
 import static org.opentripplanner.OtpArchitectureModules.GOOGLE_COLLECTIONS;
+import static org.opentripplanner.OtpArchitectureModules.SPRING;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
@@ -58,7 +59,7 @@ public class DataStoreArchitectureTest {
 
   @Test
   void enforceConfigureDependencies() {
-    CONFIGURE.dependsOn(API, BASE, FILE, HTTPS, SERVICE, DAGGER).verify();
+    CONFIGURE.dependsOn(API, BASE, FILE, HTTPS, SERVICE, DAGGER, SPRING).verify();
   }
 
   @Test

@@ -1,8 +1,5 @@
 package org.opentripplanner.ext.datastore.gs;
 
-import dagger.Module;
-import dagger.Provides;
-import jakarta.inject.Singleton;
 import javax.annotation.Nullable;
 import org.opentripplanner.datastore.api.GoogleStorageDSRepository;
 import org.opentripplanner.datastore.api.OtpDataStoreConfig;
@@ -10,14 +7,15 @@ import org.opentripplanner.datastore.base.DataSourceRepository;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@Module
+@Configuration(proxyBeanMethods = false)
 public class GsDataSourceModule {
 
   private static final Logger LOG = LoggerFactory.getLogger(GsDataSourceModule.class);
 
-  @Provides
-  @Singleton
+  @Bean
   @Nullable
   @GoogleStorageDSRepository
   DataSourceRepository provideGoogleStorageDataSourceRepository(OtpDataStoreConfig config) {

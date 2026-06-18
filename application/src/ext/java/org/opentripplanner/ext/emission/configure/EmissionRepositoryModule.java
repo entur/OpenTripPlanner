@@ -2,19 +2,17 @@ package org.opentripplanner.ext.emission.configure;
 
 import static org.opentripplanner.ext.emission.model.CarEmissionUtil.calculateCarCo2EmissionPerMeterPerPerson;
 
-import dagger.Module;
-import dagger.Provides;
-import jakarta.inject.Singleton;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.emission.internal.DefaultEmissionRepository;
 import org.opentripplanner.standalone.config.BuildConfig;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@Module
+@Configuration(proxyBeanMethods = false)
 public class EmissionRepositoryModule {
 
-  @Provides
-  @Singleton
-  static EmissionRepository provideEmissionRepository(BuildConfig config) {
+  @Bean
+  EmissionRepository provideEmissionRepository(BuildConfig config) {
     var repository = new DefaultEmissionRepository();
     // Init car passenger emission data
     {

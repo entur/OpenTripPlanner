@@ -1,19 +1,17 @@
 package org.opentripplanner.transfer.regular.configure;
 
-import dagger.Module;
-import dagger.Provides;
-import jakarta.inject.Singleton;
 import org.opentripplanner.ext.flex.FlexTransferIndex;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.transfer.regular.TransferRepository;
 import org.opentripplanner.transfer.regular.internal.DefaultTransferRepository;
 import org.opentripplanner.transfer.regular.internal.TransferIndex;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-@Module
+@Configuration(proxyBeanMethods = false)
 public class TransferRepositoryModule {
 
-  @Provides
-  @Singleton
+  @Bean
   public TransferRepository provideTransferRepository() {
     TransferIndex index;
     if (OTPFeature.FlexRouting.isOn()) {

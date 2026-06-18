@@ -7,6 +7,7 @@ public interface OtpArchitectureModules {
   /* Third party libs*/
 
   Package DAGGER = Package.of("dagger..");
+  Package SPRING = Package.of("org.springframework..");
   Package GNU_TROVE = Package.of("gnu.trove.(*)..");
   Package GOOGLE_COLLECTIONS = Package.of("com.google.common.collect");
   Package JACKSON_ANNOTATIONS = Package.of("com.fasterxml.jackson.annotation");

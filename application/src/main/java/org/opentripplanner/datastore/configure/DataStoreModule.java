@@ -1,8 +1,5 @@
 package org.opentripplanner.datastore.configure;
 
-import dagger.Module;
-import dagger.Provides;
-import jakarta.inject.Singleton;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +13,8 @@ import org.opentripplanner.datastore.api.OtpDataStoreConfig;
 import org.opentripplanner.datastore.base.DataSourceRepository;
 import org.opentripplanner.datastore.file.FileDataSourceRepository;
 import org.opentripplanner.datastore.https.HttpsDataSourceRepository;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * This is the global access point to create a data store and create datasource objects(tests). It
@@ -31,8 +30,8 @@ import org.opentripplanner.datastore.https.HttpsDataSourceRepository;
  * Implementation details. This class should contain minimal amount of business logic, delegating
  * all tasks to the underlying implementations.
  */
-@Module
-public abstract class DataStoreModule {
+@Configuration(proxyBeanMethods = false)
+public class DataStoreModule {
 
   /**
    * For test only.
@@ -46,8 +45,7 @@ public abstract class DataStoreModule {
   /**
    * Connect to data source and prepare to retrieve data.
    */
-  @Provides
-  @Singleton
+  @Bean
   public static OtpDataStore provideDataStore(
     @OtpBaseDirectory File baseDirectory,
     OtpDataStoreConfig config,
