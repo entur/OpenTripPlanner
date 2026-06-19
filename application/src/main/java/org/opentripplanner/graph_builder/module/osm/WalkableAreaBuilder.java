@@ -650,7 +650,6 @@ class WalkableAreaBuilder {
     // combine properties of intersected areas
     for (OsmArea area : areas) {
       var polygon = area.jtsMultiPolygon;
-      // intersects() is a cheap spatial predicate; only compute the full intersection when needed
       boolean crosses = !testIntersection || polygon.intersects(line);
       if (crosses) {
         parent = area.parent;
