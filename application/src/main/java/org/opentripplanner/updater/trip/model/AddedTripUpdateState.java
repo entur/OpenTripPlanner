@@ -1,34 +1,37 @@
 package org.opentripplanner.updater.trip.model;
 
-import org.opentripplanner.transit.model.timetable.RealTimeState;
+import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 
 /**
- * Controls the {@link RealTimeState} when re-updating an already-added trip.
+ * Controls the real-time state when re-updating an already-added trip.
  *
  * <p>SIRI-ET treats a subsequent update to an extra journey as a modification, so the
- * state transitions to UPDATED. GTFS-RT keeps the trip as ADDED since it was never
- * part of the static schedule.
+ * state transitions to UPDATED (times modified, not added). GTFS-RT keeps the trip as ADDED
+ * since it was never part of the static schedule.
  */
 public enum AddedTripUpdateState {
   /**
-   * Keep {@code RealTimeState.ADDED} when re-updating an added trip.
+   * Keep the trip as ADDED when re-updating.
    * Used by GTFS-RT.
    */
   RETAIN_ADDED,
 
   /**
-   * Set {@code RealTimeState.UPDATED} when re-updating an added trip.
+   * Set the trip as UPDATED (times modified) when re-updating an added trip.
    * Used by SIRI-ET.
    */
   SET_UPDATED;
 
   /**
-   * Convert to the corresponding {@link RealTimeState}.
+   * Apply the corresponding real-time state to the builder.
    */
-  public RealTimeState toRealTimeState() {
-    return switch (this) {
-      case SET_UPDATED -> RealTimeState.UPDATED;
-      case RETAIN_ADDED -> RealTimeState.ADDED;
-    };
+  public void applyTo(RealTimeTripTimesBuilder builder) {
+    switch (this) {
+      case RETAIN_ADDED -> builder.withAdded();
+      case SET_UPDATED ->
+        // Extra journeys remain "added" trips even when their times are updated,
+        // because they were never part of the static schedule.
+        builder.withAdded();
+    }
   }
 }

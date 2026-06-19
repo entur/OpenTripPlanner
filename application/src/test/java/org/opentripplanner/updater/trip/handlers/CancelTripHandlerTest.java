@@ -2,18 +2,19 @@ package org.opentripplanner.updater.trip.handlers;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
+import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
@@ -79,13 +80,13 @@ class CancelTripHandlerTest {
     var parsedUpdate = new ParsedCancelTrip(tripRef, env.defaultServiceDate(), null, null);
 
     // Verify trip is scheduled before cancellation
-    assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
+    assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
     var result = handler.handle(resolver.resolve(parsedUpdate));
 
     assertNotNull(result);
     assertEquals(tripId, result.updatedTripTimes().getTrip().getId());
-    assertEquals(RealTimeState.CANCELED, result.updatedTripTimes().getRealTimeState());
+    assertTrue(result.updatedTripTimes().isCanceled());
   }
 
   @Test
@@ -95,7 +96,7 @@ class CancelTripHandlerTest {
     var parsedUpdate = new ParsedCancelTrip(tripRef, env.defaultServiceDate(), null, null);
 
     // Verify trip is scheduled before cancellation
-    assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
+    assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
     var result = handler.handle(resolver.resolve(parsedUpdate));
 
@@ -103,7 +104,7 @@ class CancelTripHandlerTest {
     // The underlying trip should be cancelled
     var expectedTripId = new FeedScopedId(FEED_ID, TRIP_ID);
     assertEquals(expectedTripId, result.updatedTripTimes().getTrip().getId());
-    assertEquals(RealTimeState.CANCELED, result.updatedTripTimes().getRealTimeState());
+    assertTrue(result.updatedTripTimes().isCanceled());
   }
 
   @Test
@@ -152,7 +153,7 @@ class CancelTripHandlerTest {
     var parsedUpdate = new ParsedCancelTrip(tripRef, env.defaultServiceDate(), null, null);
 
     // Before cancellation, the trip should be scheduled
-    assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_ID).realTimeState());
+    assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
     var result = handler.handle(resolver.resolve(parsedUpdate));
 
@@ -164,6 +165,6 @@ class CancelTripHandlerTest {
 
     // After applying to snapshot, verify the trip is cancelled in the timetable
     var tripData = env.tripData(TRIP_ID);
-    assertEquals(RealTimeState.CANCELED, tripData.realTimeState());
+    assertTrue(tripData.tripTimes().isCanceled());
   }
 }

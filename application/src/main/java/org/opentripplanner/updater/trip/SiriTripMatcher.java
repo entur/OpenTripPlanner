@@ -90,7 +90,7 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
     Integer aimedDepartureSeconds = getAimedDepartureSeconds(firstStopUpdate, serviceDate);
     if (aimedDepartureSeconds == null) {
       LOG.debug("Cannot fuzzy match without aimed departure time at first stop");
-      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
+      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.INVALID_DEPARTURE_TIME);
     }
 
     // Get the aimed arrival time at last stop (for cache lookup)
