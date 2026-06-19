@@ -289,12 +289,10 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       if (TRUE.equals(call.isPredictionInaccurate()) || TRUE.equals(journeyPredictionInaccurate)) {
         builder.withPredictionInaccurate(true);
       }
-      boolean isLastStop = stopIndex == totalStops - 1;
       if (call.hasArrived()) {
         builder.withHasArrived(true);
       }
-      // TODO VP_RT the edge case for the last stop is unnecessarily complicated
-      if (call.hasDeparted() || (isLastStop && call.isRecorded())) {
+      if (call.hasDeparted()) {
         builder.withHasDeparted(true);
       }
 
