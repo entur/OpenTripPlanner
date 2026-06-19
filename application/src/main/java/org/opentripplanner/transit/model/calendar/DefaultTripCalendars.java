@@ -14,6 +14,12 @@ import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 
+/**
+ * TODO : This class is NOT SAFE for realtime updates. This should be split into a
+ *        snapshot and a mutable version and integrated with the realtime update
+ *        transactions. See https://github.com/opentripplanner/OpenTripPlanner/pull/7689
+ *        and https://github.com/opentripplanner/OpenTripPlanner/pull/7731#discussion_r3441794468
+ */
 public class DefaultTripCalendars implements TripCalendars {
 
   private final CalendarServiceData calendarServiceData;
@@ -25,6 +31,7 @@ public class DefaultTripCalendars implements TripCalendars {
     Map<LocalDate, TIntSet> serviceCodesRunningForDate,
     Map<FeedScopedId, Integer> serviceCodes
   ) {
+    // TODO, inline the calendarServiceData and copy the maps
     this.calendarServiceData = calendarServiceData;
     this.serviceCodesRunningForDate = serviceCodesRunningForDate;
     this.serviceCodes = serviceCodes;
@@ -39,8 +46,8 @@ public class DefaultTripCalendars implements TripCalendars {
    */
   public DefaultTripCalendars copyOf() {
     return new DefaultTripCalendars(
-      // TODO, inline the calendarServiceData and copy the maps
       calendarServiceData,
+      // TODO: The values must be copied as well
       new HashMap<>(serviceCodesRunningForDate),
       new HashMap<>(serviceCodes)
     );
