@@ -102,6 +102,13 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
     // Set state to MODIFIED (trip pattern was modified)
     builder.withModifiedTripPattern();
 
+    // If this is a SIRI extra journey (ExtraJourney=true) that also carries extra calls, also mark
+    // the trip as added: an extra journey is never part of the static schedule. Mirrors the legacy
+    // ExtraCallTripBuilder, which sets added and modifiedTripPattern (and canceled) simultaneously.
+    if (resolvedUpdate.isExtraJourney()) {
+      builder.withAdded();
+    }
+
     // If the SIRI message carries a trip-level cancellation flag (e.g. extra call + cancellation),
     // mark the trip as cancelled on the modified pattern.
     if (resolvedUpdate.isCancellation()) {

@@ -26,6 +26,7 @@ public final class ResolvedExistingTrip {
 
   private final boolean hasStopSequences;
   private final boolean cancellation;
+  private final boolean extraJourney;
 
   private final LocalDate serviceDate;
   private final Trip trip;
@@ -49,6 +50,8 @@ public final class ResolvedExistingTrip {
     this.hasStopSequences = parsedUpdate.hasStopSequences();
     this.cancellation =
       parsedUpdate instanceof ParsedModifyTrip pmt ? pmt.isCancellation() : false;
+    this.extraJourney =
+      parsedUpdate instanceof ParsedModifyTrip pmt2 ? pmt2.isExtraJourney() : false;
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
     this.trip = Objects.requireNonNull(trip, "trip must not be null");
     this.pattern = Objects.requireNonNull(pattern, "pattern must not be null");
@@ -138,6 +141,15 @@ public final class ResolvedExistingTrip {
    */
   public boolean isCancellation() {
     return cancellation;
+  }
+
+  /**
+   * Returns true if the update is for a SIRI extra journey (ExtraJourney=true) that also carries
+   * extra calls. Used by {@link org.opentripplanner.updater.trip.handlers.ModifyTripHandler} to
+   * also mark the modified trip as added, mirroring the legacy {@code ExtraCallTripBuilder}.
+   */
+  public boolean isExtraJourney() {
+    return extraJourney;
   }
 
   @Override
