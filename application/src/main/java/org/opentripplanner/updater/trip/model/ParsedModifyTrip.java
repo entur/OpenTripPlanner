@@ -34,6 +34,8 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
 
   private final boolean cancellation;
 
+  private final boolean extraJourney;
+
   ParsedModifyTrip(
     TripReference tripReference,
     @Nullable LocalDate serviceDate,
@@ -42,7 +44,8 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
     @Nullable TripCreationInfo tripCreationInfo,
     TripUpdateOptions options,
     @Nullable String dataSource,
-    boolean cancellation
+    boolean cancellation,
+    boolean extraJourney
   ) {
     this.tripReference = Objects.requireNonNull(tripReference);
     ParsedTripUpdate.validateServiceDateAvailable(tripReference, serviceDate, aimedDepartureTime);
@@ -53,10 +56,20 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
     this.options = Objects.requireNonNull(options);
     this.dataSource = dataSource;
     this.cancellation = cancellation;
+    this.extraJourney = extraJourney;
   }
 
   public boolean isCancellation() {
     return cancellation;
+  }
+
+  /**
+   * Whether the SIRI journey was flagged as an extra journey (ExtraJourney=true). When an extra
+   * journey also carries extra calls it is classified as a MODIFY_TRIP; the modified trip is then
+   * also marked as added, mirroring the legacy {@code ExtraCallTripBuilder}.
+   */
+  public boolean isExtraJourney() {
+    return extraJourney;
   }
 
   public static Builder builder(TripReference tripReference, @Nullable LocalDate serviceDate) {
@@ -112,6 +125,8 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
       serviceDate +
       ", cancellation=" +
       cancellation +
+      ", extraJourney=" +
+      extraJourney +
       '}'
     );
   }
@@ -137,6 +152,8 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
     private String dataSource;
 
     private boolean cancellation = false;
+
+    private boolean extraJourney = false;
 
     private Builder(TripReference tripReference, @Nullable LocalDate serviceDate) {
       this.tripReference = Objects.requireNonNull(tripReference);
@@ -178,6 +195,11 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
       return this;
     }
 
+    public Builder withExtraJourney(boolean extraJourney) {
+      this.extraJourney = extraJourney;
+      return this;
+    }
+
     public ParsedModifyTrip build() {
       return new ParsedModifyTrip(
         tripReference,
@@ -187,7 +209,8 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
         tripCreationInfo,
         options,
         dataSource,
-        cancellation
+        cancellation,
+        extraJourney
       );
     }
   }
