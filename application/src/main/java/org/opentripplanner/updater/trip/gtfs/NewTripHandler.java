@@ -87,8 +87,8 @@ class NewTripHandler {
     }
 
     final Set<FeedScopedId> serviceIds = transitEditorService
-      .getCalendarService()
-      .getServiceIdsOnDate(tripUpdate.serviceDate());
+      .getTripCalendars()
+      .listServiceIdsOnServiceDate(tripUpdate.serviceDate());
     if (!serviceIds.contains(trip.getServiceId())) {
       // TODO: should we support this and change service id of trip?
       throw UpdateException.of(tripUpdate.tripId(), NO_SERVICE_ON_DATE);
@@ -126,7 +126,7 @@ class NewTripHandler {
       stopAndStopTimeUpdates,
       added,
       modified,
-      transitEditorService.getServiceCode(trip.getServiceId())
+      transitEditorService.getTripCalendars().getServiceCode(trip.getServiceId())
     );
 
     return addNewOrReplacementTripToSnapshot(

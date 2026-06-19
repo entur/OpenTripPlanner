@@ -61,9 +61,7 @@ class ScheduledTripHandler {
     }
 
     var serviceId = transitEditorService.getTrip(tripUpdate.tripId()).getServiceId();
-    var serviceDates = transitEditorService
-      .getCalendarService()
-      .getServiceDatesForServiceId(serviceId);
+    var serviceDates = transitEditorService.getTripCalendars().listServiceDates(serviceId);
     if (!serviceDates.contains(tripUpdate.serviceDate())) {
       throw UpdateException.of(tripUpdate.tripId(), NO_SERVICE_ON_DATE);
     }
