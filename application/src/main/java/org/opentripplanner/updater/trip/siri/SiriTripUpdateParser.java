@@ -86,8 +86,11 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
     var tripReference = buildTripReference(journey, updateType, psd);
 
-    // Handle cancellation (no stop times needed)
-    if (TRUE.equals(journey.isCancellation())) {
+    // Handle plain cancellation (no stop times needed).
+    // Exception: if this is a MODIFY_TRIP (extra call), the cancellation flag must be carried
+    // into the ParsedModifyTrip so that ModifyTripHandler can mark the trip as cancelled on
+    // the extra-call pattern — preserving the extra stop information in the cancelled trip.
+    if (TRUE.equals(journey.isCancellation()) && updateType != TripUpdateType.MODIFY_TRIP) {
       return new ParsedCancelTrip(
         tripReference,
         psd.serviceDate(),
@@ -119,7 +122,8 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         var builder = ParsedModifyTrip.builder(tripReference, psd.serviceDate())
           .withOptions(TripUpdateOptions.siriDefaults())
           .withDataSource(journey.getDataSource())
-          .withStopTimeUpdates(stopTimeUpdates);
+          .withStopTimeUpdates(stopTimeUpdates)
+          .withCancellation(TRUE.equals(journey.isCancellation()));
         if (psd.aimedDepartureTime() != null) {
           builder.withAimedDepartureTime(psd.aimedDepartureTime());
         }

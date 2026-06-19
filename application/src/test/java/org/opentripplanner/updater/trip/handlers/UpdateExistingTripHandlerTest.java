@@ -12,10 +12,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
+import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
+
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
@@ -129,7 +129,7 @@ class UpdateExistingTripHandlerTest {
     assertNotNull(result);
 
     var updatedTimes = result.updatedTripTimes();
-    assertEquals(RealTimeState.UPDATED, updatedTimes.getRealTimeState());
+    assertTrue(updatedTimes.hasAnyUpdates());
     assertEquals(tripId, updatedTimes.getTrip().getId());
 
     // Stop B (index 1) should have 5 minute delay
@@ -182,7 +182,7 @@ class UpdateExistingTripHandlerTest {
     assertNotNull(result);
 
     var updatedTimes = result.updatedTripTimes();
-    assertEquals(RealTimeState.UPDATED, updatedTimes.getRealTimeState());
+    assertTrue(updatedTimes.hasAnyUpdates());
 
     // Each stop should have its specific delay
     assertEquals(STOP_A_ARRIVAL + 60, updatedTimes.getArrivalTime(0));
@@ -219,7 +219,7 @@ class UpdateExistingTripHandlerTest {
     assertNotNull(result);
 
     var updatedTimes = result.updatedTripTimes();
-    assertEquals(RealTimeState.UPDATED, updatedTimes.getRealTimeState());
+    assertTrue(updatedTimes.hasAnyUpdates());
 
     // Stop B should have the absolute time (10:35)
     assertEquals(absoluteTime, updatedTimes.getArrivalTime(1));
@@ -281,10 +281,10 @@ class UpdateExistingTripHandlerTest {
     var updatedTimes = (RealTimeTripTimes) result.updatedTripTimes();
     // Cancelled stops are tracked as pickup/dropoff changes (unified behavior),
     // but GTFS-RT uses ALWAYS_UPDATED strategy, so TripTimes state remains UPDATED
-    assertEquals(RealTimeState.UPDATED, updatedTimes.getRealTimeState());
+    assertTrue(updatedTimes.hasAnyUpdates());
 
     // Stop B (index 1) should be marked as cancelled
-    assertTrue(updatedTimes.isCancelledStop(1));
+    assertTrue(updatedTimes.isCanceledStop(1));
   }
 
   @Test
@@ -317,7 +317,7 @@ class UpdateExistingTripHandlerTest {
     assertNotNull(result);
 
     var updatedTimes = result.updatedTripTimes();
-    assertEquals(RealTimeState.UPDATED, updatedTimes.getRealTimeState());
+    assertTrue(updatedTimes.hasAnyUpdates());
 
     // Stop A (index 0) should be marked as arrived and departed
     assertTrue(updatedTimes.hasArrived(0));

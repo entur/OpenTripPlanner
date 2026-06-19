@@ -11,8 +11,9 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
-import org.opentripplanner.transit.model.timetable.TripTimesStringBuilder;
+import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.utils.time.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -198,7 +199,7 @@ public class RealTimeTripUpdateComparator {
     sb.append(" producer=").append(update.producer());
 
     sb.append(" ");
-    sb.append(TripTimesStringBuilder.encodeTripTimes(update.updatedTripTimes(), update.pattern()));
+    sb.append(encodeTripTimes(update.updatedTripTimes(), update.pattern()));
 
     return sb.toString();
   }
@@ -249,7 +250,7 @@ public class RealTimeTripUpdateComparator {
     sb.append("  tripCreation : ").append(update.tripCreation()).append('\n');
     sb.append("  routeCreation: ").append(update.routeCreation()).append('\n');
     sb.append("  producer     : ").append(update.producer()).append('\n');
-    sb.append("  realTimeState: ").append(tripTimes.getRealTimeState()).append('\n');
+    sb.append("  realTimeState: ").append(summarizeTripTimesState(tripTimes)).append('\n');
     sb.append("  wheelchair   : ").append(tripTimes.getWheelchairAccessibility()).append('\n');
 
     var addedTrip = update.addedTripOnServiceDate();
@@ -283,7 +284,7 @@ public class RealTimeTripUpdateComparator {
       var delayDep = tripTimes.getDepartureDelay(i);
 
       var flags = new ArrayList<String>();
-      if (tripTimes.isCancelledStop(i)) {
+      if (tripTimes.isCanceledStop(i)) {
         flags.add("C");
       }
       if (tripTimes.hasArrived(i)) {
@@ -421,5 +422,79 @@ public class RealTimeTripUpdateComparator {
       return "+" + delaySeconds;
     }
     return String.valueOf(delaySeconds);
+  }
+
+  /**
+   * Encode trip times and stop information as a compact string for comparison.
+   * Format: "STATE_FLAGS | stop1 [FLAGS] arrivalTime departureTime | stop2 ..."
+   */
+  private static String encodeTripTimes(TripTimes tripTimes, TripPattern pattern) {
+    var stops = pattern.getStops();
+    if (tripTimes.getNumStops() != stops.size()) {
+      throw new IllegalArgumentException(
+        "TripTimes and TripPattern have different number of stops"
+      );
+    }
+    var s = new StringBuilder(summarizeTripTimesState(tripTimes));
+    for (int i = 0; i < tripTimes.getNumStops(); i++) {
+      var depart = tripTimes.getDepartureTime(i);
+      var arrive = tripTimes.getArrivalTime(i);
+      var flags = new ArrayList<String>();
+      if (tripTimes.isCanceledStop(i)) {
+        flags.add("C");
+      }
+      if (tripTimes.hasArrived(i)) {
+        if (tripTimes.hasDeparted(i)) {
+          flags.add("R");
+        } else {
+          flags.add("A");
+        }
+      }
+      if (tripTimes.isPredictionInaccurate(i)) {
+        flags.add("PI");
+      }
+      if (tripTimes.isNoDataStop(i)) {
+        flags.add("ND");
+      }
+      if (tripTimes.isExtraCall(i)) {
+        flags.add("EC");
+      }
+      s.append(" | ").append(stops.get(i).getName());
+      if (!flags.isEmpty()) {
+        s.append(" [").append(String.join(",", flags)).append("]");
+      }
+      s
+        .append(" ")
+        .append(TimeUtils.timeToStrCompact(arrive))
+        .append(" ")
+        .append(TimeUtils.timeToStrCompact(depart));
+    }
+    return s.toString();
+  }
+
+  /**
+   * Summarize the real-time state of a trip as a short string.
+   * Mirrors TripTimesStateDecoder (test utility) but lives in main source.
+   */
+  private static String summarizeTripTimesState(TripTimes tripTimes) {
+    var sb = new StringBuilder();
+    if (tripTimes.isAdded()) {
+      sb.append("A ");
+    }
+    if (tripTimes.isCanceled()) {
+      sb.append("C ");
+    }
+    if (tripTimes.isTripPatternModified()) {
+      sb.append("P ");
+    }
+    if (tripTimes.isDeleted()) {
+      sb.append("D ");
+    }
+    if (tripTimes.hasAnyUpdates()) {
+      sb.append("U ");
+    } else {
+      sb.append("S ");
+    }
+    return sb.toString().trim();
   }
 }

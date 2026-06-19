@@ -5,7 +5,6 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.network.TripPattern;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
@@ -82,12 +81,38 @@ public class TripRemovalResolver {
       return resolveAddedTripOrNotFound(serviceDate, trip.getId(), dataSource);
     }
 
+    // If the resolved pattern is itself a real-time added pattern (i.e., this trip was added via
+    // real-time, not in the static schedule), look up the RT timetable times and treat the trip
+    // as a previously-added trip so that AbstractTripRemovalHandler preserves the "added" flag.
+    if (pattern.isRealTimeTripPattern() && !pattern.isStopPatternModifiedInRealTime()) {
+      if (snapshotManager != null) {
+        var rtTimetable = snapshotManager.resolve(pattern, serviceDate);
+        var rtTripTimes = rtTimetable.getTripTimes(trip.getId());
+        if (rtTripTimes != null && rtTripTimes.isAdded()) {
+          return ResolvedTripRemoval.forPreviouslyAddedTrip(
+            serviceDate,
+            trip.getId(),
+            pattern,
+            rtTripTimes,
+            dataSource
+          );
+        }
+      }
+    }
+
     // Get trip times
     TripTimes tripTimes = pattern.getScheduledTimetable().getTripTimes(trip);
     if (tripTimes == null) {
       return resolveAddedTripOrNotFound(serviceDate, trip.getId(), dataSource);
     }
 
+    // Cancellation of a scheduled trip always reverts any previous real-time modifications
+    // (quay changes, time updates) and marks the trip as cancelled on the scheduled pattern.
+    // AbstractTripRemovalHandler sets revertPreviousRealTimeUpdates=true so that any existing
+    // RT-modified pattern entry for this trip is cleared from the snapshot.
+    //
+    // Note: extra call cancellations (SIRI Cancellation=true with extra call stops) are NOT
+    // routed here — they go through ModifyTripHandler instead (see SiriTripUpdateParser).
     return ResolvedTripRemoval.forScheduledTrip(serviceDate, trip, pattern, tripTimes, dataSource);
   }
 
@@ -105,7 +130,7 @@ public class TripRemovalResolver {
       if (pattern != null) {
         var timetable = snapshotManager.resolve(pattern, serviceDate);
         var tripTimes = timetable.getTripTimes(tripId);
-        if (tripTimes != null && tripTimes.getRealTimeState() == RealTimeState.ADDED) {
+        if (tripTimes != null && tripTimes.isAdded()) {
           return ResolvedTripRemoval.forPreviouslyAddedTrip(
             serviceDate,
             tripId,

@@ -9,9 +9,16 @@ import org.slf4j.LoggerFactory;
 /**
  * Abstract base class for handlers that remove trips (cancel or delete).
  * <p>
- * Uses pre-resolved data from {@link ResolvedTripRemoval}: if the resolver found a previously
- * added (real-time) trip, it is available via {@code addedTripPattern}/{@code addedTripTimes}.
- * Otherwise, the handler falls back to the scheduled trip data.
+ * Uses pre-resolved data from {@link ResolvedTripRemoval}:
+ * <ul>
+ *   <li>If the resolver found a previously real-time added trip (extra journey), it is available
+ *       via {@code addedTripPattern}/{@code addedTripTimes} and the {@code added} flag is
+ *       preserved in the result.</li>
+ *   <li>Otherwise, the handler uses the scheduled trip data and sets
+ *       {@code revertPreviousRealTimeUpdates=true} to clear any prior RT modifications.</li>
+ * </ul>
+ * Note: extra call cancellations (SIRI messages with extra calls AND {@code isCancellation=true})
+ * are handled by {@link ModifyTripHandler}, not this class.
  */
 public abstract class AbstractTripRemovalHandler implements TripUpdateHandler.ForTripRemoval {
 
@@ -22,13 +29,15 @@ public abstract class AbstractTripRemovalHandler implements TripUpdateHandler.Fo
     var serviceDate = resolvedUpdate.serviceDate();
     var tripId = resolvedUpdate.tripId();
 
-    // First, check for a previously added (real-time) trip (pre-resolved by TripRemovalResolver)
+    // First, check for a previously added or RT-modified trip (pre-resolved by TripRemovalResolver)
     var addedTripPattern = resolvedUpdate.addedTripPattern();
     var addedTripTimes = resolvedUpdate.addedTripTimes();
 
     if (addedTripPattern != null && addedTripTimes != null) {
+      // Previously added (extra journey) trip: preserve the "added" state flag.
       var builder = addedTripTimes.createRealTimeFromScheduledTimes();
       applyRemoval(builder);
+      builder.withAdded();
 
       var realTimeTripUpdate = RealTimeTripUpdate.of(addedTripPattern, builder.build(), serviceDate)
         .withProducer(resolvedUpdate.dataSource())

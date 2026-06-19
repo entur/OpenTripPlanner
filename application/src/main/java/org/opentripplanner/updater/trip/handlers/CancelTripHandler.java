@@ -10,7 +10,7 @@ public class CancelTripHandler extends AbstractTripRemovalHandler {
 
   @Override
   protected void applyRemoval(RealTimeTripTimesBuilder builder) {
-    builder.cancelTrip();
+    builder.withCanceled();
   }
 
   @Override

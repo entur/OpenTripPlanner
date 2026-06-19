@@ -5,7 +5,6 @@ import java.util.Objects;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.network.TripPattern;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
@@ -100,8 +99,14 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
     // Apply real-time updates
     HandlerUtils.applyRealTimeUpdates(resolvedUpdate.tripCreationInfo(), builder, stopTimeUpdates);
 
-    // Set state to MODIFIED
-    builder.withRealTimeState(RealTimeState.MODIFIED);
+    // Set state to MODIFIED (trip pattern was modified)
+    builder.withModifiedTripPattern();
+
+    // If the SIRI message carries a trip-level cancellation flag (e.g. extra call + cancellation),
+    // mark the trip as cancelled on the modified pattern.
+    if (resolvedUpdate.isCancellation()) {
+      builder.withCanceled();
+    }
 
     // Build and return the result with revert and deletion signals
     try {

@@ -1,7 +1,9 @@
 package org.opentripplanner.updater.trip.siri;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.updater.trip.UpdateIncrementality.DIFFERENTIAL;
 
 import java.util.List;
@@ -15,7 +17,6 @@ import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.site.RegularStop;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
 import org.opentripplanner.updater.trip.siri.updater.EstimatedTimetableHandler;
@@ -60,7 +61,7 @@ class SiriNewTripUpdateAdapterTest implements RealtimeTestConstants {
       env.feedId()
     );
 
-    assertEquals(RealTimeState.SCHEDULED, env.tripData(TRIP_1_ID).realTimeState());
+    assertFalse(env.tripData(TRIP_1_ID).tripTimes().hasAnyUpdates());
 
     var updates = new SiriEtBuilder(env.localTimeParser())
       .withDatedVehicleJourneyRef(TRIP_1_ID)
@@ -83,7 +84,7 @@ class SiriNewTripUpdateAdapterTest implements RealtimeTestConstants {
 
     assertNotNull(result);
     assertEquals(1, result.successful());
-    assertEquals(RealTimeState.CANCELED, env.tripData(TRIP_1_ID).realTimeState());
+    assertTrue(env.tripData(TRIP_1_ID).tripTimes().isCanceled());
   }
 
   @Test
