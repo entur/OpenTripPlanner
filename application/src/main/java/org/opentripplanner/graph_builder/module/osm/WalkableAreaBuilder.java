@@ -155,7 +155,7 @@ class WalkableAreaBuilder {
       AreaGroup areaGroup = new AreaGroup(ring.jtsPolygon);
       HashSet<NodeEdge> alreadyAddedEdges = new HashSet<>();
       for (OsmArea area : group.areas) {
-        if (!ring.jtsPolygon.contains(area.jtsMultiPolygon.getGeometry())) {
+        if (!area.jtsMultiPolygon.within(ring.jtsPolygon)) {
           continue;
         }
 
@@ -282,7 +282,7 @@ class WalkableAreaBuilder {
       for (OsmArea area : group.areas) {
         OsmEntity areaEntity = area.parent;
 
-        if (!group.isSimpleAreaGroup() && !polygon.contains(area.jtsMultiPolygon.getGeometry())) {
+        if (!group.isSimpleAreaGroup() && !area.jtsMultiPolygon.within(polygon)) {
           continue;
         }
 
