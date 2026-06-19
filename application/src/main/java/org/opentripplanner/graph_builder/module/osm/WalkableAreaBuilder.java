@@ -714,10 +714,12 @@ class WalkableAreaBuilder {
   private void createAreas(AreaGroup areaGroup, Ring ring, Collection<OsmArea> areas) {
     Polygon containingArea = ring.jtsPolygon;
     for (OsmArea area : areas) {
-      Geometry intersection = containingArea.intersection(area.jtsMultiPolygon.getGeometry());
-      if (intersection.getArea() == 0) {
+      // intersects is a quick filter to remove candidates
+      if (!area.jtsMultiPolygon.intersects(containingArea)) {
         continue;
       }
+      // here we compute the exact intersection (slow) only if we need it
+      Geometry intersection = containingArea.intersection(area.jtsMultiPolygon.getGeometry());
       Area namedArea = new Area();
       OsmEntity areaEntity = area.parent;
 
