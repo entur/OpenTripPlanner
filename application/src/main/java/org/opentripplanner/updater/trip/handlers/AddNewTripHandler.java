@@ -228,8 +228,9 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
       builder,
       filteredUpdates.updates()
     );
-    // Extra journeys always retain the "added" flag, even when all stops are cancelled.
-    resolvedUpdate.options().addedTripUpdateState().applyTo(builder);
+    // Extra journeys always keep the "added" flag, even when all stops are cancelled,
+    // because they were never part of the static schedule.
+    builder.withAdded();
     if (resolvedUpdate.isAllStopsCancelled()) {
       builder.withCanceled();
     }
