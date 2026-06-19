@@ -123,7 +123,8 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
           .withOptions(TripUpdateOptions.siriDefaults())
           .withDataSource(journey.getDataSource())
           .withStopTimeUpdates(stopTimeUpdates)
-          .withCancellation(TRUE.equals(journey.isCancellation()));
+          .withCancellation(TRUE.equals(journey.isCancellation()))
+          .withExtraJourney(TRUE.equals(journey.isExtraJourney()));
         if (psd.aimedDepartureTime() != null) {
           builder.withAimedDepartureTime(psd.aimedDepartureTime());
         }
