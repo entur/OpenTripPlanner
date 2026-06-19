@@ -2,6 +2,7 @@ package org.opentripplanner.transit.model.calendar;
 
 import gnu.trove.set.TIntSet;
 import gnu.trove.set.hash.TIntHashSet;
+import java.io.Serializable;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashMap;
@@ -20,7 +21,7 @@ import org.opentripplanner.model.calendar.CalendarServiceData;
  *        transactions. See https://github.com/opentripplanner/OpenTripPlanner/pull/7689
  *        and https://github.com/opentripplanner/OpenTripPlanner/pull/7731#discussion_r3441794468
  */
-public class DefaultTripCalendars implements TripCalendars {
+public class DefaultTripCalendars implements TripCalendars, Serializable {
 
   private final CalendarServiceData calendarServiceData;
   private final Map<LocalDate, TIntSet> serviceCodesRunningForDate;
