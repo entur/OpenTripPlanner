@@ -281,7 +281,7 @@ class UpdatedTimesTest implements RealtimeTestConstants {
 
     assertSuccess(result);
     assertEquals(
-      "UPDATED | A [R] 0:00:15 0:00:15 | B [R] 0:00:20 0:00:25 | C 0:00:35 0:00:36 | D [R] 0:00:48 0:00:48",
+      "U | A [R] 0:00:15 0:00:15 | B [R] 0:00:20 0:00:25 | C 0:00:35 0:00:36 | D [R] 0:00:48 0:00:48",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }

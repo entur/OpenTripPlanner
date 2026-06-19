@@ -25,6 +25,7 @@ public final class ResolvedExistingTrip {
   private final String dataSource;
 
   private final boolean hasStopSequences;
+  private final boolean cancellation;
 
   private final LocalDate serviceDate;
   private final Trip trip;
@@ -46,6 +47,8 @@ public final class ResolvedExistingTrip {
     this.tripCreationInfo = parsedUpdate.tripCreationInfo();
     this.dataSource = parsedUpdate.dataSource();
     this.hasStopSequences = parsedUpdate.hasStopSequences();
+    this.cancellation =
+      parsedUpdate instanceof ParsedModifyTrip pmt ? pmt.isCancellation() : false;
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
     this.trip = Objects.requireNonNull(trip, "trip must not be null");
     this.pattern = Objects.requireNonNull(pattern, "pattern must not be null");
@@ -126,6 +129,15 @@ public final class ResolvedExistingTrip {
 
   public boolean hasStopSequences() {
     return hasStopSequences;
+  }
+
+  /**
+   * Returns true if this update carries a trip-level cancellation flag (SIRI {@code isCancellation=true}).
+   * Used by {@link org.opentripplanner.updater.trip.handlers.ModifyTripHandler} to mark the trip
+   * as cancelled on the modified pattern (e.g. extra call with cancellation).
+   */
+  public boolean isCancellation() {
+    return cancellation;
   }
 
   @Override

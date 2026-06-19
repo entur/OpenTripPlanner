@@ -32,6 +32,8 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
   @Nullable
   private final String dataSource;
 
+  private final boolean cancellation;
+
   ParsedModifyTrip(
     TripReference tripReference,
     @Nullable LocalDate serviceDate,
@@ -39,7 +41,8 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
     List<ParsedStopTimeUpdate> stopTimeUpdates,
     @Nullable TripCreationInfo tripCreationInfo,
     TripUpdateOptions options,
-    @Nullable String dataSource
+    @Nullable String dataSource,
+    boolean cancellation
   ) {
     this.tripReference = Objects.requireNonNull(tripReference);
     ParsedTripUpdate.validateServiceDateAvailable(tripReference, serviceDate, aimedDepartureTime);
@@ -49,6 +52,11 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
     this.tripCreationInfo = tripCreationInfo;
     this.options = Objects.requireNonNull(options);
     this.dataSource = dataSource;
+    this.cancellation = cancellation;
+  }
+
+  public boolean isCancellation() {
+    return cancellation;
   }
 
   public static Builder builder(TripReference tripReference, @Nullable LocalDate serviceDate) {
@@ -97,7 +105,14 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
   @Override
   public String toString() {
     return (
-      "ParsedModifyTrip{" + "tripReference=" + tripReference + ", serviceDate=" + serviceDate + '}'
+      "ParsedModifyTrip{" +
+      "tripReference=" +
+      tripReference +
+      ", serviceDate=" +
+      serviceDate +
+      ", cancellation=" +
+      cancellation +
+      '}'
     );
   }
 
@@ -120,6 +135,8 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
 
     @Nullable
     private String dataSource;
+
+    private boolean cancellation = false;
 
     private Builder(TripReference tripReference, @Nullable LocalDate serviceDate) {
       this.tripReference = Objects.requireNonNull(tripReference);
@@ -156,6 +173,11 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
       return this;
     }
 
+    public Builder withCancellation(boolean cancellation) {
+      this.cancellation = cancellation;
+      return this;
+    }
+
     public ParsedModifyTrip build() {
       return new ParsedModifyTrip(
         tripReference,
@@ -164,7 +186,8 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
         stopTimeUpdates,
         tripCreationInfo,
         options,
-        dataSource
+        dataSource,
+        cancellation
       );
     }
   }

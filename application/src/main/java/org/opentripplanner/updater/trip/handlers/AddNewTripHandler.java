@@ -9,7 +9,6 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
@@ -156,10 +155,11 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     // Create real-time trip times
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
     HandlerUtils.applyRealTimeUpdates(tripCreationInfo, builder, filteredUpdates.updates());
+    // Extra journeys always retain the "added" flag, even when all stops are cancelled,
+    // because they were never part of the static schedule.
+    builder.withAdded();
     if (resolvedUpdate.isAllStopsCancelled()) {
-      builder.cancelTrip();
-    } else {
-      builder.withRealTimeState(RealTimeState.ADDED);
+      builder.withCanceled();
     }
 
     // Apply wheelchair accessibility
@@ -179,6 +179,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     TripOnServiceDate tripOnServiceDate = TripOnServiceDate.of(tripId)
       .withTrip(trip)
       .withServiceDate(serviceDate)
+      .withRealtimeExtraJourney(true)
       .withReplacementFor(replacedTrips)
       .build();
 
@@ -227,10 +228,10 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
       builder,
       filteredUpdates.updates()
     );
+    // Extra journeys always retain the "added" flag, even when all stops are cancelled.
+    resolvedUpdate.options().addedTripUpdateState().applyTo(builder);
     if (resolvedUpdate.isAllStopsCancelled()) {
-      builder.cancelTrip();
-    } else {
-      builder.withRealTimeState(resolvedUpdate.options().addedTripUpdateState().toRealTimeState());
+      builder.withCanceled();
     }
 
     // Build and return result

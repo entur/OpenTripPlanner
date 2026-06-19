@@ -22,22 +22,25 @@ To enable the SIRI updater you need to add it to the updaters section of the `ro
 <!-- siri-azure-et-updater BEGIN -->
 <!-- NOTE! This section is auto-generated. Do not change, change doc in code instead. -->
 
-| Config Parameter                                           |    Type    | Summary                                                          |  Req./Opt. | Default Value       | Since |
-|------------------------------------------------------------|:----------:|------------------------------------------------------------------|:----------:|---------------------|:-----:|
-| type = "siri-azure-et-updater"                             |   `enum`   | The type of the updater.                                         | *Required* |                     |  1.5  |
-| [authenticationType](#u__11__authenticationType)           |   `enum`   | Which authentication type to use                                 | *Optional* | `"sharedaccesskey"` |  2.5  |
-| autoDeleteOnIdle                                           | `duration` | The time after which an inactive subscription is removed.        | *Optional* | `"PT1H"`            |  2.5  |
-| [customMidnight](#u__11__customMidnight)                   |  `integer` | Time on which time breaks into new day.                          | *Optional* | `0`                 |  2.2  |
-| feedId                                                     |  `string`  | The ID of the feed to apply the updates to.                      | *Required* |                     |  2.2  |
-| [fullyQualifiedNamespace](#u__11__fullyQualifiedNamespace) |  `string`  | Service Bus fully qualified namespace used for authentication.   | *Optional* |                     |  2.5  |
-| fuzzyTripMatching                                          |  `boolean` | Whether to apply fuzzyTripMatching on the updates                | *Optional* | `false`             |  2.2  |
-| prefetchCount                                              |  `integer` | The number of messages to fetch from the subscription at a time. | *Optional* | `10`                |  2.5  |
-| [servicebus-url](#u__11__servicebus_url)                   |  `string`  | Service Bus connection used for authentication.                  | *Optional* |                     |  2.2  |
-| topic                                                      |  `string`  | Service Bus topic to connect to.                                 | *Required* |                     |  2.2  |
-| history                                                    |  `object`  | Configuration for fetching historical data on startup            | *Optional* |                     |  2.2  |
-|    fromDateTime                                            |  `string`  | Datetime boundary for historical data                            | *Optional* | `"-P1D"`            |  2.2  |
-|    timeout                                                 |  `integer` | Timeout in milliseconds                                          | *Optional* | `300000`            |   na  |
-|    url                                                     |  `string`  | Endpoint to fetch from                                           | *Optional* |                     |   na  |
+| Config Parameter                                                   |    Type    | Summary                                                                   |  Req./Opt. | Default Value       | Since |
+|--------------------------------------------------------------------|:----------:|---------------------------------------------------------------------------|:----------:|---------------------|:-----:|
+| type = "siri-azure-et-updater"                                     |   `enum`   | The type of the updater.                                                  | *Required* |                     |  1.5  |
+| [authenticationType](#u__11__authenticationType)                   |   `enum`   | Which authentication type to use                                          | *Optional* | `"sharedaccesskey"` |  2.5  |
+| autoDeleteOnIdle                                                   | `duration` | The time after which an inactive subscription is removed.                 | *Optional* | `"PT1H"`            |  2.5  |
+| [customMidnight](#u__11__customMidnight)                           |  `integer` | Time on which time breaks into new day.                                   | *Optional* | `0`                 |  2.2  |
+| feedId                                                             |  `string`  | The ID of the feed to apply the updates to.                               | *Required* |                     |  2.2  |
+| [fullyQualifiedNamespace](#u__11__fullyQualifiedNamespace)         |  `string`  | Service Bus fully qualified namespace used for authentication.            | *Optional* |                     |  2.5  |
+| fuzzyTripMatching                                                  |  `boolean` | Whether to apply fuzzyTripMatching on the updates                         | *Optional* | `false`             |  2.2  |
+| prefetchCount                                                      |  `integer` | The number of messages to fetch from the subscription at a time.          | *Optional* | `10`                |  2.5  |
+| [servicebus-url](#u__11__servicebus_url)                           |  `string`  | Service Bus connection used for authentication.                           | *Optional* |                     |  2.2  |
+| shadowComparison                                                   |  `boolean` | Run the legacy and unified adapters in parallel, comparing their outputs. | *Optional* | `false`             |  2.9  |
+| shadowComparisonReportDirectory                                    |  `string`  | Directory to write detailed shadow comparison mismatch reports to.        | *Optional* |                     |  2.9  |
+| topic                                                              |  `string`  | Service Bus topic to connect to.                                          | *Required* |                     |  2.2  |
+| [useNewUpdaterImplementation](#u__11__useNewUpdaterImplementation) |  `boolean` | Use the new trip updater implementation.                                  | *Optional* | `false`             |  2.9  |
+| history                                                            |  `object`  | Configuration for fetching historical data on startup                     | *Optional* |                     |  2.2  |
+|    fromDateTime                                                    |  `string`  | Datetime boundary for historical data                                     | *Optional* | `"-P1D"`            |  2.2  |
+|    timeout                                                         |  `integer` | Timeout in milliseconds                                                   | *Optional* | `300000`            |   na  |
+|    url                                                             |  `string`  | Endpoint to fetch from                                                    | *Optional* |                     |   na  |
 
 
 ##### Parameter details
@@ -77,6 +80,18 @@ Service Bus connection used for authentication.
 
 Has to be present for authenticationMethod SharedAccessKey. This should be Primary/Secondary connection string from service bus.
 
+<h4 id="u__11__useNewUpdaterImplementation">useNewUpdaterImplementation</h4>
+
+**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Path:** /updaters/[11] 
+
+Use the new trip updater implementation.
+
+When enabled, uses the new modular trip updater implementation based on
+`DefaultTripUpdateApplier`. This is experimental and should be used with caution.
+The default value is `false`, which uses the legacy implementation.
+
+
 
 
 ##### Example configuration
@@ -110,23 +125,26 @@ Has to be present for authenticationMethod SharedAccessKey. This should be Prima
 <!-- siri-azure-sx-updater BEGIN -->
 <!-- NOTE! This section is auto-generated. Do not change, change doc in code instead. -->
 
-| Config Parameter                                           |    Type    | Summary                                                          |  Req./Opt. | Default Value       | Since |
-|------------------------------------------------------------|:----------:|------------------------------------------------------------------|:----------:|---------------------|:-----:|
-| type = "siri-azure-sx-updater"                             |   `enum`   | The type of the updater.                                         | *Required* |                     |  1.5  |
-| [authenticationType](#u__10__authenticationType)           |   `enum`   | Which authentication type to use                                 | *Optional* | `"sharedaccesskey"` |  2.5  |
-| autoDeleteOnIdle                                           | `duration` | The time after which an inactive subscription is removed.        | *Optional* | `"PT1H"`            |  2.5  |
-| [customMidnight](#u__10__customMidnight)                   |  `integer` | Time on which time breaks into new day.                          | *Optional* | `0`                 |  2.2  |
-| feedId                                                     |  `string`  | The ID of the feed to apply the updates to.                      | *Required* |                     |  2.2  |
-| [fullyQualifiedNamespace](#u__10__fullyQualifiedNamespace) |  `string`  | Service Bus fully qualified namespace used for authentication.   | *Optional* |                     |  2.5  |
-| fuzzyTripMatching                                          |  `boolean` | Whether to apply fuzzyTripMatching on the updates                | *Optional* | `false`             |  2.2  |
-| prefetchCount                                              |  `integer` | The number of messages to fetch from the subscription at a time. | *Optional* | `10`                |  2.5  |
-| [servicebus-url](#u__10__servicebus_url)                   |  `string`  | Service Bus connection used for authentication.                  | *Optional* |                     |  2.2  |
-| topic                                                      |  `string`  | Service Bus topic to connect to.                                 | *Required* |                     |  2.2  |
-| history                                                    |  `object`  | Configuration for fetching historical data on startup            | *Optional* |                     |  2.2  |
-|    fromDateTime                                            |  `string`  | Datetime boundary for historical data.                           | *Optional* | `"-P1D"`            |  2.2  |
-|    timeout                                                 |  `integer` | Timeout in milliseconds                                          | *Optional* | `300000`            |   na  |
-|    toDateTime                                              |  `string`  | Datetime boundary for historical data.                           | *Optional* | `"P1D"`             |  2.2  |
-|    url                                                     |  `string`  | Endpoint to fetch from                                           | *Optional* |                     |   na  |
+| Config Parameter                                                   |    Type    | Summary                                                                   |  Req./Opt. | Default Value       | Since |
+|--------------------------------------------------------------------|:----------:|---------------------------------------------------------------------------|:----------:|---------------------|:-----:|
+| type = "siri-azure-sx-updater"                                     |   `enum`   | The type of the updater.                                                  | *Required* |                     |  1.5  |
+| [authenticationType](#u__10__authenticationType)                   |   `enum`   | Which authentication type to use                                          | *Optional* | `"sharedaccesskey"` |  2.5  |
+| autoDeleteOnIdle                                                   | `duration` | The time after which an inactive subscription is removed.                 | *Optional* | `"PT1H"`            |  2.5  |
+| [customMidnight](#u__10__customMidnight)                           |  `integer` | Time on which time breaks into new day.                                   | *Optional* | `0`                 |  2.2  |
+| feedId                                                             |  `string`  | The ID of the feed to apply the updates to.                               | *Required* |                     |  2.2  |
+| [fullyQualifiedNamespace](#u__10__fullyQualifiedNamespace)         |  `string`  | Service Bus fully qualified namespace used for authentication.            | *Optional* |                     |  2.5  |
+| fuzzyTripMatching                                                  |  `boolean` | Whether to apply fuzzyTripMatching on the updates                         | *Optional* | `false`             |  2.2  |
+| prefetchCount                                                      |  `integer` | The number of messages to fetch from the subscription at a time.          | *Optional* | `10`                |  2.5  |
+| [servicebus-url](#u__10__servicebus_url)                           |  `string`  | Service Bus connection used for authentication.                           | *Optional* |                     |  2.2  |
+| shadowComparison                                                   |  `boolean` | Run the legacy and unified adapters in parallel, comparing their outputs. | *Optional* | `false`             |  2.9  |
+| shadowComparisonReportDirectory                                    |  `string`  | Directory to write detailed shadow comparison mismatch reports to.        | *Optional* |                     |  2.9  |
+| topic                                                              |  `string`  | Service Bus topic to connect to.                                          | *Required* |                     |  2.2  |
+| [useNewUpdaterImplementation](#u__10__useNewUpdaterImplementation) |  `boolean` | Use the new trip updater implementation.                                  | *Optional* | `false`             |  2.9  |
+| history                                                            |  `object`  | Configuration for fetching historical data on startup                     | *Optional* |                     |  2.2  |
+|    fromDateTime                                                    |  `string`  | Datetime boundary for historical data.                                    | *Optional* | `"-P1D"`            |  2.2  |
+|    timeout                                                         |  `integer` | Timeout in milliseconds                                                   | *Optional* | `300000`            |   na  |
+|    toDateTime                                                      |  `string`  | Datetime boundary for historical data.                                    | *Optional* | `"P1D"`             |  2.2  |
+|    url                                                             |  `string`  | Endpoint to fetch from                                                    | *Optional* |                     |   na  |
 
 
 ##### Parameter details
@@ -165,6 +183,18 @@ Has to be present for authenticationMethod FederatedIdentity.
 Service Bus connection used for authentication.
 
 Has to be present for authenticationMethod SharedAccessKey. This should be Primary/Secondary connection string from service bus.
+
+<h4 id="u__10__useNewUpdaterImplementation">useNewUpdaterImplementation</h4>
+
+**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Path:** /updaters/[10] 
+
+Use the new trip updater implementation.
+
+When enabled, uses the new modular trip updater implementation based on
+`DefaultTripUpdateApplier`. This is experimental and should be used with caution.
+The default value is `false`, which uses the legacy implementation.
+
 
 
 
