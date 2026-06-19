@@ -18,7 +18,6 @@ public final class TripUpdateOptions {
   private final FirstLastStopTimeAdjustment firstLastStopTimeAdjustment;
   private final ScheduledDataInclusion scheduledDataInclusion;
   private final UnknownStopBehavior unknownStopBehavior;
-  private final AddedTripUpdateState addedTripUpdateState;
   private final PickDropChangeStrategy pickDropChangeStrategy;
 
   /**
@@ -30,7 +29,6 @@ public final class TripUpdateOptions {
    * @param firstLastStopTimeAdjustment Strategy for adjusting times at first/last stops
    * @param scheduledDataInclusion Whether to include scheduled data for added trips
    * @param unknownStopBehavior Behavior when encountering unknown stops in added trips
-   * @param addedTripUpdateState RealTimeState to use when re-updating an already-added trip
    * @param pickDropChangeStrategy Strategy for comparing pickup/dropoff values
    */
   public TripUpdateOptions(
@@ -42,7 +40,6 @@ public final class TripUpdateOptions {
     FirstLastStopTimeAdjustment firstLastStopTimeAdjustment,
     ScheduledDataInclusion scheduledDataInclusion,
     UnknownStopBehavior unknownStopBehavior,
-    AddedTripUpdateState addedTripUpdateState,
     PickDropChangeStrategy pickDropChangeStrategy
   ) {
     this.forwardsPropagation = Objects.requireNonNull(
@@ -77,10 +74,6 @@ public final class TripUpdateOptions {
       unknownStopBehavior,
       "unknownStopBehavior must not be null"
     );
-    this.addedTripUpdateState = Objects.requireNonNull(
-      addedTripUpdateState,
-      "addedTripUpdateState must not be null"
-    );
     this.pickDropChangeStrategy = Objects.requireNonNull(
       pickDropChangeStrategy,
       "pickDropChangeStrategy must not be null"
@@ -105,7 +98,6 @@ public final class TripUpdateOptions {
       FirstLastStopTimeAdjustment.ADJUST,
       ScheduledDataInclusion.INCLUDE,
       UnknownStopBehavior.FAIL,
-      AddedTripUpdateState.SET_UPDATED,
       PickDropChangeStrategy.ROUTABILITY_CHANGE_ONLY
     );
   }
@@ -131,7 +123,6 @@ public final class TripUpdateOptions {
       FirstLastStopTimeAdjustment.PRESERVE,
       ScheduledDataInclusion.EXCLUDE,
       UnknownStopBehavior.IGNORE,
-      AddedTripUpdateState.RETAIN_ADDED,
       PickDropChangeStrategy.EXACT_MATCH
     );
   }
@@ -175,10 +166,6 @@ public final class TripUpdateOptions {
     return unknownStopBehavior;
   }
 
-  public AddedTripUpdateState addedTripUpdateState() {
-    return addedTripUpdateState;
-  }
-
   public PickDropChangeStrategy pickDropChangeStrategy() {
     return pickDropChangeStrategy;
   }
@@ -211,7 +198,6 @@ public final class TripUpdateOptions {
       firstLastStopTimeAdjustment == that.firstLastStopTimeAdjustment &&
       scheduledDataInclusion == that.scheduledDataInclusion &&
       unknownStopBehavior == that.unknownStopBehavior &&
-      addedTripUpdateState == that.addedTripUpdateState &&
       pickDropChangeStrategy == that.pickDropChangeStrategy
     );
   }
@@ -227,7 +213,6 @@ public final class TripUpdateOptions {
       firstLastStopTimeAdjustment,
       scheduledDataInclusion,
       unknownStopBehavior,
-      addedTripUpdateState,
       pickDropChangeStrategy
     );
   }
@@ -252,8 +237,6 @@ public final class TripUpdateOptions {
       scheduledDataInclusion +
       ", unknownStopBehavior=" +
       unknownStopBehavior +
-      ", addedTripUpdateState=" +
-      addedTripUpdateState +
       ", pickDropChangeStrategy=" +
       pickDropChangeStrategy +
       '}'
@@ -276,7 +259,6 @@ public final class TripUpdateOptions {
       FirstLastStopTimeAdjustment.PRESERVE;
     private ScheduledDataInclusion scheduledDataInclusion = ScheduledDataInclusion.EXCLUDE;
     private UnknownStopBehavior unknownStopBehavior = UnknownStopBehavior.IGNORE;
-    private AddedTripUpdateState addedTripUpdateState = AddedTripUpdateState.RETAIN_ADDED;
     private PickDropChangeStrategy pickDropChangeStrategy = PickDropChangeStrategy.EXACT_MATCH;
 
     public Builder withForwardsPropagation(ForwardsDelayPropagationType forwardsPropagation) {
@@ -323,11 +305,6 @@ public final class TripUpdateOptions {
       return this;
     }
 
-    public Builder withAddedTripUpdateState(AddedTripUpdateState addedTripUpdateState) {
-      this.addedTripUpdateState = addedTripUpdateState;
-      return this;
-    }
-
     public Builder withPickDropChangeStrategy(PickDropChangeStrategy pickDropChangeStrategy) {
       this.pickDropChangeStrategy = pickDropChangeStrategy;
       return this;
@@ -343,7 +320,6 @@ public final class TripUpdateOptions {
         firstLastStopTimeAdjustment,
         scheduledDataInclusion,
         unknownStopBehavior,
-        addedTripUpdateState,
         pickDropChangeStrategy
       );
     }
