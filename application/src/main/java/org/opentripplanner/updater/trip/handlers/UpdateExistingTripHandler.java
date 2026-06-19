@@ -9,7 +9,6 @@ import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
@@ -71,7 +70,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
 
     // If all stops are cancelled, treat as implicit trip-level cancellation (avoid MODIFIED state)
     if (resolvedUpdate.isAllStopsCancelled()) {
-      builder.cancelTrip();
+      builder.withCanceled();
       var realTimeTripUpdate = RealTimeTripUpdate.of(scheduledPattern, builder.build(), serviceDate)
         .withProducer(resolvedUpdate.dataSource())
         .withRevertPreviousRealTimeUpdates(true)
@@ -96,7 +95,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
     // After reverting, start with the scheduled pattern unless new modifications are needed
     TripPattern finalPattern = scheduledPattern;
     TripPattern patternToDeleteFrom = null;
-    RealTimeState realTimeState = RealTimeState.UPDATED;
+    boolean patternModified = false;
 
     // If stop pattern was modified, create or get cached modified pattern
     if (modResult.hasPatternChanges()) {
@@ -113,7 +112,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
         finalPattern = tripPatternCache.getOrCreateTripPattern(newStopPattern, trip);
         var stateStrategy = resolvedUpdate.options().realTimeStateStrategy();
         if (stateStrategy == RealTimeStateUpdateStrategy.MODIFIED_ON_PATTERN_CHANGE) {
-          realTimeState = RealTimeState.MODIFIED;
+          patternModified = true;
         }
         patternToDeleteFrom = scheduledPattern;
       }
@@ -121,7 +120,14 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
 
     // Set real-time state if any updates were applied
     if (modResult.hasAnyUpdates()) {
-      builder.withRealTimeState(realTimeState);
+      if (patternModified) {
+        // MODIFIED_ON_PATTERN_CHANGE strategy: mark trip pattern as modified
+        builder.withModifiedTripPattern();
+      } else {
+        // ALWAYS_UPDATED strategy or no pattern change: mark times as modified to ensure
+        // the trip is exposed as UPDATED (not SCHEDULED) even if only stop-level flags were set
+        builder.withRealTimeUpdated();
+      }
     }
 
     // Create the RealTimeTripUpdate with revert and deletion signals
@@ -131,7 +137,12 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
         .withRevertPreviousRealTimeUpdates(true)
         .withHideTripInScheduledPattern(patternToDeleteFrom)
         .build();
-      LOG.debug("Updated trip {} on {} (state: {})", trip.getId(), serviceDate, realTimeState);
+      LOG.debug(
+        "Updated trip {} on {} (patternModified: {})",
+        trip.getId(),
+        serviceDate,
+        patternModified
+      );
       return new TripUpdateResult(realTimeTripUpdate);
     } catch (DataValidationException e) {
       LOG.info(
@@ -183,6 +194,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
 
     boolean hasTimeUpdates = false;
     boolean hasCancellations = false;
+    boolean hasNoDataUpdates = false;
     final Map<Integer, StopLocation> stopReplacements = new HashMap<>();
     final Map<Integer, PickDrop> pickupChanges = new HashMap<>();
     final Map<Integer, PickDrop> dropoffChanges = new HashMap<>();
@@ -197,7 +209,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
     }
 
     public boolean hasAnyUpdates() {
-      return hasTimeUpdates || hasCancellations || hasPatternChanges();
+      return hasTimeUpdates || hasCancellations || hasNoDataUpdates || hasPatternChanges();
     }
 
     public Map<Integer, StopLocation> stopReplacements() {
@@ -344,6 +356,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       if (stopUpdate.status() == ParsedStopTimeUpdate.StopUpdateStatus.NO_DATA) {
         builder.withNoData(stopIndex);
         // Don't process time updates for NO_DATA stops - they should have none
+        result.hasNoDataUpdates = true;
         continue;
       }
 

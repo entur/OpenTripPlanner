@@ -106,19 +106,19 @@ class ReEnabledStopTest implements RealtimeTestConstants {
       )
       .buildEstimatedTimetableDeliveries();
 
-    // First update: MODIFIED (pattern changed due to routability change)
+    // First update: P U (pattern changed due to routability change)
     var result1 = siri.applyEstimatedTimetable(updates);
     assertSuccess(result1);
     assertEquals(
-      "MODIFIED | A 0:00:11 0:00:11 | B 0:00:20 0:00:21 | C 0:00:30 0:00:30",
+      "P U | A 0:00:11 0:00:11 | B 0:00:20 0:00:21 | C 0:00:30 0:00:30",
       env.tripData(TRIP_1_ID).showTimetable()
     );
 
-    // Second update (re-processing): should still be MODIFIED
+    // Second update (re-processing): should still be P U (pattern differs from scheduled)
     var result2 = siri.applyEstimatedTimetable(updates);
     assertSuccess(result2);
     assertEquals(
-      "MODIFIED | A 0:00:11 0:00:11 | B 0:00:20 0:00:21 | C 0:00:30 0:00:30",
+      "P U | A 0:00:11 0:00:11 | B 0:00:20 0:00:21 | C 0:00:30 0:00:30",
       env.tripData(TRIP_1_ID).showTimetable()
     );
   }

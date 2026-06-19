@@ -3,6 +3,7 @@ package org.opentripplanner.updater.trip.handlers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -11,10 +12,10 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory;
+import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
-import org.opentripplanner.transit.model.timetable.RealTimeState;
+
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
@@ -125,7 +126,7 @@ class ModifyTripHandlerTest {
       var result = handler.handle(resolver.resolve(parsedUpdate));
 
       assertNotNull(result);
-      assertEquals(RealTimeState.MODIFIED, result.updatedTripTimes().getRealTimeState());
+      assertTrue(result.updatedTripTimes().isTripPatternModified());
 
       // New pattern should have 4 stops
       assertEquals(4, result.pattern().numberOfStops());
@@ -158,7 +159,7 @@ class ModifyTripHandlerTest {
       var result = handler.handle(resolver.resolve(parsedUpdate));
 
       assertNotNull(result);
-      assertEquals(RealTimeState.MODIFIED, result.updatedTripTimes().getRealTimeState());
+      assertTrue(result.updatedTripTimes().isTripPatternModified());
 
       // New pattern should have 2 stops
       assertEquals(2, result.pattern().numberOfStops());
@@ -231,7 +232,7 @@ class ModifyTripHandlerTest {
       var originalTripTimes = originalTimetable.getTripTimes(tripId);
 
       assertNotNull(originalTripTimes);
-      assertEquals(RealTimeState.DELETED, originalTripTimes.getRealTimeState());
+      assertTrue(originalTripTimes.isDeleted());
     }
 
     @Test
@@ -397,7 +398,7 @@ class ModifyTripHandlerTest {
       var result = handler.handle(resolver.resolve(parsedUpdate));
 
       assertNotNull(result);
-      assertEquals(RealTimeState.MODIFIED, result.updatedTripTimes().getRealTimeState());
+      assertTrue(result.updatedTripTimes().isTripPatternModified());
 
       // New pattern should have 3 stops: A, D, B
       assertEquals(3, result.pattern().numberOfStops());
