@@ -55,6 +55,8 @@ spec:
           value: {{ .Values.proxy.googlePubsubRequestTopic }}
         - name: GOOGLE_PUBSUB_RESPONSE_TOPIC
           value: {{ .Values.proxy.googlePubsubResponseTopic }}
+        - name: LOG_RESPONSE_BODY
+          value: "false"
         lifecycle:
           preStop:
             exec:
