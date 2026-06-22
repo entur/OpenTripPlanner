@@ -1,6 +1,7 @@
 package org.opentripplanner.gtfs.mapping;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.onebusaway.gtfs.model.AgencyAndIdFactory.obaId;
 import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.FEED_ID;
@@ -34,7 +35,7 @@ class NoticeMapperTest {
   @Test
   void testPublicCodeIsNull() {
     var result = subject.map(GTFS_NOTICE);
-    assertEquals(null, result.publicCode());
+    assertNull(result.publicCode());
   }
 
   @Test

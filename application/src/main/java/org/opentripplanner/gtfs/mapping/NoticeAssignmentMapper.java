@@ -49,7 +49,7 @@ class NoticeAssignmentMapper {
       .collect(Collectors.toMap(Trip::getId, Function.identity()));
     var routes = routeMapper.mappedRoutes();
     for (var assignment : assignments) {
-      mapOne(noticeMapper.mappedNotices(), assignment, trips, routes).ifPresent(entry ->
+      mapOne(assignment, noticeMapper.mappedNotices(), trips, routes).ifPresent(entry ->
         result.put(entry.getKey(), entry.getValue())
       );
     }
@@ -57,8 +57,8 @@ class NoticeAssignmentMapper {
   }
 
   private Optional<Map.Entry<AbstractTransitEntity, Notice>> mapOne(
-    Map<FeedScopedId, Notice> notices,
     NoticeAssignment assignment,
+    Map<FeedScopedId, Notice> notices,
     Map<FeedScopedId, Trip> trips,
     Map<FeedScopedId, Route> routes
   ) {

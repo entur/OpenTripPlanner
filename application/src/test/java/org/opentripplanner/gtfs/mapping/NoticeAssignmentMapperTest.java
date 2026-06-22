@@ -1,7 +1,7 @@
 package org.opentripplanner.gtfs.mapping;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.onebusaway.gtfs.model.AgencyAndIdFactory.obaId;
 
 import java.util.List;
@@ -111,13 +111,14 @@ class NoticeAssignmentMapperTest {
   void missingNoticeLogsIssue() {
     var issues = new DefaultDataImportIssueStore();
     var noticeMapper = new NoticeMapper(ID_FACTORY);
+    var routeMapper = createRouteMapper();
 
     var mapper = new NoticeAssignmentMapper(
       ID_FACTORY,
       issues,
       noticeMapper,
-      createTripMapper(createRouteMapper()),
-      createRouteMapper()
+      createTripMapper(routeMapper),
+      routeMapper
     );
 
     var assignment = new NoticeAssignment();
@@ -127,10 +128,9 @@ class NoticeAssignmentMapperTest {
 
     var result = mapper.map(List.of(assignment));
 
-    assertTrue(result.isEmpty());
-    assertEquals(
-      List.of("NoticeAssignmentWithoutNotice"),
-      issues.listIssues().stream().map(DataImportIssue::getType).toList()
+    assertThat(result).isEmpty();
+    assertThat(issues.listIssues().stream().map(DataImportIssue::getType)).containsExactly(
+      "NoticeAssignmentWithoutNotice"
     );
   }
 
@@ -139,13 +139,14 @@ class NoticeAssignmentMapperTest {
     var issues = new DefaultDataImportIssueStore();
     var noticeMapper = new NoticeMapper(ID_FACTORY);
     noticeMapper.map(GTFS_NOTICE);
+    var routeMapper = createRouteMapper();
 
     var mapper = new NoticeAssignmentMapper(
       ID_FACTORY,
       issues,
       noticeMapper,
-      createTripMapper(createRouteMapper()),
-      createRouteMapper()
+      createTripMapper(routeMapper),
+      routeMapper
     );
 
     var assignment = new NoticeAssignment();
@@ -155,10 +156,9 @@ class NoticeAssignmentMapperTest {
 
     var result = mapper.map(List.of(assignment));
 
-    assertTrue(result.isEmpty());
-    assertEquals(
-      List.of("NoticeAssignmentWithUnknownEntity"),
-      issues.listIssues().stream().map(DataImportIssue::getType).toList()
+    assertThat(result).isEmpty();
+    assertThat(issues.listIssues().stream().map(DataImportIssue::getType).toList()).containsExactly(
+      "NoticeAssignmentWithUnknownEntity"
     );
   }
 
@@ -167,13 +167,14 @@ class NoticeAssignmentMapperTest {
     var issues = new DefaultDataImportIssueStore();
     var noticeMapper = new NoticeMapper(ID_FACTORY);
     noticeMapper.map(GTFS_NOTICE);
+    var routeMapper = createRouteMapper();
 
     var mapper = new NoticeAssignmentMapper(
       ID_FACTORY,
       issues,
       noticeMapper,
-      createTripMapper(createRouteMapper()),
-      createRouteMapper()
+      createTripMapper(routeMapper),
+      routeMapper
     );
 
     var assignment = new NoticeAssignment();
@@ -183,10 +184,9 @@ class NoticeAssignmentMapperTest {
 
     var result = mapper.map(List.of(assignment));
 
-    assertTrue(result.isEmpty());
-    assertEquals(
-      List.of("NoticeAssignmentWithUnknownEntity"),
-      issues.listIssues().stream().map(DataImportIssue::getType).toList()
+    assertThat(result).isEmpty();
+    assertThat(issues.listIssues().stream().map(DataImportIssue::getType).toList()).containsExactly(
+      "NoticeAssignmentWithUnknownEntity"
     );
   }
 
