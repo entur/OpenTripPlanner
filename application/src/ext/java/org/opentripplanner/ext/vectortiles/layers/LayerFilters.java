@@ -59,8 +59,7 @@ public class LayerFilters {
       case NONE -> NO_FILTER;
       case SUNDAY_TO_SUNDAY_SERVICE_WEEK -> buildCurrentServiceWeekPredicate(
         transitService::findPatterns,
-        trip ->
-          transitService.getCalendarService().getServiceDatesForServiceId(trip.getServiceId()),
+        trip -> transitService.getTripCalendars().listServiceDates(trip.getServiceId()),
         () -> LocalDate.now(transitService.getTimeZone())
       );
     };

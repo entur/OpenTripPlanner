@@ -73,6 +73,9 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Add `boardCost` and `reluctance` for all types of flex legs [#7658](https://github.com/opentripplanner/OpenTripPlanner/pull/7658)
 - State-based geofencing zone enforcement for vehicle rental routing [#7544](https://github.com/opentripplanner/OpenTripPlanner/pull/7544)
 - Add query for fetching number of canceled trips grouped by routes and patterns to GTFS API [#7703](https://github.com/opentripplanner/OpenTripPlanner/pull/7703)
+- Make TransitGroupPriority an official feature [#7738](https://github.com/opentripplanner/OpenTripPlanner/pull/7738)
+- Deprecate serviceJourneys filter in Transmodel [#7712](https://github.com/opentripplanner/OpenTripPlanner/pull/7712)
+- Grouping Trip calendar logic into a single service [#7731](https://github.com/opentripplanner/OpenTripPlanner/pull/7731)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
