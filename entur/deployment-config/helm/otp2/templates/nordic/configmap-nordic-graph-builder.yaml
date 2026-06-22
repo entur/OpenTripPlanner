@@ -71,9 +71,11 @@ data:
           "groupFilePattern": "(\\w{3})_.*\\.xml"
         },
         {
-          "type": "gtfs",
+          "type": "netex",
           "feedId": "FI",
-          "source": "https://mobility.mobility-database.fintraffic.fi/static/finland_gtfs.zip"
+          "source": "https://mobility.mobility-database.fintraffic.fi/static/finland_netex.zip",
+          "sharedFilePattern": "_stops.xml|_shared_data.xml",
+          "groupFilePattern": "line_([0-9]+)\\.xml"
         },
         {
           "type": "netex",
