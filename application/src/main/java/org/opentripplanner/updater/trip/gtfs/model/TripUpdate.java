@@ -136,13 +136,12 @@ public final class TripUpdate {
     }
   }
 
-   /// Validates the requirement for the schedule relationship DUPLICATED.
-  public void validateDuplicated() throws DataValidationException{
+  /// Validates the requirement for the schedule relationship DUPLICATED.
+  public void validateDuplicated() throws DataValidationException {
     try {
-      if(tripDescriptor.startDate().isEmpty() || tripDescriptor.startTime().isEmpty()){
+      if (tripDescriptor.startDate().isEmpty() || tripDescriptor.startTime().isEmpty()) {
         throw UpdateException.of(tripId(), INVALID_INPUT_STRUCTURE);
       }
-
     } catch (ParseException e) {
       throw UpdateException.of(tripId(), INVALID_INPUT_STRUCTURE);
     }
@@ -150,12 +149,6 @@ public final class TripUpdate {
 
   public Optional<LocalTime> startTime() {
     return tripDescriptor.startTime();
-  }
-
-  public Optional<FeedScopedId> newTripId() {
-    return tripProperties()
-      .filter(GtfsRealtime.TripUpdate.TripProperties::hasTripId)
-      .map(p -> new FeedScopedId(feedId, p.getTripId()));
   }
 
   public Optional<FeedScopedId> routeId() {

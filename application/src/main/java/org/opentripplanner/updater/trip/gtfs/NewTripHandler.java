@@ -97,8 +97,6 @@ class NewTripHandler {
     return handleNewOrReplacementTrip(trip, tripUpdate, false, true, false);
   }
 
-
-
   /**
    * Handle GTFS-RT TripUpdate message containing a NEW or REPLACEMENT trip.
    */

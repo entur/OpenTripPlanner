@@ -15,7 +15,6 @@ import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
-import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 
 /**
  * Handles GTFS-RT TripUpdates for trips with schedule relationship {@code DUPLICATED}.
@@ -25,16 +24,13 @@ class DuplicatedTripHandler {
 
   private final TransitEditorService transitEditorService;
   private final TimetableSnapshotManager snapshotManager;
-  private final TripPatternCache tripPatternCache;
 
   DuplicatedTripHandler(
     TransitEditorService transitEditorService,
-    TimetableSnapshotManager snapshotManager,
-    TripPatternCache tripPatternCache
+    TimetableSnapshotManager snapshotManager
   ) {
     this.transitEditorService = transitEditorService;
     this.snapshotManager = snapshotManager;
-    this.tripPatternCache = tripPatternCache;
   }
 
   UpdateSuccess handleDuplicated(TripUpdate tripUpdate, UpdateIncrementality updateIncrementality)
@@ -55,6 +51,7 @@ class DuplicatedTripHandler {
     }
 
     // Look up the original trip's pattern and scheduled times
+
     var originalPattern = transitEditorService.findPattern(originalTrip);
     var originalScheduledTimes = (ScheduledTripTimes) originalPattern
       .getScheduledTimetable()
@@ -66,12 +63,11 @@ class DuplicatedTripHandler {
     int offsetSeconds = newFirstDeparture - originalFirstDeparture;
 
     // Build the new trip entity (copy of original with a new ID)
-    var newTripId =
-      new FeedScopedId(
-        tripUpdate.tripId().getFeedId(),
-        tripUpdate.tripId().getId() + ":duplicated:" + tripUpdate.startTime().get()
-    );
-    var newTrip = Trip.of(newTripId).withRoute(originalTrip.getRoute()).withServiceId(serviceId).build();
+    var newTripId = duplicatedTripId(tripUpdate);
+    var newTrip = Trip.of(newTripId)
+      .withRoute(originalTrip.getRoute())
+      .withServiceId(serviceId)
+      .build();
 
     // Shift all scheduled times and rebind to the new trip
     int serviceCode = transitEditorService.getTripCalendars().getServiceCode(serviceId);
@@ -85,6 +81,7 @@ class DuplicatedTripHandler {
     // Produce real-time trip times marked as an added trip
     var newTripTimes = newScheduledTimes
       .createRealTimeFromScheduledTimes()
+      .withServiceCode(serviceCode)
       .withAdded()
       .withRealTimeUpdated()
       .build();
@@ -98,8 +95,13 @@ class DuplicatedTripHandler {
       .withTripCreation(true)
       .withAddedTripOnServiceDate(tripOnServiceDate)
       .build();
-    return snapshotManager.updateBuffer(
-      update
+    return snapshotManager.updateBuffer(update);
+  }
+
+  private static FeedScopedId duplicatedTripId(TripUpdate tripUpdate) {
+    return new FeedScopedId(
+      tripUpdate.tripId().getFeedId(),
+      tripUpdate.tripId().getId() + ":duplicated:" + tripUpdate.startTime().get()
     );
   }
 }

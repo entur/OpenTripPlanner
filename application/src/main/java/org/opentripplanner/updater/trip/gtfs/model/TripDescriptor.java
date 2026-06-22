@@ -6,7 +6,10 @@ import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.Optional;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
@@ -15,7 +18,9 @@ import org.opentripplanner.utils.time.ServiceDateUtils;
  */
 public class TripDescriptor {
 
-  public static final DateTimeFormatter GTFS_LOCAL_TIME_FORMATTER = DateTimeFormatter.ofPattern("[HH:mm:ss][HH:mm]");
+  public static final DateTimeFormatter GTFS_LOCAL_TIME_FORMATTER = DateTimeFormatter.ofPattern(
+    "[HH:mm:ss][HH:mm]"
+  );
   private final GtfsRealtime.TripDescriptor tripDescriptor;
 
   TripDescriptor(GtfsRealtime.TripDescriptor tripDescriptor) {
@@ -35,10 +40,14 @@ public class TripDescriptor {
   }
 
   Optional<LocalTime> startTime() {
-    if(tripDescriptor.hasStartTime()) {
-      return Optional.of(LocalTime.parse(tripDescriptor.getStartTime(), GTFS_LOCAL_TIME_FORMATTER));
+    try {
+      if (tripDescriptor.hasStartTime()) {
+        return Optional.of(LocalTime.parse(tripDescriptor.getStartTime(), GTFS_LOCAL_TIME_FORMATTER));
+      }
+      return Optional.empty();
+    } catch (DateTimeParseException _){
+      throw UpdateException.of(UpdateErrorType.INVALID_INPUT_STRUCTURE);
     }
-    return Optional.empty();
   }
 
   ScheduleRelationship scheduleRelationship() {
