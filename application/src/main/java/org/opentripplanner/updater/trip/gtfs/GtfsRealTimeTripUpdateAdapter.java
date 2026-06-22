@@ -36,6 +36,7 @@ public class GtfsRealTimeTripUpdateAdapter {
   private final Supplier<LocalDate> localDateNow;
   private final ScheduledTripHandler scheduledTripHandler;
   private final NewTripHandler addedTripHandler;
+  private final DuplicatedTripHandler duplicatedTripHandler;
   private final CanceledTripHandler canceledTripHandler;
 
   /**
@@ -70,6 +71,11 @@ public class GtfsRealTimeTripUpdateAdapter {
       transitEditorService,
       snapshotManager,
       tripTimesUpdater,
+      tripPatternCache
+    );
+    this.duplicatedTripHandler = new DuplicatedTripHandler(
+      transitEditorService,
+      snapshotManager,
       tripPatternCache
     );
     this.canceledTripHandler = new CanceledTripHandler(transitEditorService, snapshotManager);
@@ -158,7 +164,7 @@ public class GtfsRealTimeTripUpdateAdapter {
       case NEW, ADDED -> addedTripHandler.handleNew(tripUpdate);
       case CANCELED -> canceledTripHandler.cancel(tripUpdate, updateIncrementality);
       case DELETED -> canceledTripHandler.delete(tripUpdate, updateIncrementality);
-      case DUPLICATED -> addedTripHandler.handleDuplicated(tripUpdate, updateIncrementality);
+      case DUPLICATED -> duplicatedTripHandler.handleDuplicated(tripUpdate, updateIncrementality);
       case REPLACEMENT -> addedTripHandler.handleReplacement(tripUpdate);
       case UNSCHEDULED -> throw UpdateException.of(
         tripUpdate.tripId(),

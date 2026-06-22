@@ -1,6 +1,7 @@
 package org.opentripplanner.updater.trip.gtfs.moduletests.addition;
 
 import static com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship.DUPLICATED;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
@@ -38,17 +39,6 @@ class DuplicatedTest implements RealtimeTestConstants {
   private final GtfsRtTestHelper gtfsRt = GtfsRtTestHelper.of(env);
 
   @Test
-  void invalidIncrementality() {
-    var tripUpdate = gtfsRt
-      .tripUpdate(ADDED_TRIP_ID, DUPLICATED)
-      .withStartDate(SERVICE_DATE)
-      .withStartTime(LocalTime.of(13, 0))
-      .build();
-
-    assertFailure(NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED, gtfsRt.applyTripUpdate(tripUpdate, DIFFERENTIAL));
-  }
-
-  @Test
   void duplicated() {
     var tripUpdate = gtfsRt
       .tripUpdate(TRIP_1_ID, DUPLICATED)
@@ -57,6 +47,20 @@ class DuplicatedTest implements RealtimeTestConstants {
       .build();
 
     assertSuccess(gtfsRt.applyTripUpdate(tripUpdate));
+
+    var duplicatedId = TRIP_1_ID + ":duplicated:13:00";
+    assertEquals("", env.tripData(duplicatedId).showTimetable());
+  }
+
+  @Test
+  void invalidIncrementality() {
+    var tripUpdate = gtfsRt
+      .tripUpdate(ADDED_TRIP_ID, DUPLICATED)
+      .withStartDate(SERVICE_DATE)
+      .withStartTime(LocalTime.of(13, 0))
+      .build();
+
+    assertFailure(NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED, gtfsRt.applyTripUpdate(tripUpdate, DIFFERENTIAL));
   }
 
 }

@@ -1,6 +1,5 @@
 package org.opentripplanner.updater.trip.gtfs;
 
-import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED;
 import static org.opentripplanner.updater.spi.UpdateErrorType.NO_SERVICE_ON_DATE;
 import static org.opentripplanner.updater.spi.UpdateErrorType.OUTSIDE_SERVICE_PERIOD;
 import static org.opentripplanner.updater.spi.UpdateErrorType.TOO_FEW_STOPS;
@@ -23,7 +22,6 @@ import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
-import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 
@@ -99,20 +97,7 @@ class NewTripHandler {
     return handleNewOrReplacementTrip(trip, tripUpdate, false, true, false);
   }
 
-  UpdateSuccess handleDuplicated(TripUpdate tripUpdate, UpdateIncrementality updateIncrementality) {
-    if(updateIncrementality == UpdateIncrementality.DIFFERENTIAL) {
-      throw UpdateException.of(tripUpdate.tripId(), NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED);
-    }
-    tripUpdate.validateDuplicated();
-    Trip trip = transitEditorService.getTrip(tripUpdate.tripId());
 
-    if (trip == null) {
-      throw UpdateException.of(tripUpdate.tripId(), TRIP_NOT_FOUND);
-    }
-
-
-    return UpdateSuccess.noWarnings();
-  }
 
   /**
    * Handle GTFS-RT TripUpdate message containing a NEW or REPLACEMENT trip.

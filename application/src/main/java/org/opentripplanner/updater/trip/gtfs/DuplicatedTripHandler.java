@@ -1,0 +1,110 @@
+package org.opentripplanner.updater.trip.gtfs;
+
+import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED;
+import static org.opentripplanner.updater.spi.UpdateErrorType.OUTSIDE_SERVICE_PERIOD;
+import static org.opentripplanner.updater.spi.UpdateErrorType.TRIP_NOT_FOUND;
+
+import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
+import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
+import org.opentripplanner.transit.model.timetable.Trip;
+import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
+import org.opentripplanner.transit.service.TransitEditorService;
+import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.updater.spi.UpdateSuccess;
+import org.opentripplanner.updater.trip.TimetableSnapshotManager;
+import org.opentripplanner.updater.trip.UpdateIncrementality;
+import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
+import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
+
+/**
+ * Handles GTFS-RT TripUpdates for trips with schedule relationship {@code DUPLICATED}.
+ * Creates a copy of a scheduled trip shifted to a new start time on the same service date.
+ */
+class DuplicatedTripHandler {
+
+  private final TransitEditorService transitEditorService;
+  private final TimetableSnapshotManager snapshotManager;
+  private final TripPatternCache tripPatternCache;
+
+  DuplicatedTripHandler(
+    TransitEditorService transitEditorService,
+    TimetableSnapshotManager snapshotManager,
+    TripPatternCache tripPatternCache
+  ) {
+    this.transitEditorService = transitEditorService;
+    this.snapshotManager = snapshotManager;
+    this.tripPatternCache = tripPatternCache;
+  }
+
+  UpdateSuccess handleDuplicated(TripUpdate tripUpdate, UpdateIncrementality updateIncrementality)
+    throws UpdateException {
+    if (updateIncrementality == UpdateIncrementality.DIFFERENTIAL) {
+      throw UpdateException.of(tripUpdate.tripId(), NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED);
+    }
+    tripUpdate.validateDuplicated();
+
+    var originalTrip = transitEditorService.getTrip(tripUpdate.tripId());
+    if (originalTrip == null) {
+      throw UpdateException.of(tripUpdate.tripId(), TRIP_NOT_FOUND);
+    }
+
+    var serviceId = transitEditorService.getOrCreateServiceIdForDate(tripUpdate.serviceDate());
+    if (serviceId == null) {
+      throw UpdateException.of(tripUpdate.tripId(), OUTSIDE_SERVICE_PERIOD);
+    }
+
+    // Look up the original trip's pattern and scheduled times
+    var originalPattern = transitEditorService.findPattern(originalTrip);
+    var originalScheduledTimes = (ScheduledTripTimes) originalPattern
+      .getScheduledTimetable()
+      .getTripTimes(tripUpdate.tripId());
+
+    // Calculate how many seconds to shift all stop times
+    int originalFirstDeparture = originalScheduledTimes.getScheduledDepartureTime(0);
+    int newFirstDeparture = tripUpdate.startTime().get().toSecondOfDay();
+    int offsetSeconds = newFirstDeparture - originalFirstDeparture;
+
+    // Build the new trip entity (copy of original with a new ID)
+    var newTripId = tripUpdate.newTripId().orElseGet(() ->
+      new FeedScopedId(
+        tripUpdate.tripId().getFeedId(),
+        tripUpdate.tripId().getId() + ":duplicated:" + tripUpdate.startTime().get()
+      )
+    );
+    var newTrip = Trip.of(newTripId).withRoute(originalTrip.getRoute()).withServiceId(serviceId).build();
+
+    // Shift all scheduled times and rebind to the new trip
+    int serviceCode = transitEditorService.getTripCalendars().getServiceCode(serviceId);
+    var newScheduledTimes = originalScheduledTimes
+      .copyOfNoDuplication()
+      .withTrip(newTrip)
+      .withServiceCode(serviceCode)
+      .plusTimeShift(offsetSeconds)
+      .build();
+
+    // Produce real-time trip times marked as an added trip
+    var newTripTimes = newScheduledTimes
+      .createRealTimeFromScheduledTimes()
+      .withAdded()
+      .withRealTimeUpdated()
+      .build();
+
+    var newPattern = tripPatternCache.getOrCreateTripPattern(
+      originalPattern.getStopPattern(),
+      newTrip
+    );
+    var tripOnServiceDate = TripOnServiceDate.of(newTripId)
+      .withTrip(newTrip)
+      .withServiceDate(tripUpdate.serviceDate())
+      .build();
+
+    var update = RealTimeTripUpdate.of(newPattern, newTripTimes, tripUpdate.serviceDate())
+      .withTripCreation(true)
+      .withAddedTripOnServiceDate(tripOnServiceDate)
+      .build();
+    return snapshotManager.updateBuffer(
+      update
+    );
+  }
+}

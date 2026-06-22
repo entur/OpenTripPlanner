@@ -8,6 +8,7 @@ import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
 import java.text.ParseException;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -145,6 +146,16 @@ public final class TripUpdate {
     } catch (ParseException e) {
       throw UpdateException.of(tripId(), INVALID_INPUT_STRUCTURE);
     }
+  }
+
+  public Optional<LocalTime> startTime() {
+    return tripDescriptor.startTime();
+  }
+
+  public Optional<FeedScopedId> newTripId() {
+    return tripProperties()
+      .filter(GtfsRealtime.TripUpdate.TripProperties::hasTripId)
+      .map(p -> new FeedScopedId(feedId, p.getTripId()));
   }
 
   public Optional<FeedScopedId> routeId() {

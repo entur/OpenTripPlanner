@@ -7,8 +7,6 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
-import org.opentripplanner.transit.model.framework.ImmutableEntityById;
-import org.opentripplanner.transit.model.framework.TransitEntity;
 import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
@@ -17,7 +15,7 @@ import org.opentripplanner.utils.time.ServiceDateUtils;
  */
 public class TripDescriptor {
 
-  public static final DateTimeFormatter GTFS_LOCAL_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
+  public static final DateTimeFormatter GTFS_LOCAL_TIME_FORMATTER = DateTimeFormatter.ofPattern("[HH:mm:ss][HH:mm]");
   private final GtfsRealtime.TripDescriptor tripDescriptor;
 
   TripDescriptor(GtfsRealtime.TripDescriptor tripDescriptor) {
