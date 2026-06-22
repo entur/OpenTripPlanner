@@ -66,11 +66,10 @@ class DuplicatedTripHandler {
     int offsetSeconds = newFirstDeparture - originalFirstDeparture;
 
     // Build the new trip entity (copy of original with a new ID)
-    var newTripId = tripUpdate.newTripId().orElseGet(() ->
+    var newTripId =
       new FeedScopedId(
         tripUpdate.tripId().getFeedId(),
         tripUpdate.tripId().getId() + ":duplicated:" + tripUpdate.startTime().get()
-      )
     );
     var newTrip = Trip.of(newTripId).withRoute(originalTrip.getRoute()).withServiceId(serviceId).build();
 
@@ -90,16 +89,12 @@ class DuplicatedTripHandler {
       .withRealTimeUpdated()
       .build();
 
-    var newPattern = tripPatternCache.getOrCreateTripPattern(
-      originalPattern.getStopPattern(),
-      newTrip
-    );
     var tripOnServiceDate = TripOnServiceDate.of(newTripId)
       .withTrip(newTrip)
       .withServiceDate(tripUpdate.serviceDate())
       .build();
 
-    var update = RealTimeTripUpdate.of(newPattern, newTripTimes, tripUpdate.serviceDate())
+    var update = RealTimeTripUpdate.of(originalPattern, newTripTimes, tripUpdate.serviceDate())
       .withTripCreation(true)
       .withAddedTripOnServiceDate(tripOnServiceDate)
       .build();
