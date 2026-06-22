@@ -30,7 +30,7 @@ public class TransfersLayerBuilder extends LayerBuilder<PathTransfer> {
   }
 
   @Override
-  protected List<Geometry> getGeometries(Envelope envelope) {
+  protected List<Geometry> findGeometries(Envelope envelope) {
     return transitService
       .findAreaStops(envelope)
       .stream()
