@@ -4,7 +4,11 @@ import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
 import java.text.ParseException;
 import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Optional;
+import org.opentripplanner.transit.model.framework.ImmutableEntityById;
+import org.opentripplanner.transit.model.framework.TransitEntity;
 import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
@@ -13,6 +17,7 @@ import org.opentripplanner.utils.time.ServiceDateUtils;
  */
 public class TripDescriptor {
 
+  public static final DateTimeFormatter GTFS_LOCAL_TIME_FORMATTER = DateTimeFormatter.ofPattern("HH:mm:ss");
   private final GtfsRealtime.TripDescriptor tripDescriptor;
 
   TripDescriptor(GtfsRealtime.TripDescriptor tripDescriptor) {
@@ -29,6 +34,13 @@ public class TripDescriptor {
     return tripDescriptor.hasStartDate()
       ? Optional.of(ServiceDateUtils.parseString(tripDescriptor.getStartDate()))
       : Optional.empty();
+  }
+
+  Optional<LocalTime> startTime() {
+    if(tripDescriptor.hasStartTime()) {
+      return Optional.of(LocalTime.parse(tripDescriptor.getStartTime(), GTFS_LOCAL_TIME_FORMATTER));
+    }
+    return Optional.empty();
   }
 
   ScheduleRelationship scheduleRelationship() {

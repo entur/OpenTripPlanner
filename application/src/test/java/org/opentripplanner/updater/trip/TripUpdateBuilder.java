@@ -5,9 +5,11 @@ import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
 import de.mfdz.MfdzRealtimeExtensions;
 import de.mfdz.MfdzRealtimeExtensions.StopTimePropertiesExtension.DropOffPickupType;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import javax.annotation.Nullable;
+import org.opentripplanner.updater.trip.gtfs.model.TripDescriptor;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 import org.opentripplanner.utils.time.TimeUtils;
 
@@ -401,13 +403,22 @@ public class TripUpdateBuilder {
     return this;
   }
 
-  public TripUpdateBuilder withServiceDate(String s) {
+  public TripUpdateBuilder withStartDate(String s) {
     tripDescriptorBuilder.setStartDate(s);
     return this;
   }
 
+  public TripUpdateBuilder withStartDate(LocalDate serviceDate) {
+    return this.withStartDate(ServiceDateUtils.asCompactString(serviceDate));
+  }
+
   public TripUpdateBuilder withRouteId(String routeId) {
     tripDescriptorBuilder.setRouteId(routeId);
+    return this;
+  }
+
+  public TripUpdateBuilder withStartTime(LocalTime time) {
+    tripDescriptorBuilder.setStartTime(time.format(TripDescriptor.GTFS_LOCAL_TIME_FORMATTER));
     return this;
   }
 

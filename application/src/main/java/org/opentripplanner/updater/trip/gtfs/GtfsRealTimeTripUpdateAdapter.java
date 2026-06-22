@@ -1,6 +1,5 @@
 package org.opentripplanner.updater.trip.gtfs;
 
-import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_DUPLICATED;
 import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_UNSCHEDULED;
 import static org.opentripplanner.updater.trip.UpdateIncrementality.FULL_DATASET;
 
@@ -159,12 +158,12 @@ public class GtfsRealTimeTripUpdateAdapter {
       case NEW, ADDED -> addedTripHandler.handleNew(tripUpdate);
       case CANCELED -> canceledTripHandler.cancel(tripUpdate, updateIncrementality);
       case DELETED -> canceledTripHandler.delete(tripUpdate, updateIncrementality);
+      case DUPLICATED -> addedTripHandler.handleDuplicated(tripUpdate, updateIncrementality);
       case REPLACEMENT -> addedTripHandler.handleReplacement(tripUpdate);
       case UNSCHEDULED -> throw UpdateException.of(
         tripUpdate.tripId(),
         NOT_IMPLEMENTED_UNSCHEDULED
       );
-      case DUPLICATED -> throw UpdateException.of(tripUpdate.tripId(), NOT_IMPLEMENTED_DUPLICATED);
     };
   }
 }

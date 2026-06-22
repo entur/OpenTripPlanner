@@ -135,6 +135,18 @@ public final class TripUpdate {
     }
   }
 
+   /// Validates the requirement for the schedule relationship DUPLICATED.
+  public void validateDuplicated() throws DataValidationException{
+    try {
+      if(tripDescriptor.startDate().isEmpty() || tripDescriptor.startTime().isEmpty()){
+        throw UpdateException.of(tripId(), INVALID_INPUT_STRUCTURE);
+      }
+
+    } catch (ParseException e) {
+      throw UpdateException.of(tripId(), INVALID_INPUT_STRUCTURE);
+    }
+  }
+
   public Optional<FeedScopedId> routeId() {
     return tripDescriptor.routeId().map(id -> new FeedScopedId(feedId, id));
   }
