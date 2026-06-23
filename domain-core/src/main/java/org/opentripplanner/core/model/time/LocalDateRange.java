@@ -28,10 +28,7 @@ public final class LocalDateRange {
   private final LocalDate inclusiveStart;
   private final LocalDate exclusiveEnd;
 
-  private LocalDateRange(
-    LocalDate inclusiveStart,
-    LocalDate exclusiveEnd
-  ) {
+  private LocalDateRange(LocalDate inclusiveStart, LocalDate exclusiveEnd) {
     this.inclusiveStart = inclusiveStart;
     this.exclusiveEnd = exclusiveEnd;
     if (exclusiveEnd.isBefore(inclusiveStart)) {
@@ -50,10 +47,7 @@ public final class LocalDateRange {
    * @param start inclusive start, or {@code null} for unbounded start
    * @param end   inclusive end, or {@code null} for unbounded end
    */
-  public static LocalDateRange ofInclusiveEnd(
-    @Nullable LocalDate start,
-    @Nullable LocalDate end
-  ) {
+  public static LocalDateRange ofInclusiveEnd(@Nullable LocalDate start, @Nullable LocalDate end) {
     var startInclusive = start == null ? MIN : start;
     var endInclusive = end == null ? MAX : end;
     if (endInclusive.isBefore(startInclusive)) {
@@ -72,10 +66,7 @@ public final class LocalDateRange {
    * @param end   exclusive end (first date outside the range), or {@code null} for unbounded
    *              end
    */
-  public static LocalDateRange ofExclusiveEnd(
-    @Nullable LocalDate start,
-    @Nullable LocalDate end
-  ) {
+  public static LocalDateRange ofExclusiveEnd(@Nullable LocalDate start, @Nullable LocalDate end) {
     var startInclusive = start == null ? MIN : start;
     var endExclusive = end == null ? MAX : end;
     return new LocalDateRange(startInclusive, endExclusive);
