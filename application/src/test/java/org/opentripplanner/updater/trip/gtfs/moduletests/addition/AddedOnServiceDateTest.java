@@ -62,6 +62,9 @@ class AddedOnServiceDateTest implements RealtimeTestConstants {
     var trip = tripFetcher.trip();
     var dates = env.transitService().getTripCalendars().listServiceDates(trip.getServiceId());
     assertThat(dates).containsExactly(date);
+
+    // this currently doesn't work because of a bug in RaptorTransitData
+    // assertThat(env.raptorData(date).summarizePatterns()).contains("F:AddedTrip::001:RT[A U]");
   }
 
   private static List<LocalDate> outsidePeriod() {
