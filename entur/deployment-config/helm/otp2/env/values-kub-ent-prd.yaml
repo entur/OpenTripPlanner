@@ -2,7 +2,7 @@ otpFeatures:
   costlyAssertions: false
   emission: true
   empiricalDelay: true
-  gbfsGeofencingBuildTime: false
+  gbfsGeofencingBuildTime: true
 journeyPlanner:
   enabled: false
 cronjobRedeployGraphBuilder:
@@ -10,3 +10,14 @@ cronjobRedeployGraphBuilder:
     mardukBucket: marduk-production
     mardukInternalBucket: ror-marduk-internal-production
     ignoreFareFrame: false
+gbfsGeofencing:
+  feeds:
+    - url: "https://api.entur.io/mobility/v2/gbfs/v3/voioslo/gbfs"
+      network: "voioslo"
+      applyBusinessArea: false
+    - url: "https://api.entur.io/mobility/v2/gbfs/v3/boltoslo/gbfs"
+      network: "boltoslo"
+      applyBusinessArea: true
+    - url: "https://api.entur.io/mobility/v2/gbfs/v3/rydeoslo/gbfs"
+      network: "rydeoslo"
+      applyBusinessArea: false
