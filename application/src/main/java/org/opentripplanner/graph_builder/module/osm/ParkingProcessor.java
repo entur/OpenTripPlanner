@@ -248,8 +248,12 @@ class ParkingProcessor {
       // This P+R is not connected to the street network
       // we create an artificial entrance to the centroid and add an issue
       // the solution would be to connect it to the street network in OSM
-      issueStore.add(new IsolatedParkAndRide(creativeName.toString(), entity));
       entrances = createArtificialEntrances(group, creativeName, entity, isCarParkAndRide);
+      // we only add the issue for car parking lots because the majority of bike facilities are not
+      // connected to the street network
+      if (isCarParkAndRide) {
+        issueStore.add(new IsolatedParkAndRide(creativeName.toString(), entity));
+      }
     }
 
     var vehicleParking = createVehicleParkingObjectFromOsmEntity(
