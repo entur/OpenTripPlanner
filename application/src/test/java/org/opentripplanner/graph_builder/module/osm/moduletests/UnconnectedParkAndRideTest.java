@@ -2,7 +2,6 @@ package org.opentripplanner.graph_builder.module.osm.moduletests;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -18,10 +17,8 @@ import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParking
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.graph.GraphDataFetcher;
 
-/// Tests that a P&R areas that are intersected by other ways, which share no nodes, should
-/// create synthetic nodes to connect the P&R area to the street network.
-///
-/// This is quite a dubious feature that I would like to revisit.
+/// Tests that an entrance vertex is created for parking lots that are not connected to the rest
+/// of the street network.
 class UnconnectedParkAndRideTest {
 
   @Test
@@ -74,16 +71,9 @@ class UnconnectedParkAndRideTest {
     assertWithMessage("Unexpected edges. Check graph at %s", fetcher.geoJsonUrl())
       .that(fetcher.summarizeEdges())
       .containsExactly(
-        "(0.000333,0) → (0,-0.001) ALL ♿✅",
-        "(0.000333,0) → (0.000667,0.001) ALL ♿✅",
-        "(0,-0.001) → (0.000333,0) ALL ♿✅",
-        "(0.000667,0.001) → (0.000333,0) ALL ♿✅",
-        "(0.001,0.002) → (0.000667,0.001) ALL ♿✅",
-        "(0.000667,0.001) → (0.001,0.002) ALL ♿✅",
-        "Parking (0.000667,0.001)[Vehicle parking OSM:OsmWay/1/osm:node:-100000] → (0.000667,0.001)[Vehicle parking OSM:OsmWay/1/osm:node:-100000]",
-        "Parking (0.000667,0.001)[Vehicle parking OSM:OsmWay/1/osm:node:-100000] → (0.000333,0)[Vehicle parking OSM:OsmWay/1/osm:node:-100001]",
-        "Parking (0.000333,0)[Vehicle parking OSM:OsmWay/1/osm:node:-100001] → (0.000667,0.001)[Vehicle parking OSM:OsmWay/1/osm:node:-100000]",
-        "Parking (0.000333,0)[Vehicle parking OSM:OsmWay/1/osm:node:-100001] → (0.000333,0)[Vehicle parking OSM:OsmWay/1/osm:node:-100001]"
+        "(0,-0.001) → (0.001,0.002) ALL ♿✅",
+        "(0.001,0.002) → (0,-0.001) ALL ♿✅",
+        "Parking (0.0005,0.0005)[Vehicle parking OSM:OsmWay/1/centroid] → (0.0005,0.0005)[Vehicle parking OSM:OsmWay/1/centroid]"
       );
 
     assertThat(issueStore.listIssues().stream().map(DataImportIssue::getType)).containsExactly(
