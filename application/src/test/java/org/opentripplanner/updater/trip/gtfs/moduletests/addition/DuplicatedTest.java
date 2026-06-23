@@ -58,11 +58,15 @@ class DuplicatedTest implements RealtimeTestConstants {
       env.tripData(DUPLICATED_ID, SERVICE_DATE).showTimetable()
     );
 
-    assertThat(env.raptorData(SERVICE_DATE).summarizePatterns()).containsExactly("F:Pattern1[S,A U]");
+    assertThat(env.raptorData(SERVICE_DATE).summarizePatterns()).containsExactly(
+      "F:Pattern1[S,A U]"
+    );
   }
 
   @Test
-  @Disabled("Adding a trip on a service date where the original pattern is not running is not supported by the RAPTOR transit data")
+  @Disabled(
+    "Adding a trip on a service date where the original pattern is not running is not supported by the RAPTOR transit data"
+  )
   void duplicatedOnDifferentServiceDate() {
     var date = SERVICE_DATE.plusDays(1);
     var tripUpdate = gtfsRt
