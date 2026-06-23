@@ -18,8 +18,6 @@ public class TimetableSnapshotLifecycle
 
   @Override
   public ReadOnlyTimetableSnapshot freeze(MutableTimetableSnapshot mutableSnapshot) {
-    var readOnlySnapshot = buffer.createReadOnlySnapshot();
-    buffer.clearForBuffer();
-    return readOnlySnapshot;
+    return buffer.createReadOnlySnapshot();
   }
 }

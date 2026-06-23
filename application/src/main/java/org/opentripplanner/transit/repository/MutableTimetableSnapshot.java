@@ -14,6 +14,4 @@ public interface MutableTimetableSnapshot extends ReadOnlyTimetableSnapshot {
   boolean revertTripToScheduledTripPattern(FeedScopedId tripId, LocalDate serviceDate);
 
   boolean purgeExpiredData(LocalDate serviceDate);
-
-  void clearForBuffer();
 }

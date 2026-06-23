@@ -419,14 +419,7 @@ public class TimetableSnapshot implements ReadOnlyTimetableSnapshot, MutableTime
       return null;
     }
 
-    TimetableSnapshot ret = createReadOnlySnapshot();
-    clearForBuffer();
-    return ret;
-  }
-
-  public void clearForBuffer() {
-    dirtyTimetables.clear();
-    dirty = false;
+    return createReadOnlySnapshot();
   }
 
   public @NonNull TimetableSnapshot createReadOnlySnapshot() {
@@ -437,7 +430,7 @@ public class TimetableSnapshot implements ReadOnlyTimetableSnapshot, MutableTime
       new TripPatternForDateMapper(tripCalendars.getServiceCodesRunningForDate())
     );
 
-    TimetableSnapshot ret = new TimetableSnapshot(
+    var timetableSnapshot = new TimetableSnapshot(
       Map.copyOf(timetables),
       Map.copyOf(realTimeNewTripPatternsForModifiedTrips),
       Map.copyOf(realtimeAddedRoutes),
@@ -459,7 +452,7 @@ public class TimetableSnapshot implements ReadOnlyTimetableSnapshot, MutableTime
     dirtyTimetables.clear();
     dirty = false;
 
-    return ret;
+    return timetableSnapshot;
   }
 
   /**
