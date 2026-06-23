@@ -40,7 +40,7 @@ public class LocalDateRangeUtil {
     }
     return ranges
       .stream()
-      .map(range -> new LocalDateRange(range.getGraphQLStart(), range.getGraphQLEnd()))
+      .map(range -> LocalDateRange.ofExclusiveEnd(range.getGraphQLStart(), range.getGraphQLEnd()))
       .toList();
   }
 }
