@@ -4,6 +4,8 @@ import static com.google.common.truth.Truth.assertThat;
 import static com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship.DUPLICATED;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED;
+import static org.opentripplanner.updater.spi.UpdateErrorType.OUTSIDE_SERVICE_PERIOD;
+import static org.opentripplanner.updater.spi.UpdateErrorType.TRIP_NOT_FOUND;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 import static org.opentripplanner.updater.trip.UpdateIncrementality.DIFFERENTIAL;
@@ -21,23 +23,23 @@ import org.opentripplanner.updater.trip.RealtimeTestConstants;
 
 class DuplicatedTest implements RealtimeTestConstants {
 
-  public static final LocalTime TIME = LocalTime.of(13, 30);
-  public static final String DUPLICATED_ID = TRIP_1_ID + ":duplicated:" + TIME;
-  private final TransitTestEnvironmentBuilder envBuilder = TransitTestEnvironment.of();
-  private final RegularStop STOP_A = envBuilder.stop(STOP_A_ID);
-  private final RegularStop STOP_B = envBuilder.stop(STOP_B_ID);
-  private final RegularStop STOP_C = envBuilder.stop(STOP_C_ID);
-
   private static final LocalDate SERVICE_DATE = LocalDate.of(2026, 6, 22);
+  private static final LocalTime TIME = LocalTime.of(13, 30);
+  private static final String DUPLICATED_ID =
+    TRIP_1_ID + ":duplicated:" + SERVICE_DATE + "T" + TIME;
+  private final TransitTestEnvironmentBuilder envBuilder = TransitTestEnvironment.of();
+  private final RegularStop stopA = envBuilder.stop(STOP_A_ID);
+  private final RegularStop stopB = envBuilder.stop(STOP_B_ID);
+  private final RegularStop stopC = envBuilder.stop(STOP_C_ID);
 
   private final TransitTestEnvironment env = envBuilder
     .addStops(STOP_A_ID, STOP_B_ID, STOP_C_ID)
     .addTrip(
       TripInput.of(TRIP_1_ID)
         .withServiceDates(SERVICE_DATE, SERVICE_DATE.plusDays(2))
-        .addStop(STOP_A, "12:00")
-        .addStop(STOP_B, "12:10")
-        .addStop(STOP_C, "12:20")
+        .addStop(stopA, "12:00")
+        .addStop(stopB, "12:10")
+        .addStop(stopC, "12:20")
     )
     .build();
   private final GtfsRtTestHelper gtfsRt = GtfsRtTestHelper.of(env);
@@ -89,7 +91,7 @@ class DuplicatedTest implements RealtimeTestConstants {
   @Test
   void invalidIncrementality() {
     var tripUpdate = gtfsRt
-      .tripUpdate(ADDED_TRIP_ID, DUPLICATED)
+      .tripUpdate(TRIP_1_ID, DUPLICATED)
       .withStartDate(SERVICE_DATE)
       .withStartTime(LocalTime.of(13, 0))
       .build();
@@ -98,5 +100,27 @@ class DuplicatedTest implements RealtimeTestConstants {
       NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED,
       gtfsRt.applyTripUpdate(tripUpdate, DIFFERENTIAL)
     );
+  }
+
+  @Test
+  void originalTripNotFound() {
+    var tripUpdate = gtfsRt
+      .tripUpdate("not-found", DUPLICATED)
+      .withStartDate(SERVICE_DATE)
+      .withStartTime(LocalTime.of(13, 0))
+      .build();
+
+    assertFailure(TRIP_NOT_FOUND, gtfsRt.applyTripUpdate(tripUpdate));
+  }
+
+  @Test
+  void outsideServicePeriod() {
+    var tripUpdate = gtfsRt
+      .tripUpdate(TRIP_1_ID, DUPLICATED)
+      .withStartDate(SERVICE_DATE.plusYears(1))
+      .withStartTime(LocalTime.of(13, 0))
+      .build();
+
+    assertFailure(OUTSIDE_SERVICE_PERIOD, gtfsRt.applyTripUpdate(tripUpdate));
   }
 }
