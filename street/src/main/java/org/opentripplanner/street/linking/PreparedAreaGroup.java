@@ -3,13 +3,9 @@ package org.opentripplanner.street.linking;
 import java.util.ArrayList;
 import java.util.List;
 import org.locationtech.jts.geom.Coordinate;
-import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
-import org.locationtech.jts.operation.relateng.RelateNG;
-import org.locationtech.jts.operation.relateng.RelatePredicate;
-import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.LineStringShrinker;
 import org.opentripplanner.street.model.edge.Area;
 import org.opentripplanner.street.model.edge.AreaGroup;
@@ -27,10 +23,8 @@ final class PreparedAreaGroup {
 
   private static final Logger LOG = LoggerFactory.getLogger(PreparedAreaGroup.class);
 
-  private static final GeometryFactory GEOMETRY_FACTORY = GeometryUtils.getGeometryFactory();
-
   private final AreaGroup areaGroup;
-  private RelateNG prepared;
+  private PreparedGeometry preparedGroup;
   private PreparedGeometry[] preparedAreas;
 
   PreparedAreaGroup(AreaGroup areaGroup) {
@@ -46,14 +40,14 @@ final class PreparedAreaGroup {
    * shrunk slightly at both ends first, so that a segment connecting two boundary points is not
    * rejected by floating point imprecision at the boundary. Reuses a cached prepared index across
    * calls. A plain {@code Polygon.contains(...)} would rebuild a sweep-line index over the polygon
-   * boundary on every call; {@link RelateNG} builds it once and is also tolerant of invalid /
-   * self-intersecting OSM polygons (it does not throw {@code TopologyException}).
+   * boundary on every call; a {@link PreparedGeometry} builds it once and reuses it, matching the
+   * indexed {@link #areasCrossedBy} crossing test on this same group.
    */
   boolean containsSegment(Coordinate from, Coordinate to) {
-    if (prepared == null) {
-      prepared = RelateNG.prepare(areaGroup.getGeometry());
+    if (preparedGroup == null) {
+      preparedGroup = PreparedGeometryFactory.prepare(areaGroup.getGeometry());
     }
-    return prepared.evaluate(LineStringShrinker.shrink(from, to), RelatePredicate.contains());
+    return preparedGroup.contains(LineStringShrinker.shrink(from, to));
   }
 
   /**
