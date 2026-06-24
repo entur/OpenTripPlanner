@@ -8,17 +8,19 @@ This package contains fast collections.
 
 The fast collections are used in the OTP Repositories. Then common senarie is this:
 
-1. The graph is built using scheduled data. This is the majority of the data. After the graph is build, 
-   we might want to add more data or modify the graph. But at some point we take a snapshot and call 
-   it the scheduled graph
-2. The when the server start up we will keep this scheduled graph and perform querries and routing requests on it.
-3. We will also start adding new data to the graph as real-time data. The real-time might modify as much as 10-20%
-   of the data, but never all of it and in very small increments. The data can be grouped in to 
-   feeds, and one updater will in 98% of the cases only modify data within a feed. After a updater
-   has added a small set of updates the graph is frozen,  a snapshot is taken.
-4. The snapshot is then used for routing and querries, while the updater continues to add more updates to the graph. 
-   The snapshot is immutable and can be used by multiple threads at the same time. The updater will continue to
-   add new data to the graph, and when it has added a new set of updates it will freeze the graph and take a new snapshot.
+1. The graph is built using scheduled data. This is the majority of the data. The graph is build 
+   in stages and frozen after the all build steps/modules are done. This is called the scheduled
+   graph.
+2. When the server starts up, we will keep this scheduled graph and perform queries and do routing 
+   on it.
+3. We will also start adding new data to the graph as real-time data. The real-time data usually 
+   modify < 10% of the data, but never all of it and allways in small increments. The data can be
+   grouped in to feeds, and one updater will in most cases only modify data within a feed. After an
+   updater has added a small set of updates, the graph is frozen, and a snapshot is taken.
+4. The snapshot is then used for routing and queries, while the updater continues to add more
+   updates to the graph. The snapshot is immutable and can be used by multiple threads at the same
+   time. The updater will continue to add new data to the graph, and when it has added a new set of
+   updates it will freeze the graph and take a new snapshot.
 
 
 ## Data scale reference (Norway dataset)
@@ -32,20 +34,20 @@ These are raw NeTEx source-element counts, obtained directly from the XML files 
 loading the built OTP graph), so they are pre-deduplication/pre-graph-build and should be read as upper
 bounds on the eventual `EntityMap`/`IndexMap` sizes:
 
-| NeTEx element           | OTP equivalent (roughly)                | Count       |
-|--------------------------|------------------------------------------|-------------|
-| `Quay`                   | `RegularStop`                            | 101 781     |
-| `StopPlace`              | `Station`                                | 57 977      |
-| `FlexibleStopPlace`      | flex `AreaStop`                          | 625         |
-| `ScheduledStopPoint`     | (intermediate; resolved to a stop)       | 116 433     |
-| `Line` / `FlexibleLine`  | `Route`                                  | 4 421 / 535 |
-| `Route` (NeTEx)          | (intermediate path within a `Line`)      | 26 821      |
-| `JourneyPattern`         | `TripPattern`                            | 32 850      |
-| `ServiceJourney`         | `Trip`                                   | 403 092     |
-| `DatedServiceJourney`    | `TripOnServiceDate`                      | 2 293 067   |
-| `TimetabledPassingTime`  | per-stop entry inside a `TripTimes`      | 9 941 600   |
-| `Operator` / `Authority` | `Operator` / `Agency`                    | 293 / 89    |
-| `DestinationDisplay`     | `DestinationDisplay`                     | 15 728      |
+| NeTEx element            | OTP equivalent (roughly)            | Count       |
+|--------------------------|-------------------------------------|-------------|
+| `Quay`                   | `RegularStop`                       | 101 781     |
+| `StopPlace`              | `Station`                           | 57 977      |
+| `FlexibleStopPlace`      | flex `AreaStop`                     | 625         |
+| `ScheduledStopPoint`     | (intermediate; resolved to a stop)  | 116 433     |
+| `Line` / `FlexibleLine`  | `Route`                             | 4 421 / 535 |
+| `Route` (NeTEx)          | (intermediate path within a `Line`) | 26 821      |
+| `JourneyPattern`         | `TripPattern`                       | 32 850      |
+| `ServiceJourney`         | `Trip`                              | 403 092     |
+| `DatedServiceJourney`    | `TripOnServiceDate`                 | 2 293 067   |
+| `TimetabledPassingTime`  | per-stop entry inside a `TripTimes` | 9 941 600   |
+| `Operator` / `Authority` | `Operator` / `Agency`               | 293 / 89    |
+| `DestinationDisplay`     | `DestinationDisplay`                | 15 728      |
 
 Takeaways:
 - Stops (`Quay`/`StopPlace`) and trips (`ServiceJourney`) land squarely inside the 10 000-500 000 range
@@ -74,40 +76,37 @@ data. As a proxy, each `EstimatedVehicleJourney` carries its own `RecordedAtTime
 operator last recorded/updated that journey - so grouping journeys by `RecordedAtTime` rounded to the
 minute approximates how many trips change together:
 
-| Metric | Value |
-|---|---|
-| `EstimatedVehicleJourney` elements | 15 053 |
-| ...of which distinct `DatedVehicleJourneyRef` | 13 665 (some trips carry more than one recorded version) |
-| `EstimatedCall` elements (stop-level updates) | 327 750 (avg 21.8 / trip, max 219) |
-| Distinct `LineRef` touched | 1 237 |
-| Distinct `StopPointRef` touched | 38 393 (~38% of the 101 781 `Quay`s in the static registry) |
-| Distinct `DataSource` (operator/feed) codes | 22 (out of ~89 `Authority` codes in the static registry) |
-| Whole-trip cancellations (`Cancellation=true` on the journey) | 102 (0.7%) |
-| Extra/unplanned trips (`ExtraJourney=true`) | 39 (0.26%) |
-| Individual stop-skips (`Cancellation=true` on a call) | 2 267 of 327 750 calls (0.7%) |
-| Non-monitored journeys (`Monitored=false`) | 53 (0.35%) |
+| Metric                                                        | Value                                                       |
+|---------------------------------------------------------------|-------------------------------------------------------------|
+| `EstimatedVehicleJourney` elements                            | 15 053                                                      |
+| ...of which distinct `DatedVehicleJourneyRef`                 | 13 665 (some trips carry more than one recorded version)    |
+| `EstimatedCall` elements (stop-level updates)                 | 327 750 (avg 21.8 / trip, max 219)                          |
+| Distinct `LineRef` touched                                    | 1 237                                                       |
+| Distinct `StopPointRef` touched                               | 38 393 (~38% of the 101 781 `Quay`s in the static registry) |
+| Distinct `DataSource` (operator/feed) codes                   | 22 (out of ~89 `Authority` codes in the static registry)    |
+| Whole-trip cancellations (`Cancellation=true` on the journey) | 102 (0.7%)                                                  |
+| Extra/unplanned trips (`ExtraJourney=true`)                   | 39 (0.26%)                                                  |
+| Individual stop-skips (`Cancellation=true` on a call)         | 2 267 of 327 750 calls (0.7%)                               |
+| Non-monitored journeys (`Monitored=false`)                    | 53 (0.35%)                                                  |
 
 Update cadence, from grouping journeys into 933 distinct `RecordedAtTime`-by-minute buckets (almost
 all within a single day):
 
-| Journeys recorded per minute, system-wide | |
-|---|---|
-| Median | 2 |
-| Mean | 16.1 (pulled up by bursts) |
-| 90th percentile | ~40 |
-| 99th percentile | ~117 |
-| Max (single busiest minute) | 1 332 (likely one operator's bulk push) |
+| Journeys recorded per minute, system-wide |                                         |
+|-------------------------------------------|-----------------------------------------|
+| Median                                    | 2                                       |
+| Mean                                      | 16.1 (pulled up by bursts)              |
+| 90th percentile                           | ~40                                     |
+| 99th percentile                           | ~117                                    |
+| Max (single busiest minute)               | 1 332 (likely one operator's bulk push) |
 
 Takeaways:
 - The update volume per minute is small relative to the dataset's total size - a median of 2 and a
   mean of ~16 trips/minute, against 403 092 `ServiceJourney`/`Trip` and 101 781 `Quay`/`RegularStop`
-  nationwide - which matches the README's "only a few entities are modified for each update" assumption
-  far better than a naive "10-20% of the data per update" reading would suggest. The 10-20% figure is
-  more about *cumulative* real-time coverage over time, not the size of any single update.
+  nationwide - which matches the README's "only a few entities are modified for each update" assumption.
 - Updates are concentrated in a handful of feeds rather than evenly spread: only 22 of ~89 operator
   codes (`DataSource`) appear at all, and the top 3 (`SKY`, `RUT`, `AKT`) account for ~58% of all
-  journeys in the snapshot. This supports the "one updater will in 98% of cases only modify data within
-  a feed" assumption, though concentration across feeds is uneven, not flat.
+  journeys in the snapshot.
 - The busiest single minute (1 332 journeys) is still tiny compared to the 2.29 million
   `TripOnServiceDate` / 403 092 `Trip` totals - even a large burst update is several orders of magnitude
   smaller than the full map, reinforcing that snapshot cost should be dominated by map size (favoring
@@ -224,6 +223,99 @@ We want to try out and compare several alternative implementations before settli
 We will implement a few of these as interchangeable strategies behind the same `EntityMap`/`IndexMap`
 API, and benchmark them against each other (read throughput, snapshot latency under realistic update
 sizes, and memory overhead) before picking a default.
+
+All five strategies above have been implemented (`fmap/hashmap`, `fmap/trie`, `fmap/overlay`,
+`fmap/densearray`, `fmap/mvcc`) and exercised with a hand-rolled benchmark (no JMH) plus a shared
+snapshot-isolation contract test suite. Results below. Reproduce with the (test-only, not part of
+the regular test suite) `EntityMapBenchmark` (timing) and `EntityMapMemoryBenchmark` (memory, run it
+directly with `java -Xms<N> -Xmx<N>`, not through Maven, to keep the heap size fixed) classes in
+`application/src/test/java/.../fmap/`.
+
+#### Benchmark results: snapshot cost and read throughput
+
+Methodology: build `N` entities, then run 20 update rounds that each touch ~0.1% of entries (mix of
+replacing an existing entity and adding a brand-new one) and take a snapshot, then do 500 000 random
+reads (~80% hits) against the final snapshot. At `N` = 2 000 000 - the scale that matters most, since
+it is in `TripOnServiceDate`'s range (see "Data scale reference" above):
+
+| Strategy                   | Build (ms) | Avg snapshot (ms) | Max snapshot (ms) | Read (ops/sec) |
+|----------------------------|------------|-------------------|-------------------|----------------|
+| HashMap (baseline)         | 94         | 432.2             | 925.2             | 4 441 413      |
+| Persistent trie            | 609        | 0.0003            | 0.0028            | 6 322 501      |
+| Overlay (threshold 10 000) | 71         | 101.6             | 879.8             | 3 881 956      |
+| Dense array                | 97         | 1.3               | 17.2              | 6 630 362      |
+| Versioned/MVCC             | 148        | 0.0003            | 0.0033            | 8 377 577      |
+
+(Full results at N = 10 000 / 100 000 / 500 000 follow the same pattern; snapshot cost for the
+baseline scales roughly linearly with N - 0.34 ms avg at 10k, 17.5 ms at 100k, 38.0 ms at 500k, 432 ms
+at 2M - while the trie and MVCC stay at microseconds regardless of N.)
+
+Takeaways:
+- The baseline's snapshot cost is exactly the liability the "Data scale reference" section predicted:
+  it scales linearly with map size, not update size, so at `TripOnServiceDate` scale a single snapshot
+  can cost the better part of a second (worse under GC pressure - the max here is 925 ms).
+- The persistent trie and MVCC strategies deliver the promised O(1) snapshot, independent of N - both
+  sit at fractions of a millisecond even at 2 million entries, because they never copy anything on
+  `snapshot()`.
+- Dense array is the best non-structural-sharing option: still O(n) per snapshot, but a flat
+  `Arrays.copyOf` is a far cheaper constant factor than rebuilding a hash table, landing ~2-3 orders of
+  magnitude below the baseline.
+- Overlay's *average* snapshot cost is much better than the baseline, but its *max* is just as bad
+  (879.8 ms) - that's the compaction spike. It trades "always a bit slow" for "usually fast,
+  occasionally as slow as the baseline," which only pays off if compactions are infrequent relative to
+  how often snapshots are read.
+- Read throughput differences across strategies are smaller (4.4M-8.4M ops/sec) than the snapshot-cost
+  differences (sub-millisecond vs sub-second) - for this workload, snapshot cost is the dominant
+  concern, not raw read speed.
+- Build cost is the trie's weak point (609 ms at 2M vs 94-148 ms for the others) - it pays at insert
+  time for the structural sharing it gives away for free at snapshot time.
+
+#### Memory consumption
+
+Rather than estimate this analytically, it was measured directly: each `(strategy, size)` combination
+was run in its own JVM process with a fixed `-Xms == -Xmx` (a single shared, long-running process with
+the default dynamically-sized heap - as the timing benchmark above uses - makes
+`Runtime.totalMemory() - Runtime.freeMemory()` far too noisy to trust for memory deltas; pinning the
+heap size removes that noise at the cost of one process launch per data point).
+
+**Per-entry overhead.** Building `N` entities and holding the live map plus one snapshot, the total
+bytes/entry breaks down into an *irreducible* part - the `FmapTestEntity` + `FeedScopedId` + its
+backing `String`/`byte[]` objects, which every strategy must pay regardless of map structure (measured
+at ~100 bytes/entry, by storing entities in a plain `ArrayList` with no map at all) - and the
+*structural* part each map strategy adds on top:
+
+| Strategy                   | Total bytes/entry | Structural-only bytes/entry |
+|----------------------------|-------------------|-----------------------------|
+| Overlay (threshold 10 000) | ~121-138          | ~19-38                      |
+| Persistent trie            | ~135-143          | ~35-43                      |
+| HashMap (baseline)         | ~152-170          | ~50-70                      |
+| Versioned/MVCC             | ~160-173          | ~59-73                      |
+| Dense array                | ~162-181          | ~61-81                      |
+
+(Ranges are across N = 10k/100k/500k/2M; the structural number is the total minus the ~100 bytes/entry
+irreducible cost above.) For a single retained snapshot, the strategies are within about 2x of each
+other - the irreducible entity cost dominates more than the map structure does.
+
+**The real differentiator: retaining multiple snapshots.** A single snapshot understates the practical
+difference, because OTP's actual usage pattern keeps a snapshot alive per in-flight request while the
+updater keeps moving forward. Simulating that - 500 000 entities, 20 update rounds (~0.1%
+touched/round), retaining *every* round's snapshot simultaneously, instead of just the last one -
+shows the structural-sharing strategies pulling far ahead:
+
+| Strategy                   | 1 snapshot retained | 20 snapshots retained | Cost per extra retained snapshot            |
+|----------------------------|---------------------|-----------------------|---------------------------------------------|
+| HashMap (baseline)         | 95.7 MB             | 234.5 MB              | ~7.3 MB                                     |
+| Dense array                | 101.1 MB            | 139.0 MB              | ~2.0 MB                                     |
+| Persistent trie            | 85.5 MB             | 89.4 MB               | ~0.2 MB                                     |
+| Versioned/MVCC             | 99.3 MB             | 100.7 MB              | ~0.07 MB                                    |
+| Overlay (threshold 10 000) | 79.5 MB             | ~77-80 MB (flat)      | ~0 MB, while under the compaction threshold |
+
+This is the strongest argument in the whole comparison: each additional snapshot the baseline keeps
+alive costs roughly another full copy's worth of memory (~7.3 MB per 500k-entry snapshot here), while
+the trie and MVCC strategies cost almost nothing per extra snapshot (~35-100x cheaper) because they
+share structure with every snapshot that came before. Dense array sits in between - cheaper per byte
+than the baseline's hash table, but still a full array copy every time. Overlay stays flat for as long
+as it avoids compaction, then would jump by a full copy's cost the moment it compacts.
 
 ### Automatic update of the index map (deferred)
 
