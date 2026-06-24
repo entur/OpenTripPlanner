@@ -1,0 +1,156 @@
+package org.opentripplanner.transit.model.framework.fmap;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Locale;
+import java.util.Random;
+import java.util.function.Supplier;
+import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
+import org.opentripplanner.transit.model.framework.fmap.densearray.DenseArrayEntityMap;
+import org.opentripplanner.transit.model.framework.fmap.hashmap.HashMapEntityMap;
+import org.opentripplanner.transit.model.framework.fmap.mvcc.VersionedEntityMap;
+import org.opentripplanner.transit.model.framework.fmap.overlay.OverlayEntityMap;
+import org.opentripplanner.transit.model.framework.fmap.trie.PersistentTrieEntityMap;
+
+/**
+ * A hand-rolled (no JMH) comparison of the {@code EntityMap} strategies in this package, along two
+ * of the three dimensions called out in {@code fmap/README.md}: read throughput, and snapshot cost
+ * under realistic small update batches.
+ * <p>
+ * Memory overhead is deliberately not measured here: {@code Runtime.totalMemory() -
+ * Runtime.freeMemory()} inside a single long-running process is too noisy relative to a shared,
+ * dynamically-sized JVM heap to give a meaningful per-strategy delta (it consistently rounded to
+ * ~0 even at 2,000,000 entries in practice). Comparing real memory overhead would need each
+ * strategy measured in its own process with a small, fixed {@code -Xmx} - not done here.
+ * <p>
+ * This is a manual developer tool, not part of the regular test suite (it has no {@code @Test}
+ * methods, so surefire never picks it up). Run it with:
+ * <pre>
+ * mvn --projects application test-compile exec:java \
+ *   -Dexec.mainClass="org.opentripplanner.transit.model.framework.fmap.EntityMapBenchmark" \
+ *   -Dexec.classpathScope=test
+ * </pre>
+ * Optionally pass a comma-separated list of sizes as the first program argument, e.g.
+ * {@code -Dexec.args="10000,100000"}.
+ */
+public final class EntityMapBenchmark {
+
+  private static final int[] DEFAULT_SIZES = { 10_000, 100_000, 500_000, 2_000_000 };
+  private static final int UPDATE_ROUNDS = 20;
+  private static final int READ_OPS = 500_000;
+  private static final long SEED = 42;
+
+  private record Strategy(String name, Supplier<MutableEntityMap<FmapTestEntity>> factory) {}
+
+  private static final List<Strategy> STRATEGIES = List.of(
+    new Strategy("HashMap (baseline)", HashMapEntityMap::new),
+    new Strategy("Persistent trie", PersistentTrieEntityMap::new),
+    new Strategy("Overlay (threshold=10000)", () -> new OverlayEntityMap<>(10_000)),
+    new Strategy("Dense array", DenseArrayEntityMap::new),
+    new Strategy("Versioned/MVCC", VersionedEntityMap::new)
+  );
+
+  public static void main(String[] args) {
+    int[] sizes = args.length > 0 ? parseSizes(args[0]) : DEFAULT_SIZES;
+
+    System.out.println("Warming up JIT...");
+    for (Strategy strategy : STRATEGIES) {
+      runOnce(strategy, 5_000);
+    }
+
+    System.out.printf(
+      Locale.ROOT,
+      "%-26s %10s %12s %16s %16s %18s%n",
+      "Strategy",
+      "Size",
+      "Build (ms)",
+      "Avg snap. (ms)",
+      "Max snap. (ms)",
+      "Read (ops/sec)"
+    );
+
+    for (int size : sizes) {
+      for (Strategy strategy : STRATEGIES) {
+        Result result = runOnce(strategy, size);
+        System.out.printf(
+          Locale.ROOT,
+          "%-26s %10d %12.1f %16.4f %16.4f %18.0f%n",
+          strategy.name(),
+          size,
+          result.buildMs,
+          result.avgSnapshotMs,
+          result.maxSnapshotMs,
+          result.readOpsPerSecond
+        );
+      }
+    }
+  }
+
+  private record Result(
+    double buildMs,
+    double avgSnapshotMs,
+    double maxSnapshotMs,
+    double readOpsPerSecond
+  ) {}
+
+  private static Result runOnce(Strategy strategy, int size) {
+    Random random = new Random(SEED);
+    MutableEntityMap<FmapTestEntity> map = strategy.factory().get();
+
+    long buildStart = System.nanoTime();
+    for (int i = 0; i < size; i++) {
+      map.add(new FmapTestEntity(FeedScopedIdForTestFactory.id(i), 0));
+    }
+    double buildMs = elapsedMs(buildStart);
+
+    int touchPerRound = Math.max(1, size / 1000);
+    double snapshotTotalMs = 0;
+    double snapshotMaxMs = 0;
+    EntityMap<FmapTestEntity> lastSnapshot = null;
+    int nextNewId = size;
+    for (int round = 0; round < UPDATE_ROUNDS; round++) {
+      for (int t = 0; t < touchPerRound; t++) {
+        if (t % 2 == 0) {
+          int existing = random.nextInt(size);
+          map.add(new FmapTestEntity(FeedScopedIdForTestFactory.id(existing), round + 1));
+        } else {
+          map.add(new FmapTestEntity(FeedScopedIdForTestFactory.id(nextNewId++), round + 1));
+        }
+      }
+      long snapshotStart = System.nanoTime();
+      lastSnapshot = map.snapshot();
+      double snapshotMs = elapsedMs(snapshotStart);
+      snapshotTotalMs += snapshotMs;
+      snapshotMaxMs = Math.max(snapshotMaxMs, snapshotMs);
+    }
+
+    int totalIds = nextNewId;
+    // Collect the garbage generated by 20 rounds of (potentially full-copy) snapshots before
+    // timing reads, so a GC pause doesn't leak into - and skew - the read-throughput measurement.
+    System.gc();
+    long readStart = System.nanoTime();
+    for (int i = 0; i < READ_OPS; i++) {
+      // ~80% hits on ids known to exist, ~20% misses on ids past the end of the range
+      int id = random.nextInt(10) < 8
+        ? random.nextInt(totalIds)
+        : totalIds + random.nextInt(totalIds);
+      lastSnapshot.get(FeedScopedIdForTestFactory.id(id));
+    }
+    double readSeconds = elapsedMs(readStart) / 1000.0;
+
+    return new Result(
+      buildMs,
+      snapshotTotalMs / UPDATE_ROUNDS,
+      snapshotMaxMs,
+      READ_OPS / readSeconds
+    );
+  }
+
+  private static double elapsedMs(long startNanos) {
+    return (System.nanoTime() - startNanos) / 1_000_000.0;
+  }
+
+  private static int[] parseSizes(String csv) {
+    return Arrays.stream(csv.split(",")).map(String::trim).mapToInt(Integer::parseInt).toArray();
+  }
+}
