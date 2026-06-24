@@ -10,6 +10,7 @@ import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
 import org.locationtech.jts.operation.relateng.RelateNG;
 import org.locationtech.jts.operation.relateng.RelatePredicate;
 import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.geometry.LineStringShrinker;
 import org.opentripplanner.street.model.edge.Area;
 import org.opentripplanner.street.model.edge.AreaGroup;
 import org.slf4j.Logger;
@@ -27,13 +28,6 @@ final class PreparedAreaGroup {
   private static final Logger LOG = LoggerFactory.getLogger(PreparedAreaGroup.class);
 
   private static final GeometryFactory GEOMETRY_FACTORY = GeometryUtils.getGeometryFactory();
-
-  /**
-   * Factor by which a candidate segment is shrunk at each end before the containment test. Floating
-   * point math cannot represent boundaries precisely, so the segment between two boundary points is
-   * pulled slightly inward to make the test robust.
-   */
-  private static final double AREA_INTERSECTION_SHRINKING = 0.0001;
 
   private final AreaGroup areaGroup;
   private RelateNG prepared;
@@ -59,7 +53,7 @@ final class PreparedAreaGroup {
     if (prepared == null) {
       prepared = RelateNG.prepare(areaGroup.getGeometry());
     }
-    return prepared.evaluate(createShrunkLine(from, to), RelatePredicate.contains());
+    return prepared.evaluate(LineStringShrinker.shrink(from, to), RelatePredicate.contains());
   }
 
   /**
@@ -89,7 +83,7 @@ final class PreparedAreaGroup {
         preparedAreas[i] = PreparedGeometryFactory.prepare(areas.get(i).getGeometry());
       }
     }
-    LineString probe = createShrunkLine(
+    LineString probe = LineStringShrinker.shrink(
       line.getCoordinateN(0),
       line.getCoordinateN(line.getNumPoints() - 1)
     );
@@ -104,13 +98,5 @@ final class PreparedAreaGroup {
       return List.of(areas.getFirst());
     }
     return crossed;
-  }
-
-  private static LineString createShrunkLine(Coordinate from, Coordinate to) {
-    var dx = AREA_INTERSECTION_SHRINKING * (to.x - from.x);
-    var dy = AREA_INTERSECTION_SHRINKING * (to.y - from.y);
-    var c1 = new Coordinate(from.x + dx, from.y + dy);
-    var c2 = new Coordinate(to.x - dx, to.y - dy);
-    return GEOMETRY_FACTORY.createLineString(new Coordinate[] { c1, c2 });
   }
 }

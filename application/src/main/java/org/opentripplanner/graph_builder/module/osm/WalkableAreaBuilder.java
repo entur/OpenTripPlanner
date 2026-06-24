@@ -35,6 +35,7 @@ import org.opentripplanner.osm.wayproperty.WayProperties;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.osminfo.model.Platform;
 import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.geometry.LineStringShrinker;
 import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.StreetMode;
@@ -626,10 +627,6 @@ class WalkableAreaBuilder {
     AreaGroup areaGroup,
     boolean testIntersection
   ) {
-    Coordinate[] coordinates = new Coordinate[] {
-      vertex1.getCoordinate(),
-      vertex2.getCoordinate(),
-    };
     double length = SphericalDistanceLibrary.distance(
       vertex1.getCoordinate(),
       vertex2.getCoordinate()
@@ -638,9 +635,7 @@ class WalkableAreaBuilder {
       // vertex1 and vertex2 are in the same position
       return Set.of();
     }
-
-    GeometryFactory geometryFactory = GeometryUtils.getGeometryFactory();
-    LineString line = geometryFactory.createLineString(coordinates);
+    var line = LineStringShrinker.shrink(vertex1.getCoordinate(), vertex2.getCoordinate());
 
     OsmEntity parent = null;
     WayProperties wayData = null;
