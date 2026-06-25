@@ -122,7 +122,7 @@ For trips that pass filtering, computes optimal pickup/dropoff positions using a
 
 #### Stage 1: Position Pre-screening (InsertionPositionFinder)
 
-Fast heuristic checks eliminate impossible positions **before any A* routing**:
+Fast heuristic checks eliminate impossible positions **before any per-position A\* routing**:
 
 ```
 For each remaining trip:
@@ -132,15 +132,17 @@ For each remaining trip:
 
   2. For each position pair, check:
      a. Capacity: Does insertion exceed vehicle capacity at any point?
-     b. Beeline delay: Do straight-line estimates exceed delay threshold?
+     b. Beeline delay: beeline only the new detour segments, reuse the trip's
+        routed baseline durations for every untouched leg, and reject if the
+        resulting delay exceeds a stop's budget.
 
   3. Return only "viable" positions that pass all checks
 ```
 
 **Key optimizations**:
 - **Capacity validation**: Uses `CarpoolTrip.hasCapacityForInsertion()` to check entire journey range
-- **Beeline heuristic**: Optimistic straight-line estimates eliminate positions early
-- **No routing yet**: All checks use geometric calculations only
+- **Guaranteed lower bound**: The detour is beelined (never longer than the real drive) while untouched legs and the replaced leg use OTP's routed baseline durations, so the estimated delay never exceeds the routed delay — a position rejected here would also be rejected after routing, so no feasible insertion is lost
+- **No per-position routing**: The trip's baseline legs are routed once and cached (request-independent); Stage 1 itself does no routing
 
 #### Stage 2: Routing and Selection (InsertionEvaluator)
 

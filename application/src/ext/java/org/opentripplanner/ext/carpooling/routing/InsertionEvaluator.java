@@ -326,7 +326,7 @@ public class InsertionEvaluator {
     for (int i = 0; i < modifiedPoints.size() - 1; i++) {
       GraphPath<State, Edge, Vertex> segment;
 
-      int baselineIndex = baselineSegmentIndex(i, pickupPos, dropoffPos);
+      int baselineIndex = InsertionPosition.baselineSegmentIndex(i, pickupPos, dropoffPos);
       if (baselineIndex >= 0 && baselineIndex < baselineSegments.length) {
         segment = baselineSegments[baselineIndex];
         LOG.trace("Reusing baseline segment {} for modified position {}", baselineIndex, i);
@@ -346,40 +346,5 @@ public class InsertionEvaluator {
     }
 
     return segments;
-  }
-
-  /**
-   * Maps a modified-route segment index to the corresponding baseline segment index, or
-   * {@code -1} if the modified segment touches the inserted pickup or dropoff and so cannot be
-   * reused.
-   * <p>
-   * The modified route is the original route with two insertions: pickup at {@code pickupPos}
-   * and dropoff at {@code dropoffPos} (List.add semantics, dropoffPos interpreted after the
-   * pickup insertion). A modified segment {@code [i, i+1)} either reuses an original segment
-   * (when both endpoints fall in original points) or is one of the four newly created segments
-   * around the inserted points.
-   * <p>
-   * Requires {@code pickupPos < dropoffPos} — the shift arithmetic depends on the pickup being
-   * strictly before the dropoff, otherwise the result would silently describe a route with the
-   * dropoff before the pickup. Throws {@link IllegalArgumentException} if the precondition is
-   * violated.
-   */
-  private static int baselineSegmentIndex(int modifiedIndex, int pickupPos, int dropoffPos) {
-    if (pickupPos >= dropoffPos) {
-      throw new IllegalArgumentException(
-        "pickupPos (" + pickupPos + ") must be < dropoffPos (" + dropoffPos + ")"
-      );
-    }
-    int i = modifiedIndex;
-    if (i == pickupPos - 1 || i == pickupPos || i == dropoffPos - 1 || i == dropoffPos) {
-      return -1;
-    }
-    if (i < pickupPos) {
-      return i;
-    }
-    if (i < dropoffPos) {
-      return i - 1;
-    }
-    return i - 2;
   }
 }

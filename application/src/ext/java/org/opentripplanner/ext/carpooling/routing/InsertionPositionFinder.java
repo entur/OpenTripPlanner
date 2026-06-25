@@ -6,6 +6,7 @@ import java.util.List;
 import org.opentripplanner.ext.carpooling.constraints.PassengerDelayConstraints;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.util.BeelineEstimator;
+import org.opentripplanner.ext.carpooling.util.GraphPathUtils;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,7 +48,12 @@ public class InsertionPositionFinder {
 
   /**
    * Finds insertion positions that pass validation and beeline checks.
-   * This is done BEFORE any expensive routing to eliminate positions early.
+   * This is done BEFORE any expensive per-position routing to eliminate positions early.
+   * <p>
+   * The delay heuristic is a guaranteed lower bound on the actual routed delay: the detour's new
+   * segments are estimated by straight-line beeline distance, while the untouched and replaced legs
+   * are taken from {@code baselineLegDurations}. A position it rejects would also be rejected after
+   * routing, so no feasible insertion is lost here.
    *
    * @param trip The carpool trip being evaluated
    * @param passengerPickup Passenger's pickup location
@@ -55,17 +61,31 @@ public class InsertionPositionFinder {
    * @param stopDuration Dwell time added at each intermediate stop; used by the beeline delay
    *                     heuristic so its cumulative-time estimates match the per-stop budget
    *                     check used downstream
+   * @param baselineLegDurations OTP's routed travel duration for each leg of the trip's baseline,
+   *                     one entry per leg ({@code stops().size() - 1}).
    * @return List of viable insertion positions (may be empty)
    */
   public List<InsertionPosition> findViablePositions(
     CarpoolTrip trip,
     WgsCoordinate passengerPickup,
     WgsCoordinate passengerDropoff,
-    Duration stopDuration
+    Duration stopDuration,
+    Duration[] baselineLegDurations
   ) {
     List<WgsCoordinate> routePoints = trip.routePoints();
+    if (baselineLegDurations.length != routePoints.size() - 1) {
+      throw new IllegalArgumentException(
+        "baselineLegDurations length (%d) must equal the number of legs (%d)".formatted(
+          baselineLegDurations.length,
+          routePoints.size() - 1
+        )
+      );
+    }
 
-    Duration[] beelineTimes = beelineEstimator.calculateCumulativeTimes(routePoints, stopDuration);
+    Duration[] baselineCumulative = GraphPathUtils.calculateCumulativeDurations(
+      baselineLegDurations,
+      stopDuration
+    );
 
     List<InsertionPosition> viable = new ArrayList<>();
 
@@ -86,7 +106,8 @@ public class InsertionPositionFinder {
         if (
           !passesBeelineDelayCheck(
             routePoints,
-            beelineTimes,
+            baselineLegDurations,
+            baselineCumulative,
             passengerPickup,
             passengerDropoff,
             pickupPos,
@@ -111,13 +132,18 @@ public class InsertionPositionFinder {
   }
 
   /**
-   * Checks if an insertion position passes the beeline delay heuristic.
-   * This is a fast, optimistic check using straight-line distance estimates.
-   * If this check fails, we know the actual A* routing will also fail, so we
-   * can skip the expensive routing calculation.
+   * Checks if an insertion position passes the beeline delay heuristic — a fast, optimistic check
+   * that, when it fails, guarantees the actual A* routing would fail too, so the expensive routing
+   * can be skipped.
+   * <p>
+   * The modified route is the baseline with the passenger's pickup and dropoff inserted. Each
+   * untouched leg keeps its baseline duration and only the (at most four) detour segments around
+   * the inserted points are estimated with beeline distance.
    *
    * @param originalCoords Original route coordinates
-   * @param originalBeelineTimes Beeline cumulative times for original route
+   * @param baselineLegDurations Actual routed duration of each baseline leg
+   * @param baselineCumulative Cumulative arrival times for the baseline route (from
+   *        {@code baselineLegDurations} and {@code stopDuration})
    * @param passengerPickup Passenger pickup location
    * @param passengerDropoff Passenger dropoff location
    * @param pickupPos 0-based index of the passenger's pickup in the modified route
@@ -127,7 +153,8 @@ public class InsertionPositionFinder {
    */
   private boolean passesBeelineDelayCheck(
     List<WgsCoordinate> originalCoords,
-    Duration[] originalBeelineTimes,
+    Duration[] baselineLegDurations,
+    Duration[] baselineCumulative,
     WgsCoordinate passengerPickup,
     WgsCoordinate passengerDropoff,
     int pickupPos,
@@ -140,16 +167,24 @@ public class InsertionPositionFinder {
     modifiedCoords.add(pickupPos, passengerPickup);
     modifiedCoords.add(dropoffPos, passengerDropoff);
 
-    // Calculate beeline times for modified route
-    Duration[] modifiedBeelineTimes = beelineEstimator.calculateCumulativeTimes(
-      modifiedCoords,
+    // Each modified segment is either an untouched baseline leg (use its actual routed duration)
+    // or one of the detour segments around the inserted points (lower-bound it with the beeline).
+    Duration[] modifiedSegmentDurations = new Duration[modifiedCoords.size() - 1];
+    for (int i = 0; i < modifiedSegmentDurations.length; i++) {
+      int baselineIndex = InsertionPosition.baselineSegmentIndex(i, pickupPos, dropoffPos);
+      modifiedSegmentDurations[i] = baselineIndex >= 0
+        ? baselineLegDurations[baselineIndex]
+        : beelineEstimator.estimateDuration(modifiedCoords.get(i), modifiedCoords.get(i + 1));
+    }
+
+    Duration[] modifiedCumulative = GraphPathUtils.calculateCumulativeDurations(
+      modifiedSegmentDurations,
       stopDuration
     );
 
-    // If even the optimistic beeline estimate exceeds a stop's budget, actual routing will too
     return PassengerDelayConstraints.satisfiesConstraints(
-      originalBeelineTimes,
-      modifiedBeelineTimes,
+      baselineCumulative,
+      modifiedCumulative,
       pickupPos,
       dropoffPos,
       trip.stops()
