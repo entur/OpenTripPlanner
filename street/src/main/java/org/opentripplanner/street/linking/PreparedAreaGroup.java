@@ -3,9 +3,11 @@ package org.opentripplanner.street.linking;
 import java.util.ArrayList;
 import java.util.List;
 import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.prep.PreparedGeometry;
 import org.locationtech.jts.geom.prep.PreparedGeometryFactory;
+import org.opentripplanner.street.geometry.GeometryUtils;
 import org.opentripplanner.street.geometry.LineStringShrinker;
 import org.opentripplanner.street.model.edge.Area;
 import org.opentripplanner.street.model.edge.AreaGroup;
@@ -22,6 +24,7 @@ import org.slf4j.LoggerFactory;
 final class PreparedAreaGroup {
 
   private static final Logger LOG = LoggerFactory.getLogger(PreparedAreaGroup.class);
+  private static final GeometryFactory GEOMETRY_FACTORY = GeometryUtils.getGeometryFactory();
 
   private final AreaGroup areaGroup;
   private PreparedGeometry preparedGroup;
@@ -44,10 +47,21 @@ final class PreparedAreaGroup {
    * indexed {@link #areasCrossedBy} crossing test on this same group.
    */
   boolean containsSegment(Coordinate from, Coordinate to) {
+    return preparedGroup().contains(LineStringShrinker.shrink(from, to));
+  }
+
+  /**
+   * Whether the area group polygon contains the given point.
+   */
+  boolean containsPoint(Coordinate point) {
+    return preparedGroup().contains(GEOMETRY_FACTORY.createPoint(point));
+  }
+
+  private PreparedGeometry preparedGroup() {
     if (preparedGroup == null) {
       preparedGroup = PreparedGeometryFactory.prepare(areaGroup.getGeometry());
     }
-    return preparedGroup.contains(LineStringShrinker.shrink(from, to));
+    return preparedGroup;
   }
 
   /**
