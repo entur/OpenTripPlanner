@@ -58,7 +58,7 @@
 
 
     <properties>
-        <otp.serialization.version.id>261</otp.serialization.version.id>
+        <otp.serialization.version.id>263</otp.serialization.version.id>
 
         <!-- Lib versions - keep list sorted on property name -->
         <geotools.version>34.4</geotools.version>
@@ -298,7 +298,7 @@
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
-                <version>0.8.14</version>
+                <version>0.8.15</version>
                 <configuration>
                     <excludes>
                         <exclude>org/opentripplanner/apis/gtfs/generated/**</exclude>
@@ -472,7 +472,7 @@
                 <!-- This makes sure all google libraries are using compatible versions. -->
                 <groupId>com.google.cloud</groupId>
                 <artifactId>libraries-bom</artifactId>
-                <version>26.81.0</version>
+                <version>26.84.0</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>

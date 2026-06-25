@@ -47,7 +47,6 @@ class GbfsVehicleTypeMapper {
       case CARGO_BICYCLE -> RentalFormFactor.CARGO_BICYCLE;
       case CAR -> RentalFormFactor.CAR;
       case MOPED -> RentalFormFactor.MOPED;
-      case SCOOTER -> RentalFormFactor.SCOOTER;
       case SCOOTER_STANDING -> RentalFormFactor.SCOOTER_STANDING;
       case SCOOTER_SEATED -> RentalFormFactor.SCOOTER_SEATED;
       case OTHER -> RentalFormFactor.OTHER;
