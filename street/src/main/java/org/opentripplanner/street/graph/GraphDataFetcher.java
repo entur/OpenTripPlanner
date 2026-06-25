@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import org.opentripplanner.street.GeoJsonIo;
 import org.opentripplanner.street.model.edge.AreaEdge;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.edge.StreetEdge;
@@ -34,7 +33,11 @@ public class GraphDataFetcher {
   }
 
   public List<StreetEdge> listStreetEdges() {
-    return graph.getEdgesOfType(StreetEdge.class);
+    return listEdges()
+      .stream()
+      .filter(StreetEdge.class::isInstance)
+      .map(StreetEdge.class::cast)
+      .toList();
   }
 
   public List<TransitStopVertex> listStopVertices() {
