@@ -50,15 +50,15 @@ class PortlandMapper extends OsmTagMapper {
       ofWalkSafety(1.2)
     );
 
-    props.setMixinProperties(oneOfHighway("trunk", "trunk_link"), ofWalkSafety(7.47 / 9.3));
-    props.setMixinProperties(oneOfHighway("primary", "primary_link"), ofWalkSafety(1.8 / 2.6));
-    props.setMixinProperties(oneOfHighway("secondary", "secondary_link"), ofWalkSafety(1.6 / 1.9));
+    props.setMixinProperties(oneOfHighway("trunk", "trunk_link"), ofWalkSafety(0.8032));
+    props.setMixinProperties(oneOfHighway("primary", "primary_link"), ofWalkSafety(0.6923));
+    props.setMixinProperties(oneOfHighway("secondary", "secondary_link"), ofWalkSafety(0.8421));
     props.setMixinProperties(
       oneOfHighway("tertiary", "tertiary_link", "unclassified"),
-      ofWalkSafety(1.5 / 1.25)
+      ofWalkSafety(1.2)
     );
-    props.setMixinProperties(oneOfHighway("service"), ofWalkSafety(1.5 / 1.3));
-    props.setMixinProperties(oneOfHighway("residential"), ofWalkSafety(1.3 / 1.2));
+    props.setMixinProperties(oneOfHighway("service"), ofWalkSafety(1.1538));
+    props.setMixinProperties(oneOfHighway("residential"), ofWalkSafety(1.0833));
 
     props.setMixinProperties(
       new ExactMatchSpecifier(new GreaterThan("lanes", 4)),
@@ -71,7 +71,7 @@ class PortlandMapper extends OsmTagMapper {
         new Condition.OneOf("sidewalk", "yes", "left", "right", "both"),
         new Condition.Not(new Condition.OneOf("highway", "footway", "pedestrian", "path", "trunk"))
       ),
-      ofWalkSafety(1 / 0.9)
+      ofWalkSafety(1.1111)
     );
     props.setMixinProperties(highwaySidewalk("both"), ofWalkSafety(0.8));
     props.setMixinProperties(highwaySidewalk("left"), ofWalkSafety(0.9));
