@@ -63,4 +63,39 @@ public class InsertionPosition {
 
     return modifiedIndex;
   }
+
+  /**
+   * Maps a modified-route segment index to the corresponding baseline (original) leg index, or
+   * {@code -1} if the modified segment touches the inserted pickup or dropoff and so has no
+   * baseline counterpart.
+   * <p>
+   * The modified route is the original route with two insertions: pickup at {@code pickupPos} and
+   * dropoff at {@code dropoffPos} (List.add semantics, dropoffPos interpreted after the pickup
+   * insertion). A modified segment {@code [i, i+1)} either corresponds to an original leg (when
+   * both endpoints fall on original route points) or is one of the four newly created segments
+   * around the inserted points.
+   * <p>
+   * Requires {@code pickupPos < dropoffPos} — the shift arithmetic depends on the pickup being
+   * strictly before the dropoff, otherwise the result would silently describe a route with the
+   * dropoff before the pickup. Throws {@link IllegalArgumentException} if the precondition is
+   * violated.
+   */
+  public static int baselineSegmentIndex(int modifiedIndex, int pickupPos, int dropoffPos) {
+    if (pickupPos >= dropoffPos) {
+      throw new IllegalArgumentException(
+        "pickupPos (" + pickupPos + ") must be < dropoffPos (" + dropoffPos + ")"
+      );
+    }
+    int i = modifiedIndex;
+    if (i == pickupPos - 1 || i == pickupPos || i == dropoffPos - 1 || i == dropoffPos) {
+      return -1;
+    }
+    if (i < pickupPos) {
+      return i;
+    }
+    if (i < dropoffPos) {
+      return i - 1;
+    }
+    return i - 2;
+  }
 }

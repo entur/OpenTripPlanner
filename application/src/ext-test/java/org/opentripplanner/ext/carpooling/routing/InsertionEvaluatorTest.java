@@ -14,6 +14,7 @@ import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_NOR
 import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_NORTHEAST;
 import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_SOUTH;
 import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_WEST;
+import static org.opentripplanner.ext.carpooling.CarpoolTripTestData.beelineLegDurations;
 import static org.opentripplanner.ext.carpooling.CarpoolTripTestData.createSimpleTrip;
 import static org.opentripplanner.ext.carpooling.CarpoolTripTestData.createStopAt;
 import static org.opentripplanner.ext.carpooling.CarpoolTripTestData.createTripWithDeviationBudget;
@@ -93,7 +94,8 @@ class InsertionEvaluatorTest {
       trip,
       passengerPickup,
       passengerDropoff,
-      Duration.ZERO
+      Duration.ZERO,
+      beelineLegDurations(trip)
     );
 
     if (viablePositions.isEmpty()) {
