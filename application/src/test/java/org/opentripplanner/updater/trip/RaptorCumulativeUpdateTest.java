@@ -6,10 +6,11 @@ import static org.opentripplanner.updater.trip.UpdateIncrementality.DIFFERENTIAL
 
 import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.transit.model._data.TransitTestEnvironment;
-import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
-import org.opentripplanner.transit.model._data.TripInput;
+import org.opentripplanner.transit.model.TransitTestEnvironment;
+import org.opentripplanner.transit.model.TransitTestEnvironmentBuilder;
+import org.opentripplanner.transit.model.TripInput;
 import org.opentripplanner.transit.model.site.RegularStop;
+import org.opentripplanner.updater.trip.gtfs.GtfsRtTestHelper;
 
 class RaptorCumulativeUpdateTest implements RealtimeTestConstants {
 
