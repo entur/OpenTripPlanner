@@ -12,13 +12,13 @@ import org.opentripplanner.updater.trip.RealtimeTestConstants;
 import org.opentripplanner.updater.trip.SiriTestHelper;
 
 /**
- * Tests for the handling of SIRI ET updates where realtime times are partially or fully absent
+ * Tests for the handling of SIRI ET updates where real-time times are partially or fully absent
  * for stops in a trip.
  *
  * <p>The key behaviours under test:
  * <ul>
  *   <li>A stop that receives only one of arrival/departure time must NOT be marked NO_DATA.</li>
- *   <li>A stop with no realtime times at all must be marked NO_DATA.</li>
+ *   <li>A stop with no real-time times at all must be marked NO_DATA.</li>
  *   <li>A trip where every stop is NO_DATA must have {@code timesModified = false}, so
  *       {@code hasAnyUpdates()} returns {@code false} and the trip prefix is "S" (scheduled).</li>
  * </ul>
@@ -69,7 +69,7 @@ class MissingRealtimeTest implements RealtimeTestConstants {
     var result = siri.applyEstimatedTimetable(updates);
     assertSuccess(result);
 
-    // Stop B: arrival = scheduled (0:00:20, delay 0), departure = realtime (0:00:26, +5s)
+    // Stop B: arrival = scheduled (0:00:20, delay 0), departure = real-time (0:00:26, +5s)
     assertEquals(
       "U | A 0:00:15 0:00:15 | B 0:00:20 0:00:26 | C 0:00:35 0:00:35",
       env.tripData(TRIP_1_ID).showTimetable()
@@ -79,7 +79,7 @@ class MissingRealtimeTest implements RealtimeTestConstants {
   /**
    * An intermediate stop that provides only an arrival time (no departure) must be treated as a
    * real-time update. The missing departure falls back to the scheduled departure (delay = 0).
-   * The realtime arrival must not exceed the scheduled departure to avoid a negative dwell time.
+   * The real-time arrival must not exceed the scheduled departure to avoid a negative dwell time.
    */
   @Test
   void intermediateStop_withOnlyArrivalTime_isNotNoData() {
@@ -104,7 +104,7 @@ class MissingRealtimeTest implements RealtimeTestConstants {
     var result = siri.applyEstimatedTimetable(updates);
     assertSuccess(result);
 
-    // Stop B: arrival = realtime (0:00:20, delay 0), departure = scheduled (0:00:21, delay 0)
+    // Stop B: arrival = real-time (0:00:20, delay 0), departure = scheduled (0:00:21, delay 0)
     assertEquals(
       "U | A 0:00:15 0:00:15 | B 0:00:20 0:00:21 | C 0:00:35 0:00:35",
       env.tripData(TRIP_1_ID).showTimetable()
@@ -112,7 +112,7 @@ class MissingRealtimeTest implements RealtimeTestConstants {
   }
 
   /**
-   * A stop with no realtime times at all must be marked NO_DATA and display the scheduled times.
+   * A stop with no real-time times at all must be marked NO_DATA and display the scheduled times.
    * The other stops in the same trip have valid updates, so the trip prefix is "U" (updated).
    */
   @Test
@@ -144,7 +144,7 @@ class MissingRealtimeTest implements RealtimeTestConstants {
   }
 
   /**
-   * When every stop in the update has no realtime times, all stops are marked NO_DATA and
+   * When every stop in the update has no real-time times, all stops are marked NO_DATA and
    * {@code timesModified} remains {@code false}. The trip prefix must be "S" (scheduled), not "U"
    * (updated), because no times were actually modified.
    */
@@ -171,8 +171,8 @@ class MissingRealtimeTest implements RealtimeTestConstants {
 
   /**
    * The first stop of a trip typically only provides a departure time (no arrival). This must be
-   * treated as a valid update. The missing arrival falls back to the realtime departure time
-   * (first-stop rule), so both arrival and departure show the same realtime value.
+   * treated as a valid update. The missing arrival falls back to the real-time departure time
+   * (first-stop rule), so both arrival and departure show the same real-time value.
    */
   @Test
   void firstStop_withOnlyDepartureTime_isNotNoData() {
@@ -195,7 +195,7 @@ class MissingRealtimeTest implements RealtimeTestConstants {
     var result = siri.applyEstimatedTimetable(updates);
     assertSuccess(result);
 
-    // Stop A: missing arrival falls back to realtime departure (0:00:15) → both show 0:00:15
+    // Stop A: missing arrival falls back to real-time departure (0:00:15) → both show 0:00:15
     assertEquals(
       "U | A 0:00:15 0:00:15 | B 0:00:25 0:00:26",
       env.tripData(TRIP_1_ID).showTimetable()
@@ -204,8 +204,8 @@ class MissingRealtimeTest implements RealtimeTestConstants {
 
   /**
    * The last stop of a trip typically only provides an arrival time (no departure). This must be
-   * treated as a valid update. The missing departure falls back to the realtime arrival time
-   * (last-stop rule), so both arrival and departure show the same realtime value.
+   * treated as a valid update. The missing departure falls back to the real-time arrival time
+   * (last-stop rule), so both arrival and departure show the same real-time value.
    */
   @Test
   void lastStop_withOnlyArrivalTime_isNotNoData() {
@@ -227,7 +227,7 @@ class MissingRealtimeTest implements RealtimeTestConstants {
     var result = siri.applyEstimatedTimetable(updates);
     assertSuccess(result);
 
-    // Stop B: missing departure falls back to realtime arrival (0:00:25) → both show 0:00:25
+    // Stop B: missing departure falls back to real-time arrival (0:00:25) → both show 0:00:25
     assertEquals(
       "U | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",
       env.tripData(TRIP_1_ID).showTimetable()

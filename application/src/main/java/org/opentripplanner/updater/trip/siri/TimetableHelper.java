@@ -3,6 +3,7 @@ package org.opentripplanner.updater.trip.siri;
 import static java.lang.Boolean.TRUE;
 
 import java.time.ZonedDateTime;
+import java.util.Optional;
 import java.util.function.Supplier;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
@@ -18,17 +19,17 @@ class TimetableHelper {
    * service time. If none of the suppliers provide a time, return null.
    */
   @SafeVarargs
-  private static int getAvailableTime(
+  private static Optional<Integer> getAvailableTime(
     ZonedDateTime startOfService,
     Supplier<ZonedDateTime>... timeSuppliers
   ) {
     for (var supplier : timeSuppliers) {
       final ZonedDateTime time = supplier.get();
       if (time != null) {
-        return ServiceDateUtils.secondsSinceStartOfService(startOfService, time);
+        return Optional.of(ServiceDateUtils.secondsSinceStartOfService(startOfService, time));
       }
     }
-    return -1;
+    return Optional.empty();
   }
 
   public static void applyUpdates(
@@ -44,14 +45,14 @@ class TimetableHelper {
     tripTimesBuilder.withHasDeparted(index, call.hasDeparted());
 
     int scheduledArrivalTime = tripTimesBuilder.getArrivalTime(index);
-    int realTimeArrivalTime = getAvailableTime(
+    Optional<Integer> realTimeArrivalTime = getAvailableTime(
       departureDate,
       call::getActualArrivalTime,
       call::getExpectedArrivalTime
     );
 
     int scheduledDepartureTime = tripTimesBuilder.getDepartureTime(index);
-    int realTimeDepartureTime = getAvailableTime(
+    Optional<Integer> realTimeDepartureTime = getAvailableTime(
       departureDate,
       call::getActualDepartureTime,
       call::getExpectedDepartureTime
@@ -59,9 +60,9 @@ class TimetableHelper {
 
     StopTimeUpdate stopTimeUpdate = new StopTimeUpdate(
       scheduledArrivalTime,
-      realTimeArrivalTime,
+      realTimeArrivalTime.orElse(null),
       scheduledDepartureTime,
-      realTimeDepartureTime,
+      realTimeDepartureTime.orElse(null),
       index == 0,
       isLastStop
     );

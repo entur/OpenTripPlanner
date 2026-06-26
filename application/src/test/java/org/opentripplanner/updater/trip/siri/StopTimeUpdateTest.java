@@ -13,7 +13,7 @@ class StopTimeUpdateTest {
   private static final int SCHED_DEPARTURE = 3660;
 
   // -1 signals "no realtime value available"
-  private static final int NO_RT = -1;
+  private static final Integer NO_RT = null;
 
   // -----------------------------------------------------------------------
   // hasRealTimeUpdate
@@ -223,15 +223,15 @@ class StopTimeUpdateTest {
   // Factories
   // -----------------------------------------------------------------------
 
-  private static StopTimeUpdate intermediate(int rtArrival, int rtDeparture) {
+  private static StopTimeUpdate intermediate(Integer rtArrival, Integer rtDeparture) {
     return new StopTimeUpdate(SCHED_ARRIVAL, rtArrival, SCHED_DEPARTURE, rtDeparture, false, false);
   }
 
-  private static StopTimeUpdate firstStop(int rtArrival, int rtDeparture) {
+  private static StopTimeUpdate firstStop(Integer rtArrival, Integer rtDeparture) {
     return new StopTimeUpdate(SCHED_ARRIVAL, rtArrival, SCHED_DEPARTURE, rtDeparture, true, false);
   }
 
-  private static StopTimeUpdate lastStop(int rtArrival, int rtDeparture) {
+  private static StopTimeUpdate lastStop(Integer rtArrival, Integer rtDeparture) {
     return new StopTimeUpdate(SCHED_ARRIVAL, rtArrival, SCHED_DEPARTURE, rtDeparture, false, true);
   }
 }

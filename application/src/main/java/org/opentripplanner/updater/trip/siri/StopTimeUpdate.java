@@ -1,5 +1,7 @@
 package org.opentripplanner.updater.trip.siri;
 
+import javax.annotation.Nullable;
+
 /**
  * Represents a real-time SIRI update for a single stop within a trip, encapsulating both scheduled
  * and real-time arrival and departure times. This class provides the means to calculate arrival
@@ -15,17 +17,23 @@ package org.opentripplanner.updater.trip.siri;
 class StopTimeUpdate {
 
   private final int scheduledArrivalTime;
-  private final int realTimeArrivalTime;
+
+  @Nullable
+  private final Integer realTimeArrivalTime;
+
   private final int scheduledDepartureTime;
-  private final int realTimeDepartureTime;
+
+  @Nullable
+  private final Integer realTimeDepartureTime;
+
   private final boolean firstStop;
   private final boolean lastStop;
 
   StopTimeUpdate(
     int scheduledArrivalTime,
-    int realTimeArrivalTime,
+    @Nullable Integer realTimeArrivalTime,
     int scheduledDepartureTime,
-    int realTimeDepartureTime,
+    @Nullable Integer realTimeDepartureTime,
     boolean firstStop,
     boolean lastStop
   ) {
@@ -38,7 +46,7 @@ class StopTimeUpdate {
   }
 
   public boolean hasRealTimeUpdate() {
-    return realTimeArrivalTime != -1 || realTimeDepartureTime != -1;
+    return realTimeArrivalTime != null || realTimeDepartureTime != null;
   }
 
   int getArrivalDelay() {
@@ -61,22 +69,17 @@ class StopTimeUpdate {
       : handleMissingRealtime(realTimeDepartureTime, scheduledDepartureTime);
   }
 
-  /**
-   * Loop through all passed times, return the first non-negative one or the last one
-   */
-  private static int handleMissingRealtime(int... times) {
-    if (times.length == 0) {
-      throw new IllegalArgumentException("Need at least one value");
-    }
+  private static int handleMissingRealtime(@Nullable Integer realtimeTime, int scheduledTime) {
+    return realtimeTime != null ? realtimeTime : scheduledTime;
+  }
 
-    int time = -1;
-    for (int t : times) {
-      time = t;
-      if (time >= 0) {
-        break;
-      }
-    }
-
-    return time;
+  private static int handleMissingRealtime(
+    @Nullable Integer firstRealtimeTime,
+    @Nullable Integer secondRealtimeTime,
+    int scheduledTime
+  ) {
+    return firstRealtimeTime != null
+      ? firstRealtimeTime
+      : handleMissingRealtime(secondRealtimeTime, scheduledTime);
   }
 }
