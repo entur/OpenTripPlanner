@@ -11,6 +11,7 @@ import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 class ParsedTripUpdateTest {
 
@@ -29,7 +30,7 @@ class ParsedTripUpdateTest {
     assertEquals(TRIP_REF, update.tripReference());
     assertEquals(SERVICE_DATE, update.serviceDate());
     assertTrue(update.stopTimeUpdates().isEmpty());
-    assertEquals(TripUpdateOptions.siriDefaults(), update.options());
+    assertEquals(FormatPolicy.siri(), update.formatPolicy());
     assertNull(update.dataSource());
   }
 
@@ -76,15 +77,17 @@ class ParsedTripUpdateTest {
   }
 
   @Test
-  void updateExistingWithOptions() {
-    var options = TripUpdateOptions.gtfsRtDefaults(
+  void updateExistingWithFormatPolicy() {
+    var policy = FormatPolicy.gtfsRt(
       org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType.DEFAULT,
       org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
 
-    var update = ParsedUpdateExisting.builder(TRIP_REF, SERVICE_DATE).withOptions(options).build();
+    var update = ParsedUpdateExisting.builder(TRIP_REF, SERVICE_DATE)
+      .withFormatPolicy(policy)
+      .build();
 
-    assertEquals(options, update.options());
+    assertEquals(policy, update.formatPolicy());
   }
 
   @Test

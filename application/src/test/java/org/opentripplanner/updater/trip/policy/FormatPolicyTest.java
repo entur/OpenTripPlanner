@@ -1,6 +1,6 @@
 package org.opentripplanner.updater.trip.policy;
 
-import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
@@ -8,60 +8,46 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
-import org.opentripplanner.updater.trip.model.TripUpdateOptions;
 
 /**
- * Proves that {@link FormatPolicy} composes the exact same choices as the {@link TripUpdateOptions}
- * {@code siriDefaults()}/{@code gtfsRtDefaults()} factories, and that each derived policy reproduces
- * the corresponding enum branch. This is the behaviour-identical gate for the incremental migration
- * (#7220): consumers may migrate to the policy without changing emitted output.
+ * Proves that the {@link FormatPolicy#siri()} / {@link FormatPolicy#gtfsRt} factories compose the
+ * exact per-axis policies the SIRI-ET / GTFS-RT formats used before the migration (#7220), and that
+ * the {@link PickDropPolicy} constants reproduce the legacy {@code resolveEffectivePickDrop} branch.
  */
 class FormatPolicyTest {
 
   @Test
-  void siriWrapsSiriDefaults() {
-    assertThat(FormatPolicy.siri().options()).isEqualTo(TripUpdateOptions.siriDefaults());
-  }
-
-  @Test
-  void gtfsRtWrapsGtfsRtDefaults() {
-    for (var f : ForwardsDelayPropagationType.values()) {
-      for (var b : BackwardsDelayPropagationType.values()) {
-        assertThat(FormatPolicy.gtfsRt(f, b).options()).isEqualTo(
-          TripUpdateOptions.gtfsRtDefaults(f, b)
-        );
-      }
-    }
-  }
-
-  @Test
-  void fromOptionsRoundTrips() {
-    var options = TripUpdateOptions.siriDefaults();
-    assertSame(options, FormatPolicy.fromOptions(options).options());
-  }
-
-  @Test
-  void pickDropMapsToTheEnumBranch() {
-    assertSame(PickDropPolicy.ROUTABILITY_CHANGE_ONLY, FormatPolicy.siri().pickDrop());
-    assertSame(
-      PickDropPolicy.EXACT_MATCH,
-      FormatPolicy.gtfsRt(
-        ForwardsDelayPropagationType.DEFAULT,
-        BackwardsDelayPropagationType.REQUIRED_NO_DATA
-      ).pickDrop()
+  void siriComposesTheSiriPolicies() {
+    var siri = FormatPolicy.siri();
+    assertSame(PickDropPolicy.ROUTABILITY_CHANGE_ONLY, siri.pickDrop());
+    assertSame(RealTimeStatePolicy.MODIFIED_ON_PATTERN_CHANGE, siri.realTimeState());
+    assertSame(StopMatchingPolicy.POSITIONAL, siri.stopMatching());
+    assertSame(StopReplacementPolicy.SAME_PARENT_STATION, siri.stopReplacement());
+    assertSame(FirstLastStopTimePolicy.ADJUST, siri.firstLastStopTime());
+    assertSame(ScheduledDataPolicy.INCLUDE, siri.scheduledData());
+    assertSame(UnknownStopPolicy.FAIL, siri.unknownStop());
+    assertEquals(
+      DelayPropagationPolicy.of(
+        ForwardsDelayPropagationType.NONE,
+        BackwardsDelayPropagationType.NONE
+      ),
+      siri.delayPropagation()
     );
   }
 
   @Test
-  void realTimeStateMapsToTheEnumBranch() {
-    assertSame(RealTimeStatePolicy.MODIFIED_ON_PATTERN_CHANGE, FormatPolicy.siri().realTimeState());
-    assertSame(
-      RealTimeStatePolicy.ALWAYS_UPDATED,
-      FormatPolicy.gtfsRt(
-        ForwardsDelayPropagationType.DEFAULT,
-        BackwardsDelayPropagationType.REQUIRED_NO_DATA
-      ).realTimeState()
-    );
+  void gtfsRtComposesTheGtfsPolicies() {
+    var f = ForwardsDelayPropagationType.DEFAULT;
+    var b = BackwardsDelayPropagationType.REQUIRED_NO_DATA;
+    var gtfs = FormatPolicy.gtfsRt(f, b);
+    assertSame(PickDropPolicy.EXACT_MATCH, gtfs.pickDrop());
+    assertSame(RealTimeStatePolicy.ALWAYS_UPDATED, gtfs.realTimeState());
+    assertSame(StopMatchingPolicy.BY_SEQUENCE_OR_ID, gtfs.stopMatching());
+    assertSame(StopReplacementPolicy.ANY_STOP, gtfs.stopReplacement());
+    assertSame(FirstLastStopTimePolicy.PRESERVE, gtfs.firstLastStopTime());
+    assertSame(ScheduledDataPolicy.EXCLUDE, gtfs.scheduledData());
+    assertSame(UnknownStopPolicy.IGNORE, gtfs.unknownStop());
+    assertEquals(DelayPropagationPolicy.of(f, b), gtfs.delayPropagation());
   }
 
   @Test

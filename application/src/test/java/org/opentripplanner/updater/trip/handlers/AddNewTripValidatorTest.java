@@ -24,8 +24,8 @@ import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripUpdateOptions;
-import org.opentripplanner.updater.trip.model.UnknownStopBehavior;
+import org.opentripplanner.updater.trip.policy.FormatPolicy;
+import org.opentripplanner.updater.trip.policy.UnknownStopPolicy;
 
 /**
  * Tests for {@link AddNewTripValidator}.
@@ -66,8 +66,8 @@ class AddNewTripValidatorTest {
       env.defaultServiceDate(),
       TripCreationInfo.builder(tripId).build()
     )
-      .withOptions(
-        TripUpdateOptions.builder().withUnknownStopBehavior(UnknownStopBehavior.FAIL).build()
+      .withFormatPolicy(
+        FormatPolicy.builder().withUnknownStop(UnknownStopPolicy.FAIL).build()
       )
       .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
       .addStopTimeUpdate(createStopUpdate("B", 1, 10 * 3600 + 30 * 60))
@@ -86,8 +86,8 @@ class AddNewTripValidatorTest {
       env.defaultServiceDate(),
       TripCreationInfo.builder(tripId).build()
     )
-      .withOptions(
-        TripUpdateOptions.builder().withUnknownStopBehavior(UnknownStopBehavior.FAIL).build()
+      .withFormatPolicy(
+        FormatPolicy.builder().withUnknownStop(UnknownStopPolicy.FAIL).build()
       )
       .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
       .addStopTimeUpdate(createStopUpdate("UNKNOWN", 1, 10 * 3600 + 30 * 60))
@@ -108,8 +108,8 @@ class AddNewTripValidatorTest {
       env.defaultServiceDate(),
       TripCreationInfo.builder(tripId).build()
     )
-      .withOptions(
-        TripUpdateOptions.builder().withUnknownStopBehavior(UnknownStopBehavior.IGNORE).build()
+      .withFormatPolicy(
+        FormatPolicy.builder().withUnknownStop(UnknownStopPolicy.IGNORE).build()
       )
       .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
       .addStopTimeUpdate(createStopUpdate("UNKNOWN", 1, 10 * 3600 + 30 * 60))
@@ -130,8 +130,8 @@ class AddNewTripValidatorTest {
       env.defaultServiceDate(),
       TripCreationInfo.builder(tripId).build()
     )
-      .withOptions(
-        TripUpdateOptions.builder().withUnknownStopBehavior(UnknownStopBehavior.FAIL).build()
+      .withFormatPolicy(
+        FormatPolicy.builder().withUnknownStop(UnknownStopPolicy.FAIL).build()
       )
       .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
       .build();

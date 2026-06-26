@@ -17,7 +17,7 @@ import org.opentripplanner.updater.trip.policy.FormatPolicy;
  */
 public final class ResolvedExistingTrip {
 
-  private final TripUpdateOptions options;
+  private final FormatPolicy formatPolicy;
 
   @Nullable
   private final TripCreationInfo tripCreationInfo;
@@ -45,7 +45,7 @@ public final class ResolvedExistingTrip {
     TripTimes scheduledTripTimes,
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates
   ) {
-    this.options = parsedUpdate.options();
+    this.formatPolicy = parsedUpdate.formatPolicy();
     this.tripCreationInfo = parsedUpdate.tripCreationInfo();
     this.dataSource = parsedUpdate.dataSource();
     this.hasStopSequences = parsedUpdate.hasStopSequences();
@@ -97,16 +97,9 @@ public final class ResolvedExistingTrip {
     return scheduledTripTimes;
   }
 
-  public TripUpdateOptions options() {
-    return options;
-  }
-
-  /**
-   * The behavioural {@link FormatPolicy} for this update, derived from {@link #options()} during
-   * the incremental migration to policy-based application (#7220).
-   */
+  /** The behavioural {@link FormatPolicy} for this update, chosen once at the parser boundary. */
   public FormatPolicy formatPolicy() {
-    return FormatPolicy.fromOptions(options);
+    return formatPolicy;
   }
 
   public List<ResolvedStopTimeUpdate> stopTimeUpdates() {
