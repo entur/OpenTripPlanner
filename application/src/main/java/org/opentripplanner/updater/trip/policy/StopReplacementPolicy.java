@@ -47,6 +47,7 @@ public sealed interface StopReplacementPolicy
   StopReplacementPolicy NOT_ALLOWED = new NotAllowed();
 
   final class AnyStop implements StopReplacementPolicy {
+
     @Override
     public Result checkReplacement(StopLocation scheduled, StopLocation actual) {
       return Result.VALID;
@@ -54,6 +55,7 @@ public sealed interface StopReplacementPolicy
   }
 
   final class NotAllowed implements StopReplacementPolicy {
+
     @Override
     public Result checkReplacement(StopLocation scheduled, StopLocation actual) {
       return Result.STOP_MISMATCH;
@@ -61,6 +63,7 @@ public sealed interface StopReplacementPolicy
   }
 
   final class SameParentStation implements StopReplacementPolicy {
+
     @Override
     public Result checkReplacement(StopLocation scheduled, StopLocation actual) {
       var scheduledParent = scheduled.getParentStation();

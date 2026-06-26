@@ -52,7 +52,10 @@ class FormatPolicyTest {
 
   @Test
   void exactMatchReturnsParsedVerbatim() {
-    assertSame(PickDrop.NONE, PickDropPolicy.EXACT_MATCH.effective(PickDrop.NONE, PickDrop.SCHEDULED));
+    assertSame(
+      PickDrop.NONE,
+      PickDropPolicy.EXACT_MATCH.effective(PickDrop.NONE, PickDrop.SCHEDULED)
+    );
     assertSame(
       PickDrop.SCHEDULED,
       PickDropPolicy.EXACT_MATCH.effective(PickDrop.SCHEDULED, PickDrop.NONE)
@@ -62,7 +65,9 @@ class FormatPolicyTest {
   @Test
   void routabilityChangeOnlyReproducesTheLegacyBranch() {
     // routable -> routable: no change
-    assertNull(PickDropPolicy.ROUTABILITY_CHANGE_ONLY.effective(PickDrop.SCHEDULED, PickDrop.SCHEDULED));
+    assertNull(
+      PickDropPolicy.ROUTABILITY_CHANGE_ONLY.effective(PickDrop.SCHEDULED, PickDrop.SCHEDULED)
+    );
     // non-routable -> routable: re-enable the stop
     assertSame(
       PickDrop.SCHEDULED,

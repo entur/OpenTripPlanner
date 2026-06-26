@@ -66,9 +66,7 @@ class AddNewTripValidatorTest {
       env.defaultServiceDate(),
       TripCreationInfo.builder(tripId).build()
     )
-      .withFormatPolicy(
-        FormatPolicy.builder().withUnknownStop(UnknownStopPolicy.FAIL).build()
-      )
+      .withFormatPolicy(FormatPolicy.builder().withUnknownStop(UnknownStopPolicy.FAIL).build())
       .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
       .addStopTimeUpdate(createStopUpdate("B", 1, 10 * 3600 + 30 * 60))
       .build();
@@ -86,9 +84,7 @@ class AddNewTripValidatorTest {
       env.defaultServiceDate(),
       TripCreationInfo.builder(tripId).build()
     )
-      .withFormatPolicy(
-        FormatPolicy.builder().withUnknownStop(UnknownStopPolicy.FAIL).build()
-      )
+      .withFormatPolicy(FormatPolicy.builder().withUnknownStop(UnknownStopPolicy.FAIL).build())
       .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
       .addStopTimeUpdate(createStopUpdate("UNKNOWN", 1, 10 * 3600 + 30 * 60))
       .build();
@@ -108,9 +104,7 @@ class AddNewTripValidatorTest {
       env.defaultServiceDate(),
       TripCreationInfo.builder(tripId).build()
     )
-      .withFormatPolicy(
-        FormatPolicy.builder().withUnknownStop(UnknownStopPolicy.IGNORE).build()
-      )
+      .withFormatPolicy(FormatPolicy.builder().withUnknownStop(UnknownStopPolicy.IGNORE).build())
       .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
       .addStopTimeUpdate(createStopUpdate("UNKNOWN", 1, 10 * 3600 + 30 * 60))
       .addStopTimeUpdate(createStopUpdate("B", 2, 11 * 3600))
@@ -130,9 +124,7 @@ class AddNewTripValidatorTest {
       env.defaultServiceDate(),
       TripCreationInfo.builder(tripId).build()
     )
-      .withFormatPolicy(
-        FormatPolicy.builder().withUnknownStop(UnknownStopPolicy.FAIL).build()
-      )
+      .withFormatPolicy(FormatPolicy.builder().withUnknownStop(UnknownStopPolicy.FAIL).build())
       .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
       .build();
 

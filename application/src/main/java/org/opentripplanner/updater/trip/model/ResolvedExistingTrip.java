@@ -49,10 +49,10 @@ public final class ResolvedExistingTrip {
     this.tripCreationInfo = parsedUpdate.tripCreationInfo();
     this.dataSource = parsedUpdate.dataSource();
     this.hasStopSequences = parsedUpdate.hasStopSequences();
-    this.cancellation =
-      parsedUpdate instanceof ParsedModifyTrip pmt ? pmt.isCancellation() : false;
-    this.extraJourney =
-      parsedUpdate instanceof ParsedModifyTrip pmt2 ? pmt2.isExtraJourney() : false;
+    this.cancellation = parsedUpdate instanceof ParsedModifyTrip pmt ? pmt.isCancellation() : false;
+    this.extraJourney = parsedUpdate instanceof ParsedModifyTrip pmt2
+      ? pmt2.isExtraJourney()
+      : false;
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
     this.trip = Objects.requireNonNull(trip, "trip must not be null");
     this.pattern = Objects.requireNonNull(pattern, "pattern must not be null");
