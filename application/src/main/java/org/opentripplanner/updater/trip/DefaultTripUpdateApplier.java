@@ -1,37 +1,22 @@
 package org.opentripplanner.updater.trip;
 
-import java.time.ZoneId;
 import java.util.Objects;
-import javax.annotation.Nullable;
-import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.transit.service.TransitEditorService;
-import org.opentripplanner.updater.trip.handlers.AddNewTripHandler;
-import org.opentripplanner.updater.trip.handlers.AddNewTripValidator;
-import org.opentripplanner.updater.trip.handlers.CancelTripHandler;
-import org.opentripplanner.updater.trip.handlers.DeleteTripHandler;
-import org.opentripplanner.updater.trip.handlers.ModifyTripHandler;
-import org.opentripplanner.updater.trip.handlers.ModifyTripValidator;
-import org.opentripplanner.updater.trip.handlers.RouteCreationStrategy;
 import org.opentripplanner.updater.trip.handlers.TripUpdateHandler;
 import org.opentripplanner.updater.trip.handlers.TripUpdateResult;
 import org.opentripplanner.updater.trip.handlers.TripUpdateValidator;
-import org.opentripplanner.updater.trip.handlers.UpdateExistingTripHandler;
-import org.opentripplanner.updater.trip.handlers.UpdateExistingTripValidator;
 import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
 import org.opentripplanner.updater.trip.model.ParsedCancelTrip;
 import org.opentripplanner.updater.trip.model.ParsedDeleteTrip;
 import org.opentripplanner.updater.trip.model.ParsedModifyTrip;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
-import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 
 /**
  * Default implementation of TripUpdateApplier that applies parsed trip updates to the transit
  * model. This is the unified component shared by both SIRI-ET and GTFS-RT updaters.
  * <p>
- * This class consolidates the logic previously duplicated between:
- * - SIRI: ModifiedTripBuilder, AddedTripBuilder, ExtraCallTripBuilder
- * - GTFS-RT: GtfsRealTimeTripUpdateAdapter, TripTimesUpdater
+ * Build a fully wired instance with {@link TripUpdateApplierFactory#create}.
  * <p>
  * The applier uses pattern matching on the sealed {@link ParsedTripUpdate} hierarchy
  * to dispatch to the correct resolver/validator/handler:
@@ -65,70 +50,10 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
   private final TripUpdateHandler.ForTripRemoval deleteTripHandler;
 
   /**
-   * Primary constructor that takes all dependencies needed to construct resolvers and handlers.
+   * Wires the pre-built resolvers, validators and handlers. Package-private; use
+   * {@link TripUpdateApplierFactory#create} to obtain a fully wired instance.
    */
-  public DefaultTripUpdateApplier(
-    String feedId,
-    ZoneId timeZone,
-    TransitEditorService transitService,
-    DeduplicatorService deduplicator,
-    @Nullable TimetableSnapshotManager snapshotManager,
-    TripPatternCache tripPatternCache,
-    FuzzyTripMatcher fuzzyTripMatcher,
-    RouteCreationStrategy routeCreationStrategy
-  ) {
-    this.transitService = Objects.requireNonNull(transitService);
-
-    // Create shared resolvers
-    var tripResolver = new TripResolver(transitService);
-    var serviceDateResolver = new ServiceDateResolver(tripResolver, transitService);
-    var stopResolver = new StopResolver(transitService);
-
-    // Create resolvers with injected deps
-    this.existingTripResolver = new ExistingTripResolver(
-      transitService,
-      tripResolver,
-      serviceDateResolver,
-      stopResolver,
-      fuzzyTripMatcher,
-      timeZone
-    );
-    this.newTripResolver = new NewTripResolver(
-      transitService,
-      serviceDateResolver,
-      stopResolver,
-      timeZone
-    );
-    this.tripRemovalResolver = new TripRemovalResolver(
-      transitService,
-      tripResolver,
-      serviceDateResolver,
-      snapshotManager
-    );
-
-    // Create validators
-    this.updateExistingValidator = new UpdateExistingTripValidator();
-    this.modifyTripValidator = new ModifyTripValidator();
-    this.addNewTripValidator = new AddNewTripValidator();
-
-    // Create handlers - handlers are pure transformers, no snapshot manager dependency
-    this.updateExistingHandler = new UpdateExistingTripHandler(tripPatternCache);
-    this.modifyTripHandler = new ModifyTripHandler(transitService, deduplicator, tripPatternCache);
-    this.addNewTripHandler = new AddNewTripHandler(
-      feedId,
-      transitService,
-      deduplicator,
-      tripPatternCache,
-      routeCreationStrategy
-    );
-    this.cancelTripHandler = new CancelTripHandler();
-    this.deleteTripHandler = new DeleteTripHandler();
-  }
-
-  /**
-   * Constructor for dependency injection and testing.
-   */
-  public DefaultTripUpdateApplier(
+  DefaultTripUpdateApplier(
     TransitEditorService transitService,
     ExistingTripResolver existingTripResolver,
     NewTripResolver newTripResolver,
