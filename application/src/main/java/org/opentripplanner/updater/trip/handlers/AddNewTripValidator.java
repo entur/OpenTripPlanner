@@ -3,7 +3,6 @@ package org.opentripplanner.updater.trip.handlers;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
-import org.opentripplanner.updater.trip.model.UnknownStopBehavior;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,10 +30,9 @@ public class AddNewTripValidator implements TripUpdateValidator.ForNewTrip {
 
     var tripId = resolvedUpdate.tripCreationInfo().tripId();
     var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
-    var unknownStopBehavior = resolvedUpdate.options().unknownStopBehavior();
 
     // FAIL mode: strict validation - fail on unknown stops
-    if (unknownStopBehavior == UnknownStopBehavior.FAIL) {
+    if (resolvedUpdate.formatPolicy().unknownStop().failOnUnknownStop()) {
       for (int i = 0; i < stopTimeUpdates.size(); i++) {
         var stopUpdate = stopTimeUpdates.get(i);
         if (stopUpdate.stop() == null) {

@@ -14,13 +14,13 @@ import org.opentripplanner.transit.model._data.TripInput;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.updater.trip.StopResolver;
-import org.opentripplanner.updater.trip.model.FirstLastStopTimeAdjustment;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
+import org.opentripplanner.updater.trip.policy.FirstLastStopTimePolicy;
 
-class HandlerUtilsTest {
+class NewStopPatternFactoryTest {
 
   private static final ZoneId ZONE_ID = ZoneId.of("Europe/Oslo");
   private static final LocalDate SERVICE_DATE = LocalDate.of(2024, 5, 7);
@@ -71,10 +71,10 @@ class HandlerUtilsTest {
       stopResolver
     );
 
-    var stopTimesAndPattern = HandlerUtils.buildNewStopPattern(
+    var stopTimesAndPattern = NewStopPatternFactory.buildNewStopPattern(
       trip,
       stopUpdates,
-      FirstLastStopTimeAdjustment.ADJUST
+      FirstLastStopTimePolicy.ADJUST
     );
 
     var stopTimes = stopTimesAndPattern.stopTimes();
@@ -127,10 +127,10 @@ class HandlerUtilsTest {
       stopResolver
     );
 
-    var stopTimesAndPattern = HandlerUtils.buildNewStopPattern(
+    var stopTimesAndPattern = NewStopPatternFactory.buildNewStopPattern(
       trip,
       stopUpdates,
-      FirstLastStopTimeAdjustment.ADJUST
+      FirstLastStopTimePolicy.ADJUST
     );
 
     var stopTimes = stopTimesAndPattern.stopTimes();
