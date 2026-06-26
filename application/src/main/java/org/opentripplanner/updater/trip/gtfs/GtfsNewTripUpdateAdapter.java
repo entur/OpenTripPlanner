@@ -21,6 +21,7 @@ import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
 import org.opentripplanner.updater.trip.FuzzyTripMatcher;
+import org.opentripplanner.updater.trip.NoOpFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.GtfsTripMatcher;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
@@ -130,7 +131,7 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
     }
 
     // Create fuzzy matcher if fuzzy matching is enabled
-    FuzzyTripMatcher fuzzyMatcher = null;
+    FuzzyTripMatcher fuzzyMatcher = NoOpFuzzyTripMatcher.INSTANCE;
     if (fuzzyMatchingEnabled) {
       fuzzyMatcher = new GtfsTripMatcher(transitEditorService);
     }
