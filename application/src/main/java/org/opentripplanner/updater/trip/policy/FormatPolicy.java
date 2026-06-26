@@ -49,6 +49,21 @@ public record FormatPolicy(TripUpdateOptions options) {
     };
   }
 
+  public StopMatchingPolicy stopMatching() {
+    return switch (options.stopUpdateStrategy()) {
+      case FULL_UPDATE -> StopMatchingPolicy.POSITIONAL;
+      case PARTIAL_UPDATE -> StopMatchingPolicy.BY_SEQUENCE_OR_ID;
+    };
+  }
+
+  public StopReplacementPolicy stopReplacement() {
+    return switch (options.stopReplacementConstraint()) {
+      case ANY_STOP -> StopReplacementPolicy.ANY_STOP;
+      case SAME_PARENT_STATION -> StopReplacementPolicy.SAME_PARENT_STATION;
+      case NOT_ALLOWED -> StopReplacementPolicy.NOT_ALLOWED;
+    };
+  }
+
   /** Whether this format propagates delays (forward or backward). */
   public boolean propagatesDelays() {
     return options.propagatesDelays();

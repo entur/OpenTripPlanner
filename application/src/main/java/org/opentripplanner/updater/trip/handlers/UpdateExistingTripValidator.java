@@ -3,7 +3,6 @@ package org.opentripplanner.updater.trip.handlers;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
-import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
 
 /**
  * Validates preconditions for {@link UpdateExistingTripHandler}.
@@ -19,9 +18,8 @@ public class UpdateExistingTripValidator implements TripUpdateValidator.ForExist
 
   @Override
   public void validate(ResolvedExistingTrip resolvedUpdate) {
-    var stopUpdateStrategy = resolvedUpdate.options().stopUpdateStrategy();
-
-    if (stopUpdateStrategy != StopUpdateStrategy.FULL_UPDATE) {
+    // The exact-stop-count precondition only applies to position-based (FULL_UPDATE) matching.
+    if (!resolvedUpdate.formatPolicy().stopMatching().requiresExactStopCount()) {
       return;
     }
 

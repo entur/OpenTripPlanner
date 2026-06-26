@@ -8,7 +8,7 @@ import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.StopReplacementConstraint;
+import org.opentripplanner.updater.trip.policy.StopReplacementPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
  * <ul>
  *   <li>Minimum stops (>= 2)</li>
  *   <li>SIRI extra call constraints: non-extra stop count must match original pattern,
- *       and each non-extra stop must match the original via {@link StopReplacementValidator}</li>
+ *       and each non-extra stop must match the original via {@link StopReplacementPolicy}</li>
  * </ul>
  */
 public class ModifyTripValidator implements TripUpdateValidator.ForExistingTrip {
@@ -46,7 +46,7 @@ public class ModifyTripValidator implements TripUpdateValidator.ForExistingTrip 
         stopTimeUpdates,
         resolvedUpdate.scheduledPattern(),
         trip,
-        resolvedUpdate.options().stopReplacementConstraint()
+        resolvedUpdate.formatPolicy().stopReplacement()
       );
     }
   }
@@ -59,7 +59,7 @@ public class ModifyTripValidator implements TripUpdateValidator.ForExistingTrip 
     List<ResolvedStopTimeUpdate> stopTimeUpdates,
     TripPattern originalPattern,
     Trip trip,
-    StopReplacementConstraint constraint
+    StopReplacementPolicy stopReplacement
   ) {
     // Count non-extra stops
     long nonExtraCount = stopTimeUpdates
@@ -74,8 +74,6 @@ public class ModifyTripValidator implements TripUpdateValidator.ForExistingTrip 
       );
       throw UpdateException.of(trip.getId(), UpdateErrorType.INVALID_STOP_SEQUENCE);
     }
-
-    var validator = new StopReplacementValidator();
 
     // Validate each non-extra stop matches the original pattern
     int originalIndex = 0;
@@ -92,9 +90,9 @@ public class ModifyTripValidator implements TripUpdateValidator.ForExistingTrip 
 
       StopLocation originalStop = originalPattern.getStop(originalIndex);
 
-      // Use the configured stop replacement constraint for validation
-      var validationResult = validator.validate(originalStop, updateStop, constraint);
-      if (validationResult != StopReplacementValidator.Result.VALID) {
+      // Use the format's stop replacement policy for validation
+      var validationResult = stopReplacement.check(originalStop, updateStop);
+      if (validationResult != StopReplacementPolicy.Result.VALID) {
         LOG.debug(
           "SIRI extra call validation failed: stop {} at index {} doesn't match original stop {} ({})",
           updateStop.getId(),
