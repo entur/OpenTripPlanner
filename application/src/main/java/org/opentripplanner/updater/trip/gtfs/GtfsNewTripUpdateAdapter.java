@@ -21,9 +21,10 @@ import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
 import org.opentripplanner.updater.trip.FuzzyTripMatcher;
-import org.opentripplanner.updater.trip.NoOpFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.GtfsTripMatcher;
+import org.opentripplanner.updater.trip.NoOpFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
+import org.opentripplanner.updater.trip.TripUpdateApplierFactory;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.handlers.GtfsRtRouteCreationStrategy;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
@@ -136,7 +137,7 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
       fuzzyMatcher = new GtfsTripMatcher(transitEditorService);
     }
 
-    var applier = new DefaultTripUpdateApplier(
+    var applier = TripUpdateApplierFactory.create(
       feedId,
       transitEditorService.getTimeZone(),
       transitEditorService,
