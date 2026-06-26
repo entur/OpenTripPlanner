@@ -12,9 +12,9 @@ import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSucce
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.PickDrop;
-import org.opentripplanner.transit.model._data.TransitTestEnvironment;
-import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
-import org.opentripplanner.transit.model._data.TripInput;
+import org.opentripplanner.transit.model.TransitTestEnvironment;
+import org.opentripplanner.transit.model.TransitTestEnvironmentBuilder;
+import org.opentripplanner.transit.model.TripInput;
 import org.opentripplanner.transit.model.basic.SubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.Route;
@@ -26,8 +26,8 @@ import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
-import org.opentripplanner.updater.trip.SiriTestHelper;
 import org.opentripplanner.updater.trip.siri.SiriEtBuilder;
+import org.opentripplanner.updater.trip.siri.SiriTestHelper;
 import uk.org.siri.siri21.OccupancyEnumeration;
 import uk.org.siri.siri21.VehicleModesEnumeration;
 
