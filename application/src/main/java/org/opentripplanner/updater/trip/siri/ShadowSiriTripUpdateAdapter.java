@@ -22,6 +22,7 @@ import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
 import org.opentripplanner.updater.trip.FuzzyTripMatcher;
+import org.opentripplanner.updater.trip.NoOpFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.SiriTripMatcher;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
@@ -114,7 +115,7 @@ public class ShadowSiriTripUpdateAdapter implements SiriTripUpdateAdapter {
           new StopResolver(transitEditorService),
           transitEditorService.getTimeZone()
         )
-      : null;
+      : NoOpFuzzyTripMatcher.INSTANCE;
 
     this.applier = new DefaultTripUpdateApplier(
       feedId,
