@@ -18,8 +18,6 @@ import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.PickDropChangeStrategy;
-import org.opentripplanner.updater.trip.model.RealTimeStateUpdateStrategy;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
@@ -95,7 +93,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
     // After reverting, start with the scheduled pattern unless new modifications are needed
     TripPattern finalPattern = scheduledPattern;
     TripPattern patternToDeleteFrom = null;
-    boolean patternModified = false;
+    boolean patternChanged = false;
 
     // If stop pattern was modified, create or get cached modified pattern
     if (modResult.hasPatternChanges()) {
@@ -110,24 +108,15 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       // Compare against the scheduled pattern to determine if we need a modified pattern
       if (!scheduledPattern.getStopPattern().equals(newStopPattern)) {
         finalPattern = tripPatternCache.getOrCreateTripPattern(newStopPattern, trip);
-        var stateStrategy = resolvedUpdate.options().realTimeStateStrategy();
-        if (stateStrategy == RealTimeStateUpdateStrategy.MODIFIED_ON_PATTERN_CHANGE) {
-          patternModified = true;
-        }
+        patternChanged = true;
         patternToDeleteFrom = scheduledPattern;
       }
     }
 
-    // Set real-time state if any updates were applied
+    // Set real-time state if any updates were applied. The format's RealTimeStatePolicy decides
+    // whether a pattern change is exposed as MODIFIED (SIRI-ET) or UPDATED (GTFS-RT).
     if (modResult.hasAnyUpdates()) {
-      if (patternModified) {
-        // MODIFIED_ON_PATTERN_CHANGE strategy: mark trip pattern as modified
-        builder.withModifiedTripPattern();
-      } else {
-        // ALWAYS_UPDATED strategy or no pattern change: mark times as modified to ensure
-        // the trip is exposed as UPDATED (not SCHEDULED) even if only stop-level flags were set
-        builder.withRealTimeUpdated();
-      }
+      resolvedUpdate.formatPolicy().realTimeState().mark(builder, patternChanged);
     }
 
     // Create the RealTimeTripUpdate with revert and deletion signals
@@ -138,10 +127,10 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
         .withHideTripInScheduledPattern(patternToDeleteFrom)
         .build();
       LOG.debug(
-        "Updated trip {} on {} (patternModified: {})",
+        "Updated trip {} on {} (patternChanged: {})",
         trip.getId(),
         serviceDate,
-        patternModified
+        patternChanged
       );
       return new TripUpdateResult(realTimeTripUpdate);
     } catch (DataValidationException e) {
@@ -361,14 +350,10 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       }
 
       // Track pickup/dropoff changes
-      var pickDropStrategy = resolvedUpdate.options().pickDropChangeStrategy();
+      var pickDrop = resolvedUpdate.formatPolicy().pickDrop();
       if (stopUpdate.pickup() != null) {
         PickDrop scheduledPickup = scheduledPattern.getBoardType(stopIndex);
-        var effectivePickup = resolveEffectivePickDrop(
-          stopUpdate.pickup(),
-          scheduledPickup,
-          pickDropStrategy
-        );
+        var effectivePickup = pickDrop.effective(stopUpdate.pickup(), scheduledPickup);
         if (effectivePickup != null && !effectivePickup.equals(scheduledPickup)) {
           result.pickupChanges.put(stopIndex, effectivePickup);
         }
@@ -376,11 +361,7 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
 
       if (stopUpdate.dropoff() != null) {
         PickDrop scheduledDropoff = scheduledPattern.getAlightType(stopIndex);
-        var effectiveDropoff = resolveEffectivePickDrop(
-          stopUpdate.dropoff(),
-          scheduledDropoff,
-          pickDropStrategy
-        );
+        var effectiveDropoff = pickDrop.effective(stopUpdate.dropoff(), scheduledDropoff);
         if (effectiveDropoff != null && !effectiveDropoff.equals(scheduledDropoff)) {
           result.dropoffChanges.put(stopIndex, effectiveDropoff);
         }
@@ -495,34 +476,5 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
     }
 
     return builder.build();
-  }
-
-  /**
-   * Resolve the effective PickDrop value based on the change strategy.
-   * <p>
-   * For EXACT_MATCH, the parsed value is always used.
-   * For ROUTABILITY_CHANGE_ONLY, only routability changes matter:
-   * - routable → routable: no change (returns null)
-   * - non-routable → routable: returns SCHEDULED
-   * - routable/non-routable → non-routable: returns the parsed value
-   *
-   * @return the effective PickDrop value to apply, or null if no change is needed
-   */
-  private static PickDrop resolveEffectivePickDrop(
-    PickDrop parsedValue,
-    PickDrop scheduledValue,
-    PickDropChangeStrategy strategy
-  ) {
-    if (strategy == PickDropChangeStrategy.EXACT_MATCH) {
-      return parsedValue;
-    }
-    // ROUTABILITY_CHANGE_ONLY: only routability transitions matter
-    if (parsedValue.isRoutable()) {
-      // Routable → routable: preserve scheduled value, no pattern change
-      // Non-routable → routable: re-enable the stop
-      return scheduledValue.isNotRoutable() ? PickDrop.SCHEDULED : null;
-    }
-    // Parsed is non-routable (e.g. CANCELLED, NONE): always apply
-    return parsedValue;
   }
 }
