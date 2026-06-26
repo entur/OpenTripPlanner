@@ -399,6 +399,9 @@ public class TimetableSnapshot {
    * re-indexing when receiving multiple updates for the same timetable in rapid succession. This
    * compromise is expressed by the maxSnapshotFrequency property of StoptimeUpdater. The indexing
    * could be made much more efficient as well.
+   * <p>
+   * Updating the raptor data is now also part of the commit. Previously this was done after the
+   * commit. The amount of work triggered by each commit stayed the same.
    *
    * @return an immutable copy of this TimetableSnapshot with all updates applied
    */
