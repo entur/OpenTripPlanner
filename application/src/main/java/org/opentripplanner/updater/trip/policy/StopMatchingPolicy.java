@@ -40,6 +40,7 @@ public sealed interface StopMatchingPolicy
   StopMatchingPolicy BY_SEQUENCE_OR_ID = new BySequenceOrId();
 
   final class Positional implements StopMatchingPolicy {
+
     @Override
     public boolean requiresExactStopCount() {
       return true;
@@ -65,6 +66,7 @@ public sealed interface StopMatchingPolicy
   }
 
   final class BySequenceOrId implements StopMatchingPolicy {
+
     @Override
     public boolean requiresExactStopCount() {
       return false;

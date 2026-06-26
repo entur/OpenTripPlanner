@@ -89,10 +89,7 @@ class ModifyTripValidatorTest {
       // Only 1 stop — need at least 2
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withFormatPolicy(
-          FormatPolicy.gtfsRt(
-            ForwardsDelayPropagationType.NONE,
-            BackwardsDelayPropagationType.NONE
-          )
+          FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
         )
         .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
         .build();
@@ -107,10 +104,7 @@ class ModifyTripValidatorTest {
 
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
         .withFormatPolicy(
-          FormatPolicy.gtfsRt(
-            ForwardsDelayPropagationType.NONE,
-            BackwardsDelayPropagationType.NONE
-          )
+          FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
         )
         .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
         .addStopTimeUpdate(createStopUpdate("C", 1, 11 * 3600))

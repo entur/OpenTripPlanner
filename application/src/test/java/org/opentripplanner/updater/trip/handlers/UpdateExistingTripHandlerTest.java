@@ -15,7 +15,6 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model._data.TransitTestEnvironment;
 import org.opentripplanner.transit.model._data.TripInput;
-
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
@@ -117,10 +116,7 @@ class UpdateExistingTripHandlerTest {
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(
-        FormatPolicy.gtfsRt(
-          ForwardsDelayPropagationType.NONE,
-          BackwardsDelayPropagationType.NONE
-        )
+        FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
       )
       .addStopTimeUpdate(stopUpdate)
       .build();
@@ -170,10 +166,7 @@ class UpdateExistingTripHandlerTest {
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(
-        FormatPolicy.gtfsRt(
-          ForwardsDelayPropagationType.NONE,
-          BackwardsDelayPropagationType.NONE
-        )
+        FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
       )
       .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate))
       .build();
@@ -207,10 +200,7 @@ class UpdateExistingTripHandlerTest {
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(
-        FormatPolicy.gtfsRt(
-          ForwardsDelayPropagationType.NONE,
-          BackwardsDelayPropagationType.NONE
-        )
+        FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
       )
       .addStopTimeUpdate(stopUpdate)
       .build();
@@ -267,10 +257,7 @@ class UpdateExistingTripHandlerTest {
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(
-        FormatPolicy.gtfsRt(
-          ForwardsDelayPropagationType.NONE,
-          BackwardsDelayPropagationType.NONE
-        )
+        FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
       )
       .addStopTimeUpdate(stopUpdate)
       .build();
@@ -305,10 +292,7 @@ class UpdateExistingTripHandlerTest {
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(
-        FormatPolicy.gtfsRt(
-          ForwardsDelayPropagationType.NONE,
-          BackwardsDelayPropagationType.NONE
-        )
+        FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
       )
       .addStopTimeUpdate(stopUpdate)
       .build();
@@ -344,10 +328,7 @@ class UpdateExistingTripHandlerTest {
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(
-        FormatPolicy.gtfsRt(
-          ForwardsDelayPropagationType.NONE,
-          BackwardsDelayPropagationType.NONE
-        )
+        FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
       )
       .addStopTimeUpdate(stopUpdate)
       .build();
