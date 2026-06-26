@@ -64,6 +64,10 @@ public record FormatPolicy(TripUpdateOptions options) {
     };
   }
 
+  public DelayPropagationPolicy delayPropagation() {
+    return DelayPropagationPolicy.of(options.forwardsPropagation(), options.backwardsPropagation());
+  }
+
   /** Whether this format propagates delays (forward or backward). */
   public boolean propagatesDelays() {
     return options.propagatesDelays();
