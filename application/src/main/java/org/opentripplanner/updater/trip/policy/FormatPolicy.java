@@ -68,6 +68,27 @@ public record FormatPolicy(TripUpdateOptions options) {
     return DelayPropagationPolicy.of(options.forwardsPropagation(), options.backwardsPropagation());
   }
 
+  public FirstLastStopTimePolicy firstLastStopTime() {
+    return switch (options.firstLastStopTimeAdjustment()) {
+      case ADJUST -> FirstLastStopTimePolicy.ADJUST;
+      case PRESERVE -> FirstLastStopTimePolicy.PRESERVE;
+    };
+  }
+
+  public ScheduledDataPolicy scheduledData() {
+    return switch (options.scheduledDataInclusion()) {
+      case INCLUDE -> ScheduledDataPolicy.INCLUDE;
+      case EXCLUDE -> ScheduledDataPolicy.EXCLUDE;
+    };
+  }
+
+  public UnknownStopPolicy unknownStop() {
+    return switch (options.unknownStopBehavior()) {
+      case FAIL -> UnknownStopPolicy.FAIL;
+      case IGNORE -> UnknownStopPolicy.IGNORE;
+    };
+  }
+
   /** Whether this format propagates delays (forward or backward). */
   public boolean propagatesDelays() {
     return options.propagatesDelays();

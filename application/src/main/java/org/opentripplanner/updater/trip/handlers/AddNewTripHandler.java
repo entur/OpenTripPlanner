@@ -20,7 +20,6 @@ import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.ScheduledDataInclusion;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.slf4j.Logger;
@@ -102,10 +101,10 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     Trip trip = createTrip(tripId, tripCreationInfo, route, serviceId);
 
     // Build stop pattern from stop time updates
-    var stopTimesAndPattern = HandlerUtils.buildNewStopPattern(
+    var stopTimesAndPattern = NewStopPatternFactory.buildNewStopPattern(
       trip,
       filteredUpdates.updates(),
-      resolvedUpdate.options().firstLastStopTimeAdjustment()
+      resolvedUpdate.formatPolicy().firstLastStopTime()
     );
 
     // Create scheduled trip times
@@ -126,9 +125,10 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     // Create the new pattern
     // For SIRI (INCLUDE), we add scheduled trip times so queries for aimed times work
     // For GTFS-RT (EXCLUDE), we don't add to scheduled timetable
-    var options = resolvedUpdate.options();
-    boolean includeScheduledData =
-      options.scheduledDataInclusion() == ScheduledDataInclusion.INCLUDE;
+    boolean includeScheduledData = resolvedUpdate
+      .formatPolicy()
+      .scheduledData()
+      .includesScheduledData();
 
     TripPattern pattern;
     if (includeScheduledData) {

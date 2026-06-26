@@ -62,10 +62,10 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
     var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
 
     // Build the new stop pattern from stop time updates
-    var stopTimesAndPattern = HandlerUtils.buildNewStopPattern(
+    var stopTimesAndPattern = NewStopPatternFactory.buildNewStopPattern(
       trip,
       stopTimeUpdates,
-      resolvedUpdate.options().firstLastStopTimeAdjustment()
+      resolvedUpdate.formatPolicy().firstLastStopTime()
     );
 
     // Create scheduled trip times for the new pattern (used as baseline for real-time)
