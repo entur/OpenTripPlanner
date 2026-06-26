@@ -5,9 +5,9 @@ import dagger.Module;
 import dagger.Provides;
 import jakarta.inject.Singleton;
 import org.opentripplanner.framework.transaction.RepositoryRegistry;
+import org.opentripplanner.framework.transaction.TimetableSnapshotParameters;
 import org.opentripplanner.framework.transaction.UpdateManager;
 import org.opentripplanner.framework.transaction.internal.TransactionFactory;
-import org.opentripplanner.updater.TimetableSnapshotParameters;
 
 @Module
 public abstract class TransactionModule {
