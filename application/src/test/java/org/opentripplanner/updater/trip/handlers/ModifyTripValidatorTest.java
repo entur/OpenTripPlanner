@@ -28,7 +28,7 @@ import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripUpdateOptions;
+import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
  * Tests for {@link ModifyTripValidator}.
@@ -88,8 +88,8 @@ class ModifyTripValidatorTest {
 
       // Only 1 stop — need at least 2
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
-        .withOptions(
-          TripUpdateOptions.gtfsRtDefaults(
+        .withFormatPolicy(
+          FormatPolicy.gtfsRt(
             ForwardsDelayPropagationType.NONE,
             BackwardsDelayPropagationType.NONE
           )
@@ -106,8 +106,8 @@ class ModifyTripValidatorTest {
       var tripRef = TripReference.ofTripId(new FeedScopedId(FEED_ID, TRIP_ID));
 
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
-        .withOptions(
-          TripUpdateOptions.gtfsRtDefaults(
+        .withFormatPolicy(
+          FormatPolicy.gtfsRt(
             ForwardsDelayPropagationType.NONE,
             BackwardsDelayPropagationType.NONE
           )
@@ -175,7 +175,7 @@ class ModifyTripValidatorTest {
 
       // Original: A -> B; update: A -> D(extra) -> B
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
-        .withOptions(TripUpdateOptions.siriDefaults())
+        .withFormatPolicy(FormatPolicy.siri())
         .addStopTimeUpdate(createSiriStopUpdate("A", 10 * 3600, false))
         .addStopTimeUpdate(createSiriStopUpdate("D", 10 * 3600 + 15 * 60, true))
         .addStopTimeUpdate(createSiriStopUpdate("B", 10 * 3600 + 30 * 60, false))
@@ -190,7 +190,7 @@ class ModifyTripValidatorTest {
 
       // Original: A -> B (2 stops); update: A (non-extra) + D (extra) = 1 non-extra
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
-        .withOptions(TripUpdateOptions.siriDefaults())
+        .withFormatPolicy(FormatPolicy.siri())
         .addStopTimeUpdate(createSiriStopUpdate("A", 10 * 3600, false))
         .addStopTimeUpdate(createSiriStopUpdate("D", 10 * 3600 + 15 * 60, true))
         .build();
@@ -205,7 +205,7 @@ class ModifyTripValidatorTest {
 
       // Original: A -> B; update: A -> D(extra) -> D(non-extra, should be B)
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
-        .withOptions(TripUpdateOptions.siriDefaults())
+        .withFormatPolicy(FormatPolicy.siri())
         .addStopTimeUpdate(createSiriStopUpdate("A", 10 * 3600, false))
         .addStopTimeUpdate(createSiriStopUpdate("D", 10 * 3600 + 15 * 60, true))
         .addStopTimeUpdate(createSiriStopUpdate("D", 10 * 3600 + 30 * 60, false))
@@ -221,7 +221,7 @@ class ModifyTripValidatorTest {
 
       // Original: A -> B; update: A2(same station as A, non-extra) -> D(extra) -> B
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
-        .withOptions(TripUpdateOptions.siriDefaults())
+        .withFormatPolicy(FormatPolicy.siri())
         .addStopTimeUpdate(createSiriStopUpdate("A2", 10 * 3600, false))
         .addStopTimeUpdate(createSiriStopUpdate("D", 10 * 3600 + 15 * 60, true))
         .addStopTimeUpdate(createSiriStopUpdate("B", 10 * 3600 + 30 * 60, false))
@@ -236,7 +236,7 @@ class ModifyTripValidatorTest {
 
       // No extra calls — SIRI extra call validation is skipped
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
-        .withOptions(TripUpdateOptions.siriDefaults())
+        .withFormatPolicy(FormatPolicy.siri())
         .addStopTimeUpdate(createSiriStopUpdate("A", 10 * 3600, false))
         .addStopTimeUpdate(createSiriStopUpdate("B", 10 * 3600 + 30 * 60, false))
         .build();

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
  * Parsed update that modifies the stop pattern of an existing trip.
@@ -27,7 +28,7 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
   @Nullable
   private final TripCreationInfo tripCreationInfo;
 
-  private final TripUpdateOptions options;
+  private final FormatPolicy formatPolicy;
 
   @Nullable
   private final String dataSource;
@@ -42,7 +43,7 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
     @Nullable ZonedDateTime aimedDepartureTime,
     List<ParsedStopTimeUpdate> stopTimeUpdates,
     @Nullable TripCreationInfo tripCreationInfo,
-    TripUpdateOptions options,
+    FormatPolicy formatPolicy,
     @Nullable String dataSource,
     boolean cancellation,
     boolean extraJourney
@@ -53,7 +54,7 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
     this.aimedDepartureTime = aimedDepartureTime;
     this.stopTimeUpdates = stopTimeUpdates != null ? List.copyOf(stopTimeUpdates) : List.of();
     this.tripCreationInfo = tripCreationInfo;
-    this.options = Objects.requireNonNull(options);
+    this.formatPolicy = Objects.requireNonNull(formatPolicy);
     this.dataSource = dataSource;
     this.cancellation = cancellation;
     this.extraJourney = extraJourney;
@@ -105,8 +106,8 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
   }
 
   @Override
-  public TripUpdateOptions options() {
-    return options;
+  public FormatPolicy formatPolicy() {
+    return formatPolicy;
   }
 
   @Override
@@ -146,7 +147,7 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
     @Nullable
     private TripCreationInfo tripCreationInfo;
 
-    private TripUpdateOptions options = TripUpdateOptions.siriDefaults();
+    private FormatPolicy formatPolicy = FormatPolicy.siri();
 
     @Nullable
     private String dataSource;
@@ -180,8 +181,8 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
       return this;
     }
 
-    public Builder withOptions(TripUpdateOptions options) {
-      this.options = options;
+    public Builder withFormatPolicy(FormatPolicy formatPolicy) {
+      this.formatPolicy = formatPolicy;
       return this;
     }
 
@@ -207,7 +208,7 @@ public final class ParsedModifyTrip implements ParsedExistingTripUpdate {
         aimedDepartureTime,
         stopTimeUpdates,
         tripCreationInfo,
-        options,
+        formatPolicy,
         dataSource,
         cancellation,
         extraJourney

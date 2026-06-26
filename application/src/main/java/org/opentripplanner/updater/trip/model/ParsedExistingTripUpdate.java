@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip.model;
 
 import java.util.List;
 import javax.annotation.Nullable;
+import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
  * Common interface for updates to existing scheduled trips.
@@ -14,7 +15,7 @@ public sealed interface ParsedExistingTripUpdate
   permits ParsedUpdateExisting, ParsedModifyTrip {
   List<ParsedStopTimeUpdate> stopTimeUpdates();
 
-  TripUpdateOptions options();
+  FormatPolicy formatPolicy();
 
   /**
    * Returns true if any stop time update has an explicit stop sequence number.

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
  * Parsed update for an existing trip without stop pattern changes.
@@ -23,7 +24,7 @@ public final class ParsedUpdateExisting implements ParsedExistingTripUpdate {
   private final ZonedDateTime aimedDepartureTime;
 
   private final List<ParsedStopTimeUpdate> stopTimeUpdates;
-  private final TripUpdateOptions options;
+  private final FormatPolicy formatPolicy;
 
   @Nullable
   private final String dataSource;
@@ -33,7 +34,7 @@ public final class ParsedUpdateExisting implements ParsedExistingTripUpdate {
     @Nullable LocalDate serviceDate,
     @Nullable ZonedDateTime aimedDepartureTime,
     List<ParsedStopTimeUpdate> stopTimeUpdates,
-    TripUpdateOptions options,
+    FormatPolicy formatPolicy,
     @Nullable String dataSource
   ) {
     this.tripReference = Objects.requireNonNull(tripReference);
@@ -41,7 +42,7 @@ public final class ParsedUpdateExisting implements ParsedExistingTripUpdate {
     this.serviceDate = serviceDate;
     this.aimedDepartureTime = aimedDepartureTime;
     this.stopTimeUpdates = stopTimeUpdates != null ? List.copyOf(stopTimeUpdates) : List.of();
-    this.options = Objects.requireNonNull(options);
+    this.formatPolicy = Objects.requireNonNull(formatPolicy);
     this.dataSource = dataSource;
   }
 
@@ -72,8 +73,8 @@ public final class ParsedUpdateExisting implements ParsedExistingTripUpdate {
   }
 
   @Override
-  public TripUpdateOptions options() {
-    return options;
+  public FormatPolicy formatPolicy() {
+    return formatPolicy;
   }
 
   @Override
@@ -105,7 +106,7 @@ public final class ParsedUpdateExisting implements ParsedExistingTripUpdate {
     private ZonedDateTime aimedDepartureTime;
 
     private List<ParsedStopTimeUpdate> stopTimeUpdates = new ArrayList<>();
-    private TripUpdateOptions options = TripUpdateOptions.siriDefaults();
+    private FormatPolicy formatPolicy = FormatPolicy.siri();
 
     @Nullable
     private String dataSource;
@@ -130,8 +131,8 @@ public final class ParsedUpdateExisting implements ParsedExistingTripUpdate {
       return this;
     }
 
-    public Builder withOptions(TripUpdateOptions options) {
-      this.options = options;
+    public Builder withFormatPolicy(FormatPolicy formatPolicy) {
+      this.formatPolicy = formatPolicy;
       return this;
     }
 
@@ -146,7 +147,7 @@ public final class ParsedUpdateExisting implements ParsedExistingTripUpdate {
         serviceDate,
         aimedDepartureTime,
         stopTimeUpdates,
-        options,
+        formatPolicy,
         dataSource
       );
     }

@@ -336,7 +336,10 @@ class SiriTripUpdateParserTest {
 
     var parsed = assertInstanceOf(ParsedUpdateExisting.class, parser.parse(journey));
 
-    assertEquals(ForwardsDelayPropagationType.NONE, parsed.options().forwardsPropagation());
+    assertEquals(
+      ForwardsDelayPropagationType.NONE,
+      parsed.formatPolicy().delayPropagation().forwards()
+    );
   }
 
   @Test
