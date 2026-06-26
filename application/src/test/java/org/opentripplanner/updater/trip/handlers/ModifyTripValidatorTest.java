@@ -16,6 +16,7 @@ import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.ExistingTripResolver;
+import org.opentripplanner.updater.trip.NoOpFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.ServiceDateResolver;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TripResolver;
@@ -72,7 +73,7 @@ class ModifyTripValidatorTest {
         tripResolver,
         serviceDateResolver,
         stopResolver,
-        null,
+        NoOpFuzzyTripMatcher.INSTANCE,
         TIME_ZONE
       );
     }
@@ -159,7 +160,7 @@ class ModifyTripValidatorTest {
         tripResolver,
         serviceDateResolver,
         stopResolver,
-        null,
+        NoOpFuzzyTripMatcher.INSTANCE,
         TIME_ZONE
       );
     }

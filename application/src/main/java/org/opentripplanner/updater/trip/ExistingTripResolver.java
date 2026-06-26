@@ -3,7 +3,6 @@ package org.opentripplanner.updater.trip;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Objects;
-import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
@@ -42,7 +41,6 @@ public class ExistingTripResolver {
   private final ServiceDateResolver serviceDateResolver;
   private final StopResolver stopResolver;
 
-  @Nullable
   private final FuzzyTripMatcher fuzzyTripMatcher;
 
   private final ZoneId timeZone;
@@ -52,7 +50,7 @@ public class ExistingTripResolver {
     TripResolver tripResolver,
     ServiceDateResolver serviceDateResolver,
     StopResolver stopResolver,
-    @Nullable FuzzyTripMatcher fuzzyTripMatcher,
+    FuzzyTripMatcher fuzzyTripMatcher,
     ZoneId timeZone
   ) {
     this.transitService = Objects.requireNonNull(transitService, "transitService must not be null");
@@ -62,7 +60,10 @@ public class ExistingTripResolver {
       "serviceDateResolver must not be null"
     );
     this.stopResolver = Objects.requireNonNull(stopResolver, "stopResolver must not be null");
-    this.fuzzyTripMatcher = fuzzyTripMatcher;
+    this.fuzzyTripMatcher = Objects.requireNonNull(
+      fuzzyTripMatcher,
+      "fuzzyTripMatcher must not be null"
+    );
     this.timeZone = Objects.requireNonNull(timeZone, "timeZone must not be null");
   }
 
@@ -156,8 +157,8 @@ public class ExistingTripResolver {
       LOG.warn("Trip {} found but no pattern available", trip.getId());
       throw UpdateException.of(reference.tripId(), UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN);
     } catch (UpdateException exactMatchException) {
-      // Exact match failed - try fuzzy matching if configured
-      if (fuzzyTripMatcher != null) {
+      // Exact match failed - try fuzzy matching if enabled
+      if (fuzzyTripMatcher.isEnabled()) {
         LOG.debug("Exact match failed for {}, trying fuzzy matching", reference);
         return fuzzyTripMatcher.match(reference, parsedUpdate, serviceDate);
       }

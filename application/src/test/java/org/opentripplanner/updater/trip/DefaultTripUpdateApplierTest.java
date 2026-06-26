@@ -72,7 +72,7 @@ class DefaultTripUpdateApplierTest {
       new Deduplicator(),
       snapshotManager,
       tripPatternCache,
-      null,
+      NoOpFuzzyTripMatcher.INSTANCE,
       new GtfsRtRouteCreationStrategy(env.feedId(), null)
     );
   }

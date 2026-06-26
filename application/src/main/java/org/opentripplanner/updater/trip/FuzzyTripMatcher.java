@@ -33,4 +33,13 @@ public interface FuzzyTripMatcher {
     ParsedExistingTripUpdate parsedUpdate,
     LocalDate serviceDate
   ) throws UpdateException;
+
+  /**
+   * Whether this matcher actually attempts a fuzzy match. The {@link NoOpFuzzyTripMatcher} returns
+   * {@code false} so callers can preserve the original exact-match error instead of reporting a
+   * fuzzy-match failure.
+   */
+  default boolean isEnabled() {
+    return true;
+  }
 }

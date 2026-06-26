@@ -24,6 +24,7 @@ import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
 import org.opentripplanner.updater.trip.FuzzyTripMatcher;
+import org.opentripplanner.updater.trip.NoOpFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.GtfsTripMatcher;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
@@ -183,7 +184,7 @@ public class ShadowGtfsTripUpdateAdapter implements GtfsTripUpdateAdapter {
     try {
       FuzzyTripMatcher fuzzyMatcher = fuzzyMatchingEnabled
         ? new GtfsTripMatcher(transitEditorService)
-        : null;
+        : NoOpFuzzyTripMatcher.INSTANCE;
 
       var applier = new DefaultTripUpdateApplier(
         this.feedId,
