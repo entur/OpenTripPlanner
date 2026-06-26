@@ -1,4 +1,4 @@
-package org.opentripplanner.transit.model._data;
+package org.opentripplanner.transit.model;
 
 import org.opentripplanner.transit.model.timetable.TripTimes;
 
