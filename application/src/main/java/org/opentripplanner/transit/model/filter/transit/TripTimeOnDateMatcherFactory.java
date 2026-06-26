@@ -45,6 +45,12 @@ public class TripTimeOnDateMatcherFactory {
     expr.matchesNone(request.excludeRoutes(), TripTimeOnDateMatcherFactory::routeId);
     expr.matchesNone(request.excludeModes(), TripTimeOnDateMatcherFactory::mode);
 
+    if (request.cancellationInclusion().onlyCancellations()) {
+      expr.matches(
+        new GenericUnaryMatcher<>("canceledEffectively", TripTimeOnDate::isCanceledEffectively)
+      );
+    }
+
     return expr.build();
   }
 

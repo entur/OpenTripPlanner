@@ -11,6 +11,7 @@ import java.util.List;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.model.TripTimeOnDate;
+import org.opentripplanner.transit.api.request.CancellationInclusion;
 import org.opentripplanner.transit.api.request.TripTimeOnDateRequest;
 import org.opentripplanner.transit.api.request.TripTimeOnDateRequestBuilder;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
@@ -636,6 +637,17 @@ class TripTimeOnDateMatcherFactoryTest {
       // ROUTE_3: not selected by filter
       assertFalse(matcher.match(tripTimeOnDate(ROUTE_3)));
     }
+  }
+
+  @Test
+  void onlyCancellationsExcludesScheduledTripTimes() {
+    var request = request()
+      .withCancellationInclusion(CancellationInclusion.ONLY_CANCELLATIONS)
+      .build();
+    var matcher = TripTimeOnDateMatcherFactory.of(request);
+
+    // A scheduled (non-canceled) trip time is not a cancellation, so it does not match.
+    assertFalse(matcher.match(tripTimeOnDate(ROUTE_1)));
   }
 
   private static TripTimeOnDateRequestBuilder request() {

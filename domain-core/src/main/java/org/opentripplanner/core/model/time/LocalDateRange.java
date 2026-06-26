@@ -102,7 +102,15 @@ public final class LocalDateRange {
   }
 
   public boolean isUnbounded() {
-    return inclusiveStart.equals(MIN) && exclusiveEnd.equals(MAX);
+    return isUnboundedStart() && isUnboundedEnd();
+  }
+
+  public boolean isUnboundedStart() {
+    return inclusiveStart.equals(MIN);
+  }
+
+  public boolean isUnboundedEnd() {
+    return exclusiveEnd.equals(MAX);
   }
 
   /**

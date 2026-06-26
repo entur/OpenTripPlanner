@@ -38,6 +38,7 @@ import org.opentripplanner.apis.transmodel.model.plan.JourneyWhiteListed;
 import org.opentripplanner.apis.transmodel.support.GqlUtil;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.graphql.GraphQLUtils;
+import org.opentripplanner.transit.api.request.CancellationInclusion;
 import org.opentripplanner.transit.api.request.TripTimeOnDateRequest;
 import org.opentripplanner.transit.model.basic.SubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
@@ -386,7 +387,11 @@ public class StopPlaceType {
               .withTimeWindow(timeRange)
               .withArrivalDeparture(arrivalDeparture)
               .withNumberOfDepartures(numberOfDepartures)
-              .withIncludeCancelledTrips(includeCancelledTrips);
+              .withCancellationInclusion(
+                includeCancelledTrips
+                  ? CancellationInclusion.INCLUDE_CANCELLATIONS
+                  : CancellationInclusion.NO_CANCELLATIONS
+              );
 
             if (filtersInput != null) {
               var mapper = new TripTimeOnDateFilterMapper(idMapper);

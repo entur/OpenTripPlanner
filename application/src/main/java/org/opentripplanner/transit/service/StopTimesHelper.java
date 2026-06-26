@@ -15,7 +15,9 @@ import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Queue;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.time.LocalDateRange;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTimesInPattern;
 import org.opentripplanner.model.TripTimeOnDate;
@@ -93,6 +95,16 @@ public class StopTimesHelper {
 
   List<TripTimeOnDate> findTripTimesOnDate(TripTimeOnDateRequest request) {
     Matcher<TripTimeOnDate> matcher = TripTimeOnDateMatcherFactory.of(request);
+    Stream<TripTimeOnDate> tripTimes = request.serviceDateRanges().isEmpty()
+      ? findTripTimesInTimeWindow(request, matcher)
+      : findTripTimesInServiceDateRanges(request, matcher);
+    return tripTimes.sorted(request.sortOrder()).limit(request.numberOfDepartures()).toList();
+  }
+
+  private Stream<TripTimeOnDate> findTripTimesInTimeWindow(
+    TripTimeOnDateRequest request,
+    Matcher<TripTimeOnDate> matcher
+  ) {
     return request
       .stopLocations()
       .stream()
@@ -103,16 +115,65 @@ public class StopTimesHelper {
           request.timeWindow(),
           request.numberOfDepartures(),
           request.arrivalDeparture(),
-          request.includeCancelledTrips(),
+          request.cancellationInclusion().includesCancellations(),
           request.sortOrder(),
           matcher
         )
           .stream()
           .flatMap(st -> st.times.stream())
+      );
+  }
+
+  /**
+   * Find trip times limited by service date instead of a time window. All trip times at the
+   * requested stops whose service date falls within any of the requested ranges are returned,
+   * filtered by the given matcher.
+   */
+  private Stream<TripTimeOnDate> findTripTimesInServiceDateRanges(
+    TripTimeOnDateRequest request,
+    Matcher<TripTimeOnDate> matcher
+  ) {
+    boolean includeCancellations = request.cancellationInclusion().includesCancellations();
+    return request
+      .serviceDateRanges()
+      .stream()
+      .flatMap(range -> serviceDates(range).stream())
+      .distinct()
+      .flatMap(serviceDate ->
+        request
+          .stopLocations()
+          .stream()
+          .flatMap(stop ->
+            stopTimesForStop(stop, serviceDate, request.arrivalDeparture(), includeCancellations)
+              .stream()
+              .flatMap(st -> st.times.stream())
+          )
       )
-      .sorted(request.sortOrder())
-      .limit(request.numberOfDepartures())
-      .toList();
+      .filter(matcher::match);
+  }
+
+  /**
+   * The service dates contained in the given range. Ranges that are open on either side are clamped
+   * to the transit service period.
+   */
+  private List<LocalDate> serviceDates(LocalDateRange range) {
+    ZoneId zone = transitService.getTimeZone();
+    LocalDate start = !range.isUnboundedStart()
+      ? range.getStartInclusive()
+      : ServiceDateUtils.asServiceDay(
+          ServiceDateUtils.asStartOfService(transitService.getTransitServiceStarts(), zone)
+        );
+    LocalDate endExclusive = !range.isUnboundedEnd()
+      ? range.getEndExclusive()
+      : ServiceDateUtils.asServiceDay(
+          ServiceDateUtils.asStartOfService(transitService.getTransitServiceEnds(), zone)
+        ).plusDays(1);
+
+    List<LocalDate> dates = new ArrayList<>();
+    for (LocalDate date = start; date.isBefore(endExclusive); date = date.plusDays(1)) {
+      dates.add(date);
+    }
+    return dates;
   }
 
   /**
