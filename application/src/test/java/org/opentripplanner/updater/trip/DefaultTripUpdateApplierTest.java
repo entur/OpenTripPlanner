@@ -65,7 +65,7 @@ class DefaultTripUpdateApplierTest {
       new TripPatternIdGenerator(),
       env.transitService()::findPattern
     );
-    applier = new DefaultTripUpdateApplier(
+    applier = TripUpdateApplierFactory.create(
       env.feedId(),
       TIME_ZONE,
       transitService,

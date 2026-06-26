@@ -19,6 +19,7 @@ import org.opentripplanner.updater.trip.NoOpFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.SiriTripMatcher;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
+import org.opentripplanner.updater.trip.TripUpdateApplierFactory;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.handlers.SiriRouteCreationStrategy;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
@@ -83,7 +84,7 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
         )
       : NoOpFuzzyTripMatcher.INSTANCE;
 
-    this.applier = new DefaultTripUpdateApplier(
+    this.applier = TripUpdateApplierFactory.create(
       feedId,
       transitEditorService.getTimeZone(),
       transitEditorService,
