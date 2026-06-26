@@ -7,6 +7,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
+import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
  * Resolved data for updates to existing scheduled trips.
@@ -98,6 +99,14 @@ public final class ResolvedExistingTrip {
 
   public TripUpdateOptions options() {
     return options;
+  }
+
+  /**
+   * The behavioural {@link FormatPolicy} for this update, derived from {@link #options()} during
+   * the incremental migration to policy-based application (#7220).
+   */
+  public FormatPolicy formatPolicy() {
+    return FormatPolicy.fromOptions(options);
   }
 
   public List<ResolvedStopTimeUpdate> stopTimeUpdates() {
