@@ -40,7 +40,7 @@ class DefaultUpdateManager implements UpdateManager {
   ) {
     this.transactionManager = transactionManager;
     this.executor = Executors.newSingleThreadExecutor(threadFactory);
-    this.periodicCommitScheduler = commitInterval != null
+    this.periodicCommitScheduler = commitInterval != null && !commitInterval.isZero()
       ? new PeriodicCommitScheduler(name, commitInterval, threadFactory, this::submitCommit)
       : null;
   }
