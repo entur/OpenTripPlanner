@@ -1,4 +1,4 @@
-package org.opentripplanner.street;
+package org.opentripplanner.street.graph;
 
 import com.bedatadriven.jackson.datatype.jts.JtsModule;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -10,7 +10,6 @@ import java.util.Objects;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.opentripplanner.street.geometry.GeometryUtils;
-import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.utils.collection.ListUtils;
@@ -28,7 +27,7 @@ public class GeoJsonIo {
     try {
       var geoJson = MAPPER.writeValueAsString(geometry);
       var encoded = URLEncoder.encode(geoJson, StandardCharsets.UTF_8);
-      return "http://geojson.io/#data=data:application/json,%s".formatted(encoded);
+      return "http://geojson.io/next/#data=data:application/json,%s".formatted(encoded);
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }

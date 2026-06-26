@@ -18,7 +18,7 @@ import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.InvalidVehicleParkingCapacity;
-import org.opentripplanner.graph_builder.issues.ParkAndRideUnlinked;
+import org.opentripplanner.graph_builder.issues.IsolatedParkAndRide;
 import org.opentripplanner.osm.OsmOpeningHoursParser;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmNode;
@@ -216,9 +216,7 @@ class ParkingProcessor {
 
     // Check P+R accessibility by walking and driving.
     boolean walkAccessibleIn = false;
-    boolean carAccessibleIn = false;
     boolean walkAccessibleOut = false;
-    boolean carAccessibleOut = false;
     for (VertexAndName access : accessVertices) {
       var accessVertex = access.vertex();
       for (Edge incoming : accessVertex.getIncoming()) {
@@ -226,18 +224,12 @@ class ParkingProcessor {
           if (streetEdge.canTraverse(TraverseMode.WALK)) {
             walkAccessibleIn = true;
           }
-          if (streetEdge.canTraverse(TraverseMode.CAR)) {
-            carAccessibleIn = true;
-          }
         }
       }
       for (Edge outgoing : accessVertex.getOutgoing()) {
         if (outgoing instanceof StreetEdge streetEdge) {
           if (streetEdge.canTraverse(TraverseMode.WALK)) {
             walkAccessibleOut = true;
-          }
-          if (streetEdge.canTraverse(TraverseMode.CAR)) {
-            carAccessibleOut = true;
           }
         }
       }
@@ -249,23 +241,19 @@ class ParkingProcessor {
       );
     }
 
-    if (isCarParkAndRide) {
-      if (!walkAccessibleOut || !carAccessibleIn || !walkAccessibleIn || !carAccessibleOut) {
-        // This will prevent the P+R to be useful.
-        issueStore.add(new ParkAndRideUnlinked(creativeName.toString(), entity));
-      }
-    } else {
-      if (!walkAccessibleOut || !walkAccessibleIn) {
-        // This will prevent the P+R to be useful.
-        issueStore.add(new ParkAndRideUnlinked(creativeName.toString(), entity));
-      }
-    }
-
     List<VehicleParking.VehicleParkingEntranceCreator> entrances =
       createParkingEntrancesFromAccessVertices(accessVertices, creativeName, entity);
 
     if (entrances.isEmpty()) {
+      // This P+R is not connected to the street network
+      // we create an artificial entrance to the centroid and add an issue
+      // the solution would be to connect it to the street network in OSM
       entrances = createArtificialEntrances(group, creativeName, entity, isCarParkAndRide);
+      // we only add the issue for car parking lots because the majority of bike facilities are not
+      // connected to the street network
+      if (isCarParkAndRide) {
+        issueStore.add(new IsolatedParkAndRide(creativeName.toString(), entity));
+      }
     }
 
     var vehicleParking = createVehicleParkingObjectFromOsmEntity(
