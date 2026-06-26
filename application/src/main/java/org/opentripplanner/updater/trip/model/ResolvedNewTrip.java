@@ -19,7 +19,7 @@ import org.opentripplanner.updater.trip.policy.FormatPolicy;
  */
 public final class ResolvedNewTrip {
 
-  private final TripUpdateOptions options;
+  private final FormatPolicy formatPolicy;
 
   @Nullable
   private final TripCreationInfo tripCreationInfo;
@@ -41,7 +41,7 @@ public final class ResolvedNewTrip {
   private final TripTimes existingTripTimes;
 
   private ResolvedNewTrip(
-    TripUpdateOptions options,
+    FormatPolicy formatPolicy,
     @Nullable TripCreationInfo tripCreationInfo,
     @Nullable String dataSource,
     LocalDate serviceDate,
@@ -50,7 +50,7 @@ public final class ResolvedNewTrip {
     @Nullable TripPattern existingPattern,
     @Nullable TripTimes existingTripTimes
   ) {
-    this.options = Objects.requireNonNull(options, "options must not be null");
+    this.formatPolicy = Objects.requireNonNull(formatPolicy, "formatPolicy must not be null");
     this.tripCreationInfo = tripCreationInfo;
     this.dataSource = dataSource;
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
@@ -72,7 +72,7 @@ public final class ResolvedNewTrip {
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates
   ) {
     return new ResolvedNewTrip(
-      parsedUpdate.options(),
+      parsedUpdate.formatPolicy(),
       parsedUpdate.tripCreationInfo(),
       parsedUpdate.dataSource(),
       serviceDate,
@@ -95,7 +95,7 @@ public final class ResolvedNewTrip {
     TripTimes existingTripTimes
   ) {
     return new ResolvedNewTrip(
-      parsedUpdate.options(),
+      parsedUpdate.formatPolicy(),
       parsedUpdate.tripCreationInfo(),
       parsedUpdate.dataSource(),
       serviceDate,
@@ -151,16 +151,9 @@ public final class ResolvedNewTrip {
     return existingTripTimes;
   }
 
-  public TripUpdateOptions options() {
-    return options;
-  }
-
-  /**
-   * The behavioural {@link FormatPolicy} for this update, derived from {@link #options()} during
-   * the incremental migration to policy-based application (#7220).
-   */
+  /** The behavioural {@link FormatPolicy} for this update, chosen once at the parser boundary. */
   public FormatPolicy formatPolicy() {
-    return FormatPolicy.fromOptions(options);
+    return formatPolicy;
   }
 
   public List<ResolvedStopTimeUpdate> stopTimeUpdates() {

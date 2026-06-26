@@ -31,8 +31,8 @@ import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripUpdateOptions;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
+import org.opentripplanner.updater.trip.policy.FormatPolicy;
 import org.opentripplanner.updater.trip.siri.mapping.OccupancyMapper;
 import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.time.ServiceDateUtils;
@@ -110,7 +110,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     return switch (updateType) {
       case UPDATE_EXISTING -> {
         var builder = ParsedUpdateExisting.builder(tripReference, psd.serviceDate())
-          .withOptions(TripUpdateOptions.siriDefaults())
+          .withFormatPolicy(FormatPolicy.siri())
           .withDataSource(journey.getDataSource())
           .withStopTimeUpdates(stopTimeUpdates);
         if (psd.aimedDepartureTime() != null) {
@@ -120,7 +120,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       }
       case MODIFY_TRIP -> {
         var builder = ParsedModifyTrip.builder(tripReference, psd.serviceDate())
-          .withOptions(TripUpdateOptions.siriDefaults())
+          .withFormatPolicy(FormatPolicy.siri())
           .withDataSource(journey.getDataSource())
           .withStopTimeUpdates(stopTimeUpdates)
           .withCancellation(TRUE.equals(journey.isCancellation()))
@@ -136,7 +136,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
           throw UpdateException.noTripId(UNKNOWN);
         }
         var builder = ParsedAddNewTrip.builder(tripReference, psd.serviceDate(), creationInfo)
-          .withOptions(TripUpdateOptions.siriDefaults())
+          .withFormatPolicy(FormatPolicy.siri())
           .withDataSource(journey.getDataSource())
           .withStopTimeUpdates(stopTimeUpdates);
         if (psd.aimedDepartureTime() != null) {

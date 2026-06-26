@@ -438,8 +438,14 @@ class GtfsRtTripUpdateParserTest {
       )
     );
 
-    assertEquals(ForwardsDelayPropagationType.DEFAULT, parsed.options().forwardsPropagation());
-    assertEquals(BackwardsDelayPropagationType.ALWAYS, parsed.options().backwardsPropagation());
+    assertEquals(
+      ForwardsDelayPropagationType.DEFAULT,
+      parsed.formatPolicy().delayPropagation().forwards()
+    );
+    assertEquals(
+      BackwardsDelayPropagationType.ALWAYS,
+      parsed.formatPolicy().delayPropagation().backwards()
+    );
   }
 
   private static TimeUpdate asTimeUpdate(ParsedTimeUpdate parsedTimeUpdate) {

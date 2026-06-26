@@ -32,11 +32,11 @@ import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.StopReference;
-import org.opentripplanner.updater.trip.model.StopReplacementConstraint;
-import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripUpdateOptions;
+import org.opentripplanner.updater.trip.policy.FormatPolicy;
+import org.opentripplanner.updater.trip.policy.StopMatchingPolicy;
+import org.opentripplanner.updater.trip.policy.StopReplacementPolicy;
 
 /**
  * Tests for {@link UpdateExistingTripHandler}.
@@ -116,8 +116,8 @@ class UpdateExistingTripHandlerTest {
       .build();
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
-      .withOptions(
-        TripUpdateOptions.gtfsRtDefaults(
+      .withFormatPolicy(
+        FormatPolicy.gtfsRt(
           ForwardsDelayPropagationType.NONE,
           BackwardsDelayPropagationType.NONE
         )
@@ -169,8 +169,8 @@ class UpdateExistingTripHandlerTest {
       .build();
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
-      .withOptions(
-        TripUpdateOptions.gtfsRtDefaults(
+      .withFormatPolicy(
+        FormatPolicy.gtfsRt(
           ForwardsDelayPropagationType.NONE,
           BackwardsDelayPropagationType.NONE
         )
@@ -206,8 +206,8 @@ class UpdateExistingTripHandlerTest {
       .build();
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
-      .withOptions(
-        TripUpdateOptions.gtfsRtDefaults(
+      .withFormatPolicy(
+        FormatPolicy.gtfsRt(
           ForwardsDelayPropagationType.NONE,
           BackwardsDelayPropagationType.NONE
         )
@@ -266,8 +266,8 @@ class UpdateExistingTripHandlerTest {
       .build();
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
-      .withOptions(
-        TripUpdateOptions.gtfsRtDefaults(
+      .withFormatPolicy(
+        FormatPolicy.gtfsRt(
           ForwardsDelayPropagationType.NONE,
           BackwardsDelayPropagationType.NONE
         )
@@ -304,8 +304,8 @@ class UpdateExistingTripHandlerTest {
       .build();
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
-      .withOptions(
-        TripUpdateOptions.gtfsRtDefaults(
+      .withFormatPolicy(
+        FormatPolicy.gtfsRt(
           ForwardsDelayPropagationType.NONE,
           BackwardsDelayPropagationType.NONE
         )
@@ -343,8 +343,8 @@ class UpdateExistingTripHandlerTest {
       .build();
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
-      .withOptions(
-        TripUpdateOptions.gtfsRtDefaults(
+      .withFormatPolicy(
+        FormatPolicy.gtfsRt(
           ForwardsDelayPropagationType.NONE,
           BackwardsDelayPropagationType.NONE
         )
@@ -425,12 +425,12 @@ class UpdateExistingTripHandlerTest {
         .withDepartureUpdate(TimeUpdate.ofDelay(60))
         .build();
 
-      var options = TripUpdateOptions.builder()
-        .withStopReplacementConstraint(StopReplacementConstraint.SAME_PARENT_STATION)
+      var options = FormatPolicy.builder()
+        .withStopReplacement(StopReplacementPolicy.SAME_PARENT_STATION)
         .build();
 
       var parsedUpdate = ParsedUpdateExisting.builder(tripRef, stationEnv.defaultServiceDate())
-        .withOptions(options)
+        .withFormatPolicy(options)
         .addStopTimeUpdate(stopUpdate)
         .build();
 
@@ -455,12 +455,12 @@ class UpdateExistingTripHandlerTest {
         .withArrivalUpdate(TimeUpdate.ofDelay(60))
         .build();
 
-      var options = TripUpdateOptions.builder()
-        .withStopReplacementConstraint(StopReplacementConstraint.SAME_PARENT_STATION)
+      var options = FormatPolicy.builder()
+        .withStopReplacement(StopReplacementPolicy.SAME_PARENT_STATION)
         .build();
 
       var parsedUpdate = ParsedUpdateExisting.builder(tripRef, stationEnv.defaultServiceDate())
-        .withOptions(options)
+        .withFormatPolicy(options)
         .addStopTimeUpdate(stopUpdate)
         .build();
 
@@ -485,12 +485,12 @@ class UpdateExistingTripHandlerTest {
         .withDepartureUpdate(TimeUpdate.ofDelay(60))
         .build();
 
-      var options = TripUpdateOptions.builder()
-        .withStopReplacementConstraint(StopReplacementConstraint.ANY_STOP)
+      var options = FormatPolicy.builder()
+        .withStopReplacement(StopReplacementPolicy.ANY_STOP)
         .build();
 
       var parsedUpdate = ParsedUpdateExisting.builder(tripRef, stationEnv.defaultServiceDate())
-        .withOptions(options)
+        .withFormatPolicy(options)
         .addStopTimeUpdate(stopUpdate)
         .build();
 
@@ -512,12 +512,12 @@ class UpdateExistingTripHandlerTest {
         .withArrivalUpdate(TimeUpdate.ofDelay(60))
         .build();
 
-      var options = TripUpdateOptions.builder()
-        .withStopReplacementConstraint(StopReplacementConstraint.NOT_ALLOWED)
+      var options = FormatPolicy.builder()
+        .withStopReplacement(StopReplacementPolicy.NOT_ALLOWED)
         .build();
 
       var parsedUpdate = ParsedUpdateExisting.builder(tripRef, stationEnv.defaultServiceDate())
-        .withOptions(options)
+        .withFormatPolicy(options)
         .addStopTimeUpdate(stopUpdate)
         .build();
 
@@ -543,12 +543,12 @@ class UpdateExistingTripHandlerTest {
         .withDepartureUpdate(TimeUpdate.ofDelay(60))
         .build();
 
-      var options = TripUpdateOptions.builder()
-        .withStopReplacementConstraint(StopReplacementConstraint.NOT_ALLOWED)
+      var options = FormatPolicy.builder()
+        .withStopReplacement(StopReplacementPolicy.NOT_ALLOWED)
         .build();
 
       var parsedUpdate = ParsedUpdateExisting.builder(tripRef, stationEnv.defaultServiceDate())
-        .withOptions(options)
+        .withFormatPolicy(options)
         .addStopTimeUpdate(stopUpdate)
         .build();
 
@@ -581,13 +581,13 @@ class UpdateExistingTripHandlerTest {
         .withDepartureUpdate(TimeUpdate.ofDelay(120))
         .build();
 
-      var options = TripUpdateOptions.builder()
-        .withStopReplacementConstraint(StopReplacementConstraint.SAME_PARENT_STATION)
-        .withStopUpdateStrategy(StopUpdateStrategy.FULL_UPDATE)
+      var options = FormatPolicy.builder()
+        .withStopReplacement(StopReplacementPolicy.SAME_PARENT_STATION)
+        .withStopMatching(StopMatchingPolicy.POSITIONAL)
         .build();
 
       var parsedUpdate = ParsedUpdateExisting.builder(tripRef, stationEnv.defaultServiceDate())
-        .withOptions(options)
+        .withFormatPolicy(options)
         .withStopTimeUpdates(List.of(stopA2Update, stopB1Update))
         .build();
 
@@ -620,13 +620,13 @@ class UpdateExistingTripHandlerTest {
         .withDepartureUpdate(TimeUpdate.ofDelay(120))
         .build();
 
-      var options = TripUpdateOptions.builder()
-        .withStopReplacementConstraint(StopReplacementConstraint.SAME_PARENT_STATION)
-        .withStopUpdateStrategy(StopUpdateStrategy.FULL_UPDATE)
+      var options = FormatPolicy.builder()
+        .withStopReplacement(StopReplacementPolicy.SAME_PARENT_STATION)
+        .withStopMatching(StopMatchingPolicy.POSITIONAL)
         .build();
 
       var parsedUpdate = ParsedUpdateExisting.builder(tripRef, stationEnv.defaultServiceDate())
-        .withOptions(options)
+        .withFormatPolicy(options)
         .withStopTimeUpdates(List.of(stopA1Update, stopB1Update))
         .build();
 
@@ -665,13 +665,13 @@ class UpdateExistingTripHandlerTest {
         .withDepartureUpdate(TimeUpdate.ofDelay(60))
         .build();
 
-      var options = TripUpdateOptions.gtfsRtDefaults(
+      var options = FormatPolicy.gtfsRt(
         ForwardsDelayPropagationType.NONE,
         BackwardsDelayPropagationType.NONE
       );
 
       var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
-        .withOptions(options)
+        .withFormatPolicy(options)
         .withStopTimeUpdates(List.of(stopCUpdate, stopAUpdate))
         .build();
 
@@ -713,13 +713,13 @@ class UpdateExistingTripHandlerTest {
         .build();
 
       // Configure with GTFS-RT defaults: forwards propagation enabled
-      var options = TripUpdateOptions.gtfsRtDefaults(
+      var options = FormatPolicy.gtfsRt(
         ForwardsDelayPropagationType.DEFAULT,
         BackwardsDelayPropagationType.NONE
       );
 
       var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
-        .withOptions(options)
+        .withFormatPolicy(options)
         .addStopTimeUpdate(stopAUpdate)
         .build();
 
@@ -767,10 +767,10 @@ class UpdateExistingTripHandlerTest {
         .build();
 
       // SIRI defaults: no propagation, FULL_UPDATE strategy
-      var options = TripUpdateOptions.siriDefaults();
+      var options = FormatPolicy.siri();
 
       var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
-        .withOptions(options)
+        .withFormatPolicy(options)
         .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate))
         .build();
 
@@ -802,13 +802,13 @@ class UpdateExistingTripHandlerTest {
         .build();
 
       // Configure with backwards propagation
-      var options = TripUpdateOptions.gtfsRtDefaults(
+      var options = FormatPolicy.gtfsRt(
         ForwardsDelayPropagationType.NONE,
         BackwardsDelayPropagationType.REQUIRED
       );
 
       var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
-        .withOptions(options)
+        .withFormatPolicy(options)
         .addStopTimeUpdate(stopBUpdate)
         .build();
 
@@ -843,13 +843,13 @@ class UpdateExistingTripHandlerTest {
         .build();
 
       // GTFS-RT defaults: both forward and backward propagation
-      var options = TripUpdateOptions.gtfsRtDefaults(
+      var options = FormatPolicy.gtfsRt(
         ForwardsDelayPropagationType.DEFAULT,
         BackwardsDelayPropagationType.REQUIRED_NO_DATA
       );
 
       var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
-        .withOptions(options)
+        .withFormatPolicy(options)
         .addStopTimeUpdate(stopBUpdate)
         .build();
 
@@ -894,13 +894,13 @@ class UpdateExistingTripHandlerTest {
         .build();
 
       // GTFS-RT defaults with forwards propagation
-      var options = TripUpdateOptions.gtfsRtDefaults(
+      var options = FormatPolicy.gtfsRt(
         ForwardsDelayPropagationType.DEFAULT,
         BackwardsDelayPropagationType.NONE
       );
 
       var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
-        .withOptions(options)
+        .withFormatPolicy(options)
         .withStopTimeUpdates(List.of(stopAUpdate, stopCUpdate))
         .build();
 

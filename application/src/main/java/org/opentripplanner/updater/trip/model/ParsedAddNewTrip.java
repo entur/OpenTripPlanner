@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
  * Parsed update for adding a new trip that does not exist in the scheduled data.
@@ -27,7 +28,7 @@ public final class ParsedAddNewTrip implements ParsedTripUpdate {
 
   private final List<ParsedStopTimeUpdate> stopTimeUpdates;
   private final TripCreationInfo tripCreationInfo;
-  private final TripUpdateOptions options;
+  private final FormatPolicy formatPolicy;
 
   @Nullable
   private final String dataSource;
@@ -38,7 +39,7 @@ public final class ParsedAddNewTrip implements ParsedTripUpdate {
     @Nullable ZonedDateTime aimedDepartureTime,
     List<ParsedStopTimeUpdate> stopTimeUpdates,
     TripCreationInfo tripCreationInfo,
-    TripUpdateOptions options,
+    FormatPolicy formatPolicy,
     @Nullable String dataSource
   ) {
     this.tripReference = Objects.requireNonNull(tripReference);
@@ -50,7 +51,7 @@ public final class ParsedAddNewTrip implements ParsedTripUpdate {
       tripCreationInfo,
       "tripCreationInfo is required for ADD_NEW_TRIP"
     );
-    this.options = Objects.requireNonNull(options);
+    this.formatPolicy = Objects.requireNonNull(formatPolicy);
     this.dataSource = dataSource;
   }
 
@@ -87,8 +88,8 @@ public final class ParsedAddNewTrip implements ParsedTripUpdate {
     return tripCreationInfo;
   }
 
-  public TripUpdateOptions options() {
-    return options;
+  public FormatPolicy formatPolicy() {
+    return formatPolicy;
   }
 
   @Override
@@ -117,7 +118,7 @@ public final class ParsedAddNewTrip implements ParsedTripUpdate {
     private ZonedDateTime aimedDepartureTime;
 
     private List<ParsedStopTimeUpdate> stopTimeUpdates = new ArrayList<>();
-    private TripUpdateOptions options = TripUpdateOptions.siriDefaults();
+    private FormatPolicy formatPolicy = FormatPolicy.siri();
 
     @Nullable
     private String dataSource;
@@ -147,8 +148,8 @@ public final class ParsedAddNewTrip implements ParsedTripUpdate {
       return this;
     }
 
-    public Builder withOptions(TripUpdateOptions options) {
-      this.options = options;
+    public Builder withFormatPolicy(FormatPolicy formatPolicy) {
+      this.formatPolicy = formatPolicy;
       return this;
     }
 
@@ -164,7 +165,7 @@ public final class ParsedAddNewTrip implements ParsedTripUpdate {
         aimedDepartureTime,
         stopTimeUpdates,
         tripCreationInfo,
-        options,
+        formatPolicy,
         dataSource
       );
     }

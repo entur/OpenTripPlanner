@@ -35,8 +35,8 @@ import org.opentripplanner.updater.trip.model.StopResolutionStrategy;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripUpdateOptions;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
+import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
  * Parser for GTFS-RT TripUpdate messages into the common ParsedTripUpdate model.
@@ -84,7 +84,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       };
     }
 
-    var gtfsOptions = TripUpdateOptions.gtfsRtDefaults(
+    var gtfsPolicy = FormatPolicy.gtfsRt(
       forwardsDelayPropagationType,
       backwardsDelayPropagationType
     );
@@ -105,11 +105,11 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
     return switch (updateType) {
       case UPDATE_EXISTING -> ParsedUpdateExisting.builder(tripReference, serviceDate)
-        .withOptions(gtfsOptions)
+        .withFormatPolicy(gtfsPolicy)
         .withStopTimeUpdates(stopTimeUpdates)
         .build();
       case MODIFY_TRIP -> ParsedModifyTrip.builder(tripReference, serviceDate)
-        .withOptions(gtfsOptions)
+        .withFormatPolicy(gtfsPolicy)
         .withStopTimeUpdates(stopTimeUpdates)
         .withTripCreationInfo(buildTripCreationInfo(tripId, tripUpdate))
         .build();
@@ -118,7 +118,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
         serviceDate,
         buildTripCreationInfo(tripId, tripUpdate)
       )
-        .withOptions(gtfsOptions)
+        .withFormatPolicy(gtfsPolicy)
         .withStopTimeUpdates(stopTimeUpdates)
         .build();
       case CANCEL_TRIP, DELETE_TRIP -> throw new IllegalStateException(

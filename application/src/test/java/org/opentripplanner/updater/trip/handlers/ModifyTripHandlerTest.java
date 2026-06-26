@@ -32,7 +32,7 @@ import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripUpdateOptions;
+import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
  * Tests for {@link ModifyTripHandler}.
@@ -112,8 +112,8 @@ class ModifyTripHandlerTest {
       var tripRef = TripReference.ofTripId(tripId);
 
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
-        .withOptions(
-          TripUpdateOptions.gtfsRtDefaults(
+        .withFormatPolicy(
+          FormatPolicy.gtfsRt(
             ForwardsDelayPropagationType.NONE,
             BackwardsDelayPropagationType.NONE
           )
@@ -147,8 +147,8 @@ class ModifyTripHandlerTest {
       var tripRef = TripReference.ofTripId(tripId);
 
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
-        .withOptions(
-          TripUpdateOptions.gtfsRtDefaults(
+        .withFormatPolicy(
+          FormatPolicy.gtfsRt(
             ForwardsDelayPropagationType.NONE,
             BackwardsDelayPropagationType.NONE
           )
@@ -185,8 +185,8 @@ class ModifyTripHandlerTest {
       var stopCUpdate = createStopUpdate("C", 1, 11 * 3600);
 
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
-        .withOptions(
-          TripUpdateOptions.gtfsRtDefaults(
+        .withFormatPolicy(
+          FormatPolicy.gtfsRt(
             ForwardsDelayPropagationType.NONE,
             BackwardsDelayPropagationType.NONE
           )
@@ -208,8 +208,8 @@ class ModifyTripHandlerTest {
       var tripRef = TripReference.ofTripId(tripId);
 
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
-        .withOptions(
-          TripUpdateOptions.gtfsRtDefaults(
+        .withFormatPolicy(
+          FormatPolicy.gtfsRt(
             ForwardsDelayPropagationType.NONE,
             BackwardsDelayPropagationType.NONE
           )
@@ -242,8 +242,8 @@ class ModifyTripHandlerTest {
       var tripRef = TripReference.ofTripId(unknownTripId);
 
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
-        .withOptions(
-          TripUpdateOptions.gtfsRtDefaults(
+        .withFormatPolicy(
+          FormatPolicy.gtfsRt(
             ForwardsDelayPropagationType.NONE,
             BackwardsDelayPropagationType.NONE
           )
@@ -266,8 +266,8 @@ class ModifyTripHandlerTest {
       var invalidDate = LocalDate.of(2099, 1, 1);
 
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, invalidDate)
-        .withOptions(
-          TripUpdateOptions.gtfsRtDefaults(
+        .withFormatPolicy(
+          FormatPolicy.gtfsRt(
             ForwardsDelayPropagationType.NONE,
             BackwardsDelayPropagationType.NONE
           )
@@ -287,8 +287,8 @@ class ModifyTripHandlerTest {
       var tripRef = TripReference.ofTripId(tripId);
 
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
-        .withOptions(
-          TripUpdateOptions.gtfsRtDefaults(
+        .withFormatPolicy(
+          FormatPolicy.gtfsRt(
             ForwardsDelayPropagationType.NONE,
             BackwardsDelayPropagationType.NONE
           )
@@ -390,7 +390,7 @@ class ModifyTripHandlerTest {
       var stopBUpdate = createSiriStopUpdate("B", 10 * 3600 + 30 * 60, false);
 
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
-        .withOptions(TripUpdateOptions.siriDefaults())
+        .withFormatPolicy(FormatPolicy.siri())
         .addStopTimeUpdate(stopAUpdate)
         .addStopTimeUpdate(stopDUpdate)
         .addStopTimeUpdate(stopBUpdate)
@@ -421,7 +421,7 @@ class ModifyTripHandlerTest {
       var stopBUpdate = createSiriStopUpdate("B", 10 * 3600 + 30 * 60, false);
 
       var parsedUpdate = ParsedModifyTrip.builder(tripRef, env.defaultServiceDate())
-        .withOptions(TripUpdateOptions.siriDefaults())
+        .withFormatPolicy(FormatPolicy.siri())
         .addStopTimeUpdate(stopA2Update)
         .addStopTimeUpdate(stopDUpdate)
         .addStopTimeUpdate(stopBUpdate)

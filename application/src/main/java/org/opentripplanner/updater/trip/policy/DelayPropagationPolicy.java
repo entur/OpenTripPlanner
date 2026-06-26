@@ -11,20 +11,14 @@ import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
  * Adapter over the (already polymorphic) forwards/backwards delay interpolators. Owns the two
  * format-divergent decisions: how to seed the builder (empty for propagating feeds, pre-filled
  * otherwise) and how to propagate delays after stop times are applied.
+ * <p>
+ * Modelled as a record so two policies built from the same propagation types compare equal (used
+ * by {@link FormatPolicy} equality).
  */
-public final class DelayPropagationPolicy {
-
-  private final ForwardsDelayPropagationType forwards;
-  private final BackwardsDelayPropagationType backwards;
-
-  private DelayPropagationPolicy(
-    ForwardsDelayPropagationType forwards,
-    BackwardsDelayPropagationType backwards
-  ) {
-    this.forwards = forwards;
-    this.backwards = backwards;
-  }
-
+public record DelayPropagationPolicy(
+  ForwardsDelayPropagationType forwards,
+  BackwardsDelayPropagationType backwards
+) {
   public static DelayPropagationPolicy of(
     ForwardsDelayPropagationType forwards,
     BackwardsDelayPropagationType backwards
