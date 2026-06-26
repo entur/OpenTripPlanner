@@ -92,9 +92,7 @@ class UpdateExistingTripValidatorTest {
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(
-        FormatPolicy.builder()
-          .withStopMatching(StopMatchingPolicy.BY_SEQUENCE_OR_ID)
-          .build()
+        FormatPolicy.builder().withStopMatching(StopMatchingPolicy.BY_SEQUENCE_OR_ID).build()
       )
       .addStopTimeUpdate(stopUpdate)
       .build();
@@ -113,9 +111,7 @@ class UpdateExistingTripValidatorTest {
       .withArrivalUpdate(TimeUpdate.ofDelay(60))
       .build();
 
-    var options = FormatPolicy.builder()
-      .withStopMatching(StopMatchingPolicy.POSITIONAL)
-      .build();
+    var options = FormatPolicy.builder().withStopMatching(StopMatchingPolicy.POSITIONAL).build();
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(options)
@@ -143,9 +139,7 @@ class UpdateExistingTripValidatorTest {
       .withArrivalUpdate(TimeUpdate.ofDelay(120))
       .build();
 
-    var options = FormatPolicy.builder()
-      .withStopMatching(StopMatchingPolicy.POSITIONAL)
-      .build();
+    var options = FormatPolicy.builder().withStopMatching(StopMatchingPolicy.POSITIONAL).build();
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(options)
@@ -185,9 +179,7 @@ class UpdateExistingTripValidatorTest {
       .withArrivalUpdate(TimeUpdate.ofDelay(240))
       .build();
 
-    var options = FormatPolicy.builder()
-      .withStopMatching(StopMatchingPolicy.POSITIONAL)
-      .build();
+    var options = FormatPolicy.builder().withStopMatching(StopMatchingPolicy.POSITIONAL).build();
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(options)
@@ -224,9 +216,7 @@ class UpdateExistingTripValidatorTest {
       .withDepartureUpdate(TimeUpdate.ofDelay(180))
       .build();
 
-    var options = FormatPolicy.builder()
-      .withStopMatching(StopMatchingPolicy.POSITIONAL)
-      .build();
+    var options = FormatPolicy.builder().withStopMatching(StopMatchingPolicy.POSITIONAL).build();
 
     var parsedUpdate = ParsedUpdateExisting.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(options)
