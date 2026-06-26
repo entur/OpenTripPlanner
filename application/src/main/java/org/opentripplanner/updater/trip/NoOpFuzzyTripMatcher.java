@@ -24,4 +24,9 @@ public class NoOpFuzzyTripMatcher implements FuzzyTripMatcher {
   ) {
     throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
   }
+
+  @Override
+  public boolean isEnabled() {
+    return false;
+  }
 }

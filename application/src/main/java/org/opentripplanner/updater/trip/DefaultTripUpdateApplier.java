@@ -74,7 +74,7 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     DeduplicatorService deduplicator,
     @Nullable TimetableSnapshotManager snapshotManager,
     TripPatternCache tripPatternCache,
-    @Nullable FuzzyTripMatcher fuzzyTripMatcher,
+    FuzzyTripMatcher fuzzyTripMatcher,
     RouteCreationStrategy routeCreationStrategy
   ) {
     this.transitService = Objects.requireNonNull(transitService);
