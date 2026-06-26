@@ -20,8 +20,8 @@ import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.StopUpdateStrategy;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
+import org.opentripplanner.updater.trip.policy.StopReplacementPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -144,39 +144,6 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
   }
 
   /**
-   * Match a pre-resolved stop in the pattern by ID lookup, starting from a given index.
-   * Used for GTFS-RT updates that omit stopSequence but provide stopId.
-   * The startFrom parameter supports circular routes where the same stop appears multiple times.
-   *
-   * @param stop The pre-resolved stop location
-   * @param pattern The trip pattern to search
-   * @param startFrom The index to start searching from (inclusive)
-   * @return The matched stop index, or -1 if no match found
-   */
-  private int matchStopInPattern(StopLocation stop, TripPattern pattern, int startFrom) {
-    for (int i = startFrom; i < pattern.numberOfStops(); i++) {
-      StopLocation patternStop = pattern.getStop(i);
-
-      // Direct match by ID
-      if (patternStop.getId().equals(stop.getId())) {
-        return i;
-      }
-
-      // Parent station match (quay changes)
-      if (
-        patternStop.getParentStation() != null &&
-        stop.getParentStation() != null &&
-        patternStop.getParentStation().getId().equals(stop.getParentStation().getId())
-      ) {
-        return i;
-      }
-    }
-
-    // No match found
-    return -1;
-  }
-
-  /**
    * Result of applying stop time updates, tracking both time updates and pattern modifications.
    */
   private static class PatternModificationResult {
@@ -225,70 +192,15 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
     TripPattern scheduledPattern,
     Trip trip
   ) {
-    var stopUpdateStrategy = resolvedUpdate.options().stopUpdateStrategy();
-
     var result = new PatternModificationResult();
-    var constraint = resolvedUpdate.options().stopReplacementConstraint();
-    var stopReplacementValidator = new StopReplacementValidator();
+    var policy = resolvedUpdate.formatPolicy();
+    var cursor = policy.stopMatching().newCursor(scheduledPattern, trip.getId());
+    var stopReplacement = policy.stopReplacement();
 
-    int listIndex = 0;
-    int nextStopSearchIndex = 0;
     for (ResolvedStopTimeUpdate stopUpdate : resolvedUpdate.stopTimeUpdates()) {
-      Integer stopSequence = stopUpdate.stopSequence();
-      int stopIndex;
-      StopLocation resolvedStop = null;
-
-      if (stopUpdateStrategy == StopUpdateStrategy.FULL_UPDATE) {
-        // SIRI-ET: position in list IS the position in pattern
-        stopIndex = listIndex;
-
-        // Use the pre-resolved stop for validation and replacement
-        resolvedStop = stopUpdate.stop();
-        if (resolvedStop == null) {
-          throw UpdateException.of(trip.getId(), UpdateErrorType.UNKNOWN_STOP, stopIndex);
-        }
-      } else {
-        // PARTIAL_UPDATE (GTFS-RT): use stopSequence or lookup by stopId
-        if (stopSequence != null) {
-          // GTFS-RT with explicit stop sequence
-          stopIndex = stopSequence;
-          if (stopIndex < 0 || stopIndex >= scheduledPattern.numberOfStops()) {
-            LOG.warn(
-              "Stop index {} out of bounds for pattern with {} stops",
-              stopIndex,
-              scheduledPattern.numberOfStops()
-            );
-            throw UpdateException.of(
-              trip.getId(),
-              UpdateErrorType.INVALID_STOP_SEQUENCE,
-              stopIndex
-            );
-          }
-
-          // Use pre-resolved stop if assignedStopId is provided (stop replacement)
-          if (stopUpdate.stopReference().hasAssignedStopId()) {
-            resolvedStop = stopUpdate.stop();
-          }
-        } else {
-          // GTFS-RT without stopSequence: lookup stop by ID in pattern
-          resolvedStop = stopUpdate.stop();
-          if (resolvedStop == null) {
-            throw UpdateException.of(trip.getId(), UpdateErrorType.INVALID_STOP_REFERENCE);
-          }
-          int matchIndex = matchStopInPattern(resolvedStop, scheduledPattern, nextStopSearchIndex);
-          // If not found from current position, try from beginning (supports out-of-order updates)
-          if (matchIndex < 0 && nextStopSearchIndex > 0) {
-            matchIndex = matchStopInPattern(resolvedStop, scheduledPattern, 0);
-          }
-          if (matchIndex < 0) {
-            throw UpdateException.of(trip.getId(), UpdateErrorType.INVALID_STOP_REFERENCE);
-          }
-          stopIndex = matchIndex;
-          nextStopSearchIndex = matchIndex + 1;
-        }
-      }
-
-      listIndex++;
+      var match = cursor.resolveIndex(stopUpdate);
+      int stopIndex = match.index();
+      StopLocation resolvedStop = match.resolvedStop();
 
       // Get the scheduled stop from the pattern
       StopLocation scheduledStop = scheduledPattern.getStop(stopIndex);
@@ -303,19 +215,11 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
         resolvedStop != null && !resolvedStop.getId().equals(scheduledStop.getId());
 
       if (hasStopReplacement) {
-        // Validate replacement against constraint
-        var validationResult = stopReplacementValidator.validate(
-          scheduledStop,
-          resolvedStop,
-          constraint
-        );
-
-        if (validationResult != StopReplacementValidator.Result.VALID) {
-          var errorType = switch (validationResult) {
-            case STOP_MISMATCH -> UpdateErrorType.STOP_MISMATCH;
-            default -> UpdateErrorType.UNKNOWN;
-          };
-          throw UpdateException.of(trip.getId(), errorType, stopIndex);
+        // Validate the replacement against the format's stop replacement policy
+        if (
+          stopReplacement.check(scheduledStop, resolvedStop) != StopReplacementPolicy.Result.VALID
+        ) {
+          throw UpdateException.of(trip.getId(), UpdateErrorType.STOP_MISMATCH, stopIndex);
         }
 
         // Valid replacement - track it
