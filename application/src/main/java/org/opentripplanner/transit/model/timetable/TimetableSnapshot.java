@@ -152,6 +152,11 @@ public class TimetableSnapshot {
   > realTimeAddedTripOnServiceDateForTripAndDay;
   private final DefaultTripCalendars tripCalendars;
   private RaptorTransitData realtimeRaptorTransitData;
+
+  /**
+   * Mapper to update raptor data. The mapper has a cache and is therefore stateful, so it has to be
+   * injected into subsequent snapshot instances.
+   */
   private final TimetableUpdateMapper timetableUpdateMapper;
 
   /**
@@ -183,7 +188,8 @@ public class TimetableSnapshot {
       HashMultimap.create(),
       tripCalendars,
       raptorTransitData,
-      false
+      false,
+      new TimetableUpdateMapper()
     );
   }
 
@@ -200,7 +206,8 @@ public class TimetableSnapshot {
     SetMultimap<StopLocation, TripPattern> patternsForStop,
     DefaultTripCalendars tripCalendars,
     RaptorTransitData realtimeRaptorTransitData,
-    boolean readOnly
+    boolean readOnly,
+    TimetableUpdateMapper timetableUpdateMapper
   ) {
     this.timetables = timetables;
     this.realTimeNewTripPatternsForModifiedTrips = realTimeNewTripPatternsForModifiedTrips;
@@ -215,7 +222,7 @@ public class TimetableSnapshot {
     this.patternsForStop = patternsForStop;
     this.tripCalendars = tripCalendars;
     this.realtimeRaptorTransitData = realtimeRaptorTransitData;
-    this.timetableUpdateMapper = new TimetableUpdateMapper();
+    this.timetableUpdateMapper = timetableUpdateMapper;
     this.readOnly = readOnly;
   }
 
@@ -426,7 +433,8 @@ public class TimetableSnapshot {
       ImmutableSetMultimap.copyOf(patternsForStop),
       tripCalendars,
       updatedRaptorData,
-      true
+      true,
+      timetableUpdateMapper
     );
 
     realtimeRaptorTransitData = updatedRaptorData;

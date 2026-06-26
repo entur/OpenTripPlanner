@@ -26,6 +26,7 @@ import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitDataTestFactory;
+import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.TimetableUpdateMapper;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.calendar.DefaultTripCalendars;
 import org.opentripplanner.transit.model.framework.Deduplicator;
@@ -218,7 +219,8 @@ public class TimetableSnapshotTest {
       patternsForStop,
       new DefaultTripCalendars(),
       RaptorTransitDataTestFactory.empty(),
-      false
+      false,
+      new TimetableUpdateMapper()
     );
     assertFalse(snapshot.isEmpty());
     snapshot.clear(id.getFeedId());
