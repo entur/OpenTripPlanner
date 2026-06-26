@@ -151,7 +151,7 @@ public class TimetableSnapshot {
     TripOnServiceDate
   > realTimeAddedTripOnServiceDateForTripAndDay;
   private final DefaultTripCalendars tripCalendars;
-  private final RaptorTransitData realtimeRaptorTransitData;
+  private RaptorTransitData realtimeRaptorTransitData;
   private final TimetableUpdateMapper timetableUpdateMapper;
 
   /**
@@ -428,6 +428,8 @@ public class TimetableSnapshot {
       updatedRaptorData,
       true
     );
+
+    realtimeRaptorTransitData = updatedRaptorData;
 
     dirtyTimetables.clear();
     dirty = false;
