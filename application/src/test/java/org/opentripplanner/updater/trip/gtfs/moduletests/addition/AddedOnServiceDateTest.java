@@ -11,13 +11,13 @@ import java.time.LocalDate;
 import java.util.List;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.opentripplanner.transit.model._data.TransitTestEnvironment;
-import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
-import org.opentripplanner.transit.model._data.TripInput;
+import org.opentripplanner.transit.model.TransitTestEnvironment;
+import org.opentripplanner.transit.model.TransitTestEnvironmentBuilder;
+import org.opentripplanner.transit.model.TripInput;
 import org.opentripplanner.transit.model.site.RegularStop;
-import org.opentripplanner.updater.trip.GtfsRtTestHelper;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
-import org.opentripplanner.updater.trip.TripUpdateBuilder;
+import org.opentripplanner.updater.trip.gtfs.GtfsRtTestHelper;
+import org.opentripplanner.updater.trip.gtfs.TripUpdateBuilder;
 
 class AddedOnServiceDateTest implements RealtimeTestConstants {
 
