@@ -78,6 +78,8 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Grouping Trip calendar logic into a single service [#7731](https://github.com/opentripplanner/OpenTripPlanner/pull/7731)
 - Flex transfers in debug UI [#7661](https://github.com/opentripplanner/OpenTripPlanner/pull/7661)
 - Add canceledTrips query to Pattern type and patternsByIds query to the GTFS API [#7714](https://github.com/opentripplanner/OpenTripPlanner/pull/7714)
+- Add walk safety to OsmTagMapper [#6944](https://github.com/opentripplanner/OpenTripPlanner/pull/6944)
+- Allow http protocol for remote sources [#7758](https://github.com/opentripplanner/OpenTripPlanner/pull/7758)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)

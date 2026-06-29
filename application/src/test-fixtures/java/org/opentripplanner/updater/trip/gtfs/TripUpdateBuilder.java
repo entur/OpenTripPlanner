@@ -1,4 +1,4 @@
-package org.opentripplanner.updater.trip;
+package org.opentripplanner.updater.trip.gtfs;
 
 import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
