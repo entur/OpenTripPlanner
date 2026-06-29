@@ -74,11 +74,12 @@ class AddedTripBuilder {
     this.deduplicator = deduplicator;
     // Verifying values required in SIRI Profile
     // Added ServiceJourneyId
-    String estimatedVehicleJourneyCode = journey.estimatedVehicleJourneyCode();
-    Objects.requireNonNull(estimatedVehicleJourneyCode, "EstimatedVehicleJourneyCode is required");
-    var codeAdapter = new EstimatedVehicleJourneyCodeAdapter(estimatedVehicleJourneyCode);
-    tripId = entityResolver.resolveId(codeAdapter.getServiceJourneyId());
-    tripOnServiceDateId = entityResolver.resolveId(codeAdapter.getDatedServiceJourneyId());
+    EstimatedVehicleJourneyCode code = Objects.requireNonNull(
+      journey.code(),
+      "EstimatedVehicleJourneyCode is required"
+    );
+    tripId = entityResolver.resolveId(code.asServiceJourneyId());
+    tripOnServiceDateId = entityResolver.resolveId(code.asDatedServiceJourneyId());
 
     // OperatorRef of added trip
     String operatorRef = Objects.requireNonNull(journey.operatorRef(), "OperatorRef is required");
