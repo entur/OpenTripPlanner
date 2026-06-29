@@ -272,7 +272,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
           }
 
           // The position finder's delay heuristic measures each detour against OTP's routed
-          // baseline durations (memoized on the repository), so resolve them up front.
+          // baseline durations, resolved (and memoized) here. A trip whose baseline is unroutable
+          // is skipped.
           var baselineLegDurations = resolveLegDurations(tripWithVertices, router);
           if (baselineLegDurations == null) {
             LOG.debug("Baseline for trip {} is unroutable; skipping", trip.getId());
@@ -288,7 +289,10 @@ public class DefaultCarpoolingService implements CarpoolingService {
           );
 
           if (viablePositions.isEmpty()) {
-            LOG.debug("No viable positions found for trip {} (avoided all routing!)", trip.getId());
+            LOG.debug(
+              "No viable positions found for trip {} (avoided per-position routing)",
+              trip.getId()
+            );
             return null;
           }
 
@@ -306,7 +310,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
               dropoffSnap.vertex(),
               pickupSnap.walkPath(),
               dropoffSnap.walkPath()
-            )
+            ),
+            baselineLegDurations
           );
         })
         .filter(Objects::nonNull)
@@ -502,9 +507,9 @@ public class DefaultCarpoolingService implements CarpoolingService {
         .filter(Objects::nonNull)
         .toList();
 
-      // Sizes each leg's tree from OTP's own routed leg durations (cached per trip) and re-routes
-      // any baseline leg the tree misses — see resolveLegDurations and the InsertionEvaluator
-      // fallback below.
+      // Routes each trip's baseline legs to obtain the per-leg durations that size its trees (cached
+      // per trip) — see resolveLegDurations. The baseline geometry itself is materialized from those
+      // trees, so this router only computes durations and is not used as a routing fallback.
       var baselineRouter = new CarpoolStreetRouter(streetLimitationParametersService);
 
       // Each waypoint's tree only has to span its own leg plus the feasible insertion detour —
@@ -546,11 +551,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
       var stopDuration = request.preferences().car().pickupTime();
 
-      var insertionEvaluator = new InsertionEvaluator(
-        carpoolTreeVertexRouter,
-        baselineRouter,
-        stopDuration
-      );
+      var insertionEvaluator = new InsertionEvaluator(carpoolTreeVertexRouter, stopDuration);
 
       var candidateTripsWithViableStopsAndPositions = routableTrips
         .stream()
@@ -585,7 +586,11 @@ public class DefaultCarpoolingService implements CarpoolingService {
             })
             .filter(it -> !it.insertionPositions().isEmpty())
             .toList();
-          return new TripWithViableAccessEgress(tripWithVertices, viableSegmentInsertions);
+          return new TripWithViableAccessEgress(
+            tripWithVertices,
+            legDurations,
+            viableSegmentInsertions
+          );
         })
         .toList();
 
@@ -704,19 +709,17 @@ public class DefaultCarpoolingService implements CarpoolingService {
     CarpoolTripWithVertices tripWithVertices,
     CarpoolRouter baselineRouter
   ) {
-    var vertices = tripWithVertices.vertices();
-    var durations = new Duration[vertices.size() - 1];
-    for (int leg = 0; leg < durations.length; leg++) {
-      var path = baselineRouter.route(vertices.get(leg), vertices.get(leg + 1));
-      if (path == null) {
-        LOG.debug(
-          "OTP could not route baseline leg {} of trip {} within the carpool bound; skipping it",
-          leg,
-          tripWithVertices.trip().getId()
-        );
-        return null;
-      }
-      durations[leg] = GraphPathUtils.durationOrZero(path);
+    var legs = baselineRouter.routeLegs(tripWithVertices.vertices());
+    if (legs == null) {
+      LOG.debug(
+        "OTP could not route the baseline of trip {} within the carpool bound; skipping it",
+        tripWithVertices.trip().getId()
+      );
+      return null;
+    }
+    var durations = new Duration[legs.length];
+    for (int leg = 0; leg < legs.length; leg++) {
+      durations[leg] = GraphPathUtils.durationOrZero(legs[leg]);
     }
     return durations;
   }

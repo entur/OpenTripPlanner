@@ -29,6 +29,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
 import org.opentripplanner.ext.carpooling.util.BeelineEstimator;
+import org.opentripplanner.ext.carpooling.util.GraphPathUtils;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.SimpleVertex;
@@ -90,12 +91,18 @@ class InsertionEvaluatorTest {
     CarpoolRouter carpoolRouter
   ) {
     var tripWithVertices = createTripWithVertices(trip);
+    // A trip whose baseline cannot be routed cannot carry a passenger. The same durations feed the
+    // finder and the evaluator.
+    var baselineLegDurations = routedBaselineDurations(tripWithVertices, carpoolRouter);
+    if (baselineLegDurations == null) {
+      return null;
+    }
     List<InsertionPosition> viablePositions = positionFinder.findViablePositions(
       trip,
       passengerPickup,
       passengerDropoff,
       Duration.ZERO,
-      beelineLegDurations(trip)
+      baselineLegDurations
     );
 
     if (viablePositions.isEmpty()) {
@@ -106,8 +113,33 @@ class InsertionEvaluatorTest {
     return evaluator.findBestInsertion(
       tripWithVertices,
       viablePositions,
-      new PassengerSnap(vertexMap.get(passengerPickup), vertexMap.get(passengerDropoff), null, null)
+      new PassengerSnap(
+        vertexMap.get(passengerPickup),
+        vertexMap.get(passengerDropoff),
+        null,
+        null
+      ),
+      baselineLegDurations
     );
+  }
+
+  /**
+   * Routes each baseline leg with the test router and returns the per-leg durations, or
+   * {@code null} if any leg cannot be routed.
+   */
+  private Duration[] routedBaselineDurations(
+    CarpoolTripWithVertices tripWithVertices,
+    CarpoolRouter router
+  ) {
+    var legs = router.routeLegs(tripWithVertices.vertices());
+    if (legs == null) {
+      return null;
+    }
+    var durations = new Duration[legs.length];
+    for (int i = 0; i < legs.length; i++) {
+      durations[i] = GraphPathUtils.durationOrZero(legs[i]);
+    }
+    return durations;
   }
 
   private WgsCoordinate getCoordinateBetween(WgsCoordinate coordinate1, WgsCoordinate coordinate2) {
@@ -250,6 +282,51 @@ class InsertionEvaluatorTest {
   }
 
   /**
+   * The trip's baseline must not be routed when no position yields a valid insertion. A position
+   * passes the beeline pre-filter but a slow detour blows the tight delay budget, so the evaluator
+   * rejects every position; the router throws if asked to route the baseline leg (both endpoints
+   * are driver waypoints), proving it never is.
+   */
+  @Test
+  void findBestInsertion_doesNotRouteBaselineWhenNoPositionIsValid() {
+    var trip = createTripWithDeviationBudget(Duration.ofMinutes(5), OSLO_CENTER, OSLO_NORTH);
+    var tripWithVertices = createTripWithVertices(trip);
+
+    var centerVertex = vertexMap.get(OSLO_CENTER);
+    var northVertex = vertexMap.get(OSLO_NORTH);
+    var slowDetour = createGraphPath(Duration.ofMinutes(30));
+    CarpoolRouter routingFunction = (from, to) -> {
+      boolean baselineLeg =
+        (from == centerVertex || from == northVertex) && (to == centerVertex || to == northVertex);
+      if (baselineLeg) {
+        throw new AssertionError(
+          "baseline routed though no insertion is valid: " + from + " → " + to
+        );
+      }
+      return slowDetour;
+    };
+
+    var viablePositions = positionFinder.findViablePositions(
+      trip,
+      OSLO_EAST,
+      OSLO_WEST,
+      Duration.ZERO,
+      beelineLegDurations(trip)
+    );
+    assertFalse(viablePositions.isEmpty(), "beeline pre-filter should admit the position");
+
+    var evaluator = new InsertionEvaluator(routingFunction, Duration.ZERO);
+    var result = evaluator.findBestInsertion(
+      tripWithVertices,
+      viablePositions,
+      new PassengerSnap(vertexMap.get(OSLO_EAST), vertexMap.get(OSLO_WEST), null, null),
+      beelineLegDurations(trip)
+    );
+
+    assertNull(result);
+  }
+
+  /**
    * Given two viable insertion positions with different total trip durations,
    * the evaluator should select the one with the shorter total.
    *
@@ -300,7 +377,8 @@ class InsertionEvaluatorTest {
     var result = evaluator.findBestInsertion(
       tripWithVertices,
       viablePositions,
-      new PassengerSnap(vertexMap.get(OSLO_EAST), vertexMap.get(OSLO_WEST), null, null)
+      new PassengerSnap(vertexMap.get(OSLO_EAST), vertexMap.get(OSLO_WEST), null, null),
+      routedBaselineDurations(tripWithVertices, routingFunction)
     );
 
     assertNotNull(result);
