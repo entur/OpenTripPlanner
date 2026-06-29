@@ -4,6 +4,7 @@ import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_DI
 import static org.opentripplanner.updater.spi.UpdateErrorType.OUTSIDE_SERVICE_PERIOD;
 import static org.opentripplanner.updater.spi.UpdateErrorType.TRIP_NOT_FOUND;
 
+import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
@@ -22,13 +23,16 @@ class DuplicatedTripHandler {
 
   private final TransitEditorService transitEditorService;
   private final TimetableSnapshotManager snapshotManager;
+  private final DeduplicatorService deduplicator;
 
   DuplicatedTripHandler(
     TransitEditorService transitEditorService,
-    TimetableSnapshotManager snapshotManager
+    TimetableSnapshotManager snapshotManager,
+    DeduplicatorService deduplicator
   ) {
     this.transitEditorService = transitEditorService;
     this.snapshotManager = snapshotManager;
+    this.deduplicator = deduplicator;
   }
 
   UpdateSuccess handleDuplicated(TripUpdate tripUpdate, UpdateIncrementality updateIncrementality)
@@ -70,7 +74,7 @@ class DuplicatedTripHandler {
     // Shift all scheduled times and rebind to the new trip
     int serviceCode = transitEditorService.getTripCalendars().getServiceCode(serviceId);
     var newScheduledTimes = originalScheduledTimes
-      .copyOfNoDuplication()
+      .copyOf(deduplicator)
       .withTrip(newTrip)
       .withServiceCode(serviceCode)
       .plusTimeShift(offsetSeconds)

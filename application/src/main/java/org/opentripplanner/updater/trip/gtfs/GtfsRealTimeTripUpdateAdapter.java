@@ -73,7 +73,11 @@ public class GtfsRealTimeTripUpdateAdapter {
       tripTimesUpdater,
       tripPatternCache
     );
-    this.duplicatedTripHandler = new DuplicatedTripHandler(transitEditorService, snapshotManager);
+    this.duplicatedTripHandler = new DuplicatedTripHandler(
+      transitEditorService,
+      snapshotManager,
+      deduplicator
+    );
     this.canceledTripHandler = new CanceledTripHandler(transitEditorService, snapshotManager);
   }
 
