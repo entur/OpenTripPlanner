@@ -37,6 +37,10 @@ class DuplicatedTripHandler {
 
   UpdateSuccess handleDuplicated(TripUpdate tripUpdate, UpdateIncrementality updateIncrementality)
     throws UpdateException {
+    // out of precaution we don't allow the combination of differential and DUPLICATED
+    // it's not clear what the semantics of this would be and particular how cancellation of a
+    // duplicated trip would work.
+    // please get in touch with the dev team if you need this functionality.
     if (updateIncrementality == UpdateIncrementality.DIFFERENTIAL) {
       throw UpdateException.of(tripUpdate.tripId(), NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED);
     }
