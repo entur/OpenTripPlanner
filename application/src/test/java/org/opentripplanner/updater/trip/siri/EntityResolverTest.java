@@ -11,6 +11,8 @@ import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.SiteRepository;
 import org.opentripplanner.transit.service.TimetableRepository;
+import uk.org.siri.siri21.DatedVehicleJourneyRef;
+import uk.org.siri.siri21.EstimatedVehicleJourney;
 
 class EntityResolverTest {
 
@@ -50,5 +52,58 @@ class EntityResolverTest {
     var resolver = new EntityResolver(transitService, FEED_ID);
     assertEquals(STOP_2, resolver.resolveQuay(SSP_ID.getId()));
     assertEquals(STOP_1, resolver.resolveQuay(STOP_1.getId().getId()));
+  }
+
+  /**
+   * When the dated service journey is resolved from the EstimatedVehicleJourneyCode, the code must
+   * be normalized to a DatedServiceJourney id, matching the id under which {@link AddedTripBuilder}
+   * registers the added TripOnServiceDate. A code supplied in ServiceJourney form must be swapped.
+   */
+  @Test
+  void resolveDatedServiceJourneyIdFromServiceJourneyCode() {
+    var resolver = newResolver();
+    var journey = new EstimatedVehicleJourney();
+    journey.setEstimatedVehicleJourneyCode("RUT:ServiceJourney:1234");
+
+    assertEquals(
+      new FeedScopedId(FEED_ID, "RUT:DatedServiceJourney:1234"),
+      resolver.resolveDatedServiceJourneyId(journey)
+    );
+  }
+
+  @Test
+  void resolveDatedServiceJourneyIdFromDatedServiceJourneyCode() {
+    var resolver = newResolver();
+    var journey = new EstimatedVehicleJourney();
+    journey.setEstimatedVehicleJourneyCode("RUT:DatedServiceJourney:1234");
+
+    assertEquals(
+      new FeedScopedId(FEED_ID, "RUT:DatedServiceJourney:1234"),
+      resolver.resolveDatedServiceJourneyId(journey)
+    );
+  }
+
+  /**
+   * A DatedVehicleJourneyRef takes precedence over the EstimatedVehicleJourneyCode and is resolved
+   * verbatim, without entity-type normalization.
+   */
+  @Test
+  void resolveDatedServiceJourneyIdFromDatedVehicleJourneyRef() {
+    var resolver = newResolver();
+    var journey = new EstimatedVehicleJourney();
+    var ref = new DatedVehicleJourneyRef();
+    ref.setValue("RUT:DatedServiceJourney:5678");
+    journey.setDatedVehicleJourneyRef(ref);
+    journey.setEstimatedVehicleJourneyCode("RUT:ServiceJourney:1234");
+
+    assertEquals(
+      new FeedScopedId(FEED_ID, "RUT:DatedServiceJourney:5678"),
+      resolver.resolveDatedServiceJourneyId(journey)
+    );
+  }
+
+  private static EntityResolver newResolver() {
+    var transitService = new DefaultTransitService(new TimetableRepository());
+    return new EntityResolver(transitService, FEED_ID);
   }
 }
