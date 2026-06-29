@@ -164,10 +164,12 @@ public class TransactionFrameworkTest {
   /**
    * Demonstrates the rollback contract difference between the two lifecycle strategies:
    * <ul>
-   *   <li>ARepository uses copy-on-write via {@code ARepositoryLifecycle}: rollback discards the
-   *       in-progress copy, so the next task starts from the last committed snapshot.</li>
-   *   <li>BRepository returns {@code this} from {@code copyOnWrite}, so mutations written before
-   *       the failure are NOT discarded by rollback and leak into the next committed snapshot.</li>
+   *   <li>CustomerRepository uses copy-on-write via {@code ARepositoryLifecycle}: rollback
+   *       discards the in-progress copy, so the next task starts from the last committed
+   *       snapshot.</li>
+   *   <li>OrderRepository returns {@code this} from {@code copyOnWrite}, so mutations written
+   *       before the failure are NOT discarded by rollback and leak into the next committed
+   *       snapshot.</li>
    * </ul>
    */
   @Test

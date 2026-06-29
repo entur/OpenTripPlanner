@@ -27,6 +27,9 @@ public interface UpdateManager {
   /**
    * Register an event handler at startup.
    * <p>
+   * This method is NOT THREADSAFE and should not be called concurrently with or after event
+   * publications.
+   * <p>
    * When a {@link org.opentripplanner.framework.event.DomainEvent} matching
    * {@code handler.eventType()} is published, the {@link WriteContext} will call the
    * given event handler, injecting the mutable repository for {@code repoHandle} at dispatch time.

@@ -1,5 +1,6 @@
 package org.opentripplanner.framework.transaction;
 
+import java.util.function.Consumer;
 import org.opentripplanner.framework.transaction.api.RepositoryHandle;
 import org.opentripplanner.framework.transaction.api.RepositoryLifecycle;
 import org.opentripplanner.framework.transaction.api.TransactionScope;
@@ -16,9 +17,9 @@ import org.opentripplanner.framework.transaction.api.TransactionScope;
  *       injection into services and updaters.
  *   <li>At the start of each request, call {@link #scope()} to obtain a {@link TransactionScope}
  *       that captures a consistent snapshot of all repositories at that point in time.
- *   <li>To perform writes, use the {@link UpdateManager}, and add tasks to the manager queue.
- *   <li>Use either the {@link UpdateManager#commit()} or the auto-commit feature to commit all
- *   pending tasks. If you need atomic commits, commit after each task.
+ *   <li>To perform writes, use {@link UpdateManager#submit(Consumer)} to add tasks to the manager queue.
+ *   <li>Commits are either performed after each submitted task or, if periodic commits are
+ *       configured via {@code maxSnapshotFrequency}, in the specified frequency.
  * </ol>
  */
 public interface RepositoryRegistry {
@@ -26,7 +27,8 @@ public interface RepositoryRegistry {
    * Register a new transactional repository and return a typed handle for it.
    * <p>
    * The handle is application-scoped and should be kept for the lifetime of the application,
-   * typically by injecting it via Dagger.
+   * typically by injecting it via Dagger. Do not create and register new repositories after
+   * wiring is done, this could lead to concurrency issues.
    *
    * @param initialRepositorySnapshot the initial read-only snapshot for the repository
    * @param lifecycle                 the lifecycle strategy for the given repository/snapshot
@@ -41,7 +43,9 @@ public interface RepositoryRegistry {
 
   /**
    * This has the same semantics as {@link #registerRepositorySnapshot(Object, RepositoryLifecycle)},
-   * but creates the initial snapshot from the repository, using the provided lifecycle.
+   * but creates the initial snapshot from the repository, using the provided lifecycle. Do not
+   * create and register new repositories after wiring is done, this could lead to concurrency
+   * issues.
    */
   <S, M> RepositoryHandle<S, M> registerRepository(
     M repository,
