@@ -3,7 +3,6 @@ package org.opentripplanner.updater.trip.siri;
 import static java.lang.Boolean.TRUE;
 
 import java.time.ZonedDateTime;
-import java.util.Optional;
 import java.util.function.Supplier;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
@@ -19,17 +18,17 @@ class TimetableHelper {
    * service time. If none of the suppliers provide a time, return null.
    */
   @SafeVarargs
-  private static Optional<Integer> getAvailableTime(
+  private static Integer getAvailableTime(
     ZonedDateTime startOfService,
     Supplier<ZonedDateTime>... timeSuppliers
   ) {
     for (var supplier : timeSuppliers) {
       final ZonedDateTime time = supplier.get();
       if (time != null) {
-        return Optional.of(ServiceDateUtils.secondsSinceStartOfService(startOfService, time));
+        return ServiceDateUtils.secondsSinceStartOfService(startOfService, time);
       }
     }
-    return Optional.empty();
+    return null;
   }
 
   public static void applyUpdates(
@@ -45,14 +44,14 @@ class TimetableHelper {
     tripTimesBuilder.withHasDeparted(index, call.hasDeparted());
 
     int scheduledArrivalTime = tripTimesBuilder.getArrivalTime(index);
-    Optional<Integer> realTimeArrivalTime = getAvailableTime(
+    Integer realTimeArrivalTime = getAvailableTime(
       departureDate,
       call::getActualArrivalTime,
       call::getExpectedArrivalTime
     );
 
     int scheduledDepartureTime = tripTimesBuilder.getDepartureTime(index);
-    Optional<Integer> realTimeDepartureTime = getAvailableTime(
+    Integer realTimeDepartureTime = getAvailableTime(
       departureDate,
       call::getActualDepartureTime,
       call::getExpectedDepartureTime
@@ -60,9 +59,9 @@ class TimetableHelper {
 
     StopTimeUpdate stopTimeUpdate = new StopTimeUpdate(
       scheduledArrivalTime,
-      realTimeArrivalTime.orElse(null),
+      realTimeArrivalTime,
       scheduledDepartureTime,
-      realTimeDepartureTime.orElse(null),
+      realTimeDepartureTime,
       index == 0,
       isLastStop
     );

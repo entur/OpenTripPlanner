@@ -12,7 +12,7 @@ class StopTimeUpdateTest {
   private static final int SCHED_ARRIVAL = 3600;
   private static final int SCHED_DEPARTURE = 3660;
 
-  // -1 signals "no realtime value available"
+  // null signals "no realtime value available"
   private static final Integer NO_RT = null;
 
   // -----------------------------------------------------------------------
