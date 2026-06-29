@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.carpooling.routing;
 
+import java.time.Duration;
 import java.util.List;
 
 /**
@@ -8,9 +9,12 @@ import java.util.List;
  * represents a transit stop that can potentially be served by this carpool trip.
  *
  * @param tripWithVertices the carpool trip with its resolved street graph vertices
+ * @param baselineLegDurations OTP's routed travel duration for each leg of the trip's baseline,
+ *        one entry per leg ({@code stops().size() - 1}).
  * @param viableAccessEgress the access/egress candidates that passed filtering for this trip
  */
 public record TripWithViableAccessEgress(
   CarpoolTripWithVertices tripWithVertices,
+  Duration[] baselineLegDurations,
   List<ViableAccessEgress> viableAccessEgress
 ) {}

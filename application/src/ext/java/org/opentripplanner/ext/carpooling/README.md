@@ -45,10 +45,10 @@ The carpooling extension enables OpenTripPlanner to find carpool trip options by
 │                                            │
 │     2b. Routing & Selection                │
 │         (InsertionEvaluator)               │
-│         - Route baseline segments (cached) │
-│         - Route viable positions           │
-│         - Endpoint-matching segment reuse  │
+│         - Route each position's detours    │
 │         - Select minimum additional time   │
+│         - Route baseline once, lazily,     │
+│           to build the winning geometry    │
 │                                            │
 └────────┬───────────────────────────────────┘
          │
@@ -146,29 +146,27 @@ For each remaining trip:
 
 #### Stage 2: Routing and Selection (InsertionEvaluator)
 
-For viable positions from Stage 1, perform A* routing to find the optimal insertion:
+For viable positions from Stage 1, route each candidate's detour and select the best insertion. The driver's baseline geometry is routed **lazily** — only after a valid insertion is found:
 
 ```
 For each trip with viable positions:
-  1. Route baseline segments (driver's original route) and cache results
+  1. For each viable position:
+     a. Build the modified route with the passenger inserted
+     b. Route only the detour segments around the inserted pickup/dropoff
+     c. Take each untouched leg's duration from the routed baseline durations
+     d. Reject the position if any stop's delay exceeds its deviation budget
 
-  2. For each viable position:
-     a. Build modified route with passenger inserted
-     b. Route only segments with changed endpoints
-     c. Reuse cached segments where endpoints match exactly
-     d. Calculate total duration and additional time vs. baseline
-     e. Check passenger delay constraints
+  2. Select the surviving insertion with the minimum total trip duration
 
-  3. Select insertion with minimum additional time
-  4. Ensure additional time ≤ driver's deviation budget
+  3. Only if a position survived, route the driver's baseline path once and
+     stitch it into the selected detour segments to build the leg geometry
 ```
 
-**Critical optimization - Endpoint-matching segment reuse**:
-- Baseline segments are cached after first routing
-- For modified routes, segments are reused **only if both endpoints match exactly**
-- Endpoint matching uses `WgsCoordinate.equals()` with 7-decimal precision (~1cm)
-- Only segments with changed endpoints are re-routed
-- Prevents incorrect reuse when passenger insertion splits existing segments
+**Critical optimization - lazy baseline, durations-first selection**:
+- Selection routes only each position's detour segments; untouched legs reuse the trip's already-routed baseline durations
+- A trip whose every position fails the delay constraints costs **no** baseline-geometry routing
+- The baseline path is routed at most once per trip, then shared to materialize every winning insertion's geometry
+- A modified segment is mapped to its baseline leg by index (`InsertionPosition.baselineSegmentIndex`), so a leg untouched by the insertion is reused exactly while the (at most four) segments around the inserted points are routed afresh
 
 ## Usage Examples
 

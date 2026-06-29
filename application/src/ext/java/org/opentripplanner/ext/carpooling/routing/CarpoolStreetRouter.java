@@ -1,5 +1,7 @@
 package org.opentripplanner.ext.carpooling.routing;
 
+import java.util.HashMap;
+import java.util.Map;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.strategy.DurationSkipEdgeStrategy;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
@@ -12,6 +14,7 @@ import org.opentripplanner.street.search.request.StreetSearchRequest;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.street.search.strategy.DominanceFunctions;
 import org.opentripplanner.street.service.StreetLimitationParametersService;
+import org.opentripplanner.utils.collection.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,6 +34,13 @@ import org.slf4j.LoggerFactory;
  *   <li><strong>Error Handling:</strong> Returns null on routing failure (logged as warning)</li>
  * </ul>
  *
+ * <h2>Caching</h2>
+ * <p>
+ * Results are memoized per {@code (from, to)} vertex pair, including {@code null} for an
+ * unroutable pair. The cache is unbounded but request-scoped: each routing request builds its own
+ * router over its own temporary vertices and discards it when done. Not thread-safe — use one
+ * instance per thread.
+ *
  * @see InsertionEvaluator for usage in insertion evaluation
  */
 public class CarpoolStreetRouter implements CarpoolRouter {
@@ -38,6 +48,7 @@ public class CarpoolStreetRouter implements CarpoolRouter {
   private static final Logger LOG = LoggerFactory.getLogger(CarpoolStreetRouter.class);
 
   private final StreetLimitationParametersService streetLimitationParametersService;
+  private final Map<Pair<Vertex>, GraphPath<State, Edge, Vertex>> pathCache = new HashMap<>();
 
   /**
    * Creates a new carpool street router.
@@ -50,12 +61,19 @@ public class CarpoolStreetRouter implements CarpoolRouter {
 
   @Override
   public GraphPath<State, Edge, Vertex> route(Vertex from, Vertex to) {
+    var key = new Pair<>(from, to);
+    if (pathCache.containsKey(key)) {
+      return pathCache.get(key);
+    }
+    GraphPath<State, Edge, Vertex> path;
     try {
-      return carpoolRouting(from, to);
+      path = carpoolRouting(from, to);
     } catch (Exception e) {
       LOG.warn("Routing failed from {} to {}: {}", from, to, e.getMessage());
-      return null;
+      path = null;
     }
+    pathCache.put(key, path);
+    return path;
   }
 
   /**
