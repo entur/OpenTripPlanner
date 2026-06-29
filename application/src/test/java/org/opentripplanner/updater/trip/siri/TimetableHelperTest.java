@@ -18,6 +18,7 @@ import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Agency;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.Station;
+import org.opentripplanner.transit.model.timetable.OccupancyStatus;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimes;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.Trip;
@@ -200,7 +201,7 @@ public class TimetableHelperTest {
       false,
       true,
       recordedCall,
-      OccupancyEnumeration.STANDING_AVAILABLE
+      OccupancyStatus.STANDING_ROOM_ONLY
     );
 
     assertEquals(

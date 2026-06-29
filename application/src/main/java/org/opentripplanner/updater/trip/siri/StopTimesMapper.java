@@ -10,7 +10,6 @@ import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.timetable.Trip;
-import org.opentripplanner.updater.trip.siri.mapping.PickDropMapper;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
 class StopTimesMapper {
@@ -91,10 +90,8 @@ class StopTimesMapper {
     }
 
     // Update pickup / dropoff
-    PickDropMapper.mapPickUpType(call, stopTime.getPickupType()).ifPresent(stopTime::setPickupType);
-    PickDropMapper.mapDropOffType(call, stopTime.getDropOffType()).ifPresent(
-      stopTime::setDropOffType
-    );
+    call.mapPickUpType(stopTime.getPickupType()).ifPresent(stopTime::setPickupType);
+    call.mapDropOffType(stopTime.getDropOffType()).ifPresent(stopTime::setDropOffType);
 
     return stopTime;
   }

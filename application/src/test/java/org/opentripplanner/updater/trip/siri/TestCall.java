@@ -2,6 +2,10 @@ package org.opentripplanner.updater.trip.siri;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import java.util.Optional;
+import org.opentripplanner.model.PickDrop;
+import org.opentripplanner.transit.model.timetable.OccupancyStatus;
+import org.opentripplanner.updater.trip.siri.mapping.OccupancyMapper;
 import uk.org.siri.siri21.ArrivalBoardingActivityEnumeration;
 import uk.org.siri.siri21.CallStatusEnumeration;
 import uk.org.siri.siri21.DepartureBoardingActivityEnumeration;
@@ -99,8 +103,8 @@ public class TestCall implements CallWrapper {
   }
 
   @Override
-  public OccupancyEnumeration getOccupancy() {
-    return occupancy;
+  public OccupancyStatus getOccupancy() {
+    return occupancy == null ? null : OccupancyMapper.mapOccupancyStatus(occupancy);
   }
 
   @Override
@@ -124,16 +128,6 @@ public class TestCall implements CallWrapper {
   }
 
   @Override
-  public CallStatusEnumeration getArrivalStatus() {
-    return arrivalStatus;
-  }
-
-  @Override
-  public ArrivalBoardingActivityEnumeration getArrivalBoardingActivity() {
-    return arrivalBoardingActivity;
-  }
-
-  @Override
   public ZonedDateTime getAimedDepartureTime() {
     return aimedDepartureTime;
   }
@@ -149,18 +143,38 @@ public class TestCall implements CallWrapper {
   }
 
   @Override
-  public CallStatusEnumeration getDepartureStatus() {
-    return departureStatus;
+  public Optional<PickDrop> mapDropOffType(PickDrop plannedValue) {
+    return CallPickDropMapper.mapDropOffType(
+      plannedValue,
+      cancellation,
+      arrivalStatus,
+      arrivalBoardingActivity
+    );
   }
 
   @Override
-  public DepartureBoardingActivityEnumeration getDepartureBoardingActivity() {
-    return departureBoardingActivity;
+  public Optional<PickDrop> mapPickUpType(PickDrop plannedValue) {
+    return CallPickDropMapper.mapPickUpType(
+      plannedValue,
+      cancellation,
+      departureStatus,
+      departureBoardingActivity
+    );
   }
 
   @Override
   public boolean isRecorded() {
     return isRecorded;
+  }
+
+  @Override
+  public boolean hasArrived() {
+    return isRecorded || arrivalStatus == CallStatusEnumeration.ARRIVED;
+  }
+
+  @Override
+  public boolean hasDeparted() {
+    return isRecorded && actualDepartureTime != null;
   }
 
   public static class TestCallBuilder {
