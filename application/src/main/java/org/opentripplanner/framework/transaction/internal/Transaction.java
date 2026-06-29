@@ -16,7 +16,7 @@ final class Transaction {
 
   private final long id;
 
-  public Transaction(long id) {
+  Transaction(long id) {
     this.id = id;
   }
 
