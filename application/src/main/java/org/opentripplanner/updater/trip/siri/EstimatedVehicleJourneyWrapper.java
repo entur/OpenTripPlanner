@@ -173,12 +173,16 @@ final class EstimatedVehicleJourneyWrapper {
 
   /* Descriptive information */
 
-  @Nullable
+  /**
+   * The published line name, or an empty string if not set.
+   */
   String publishedLineName() {
     return getFirstStringFromList(journey.getPublishedLineNames());
   }
 
-  @Nullable
+  /**
+   * The destination name (headsign), or an empty string if not set.
+   */
   String destinationName() {
     return getFirstStringFromList(journey.getDestinationNames());
   }
