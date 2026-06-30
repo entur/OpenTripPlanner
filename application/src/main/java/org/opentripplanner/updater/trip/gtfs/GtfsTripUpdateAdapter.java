@@ -5,6 +5,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
+import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 
 /**
  * Interface for applying GTFS-RT TripUpdate messages to the transit model.

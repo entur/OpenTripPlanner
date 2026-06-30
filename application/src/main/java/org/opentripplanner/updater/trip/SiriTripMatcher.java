@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import org.opentripplanner.model.calendar.CalendarService;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -298,14 +297,12 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
     LocalDate serviceDate,
     TripReference tripReference
   ) {
-    CalendarService calendarService = transitService.getCalendarService();
+    var tripCalendars = transitService.getTripCalendars();
     Set<TripAndPattern> matches = new HashSet<>();
 
     for (Trip trip : candidateTrips) {
       // Check service date
-      Set<LocalDate> serviceDates = calendarService.getServiceDatesForServiceId(
-        trip.getServiceId()
-      );
+      Set<LocalDate> serviceDates = tripCalendars.listServiceDates(trip.getServiceId());
       if (!serviceDates.contains(serviceDate)) {
         continue;
       }

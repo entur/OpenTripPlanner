@@ -79,8 +79,8 @@ class ParsedTripUpdateTest {
   @Test
   void updateExistingWithFormatPolicy() {
     var policy = FormatPolicy.gtfsRt(
-      org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType.DEFAULT,
-      org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType.REQUIRED_NO_DATA
+      org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType.DEFAULT,
+      org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
 
     var update = ParsedUpdateExisting.builder(TRIP_REF, SERVICE_DATE)

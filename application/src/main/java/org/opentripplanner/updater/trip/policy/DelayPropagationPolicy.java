@@ -2,10 +2,10 @@ package org.opentripplanner.updater.trip.policy;
 
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.TripTimes;
-import org.opentripplanner.updater.trip.gtfs.BackwardsDelayInterpolator;
-import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
-import org.opentripplanner.updater.trip.gtfs.ForwardsDelayInterpolator;
-import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayInterpolator;
+import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayInterpolator;
+import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 
 /**
  * Adapter over the (already polymorphic) forwards/backwards delay interpolators. Owns the two
