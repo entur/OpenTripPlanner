@@ -1,4 +1,4 @@
-package org.opentripplanner.graph_builder.module.osm.moduletests;
+package org.opentripplanner.graph_builder.module.osm.moduletests.parking;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
