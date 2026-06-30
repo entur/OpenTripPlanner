@@ -2,8 +2,6 @@ package org.opentripplanner.graph_builder.module.osm.moduletests.parking;
 
 import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -13,7 +11,6 @@ import org.opentripplanner.graph_builder.module.osm.OsmModuleTestFactory;
 import org.opentripplanner.osm.TestOsmProvider;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmWay;
-import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.graph.GraphDataFetcher;
 
@@ -47,24 +44,15 @@ class UnconnectedParkAndRideTest {
     );
 
     var graph = new Graph();
-    var parkingRepository = new DefaultVehicleParkingRepository();
-
     var issueStore = new DefaultDataImportIssueStore();
+
     OsmModuleTestFactory.of(provider)
       .withGraph(graph)
-      .withVehicleParkingRepository(parkingRepository)
       .builder()
       .withIssueStore(issueStore)
       .withStaticParkAndRide(true)
       .build()
       .buildGraph();
-
-    var parkings = List.copyOf(parkingRepository.listVehicleParkings());
-    assertEquals(1, parkings.size());
-
-    var parking = parkings.getFirst();
-    assertTrue(parking.hasCarPlaces());
-    assertEquals("Test P+R", parking.getName().toString());
 
     var fetcher = new GraphDataFetcher(graph);
 

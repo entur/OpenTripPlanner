@@ -219,7 +219,7 @@ class ParkingProcessor {
     List<VehicleParking.VehicleParkingEntranceCreator> entrances =
       createParkingEntrancesFromAccessVertices(accessVertices, creativeName, entity);
 
-    if (entrances.isEmpty() || (!isCarAccessible)) {
+    if (entrances.isEmpty() || (isCarParkAndRide && !isCarAccessible)) {
       // This P+R is not connected to the drivable street network.
       // We create an artificial entrance to the centroid and add an issue.
       // The solution would be to connect it to the street network in OSM.
