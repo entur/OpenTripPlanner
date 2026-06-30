@@ -46,6 +46,15 @@ public final class PatternModification {
     return hasTimeUpdates || hasCancellations || hasNoDataUpdates || hasPatternChanges();
   }
 
+  /**
+   * Whether this update changes the trip's real-time state: there were time updates, cancellations
+   * or pattern changes. NO_DATA stops are deliberately excluded — a trip whose only change is that
+   * some (or all) stops are NO_DATA stays scheduled rather than being marked updated.
+   */
+  public boolean hasRealTimeChanges() {
+    return hasTimeUpdates || hasPatternChanges();
+  }
+
   public Map<Integer, StopLocation> stopReplacements() {
     return stopReplacements;
   }

@@ -40,6 +40,8 @@ public final class ResolvedNewTrip {
   @Nullable
   private final TripTimes existingTripTimes;
 
+  private final boolean cancellation;
+
   private ResolvedNewTrip(
     FormatPolicy formatPolicy,
     @Nullable TripCreationInfo tripCreationInfo,
@@ -48,7 +50,8 @@ public final class ResolvedNewTrip {
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates,
     @Nullable Trip existingTrip,
     @Nullable TripPattern existingPattern,
-    @Nullable TripTimes existingTripTimes
+    @Nullable TripTimes existingTripTimes,
+    boolean cancellation
   ) {
     this.formatPolicy = Objects.requireNonNull(formatPolicy, "formatPolicy must not be null");
     this.tripCreationInfo = tripCreationInfo;
@@ -61,6 +64,7 @@ public final class ResolvedNewTrip {
     this.existingTrip = existingTrip;
     this.existingPattern = existingPattern;
     this.existingTripTimes = existingTripTimes;
+    this.cancellation = cancellation;
   }
 
   /**
@@ -79,7 +83,8 @@ public final class ResolvedNewTrip {
       resolvedStopTimeUpdates,
       null,
       null,
-      null
+      null,
+      parsedUpdate.cancellation()
     );
   }
 
@@ -102,7 +107,8 @@ public final class ResolvedNewTrip {
       resolvedStopTimeUpdates,
       Objects.requireNonNull(existingTrip),
       Objects.requireNonNull(existingPattern),
-      Objects.requireNonNull(existingTripTimes)
+      Objects.requireNonNull(existingTripTimes),
+      parsedUpdate.cancellation()
     );
   }
 
@@ -125,6 +131,14 @@ public final class ResolvedNewTrip {
    */
   public boolean isAllStopsCancelled() {
     return ResolvedStopTimeUpdate.allSkipped(resolvedStopTimeUpdates);
+  }
+
+  /**
+   * Whether the journey is cancelled at the trip level. A cancelled extra journey is still added,
+   * but in cancelled state.
+   */
+  public boolean isCancellation() {
+    return cancellation;
   }
 
   /**

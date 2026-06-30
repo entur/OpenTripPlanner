@@ -83,10 +83,16 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     var tripReference = buildTripReference(journey, updateType, psd);
 
     // Handle plain cancellation (no stop times needed).
-    // Exception: if this is a MODIFY_TRIP (extra call), the cancellation flag must be carried
-    // into the ParsedModifyTrip so that ModifyTripHandler can mark the trip as cancelled on
-    // the extra-call pattern — preserving the extra stop information in the cancelled trip.
-    if (journey.isCancellation() && updateType != TripUpdateType.MODIFY_TRIP) {
+    // Exceptions where the cancellation flag is instead carried on the parsed update:
+    // - MODIFY_TRIP (extra call): carried into ParsedModifyTrip so ModifyTripHandler can mark the
+    //   trip cancelled on the extra-call pattern, preserving the extra stop information.
+    // - ADD_NEW_TRIP (extra journey): carried into ParsedAddNewTrip so the extra journey is added
+    //   in cancelled state rather than rejected as a cancellation of a non-existent trip.
+    if (
+      journey.isCancellation() &&
+      updateType != TripUpdateType.MODIFY_TRIP &&
+      updateType != TripUpdateType.ADD_NEW_TRIP
+    ) {
       return new ParsedCancelTrip(
         tripReference,
         psd.serviceDate(),
@@ -134,7 +140,8 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         var builder = ParsedAddNewTrip.builder(tripReference, psd.serviceDate(), creationInfo)
           .withFormatPolicy(FormatPolicy.siri())
           .withDataSource(journey.dataSource())
-          .withStopTimeUpdates(stopTimeUpdates);
+          .withStopTimeUpdates(stopTimeUpdates)
+          .withCancellation(journey.isCancellation());
         if (psd.aimedDepartureTime() != null) {
           builder.withAimedDepartureTime(psd.aimedDepartureTime());
         }
@@ -154,11 +161,13 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     if (journey.hasExtraCall()) {
       return TripUpdateType.MODIFY_TRIP;
     }
-    if (journey.isCancellation()) {
-      return TripUpdateType.CANCEL_TRIP;
-    }
+    // An extra journey is always an addition, even when cancelled: a cancelled extra journey is
+    // added in cancelled state rather than treated as a cancellation of a non-existent trip.
     if (journey.isExtraJourney()) {
       return TripUpdateType.ADD_NEW_TRIP;
+    }
+    if (journey.isCancellation()) {
+      return TripUpdateType.CANCEL_TRIP;
     }
     return TripUpdateType.UPDATE_EXISTING;
   }
@@ -265,8 +274,9 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       var stopReference = StopReference.ofScheduledStopPointOrStopId(stopId);
       var builder = ParsedStopTimeUpdate.builder(stopReference);
 
-      builder.withStatus(determineStopStatus(call));
-      parseStopTimes(call, builder, serviceDate, stopIndex, totalStops);
+      var resolvedTimes = SiriTimeResolver.resolveTimes(call, stopIndex, totalStops);
+      builder.withStatus(determineStopStatus(call, resolvedTimes));
+      parseStopTimes(call, builder, resolvedTimes, serviceDate, stopIndex, totalStops);
 
       if (call.isExtraCall()) {
         builder.withIsExtraCall(true);
@@ -303,12 +313,20 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     return result;
   }
 
-  private ParsedStopTimeUpdate.StopUpdateStatus determineStopStatus(CallWrapper call) {
+  private ParsedStopTimeUpdate.StopUpdateStatus determineStopStatus(
+    CallWrapper call,
+    SiriTimeResolver.ResolvedTimes resolvedTimes
+  ) {
     if (TRUE.equals(call.isCancellation())) {
       return ParsedStopTimeUpdate.StopUpdateStatus.CANCELLED;
     }
     if (call.isExtraCall()) {
       return ParsedStopTimeUpdate.StopUpdateStatus.ADDED;
+    }
+    // A call carrying no real-time arrival or departure time is reported as NO_DATA: the scheduled
+    // times are kept, the stop is flagged, and the trip is not, by this stop alone, modified.
+    if (resolvedTimes.arrivalTime() == null && resolvedTimes.departureTime() == null) {
+      return ParsedStopTimeUpdate.StopUpdateStatus.NO_DATA;
     }
     return ParsedStopTimeUpdate.StopUpdateStatus.SCHEDULED;
   }
@@ -316,12 +334,12 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
   private void parseStopTimes(
     CallWrapper call,
     ParsedStopTimeUpdate.Builder builder,
+    SiriTimeResolver.ResolvedTimes resolvedTimes,
     @Nullable LocalDate serviceDate,
     int stopIndex,
     int totalStops
   ) {
-    // Resolve times using the same fallback logic as TimetableHelper
-    var resolvedTimes = SiriTimeResolver.resolveTimes(call, stopIndex, totalStops);
+    // Resolve aimed times using the same fallback logic as TimetableHelper
     var resolvedAimedTimes = SiriTimeResolver.resolveAimedTimes(call, stopIndex, totalStops);
 
     if (serviceDate != null) {

@@ -103,9 +103,11 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       }
     }
 
-    // Set real-time state if any updates were applied. The format's RealTimeStatePolicy decides
-    // whether a pattern change is exposed as MODIFIED (SIRI-ET) or UPDATED (GTFS-RT).
-    if (modResult.hasAnyUpdates()) {
+    // Set real-time state if there were real-time changes (time updates, cancellations or pattern
+    // changes). NO_DATA-only updates are excluded so a trip whose only change is NO_DATA stops stays
+    // scheduled. The format's RealTimeStatePolicy decides whether a pattern change is exposed as
+    // MODIFIED (SIRI-ET) or UPDATED (GTFS-RT).
+    if (modResult.hasRealTimeChanges()) {
       policy.realTimeState().mark(builder, patternChanged);
     }
 

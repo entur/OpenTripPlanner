@@ -33,6 +33,8 @@ public final class ParsedAddNewTrip implements ParsedTripUpdate {
   @Nullable
   private final String dataSource;
 
+  private final boolean cancellation;
+
   ParsedAddNewTrip(
     TripReference tripReference,
     @Nullable LocalDate serviceDate,
@@ -40,7 +42,8 @@ public final class ParsedAddNewTrip implements ParsedTripUpdate {
     List<ParsedStopTimeUpdate> stopTimeUpdates,
     TripCreationInfo tripCreationInfo,
     FormatPolicy formatPolicy,
-    @Nullable String dataSource
+    @Nullable String dataSource,
+    boolean cancellation
   ) {
     this.tripReference = Objects.requireNonNull(tripReference);
     ParsedTripUpdate.validateServiceDateAvailable(tripReference, serviceDate, aimedDepartureTime);
@@ -53,6 +56,7 @@ public final class ParsedAddNewTrip implements ParsedTripUpdate {
     );
     this.formatPolicy = Objects.requireNonNull(formatPolicy);
     this.dataSource = dataSource;
+    this.cancellation = cancellation;
   }
 
   public static Builder builder(
@@ -98,6 +102,11 @@ public final class ParsedAddNewTrip implements ParsedTripUpdate {
     return dataSource;
   }
 
+  /** Whether this added (extra) journey is cancelled, i.e. added in cancelled state. */
+  public boolean cancellation() {
+    return cancellation;
+  }
+
   @Override
   public String toString() {
     return (
@@ -122,6 +131,8 @@ public final class ParsedAddNewTrip implements ParsedTripUpdate {
 
     @Nullable
     private String dataSource;
+
+    private boolean cancellation = false;
 
     private Builder(
       TripReference tripReference,
@@ -158,6 +169,11 @@ public final class ParsedAddNewTrip implements ParsedTripUpdate {
       return this;
     }
 
+    public Builder withCancellation(boolean cancellation) {
+      this.cancellation = cancellation;
+      return this;
+    }
+
     public ParsedAddNewTrip build() {
       return new ParsedAddNewTrip(
         tripReference,
@@ -166,7 +182,8 @@ public final class ParsedAddNewTrip implements ParsedTripUpdate {
         stopTimeUpdates,
         tripCreationInfo,
         formatPolicy,
-        dataSource
+        dataSource,
+        cancellation
       );
     }
   }
