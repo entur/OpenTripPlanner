@@ -73,7 +73,7 @@ public class ModifyTripHandler implements TripUpdateHandler.ForExistingTrip {
       trip,
       stopTimesAndPattern.stopTimes(),
       deduplicator
-    ).withServiceCode(transitService.getServiceCode(trip.getServiceId()));
+    ).withServiceCode(transitService.getTripCalendars().getServiceCode(trip.getServiceId()));
 
     // Validate scheduled times
     try {

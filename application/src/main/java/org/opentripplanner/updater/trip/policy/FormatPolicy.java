@@ -1,7 +1,7 @@
 package org.opentripplanner.updater.trip.policy;
 
-import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
-import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 
 /**
  * Immutable bundle of the behavioural policies that capture how a real-time message of a given
