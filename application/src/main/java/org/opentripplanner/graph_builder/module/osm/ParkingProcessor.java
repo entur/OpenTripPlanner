@@ -216,7 +216,9 @@ class ParkingProcessor {
 
     // Check P+R accessibility by walking and driving.
     boolean walkAccessibleIn = false;
+    boolean carAccessibleIn = false;
     boolean walkAccessibleOut = false;
+    boolean carAccessibleOut = false;
     for (VertexAndName access : accessVertices) {
       var accessVertex = access.vertex();
       for (Edge incoming : accessVertex.getIncoming()) {
@@ -224,12 +226,18 @@ class ParkingProcessor {
           if (streetEdge.canTraverse(TraverseMode.WALK)) {
             walkAccessibleIn = true;
           }
+          if (streetEdge.canTraverse(TraverseMode.CAR)) {
+            carAccessibleIn = true;
+          }
         }
       }
       for (Edge outgoing : accessVertex.getOutgoing()) {
         if (outgoing instanceof StreetEdge streetEdge) {
           if (streetEdge.canTraverse(TraverseMode.WALK)) {
             walkAccessibleOut = true;
+          }
+          if (streetEdge.canTraverse(TraverseMode.CAR)) {
+            carAccessibleOut = true;
           }
         }
       }
@@ -244,13 +252,13 @@ class ParkingProcessor {
     List<VehicleParking.VehicleParkingEntranceCreator> entrances =
       createParkingEntrancesFromAccessVertices(accessVertices, creativeName, entity);
 
-    if (entrances.isEmpty()) {
-      // This P+R is not connected to the street network
-      // we create an artificial entrance to the centroid and add an issue
-      // the solution would be to connect it to the street network in OSM
+    if (entrances.isEmpty() || (!carAccessibleIn && !carAccessibleOut)) {
+      // This P+R is not connected to the drivable street network.
+      // We create an artificial entrance to the centroid and add an issue.
+      // The solution would be to connect it to the street network in OSM.
       entrances = createArtificialEntrances(group, creativeName, entity, isCarParkAndRide);
-      // we only add the issue for car parking lots because the majority of bike facilities are not
-      // connected to the street network
+      // We only add the issue for car parking lots because the majority of bike facilities are not
+      // connected to the street network.
       if (isCarParkAndRide) {
         issueStore.add(new IsolatedParkAndRide(creativeName.toString(), entity));
       }

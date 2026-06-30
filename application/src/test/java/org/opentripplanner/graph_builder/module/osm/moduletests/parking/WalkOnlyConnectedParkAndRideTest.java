@@ -1,6 +1,5 @@
 package org.opentripplanner.graph_builder.module.osm.moduletests.parking;
 
-import static com.google.common.truth.Truth.assertThat;
 import static com.google.common.truth.Truth.assertWithMessage;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -20,13 +19,11 @@ import org.opentripplanner.street.graph.GraphDataFetcher;
 /// receives an artificial car-accessible entrance.
 class WalkOnlyConnectedParkAndRideTest {
 
-  /**
-   * A parking lot whose boundary shares a node with a footway is connected to the street network
-   * for pedestrians but not for cars. A service road also crosses through the lot geometrically,
-   * but shares no boundary node, so it does not count as car access either. The algorithm must
-   * detect the missing car access and add an artificial car-accessible entrance at the lot's
-   * centroid, just as it does for a fully disconnected lot.
-   */
+  /// A parking lot whose boundary shares a node with a footway is connected to the street network
+  /// for pedestrians but not for cars. A service road also crosses through the lot geometrically,
+  /// but shares no boundary node, so it does not count as car access either. The algorithm must
+  /// detect the missing car access and add an artificial car-accessible entrance at the lot's
+  /// centroid, just as it does for a fully disconnected lot.
   @Test
   void walkOnlyConnectedParkingLotGetsArtificialCarEntrance() {
     var n1 = OsmNode.of().withId(1).withLatLon(0.0, 0.0).build();
@@ -85,8 +82,9 @@ class WalkOnlyConnectedParkAndRideTest {
         "(0.0005,-0.001) → (0.0005,0.002) ALL ♿✅",
         "(0.0005,0.002) → (0.0005,-0.001) ALL ♿✅",
         "(0,-0.001) → (0,0) PEDESTRIAN ♿✅",
-        "(0,0) → (0,-0.001) PEDESTRIAN ♿✅"
+        "(0,0) → (0,-0.001) PEDESTRIAN ♿✅",
+        // centroid that is later linked to the car-accessible street network
+        "Parking (0.0005,0.0005)[Vehicle parking OSM:OsmWay/1/centroid] → (0.0005,0.0005)[Vehicle parking OSM:OsmWay/1/centroid]"
       );
-
   }
 }
