@@ -6,8 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertSame;
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.model.PickDrop;
-import org.opentripplanner.updater.trip.gtfs.BackwardsDelayPropagationType;
-import org.opentripplanner.updater.trip.gtfs.ForwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 
 /**
  * Proves that the {@link FormatPolicy#siri()} / {@link FormatPolicy#gtfsRt} factories compose the

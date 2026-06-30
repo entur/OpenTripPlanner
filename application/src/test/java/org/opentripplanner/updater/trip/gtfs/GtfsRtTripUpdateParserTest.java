@@ -14,6 +14,8 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
 import org.opentripplanner.updater.trip.model.ParsedCancelTrip;
 import org.opentripplanner.updater.trip.model.ParsedDeleteTrip;
