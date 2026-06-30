@@ -214,6 +214,38 @@ class ParkingProcessor {
 
     var creativeName = nameParkAndRideEntity(entity);
 
+    var isCarAccessible = hasAnyCarAccessibleAccess(accessVertices);
+
+    List<VehicleParking.VehicleParkingEntranceCreator> entrances =
+      createParkingEntrancesFromAccessVertices(accessVertices, creativeName, entity);
+
+    if (entrances.isEmpty() || (!isCarAccessible)) {
+      // This P+R is not connected to the drivable street network.
+      // We create an artificial entrance to the centroid and add an issue.
+      // The solution would be to connect it to the street network in OSM.
+      entrances = createArtificialEntrances(group, creativeName, entity, isCarParkAndRide);
+      // We only add the issue for car parking lots because the majority of bike facilities are not
+      // connected to the street network.
+      if (isCarParkAndRide) {
+        issueStore.add(new IsolatedParkAndRide(creativeName.toString(), entity));
+      }
+    }
+
+    var vehicleParking = createVehicleParkingObjectFromOsmEntity(
+      isCarParkAndRide,
+      envelope.centre(),
+      entity,
+      creativeName,
+      entrances
+    );
+
+    vehicleParkingHelper.linkVehicleParkingToGraph(vehicleParking);
+
+    return vehicleParking;
+  }
+
+  /// Do the vertices have any car-accessible access?
+  private static boolean hasAnyCarAccessibleAccess(Set<VertexAndName> accessVertices) {
     // Check P+R accessibility by walking and driving.
     boolean walkAccessibleIn = false;
     boolean carAccessibleIn = false;
@@ -248,33 +280,7 @@ class ParkingProcessor {
         "P+R walk IN/OUT accessibility mismatch! Please have a look as this should not happen."
       );
     }
-
-    List<VehicleParking.VehicleParkingEntranceCreator> entrances =
-      createParkingEntrancesFromAccessVertices(accessVertices, creativeName, entity);
-
-    if (entrances.isEmpty() || (!carAccessibleIn && !carAccessibleOut)) {
-      // This P+R is not connected to the drivable street network.
-      // We create an artificial entrance to the centroid and add an issue.
-      // The solution would be to connect it to the street network in OSM.
-      entrances = createArtificialEntrances(group, creativeName, entity, isCarParkAndRide);
-      // We only add the issue for car parking lots because the majority of bike facilities are not
-      // connected to the street network.
-      if (isCarParkAndRide) {
-        issueStore.add(new IsolatedParkAndRide(creativeName.toString(), entity));
-      }
-    }
-
-    var vehicleParking = createVehicleParkingObjectFromOsmEntity(
-      isCarParkAndRide,
-      envelope.centre(),
-      entity,
-      creativeName,
-      entrances
-    );
-
-    vehicleParkingHelper.linkVehicleParkingToGraph(vehicleParking);
-
-    return vehicleParking;
+    return carAccessibleIn && carAccessibleOut;
   }
 
   /**
