@@ -4,16 +4,14 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.updater.spi.UpdateException;
-import uk.org.siri.siri21.EstimatedVehicleJourney;
 
 public class ServiceDateParser {
 
-  private final EstimatedVehicleJourney journey;
+  private final EstimatedVehicleJourneyWrapper journey;
   private final String feedId;
   private FeedScopedId tripOnServiceDateId;
 
-  public ServiceDateParser(EstimatedVehicleJourney journey, String feedId) {
+  public ServiceDateParser(EstimatedVehicleJourneyWrapper journey, String feedId) {
     this.journey = journey;
     this.feedId = feedId;
   }
@@ -30,39 +28,36 @@ public class ServiceDateParser {
    */
   @Nullable
   private FeedScopedId resolveTripOnServiceDateId() {
-    // journey.getDatedVehicleJourneyRef contains a TripOnServiceDate ID, not a Trip ID
-    if (journey.getDatedVehicleJourneyRef() != null) {
-      return new FeedScopedId(feedId, journey.getDatedVehicleJourneyRef().getValue());
+    // The dated vehicle journey ref contains a TripOnServiceDate ID, not a Trip ID
+    if (journey.datedVehicleJourneyRef() != null) {
+      return new FeedScopedId(feedId, journey.datedVehicleJourneyRef());
     }
     return null;
   }
 
   private ParsedServiceDate resolveServiceDate() {
-    if (journey.getFramedVehicleJourneyRef() != null) {
-      var dataFrameRef = journey.getFramedVehicleJourneyRef().getDataFrameRef();
-      if (dataFrameRef != null) {
-        try {
-          return new ParsedServiceDate(
-            LocalDate.parse(dataFrameRef.getValue()),
-            tripOnServiceDateId,
-            null
-          );
-        } catch (Exception ignored) {}
-      }
+    var vehicleJourneyIdAndServiceDate = journey.vehicleJourneyIdAndServiceDate();
+    if (
+      vehicleJourneyIdAndServiceDate != null && vehicleJourneyIdAndServiceDate.serviceDate() != null
+    ) {
+      try {
+        return new ParsedServiceDate(
+          LocalDate.parse(vehicleJourneyIdAndServiceDate.serviceDate()),
+          tripOnServiceDateId,
+          null
+        );
+      } catch (Exception ignored) {}
     }
 
     // Always extract aimedDepartureTime as a fallback for service date resolution.
     // This is needed even when tripOnServiceDateId is present, because the ID may not
     // resolve to a valid NeTEx DatedServiceJourney (e.g. BNR numeric IDs).
-    ZonedDateTime aimedDepartureTime = null;
-    try {
-      var calls = CallWrapper.of(journey);
-      aimedDepartureTime = calls
-        .stream()
-        .findFirst()
-        .map(CallWrapper::getAimedDepartureTime)
-        .orElse(null);
-    } catch (UpdateException ignored) {}
+    ZonedDateTime aimedDepartureTime = journey
+      .calls()
+      .stream()
+      .findFirst()
+      .map(CallWrapper::getAimedDepartureTime)
+      .orElse(null);
 
     if (tripOnServiceDateId != null) {
       return new ParsedServiceDate(null, tripOnServiceDateId, aimedDepartureTime);
