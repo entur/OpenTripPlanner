@@ -13,11 +13,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.GeometryFactory;
-import org.locationtech.jts.geom.LineString;
 import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.prep.PreparedPolygon;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.astar.model.ShortestPathTree;
 import org.opentripplanner.astar.spi.SkipEdgeStrategy;
@@ -389,7 +388,7 @@ class WalkableAreaBuilder {
       perRingData.add(
         new PerRingData(
           areaGroup,
-          polygon,
+          new PreparedPolygon(polygon),
           visibilityVertices,
           platformLinkingVertices,
           alreadyAddedEdges
@@ -418,7 +417,6 @@ class WalkableAreaBuilder {
    */
   private List<VisibilityPair> computeVisiblePairs(RingSetData ringSetData) {
     List<VisibilityPair> pairs = new ArrayList<>();
-    GeometryFactory geometryFactory = GeometryUtils.getGeometryFactory();
 
     for (PerRingData ringData : ringSetData.perRingData()) {
       float skipRatio = (float) maxAreaNodes / (float) ringData.visibilityVertices().size();
@@ -441,11 +439,7 @@ class WalkableAreaBuilder {
           if (shouldSkipEdge(vertex1, vertex2, ringData.alreadyAddedEdges())) {
             continue;
           }
-          Coordinate[] coordinates = new Coordinate[] {
-            vertex1.getCoordinate(),
-            vertex2.getCoordinate(),
-          };
-          LineString line = geometryFactory.createLineString(coordinates);
+          var line = LineStringShrinker.shrink(vertex1.getCoordinate(), vertex2.getCoordinate());
           if (ringData.polygon().contains(line)) {
             boolean platformLinked =
               ringData.platformLinkingVertices().contains(vertex1) ||
@@ -802,7 +796,7 @@ class WalkableAreaBuilder {
    */
   private record PerRingData(
     AreaGroup areaGroup,
-    Polygon polygon,
+    PreparedPolygon polygon,
     HashSet<IntersectionVertex> visibilityVertices,
     Set<IntersectionVertex> platformLinkingVertices,
     HashSet<NodeEdge> alreadyAddedEdges
