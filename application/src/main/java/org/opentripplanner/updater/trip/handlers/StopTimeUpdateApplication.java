@@ -95,12 +95,13 @@ final class StopTimeUpdateApplication {
         }
       }
 
-      // Handle NO_DATA stops
-      if (stopUpdate.status() == ParsedStopTimeUpdate.StopUpdateStatus.NO_DATA) {
+      // Flag NO_DATA stops. Their (absent) real-time times are skipped below, but pick/drop,
+      // occupancy, headsign and prediction flags are still applied, matching the legacy SIRI path
+      // where these flags follow withNoData so they take precedence.
+      boolean noData = stopUpdate.status() == ParsedStopTimeUpdate.StopUpdateStatus.NO_DATA;
+      if (noData) {
         builder.withNoData(stopIndex);
-        // Don't process time updates for NO_DATA stops - they should have none
         mod.markNoData();
-        continue;
       }
 
       // Track pickup/dropoff changes
@@ -120,10 +121,10 @@ final class StopTimeUpdateApplication {
         }
       }
 
-      // Apply time updates
+      // Apply time updates (NO_DATA stops carry no real-time times, so skip them)
       boolean hasTimeUpdate = false;
 
-      if (stopUpdate.hasArrivalUpdate()) {
+      if (!noData && stopUpdate.hasArrivalUpdate()) {
         var arrivalUpdate = stopUpdate.arrivalUpdate();
         int scheduledArrival = builder.getScheduledArrivalTime(stopIndex);
         int newArrivalTime = arrivalUpdate.resolveTime(scheduledArrival);
@@ -131,7 +132,7 @@ final class StopTimeUpdateApplication {
         hasTimeUpdate = true;
       }
 
-      if (stopUpdate.hasDepartureUpdate()) {
+      if (!noData && stopUpdate.hasDepartureUpdate()) {
         var departureUpdate = stopUpdate.departureUpdate();
         int scheduledDeparture = builder.getScheduledDepartureTime(stopIndex);
         int newDepartureTime = departureUpdate.resolveTime(scheduledDeparture);

@@ -158,7 +158,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
     // Extra journeys always retain the "added" flag, even when all stops are cancelled,
     // because they were never part of the static schedule.
     builder.withAdded();
-    if (resolvedUpdate.isAllStopsCancelled()) {
+    if (resolvedUpdate.isCancellation() || resolvedUpdate.isAllStopsCancelled()) {
       builder.withCanceled();
     }
 
@@ -223,15 +223,20 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
 
     // Create real-time trip times from the scheduled times
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
-    HandlerUtils.applyRealTimeUpdates(
-      resolvedUpdate.tripCreationInfo(),
-      builder,
-      filteredUpdates.updates()
-    );
+    // A journey-level cancellation of an already-added trip is a clean cancellation: keep the
+    // scheduled times and do not re-apply the real-time call data, so the previously applied
+    // real-time flags are dropped (matching the legacy ModifiedTripBuilder.cancelTrip behaviour).
+    if (!resolvedUpdate.isCancellation()) {
+      HandlerUtils.applyRealTimeUpdates(
+        resolvedUpdate.tripCreationInfo(),
+        builder,
+        filteredUpdates.updates()
+      );
+    }
     // Extra journeys always keep the "added" flag, even when all stops are cancelled,
     // because they were never part of the static schedule.
     builder.withAdded();
-    if (resolvedUpdate.isAllStopsCancelled()) {
+    if (resolvedUpdate.isCancellation() || resolvedUpdate.isAllStopsCancelled()) {
       builder.withCanceled();
     }
 
