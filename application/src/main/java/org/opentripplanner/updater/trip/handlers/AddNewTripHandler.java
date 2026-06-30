@@ -112,7 +112,7 @@ public class AddNewTripHandler implements TripUpdateHandler.ForNewTrip {
       trip,
       stopTimesAndPattern.stopTimes(),
       deduplicator
-    ).withServiceCode(transitService.getServiceCode(serviceId));
+    ).withServiceCode(transitService.getTripCalendars().getServiceCode(serviceId));
 
     // Validate times
     try {

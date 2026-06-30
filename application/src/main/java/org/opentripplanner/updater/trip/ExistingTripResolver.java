@@ -173,7 +173,7 @@ public class ExistingTripResolver {
    */
   private void validateServiceDate(Trip trip, LocalDate serviceDate) {
     var serviceId = trip.getServiceId();
-    var serviceDates = transitService.getCalendarService().getServiceDatesForServiceId(serviceId);
+    var serviceDates = transitService.getTripCalendars().listServiceDates(serviceId);
     if (!serviceDates.contains(serviceDate)) {
       LOG.debug(
         "Trip {} has service date {} for which trip's service is not valid, skipping.",
