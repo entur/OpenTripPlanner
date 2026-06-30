@@ -30,7 +30,7 @@ class OsmArea {
   final List<Ring> outermostRings;
   // This is the way or relation that has the relevant tags for the area
   final OsmEntity parent;
-  public PreparedPolygon jtsMultiPolygon;
+  final PreparedPolygon jtsMultiPolygon;
 
   OsmArea(
     OsmEntity parent,
