@@ -208,7 +208,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
     var result = siri.applyEstimatedTimetable(updates);
 
-    assertEquals(0, result.successful());
+    assertSuccess(result);
     assertFailure(UpdateErrorType.NOT_MONITORED, result);
     assertNull(
       env.transitService().getTrip(id(ADDED_TRIP_ID)),
