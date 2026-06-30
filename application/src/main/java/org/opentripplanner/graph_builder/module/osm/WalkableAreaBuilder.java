@@ -283,7 +283,7 @@ class WalkableAreaBuilder {
       for (OsmArea area : group.areas) {
         OsmEntity areaEntity = area.parent;
 
-        if (!group.isSimpleAreaGroup() && !area.jtsMultiPolygon.within(polygon)) {
+        if (!group.isSimpleAreaGroup() && !polygon.contains(area.jtsMultiPolygon.getGeometry())) {
           continue;
         }
 
