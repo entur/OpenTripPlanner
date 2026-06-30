@@ -161,6 +161,14 @@ final class EstimatedVehicleJourneyWrapper {
   }
 
   /**
+   * The direction of travel, used to disambiguate trips.
+   */
+  @Nullable
+  String directionRef() {
+    return journey.getDirectionRef() != null ? journey.getDirectionRef().getValue() : null;
+  }
+
+  /**
    * Whether this journey is operated by rail.
    */
   boolean isRail() {
