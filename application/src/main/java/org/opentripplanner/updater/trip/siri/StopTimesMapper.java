@@ -1,7 +1,5 @@
 package org.opentripplanner.updater.trip.siri;
 
-import static org.opentripplanner.updater.trip.siri.support.NaturalLanguageStringHelper.getFirstStringFromList;
-
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import javax.annotation.Nullable;
@@ -79,7 +77,7 @@ class StopTimesMapper {
     stopTime.setDepartureTime(isLastStop ? aimedArrivalTimeSeconds : aimedDepartureTimeSeconds);
 
     // Update destination display
-    var destinationDisplay = getFirstStringFromList(call.getDestinationDisplays());
+    var destinationDisplay = call.destinationDisplay();
     if (!destinationDisplay.isEmpty()) {
       stopTime.setStopHeadsign(new NonLocalizedString(destinationDisplay));
     } else if (trip.getHeadsign() != null) {

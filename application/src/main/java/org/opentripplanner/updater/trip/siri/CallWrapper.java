@@ -1,5 +1,7 @@
 package org.opentripplanner.updater.trip.siri;
 
+import static org.opentripplanner.updater.trip.siri.support.NaturalLanguageStringHelper.getFirstStringFromList;
+
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -13,7 +15,6 @@ import org.opentripplanner.utils.lang.StringUtils;
 import uk.org.siri.siri21.CallStatusEnumeration;
 import uk.org.siri.siri21.EstimatedCall;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
-import uk.org.siri.siri21.NaturalLanguageStringStructure;
 import uk.org.siri.siri21.RecordedCall;
 import uk.org.siri.siri21.StopPointRefStructure;
 
@@ -112,7 +113,11 @@ public interface CallWrapper {
    */
   OccupancyStatus getOccupancy();
 
-  List<NaturalLanguageStringStructure> getDestinationDisplays();
+  /**
+   * The destination display (headsign) of this call, or an empty string if not set.
+   */
+  String destinationDisplay();
+
   ZonedDateTime getAimedArrivalTime();
   ZonedDateTime getExpectedArrivalTime();
   ZonedDateTime getActualArrivalTime();
@@ -182,8 +187,8 @@ public interface CallWrapper {
     }
 
     @Override
-    public List<NaturalLanguageStringStructure> getDestinationDisplays() {
-      return call.getDestinationDisplaies();
+    public String destinationDisplay() {
+      return getFirstStringFromList(call.getDestinationDisplaies());
     }
 
     @Override
@@ -306,8 +311,8 @@ public interface CallWrapper {
     }
 
     @Override
-    public List<NaturalLanguageStringStructure> getDestinationDisplays() {
-      return call.getDestinationDisplaies();
+    public String destinationDisplay() {
+      return getFirstStringFromList(call.getDestinationDisplaies());
     }
 
     @Override

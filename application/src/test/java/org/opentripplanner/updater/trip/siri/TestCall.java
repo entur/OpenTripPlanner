@@ -1,5 +1,7 @@
 package org.opentripplanner.updater.trip.siri;
 
+import static org.opentripplanner.updater.trip.siri.support.NaturalLanguageStringHelper.getFirstStringFromList;
+
 import java.time.ZonedDateTime;
 import java.util.List;
 import org.opentripplanner.transit.model.timetable.OccupancyStatus;
@@ -106,8 +108,8 @@ public class TestCall implements CallWrapper {
   }
 
   @Override
-  public List<NaturalLanguageStringStructure> getDestinationDisplays() {
-    return destinationDisplaies;
+  public String destinationDisplay() {
+    return getFirstStringFromList(destinationDisplaies);
   }
 
   @Override

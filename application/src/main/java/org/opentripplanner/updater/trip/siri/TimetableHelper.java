@@ -8,7 +8,6 @@ import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.transit.model.timetable.OccupancyStatus;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.utils.time.ServiceDateUtils;
-import uk.org.siri.siri21.NaturalLanguageStringStructure;
 
 class TimetableHelper {
 
@@ -95,12 +94,9 @@ class TimetableHelper {
       tripTimesBuilder.withOccupancyStatus(index, callOccupancy);
     }
 
-    if (call.getDestinationDisplays() != null && !call.getDestinationDisplays().isEmpty()) {
-      NaturalLanguageStringStructure destinationDisplay = call.getDestinationDisplays().get(0);
-      tripTimesBuilder.withStopHeadsign(
-        index,
-        new NonLocalizedString(destinationDisplay.getValue())
-      );
+    var destinationDisplay = call.destinationDisplay();
+    if (!destinationDisplay.isEmpty()) {
+      tripTimesBuilder.withStopHeadsign(index, new NonLocalizedString(destinationDisplay));
     }
   }
 }
