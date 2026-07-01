@@ -84,6 +84,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Use prepared geometries for walkable area building [#7333](https://github.com/opentripplanner/OpenTripPlanner/pull/7333)
 - Add transactional repository and snapshot framework [#7745](https://github.com/opentripplanner/OpenTripPlanner/pull/7745)
 - Remove vehicle routing optimization and deprecate its API [#7741](https://github.com/opentripplanner/OpenTripPlanner/pull/7741)
+- Make StdTransferEarlyPruning.updateArrival O(1) Replace the per… [#7682](https://github.com/opentripplanner/OpenTripPlanner/pull/7682)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
