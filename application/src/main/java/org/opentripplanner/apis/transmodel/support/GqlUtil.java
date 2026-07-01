@@ -6,6 +6,7 @@ import graphql.schema.GraphQLFieldDefinition;
 import graphql.schema.GraphQLInputObjectField;
 import graphql.schema.GraphQLList;
 import graphql.schema.GraphQLNonNull;
+import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -86,6 +87,17 @@ public class GqlUtil {
 
   public static boolean hasArgument(DataFetchingEnvironment environment, String name) {
     return environment.containsArgument(name) && environment.getArgument(name) != null;
+  }
+
+  /**
+   * Return the value of the given epoch-milliseconds argument as an {@link Instant}, or the
+   * current time if the argument is absent or explicitly set to {@code null}. Using
+   * {@code containsArgument} alone is not sufficient, as it also returns {@code true} when a
+   * client passes {@code argumentName: null} explicitly.
+   */
+  public static Instant getInstantOrNow(DataFetchingEnvironment environment, String argumentName) {
+    Long epochMilli = environment.getArgument(argumentName);
+    return epochMilli != null ? Instant.ofEpochMilli(epochMilli) : Instant.now();
   }
 
   /**
