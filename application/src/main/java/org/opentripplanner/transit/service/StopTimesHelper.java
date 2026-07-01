@@ -115,7 +115,7 @@ public class StopTimesHelper {
           request.timeWindow(),
           request.numberOfDepartures(),
           request.arrivalDeparture(),
-          request.cancellationInclusion().includesCancellations(),
+          request.cancellationPolicy().includesCancellations(),
           request.sortOrder(),
           matcher
         )
@@ -133,7 +133,7 @@ public class StopTimesHelper {
     TripTimeOnDateRequest request,
     Matcher<TripTimeOnDate> matcher
   ) {
-    boolean includeCancellations = request.cancellationInclusion().includesCancellations();
+    boolean includeCancellations = request.cancellationPolicy().includesCancellations();
     return request
       .serviceDateRanges()
       .stream()

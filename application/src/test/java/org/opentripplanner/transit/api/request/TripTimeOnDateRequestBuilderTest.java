@@ -34,7 +34,7 @@ class TripTimeOnDateRequestBuilderTest {
     assertEquals(Duration.ofHours(2), request.timeWindow());
     assertEquals(ArrivalDeparture.BOTH, request.arrivalDeparture());
     assertEquals(10, request.numberOfDepartures());
-    assertEquals(CancellationInclusion.NO_CANCELLATIONS, request.cancellationInclusion());
+    assertEquals(CancellationPolicy.NO_CANCELLATIONS, request.cancellationPolicy());
     assertTrue(request.includeAgencies().includeEverything());
     assertTrue(request.includeRoutes().includeEverything());
     assertTrue(request.excludeAgencies().includeEverything());
@@ -77,13 +77,13 @@ class TripTimeOnDateRequestBuilderTest {
   }
 
   @Test
-  void withCancellationInclusion() {
+  void withCancellationPolicy() {
     var request = TripTimeOnDateRequest.of(List.of(STOP))
       .withTime(TIME)
-      .withCancellationInclusion(CancellationInclusion.ONLY_CANCELLATIONS)
+      .withCancellationPolicy(CancellationPolicy.ONLY_CANCELLATIONS)
       .build();
 
-    assertEquals(CancellationInclusion.ONLY_CANCELLATIONS, request.cancellationInclusion());
+    assertEquals(CancellationPolicy.ONLY_CANCELLATIONS, request.cancellationPolicy());
   }
 
   @Test

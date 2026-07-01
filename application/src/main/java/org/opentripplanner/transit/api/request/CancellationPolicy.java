@@ -5,7 +5,7 @@ package org.opentripplanner.transit.api.request;
  * trip time is considered canceled if the whole trip is canceled/replaced or the visit at the stop
  * has been skipped.
  */
-public enum CancellationInclusion {
+public enum CancellationPolicy {
   /** Only return canceled trip times. */
   ONLY_CANCELLATIONS,
   /** Do not return any canceled trip times. */

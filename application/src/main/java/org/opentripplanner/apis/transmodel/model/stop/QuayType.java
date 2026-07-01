@@ -30,7 +30,7 @@ import org.opentripplanner.apis.transmodel.model.scalars.GeoJSONCoordinatesScala
 import org.opentripplanner.apis.transmodel.support.GqlUtil;
 import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.framework.graphql.GraphQLUtils;
-import org.opentripplanner.transit.api.request.CancellationInclusion;
+import org.opentripplanner.transit.api.request.CancellationPolicy;
 import org.opentripplanner.transit.api.request.TripTimeOnDateRequest;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -324,10 +324,10 @@ public class QuayType {
               .withTimeWindow(timeRange)
               .withArrivalDeparture(arrivalDeparture)
               .withNumberOfDepartures(numberOfDepartures)
-              .withCancellationInclusion(
+              .withCancellationPolicy(
                 includeCancelledTrips
-                  ? CancellationInclusion.INCLUDE_CANCELLATIONS
-                  : CancellationInclusion.NO_CANCELLATIONS
+                  ? CancellationPolicy.INCLUDE_CANCELLATIONS
+                  : CancellationPolicy.NO_CANCELLATIONS
               );
 
             if (filtersInput != null) {

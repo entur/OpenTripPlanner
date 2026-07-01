@@ -10,7 +10,7 @@ import org.opentripplanner.apis.gtfs.model.StopCallForTripOnServiceDate;
 import org.opentripplanner.core.model.time.LocalDateRange;
 import org.opentripplanner.model.TripTimeOnDate;
 import org.opentripplanner.model.plan.Leg;
-import org.opentripplanner.transit.api.request.CancellationInclusion;
+import org.opentripplanner.transit.api.request.CancellationPolicy;
 import org.opentripplanner.transit.api.request.TripTimeOnDateRequest;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
@@ -104,7 +104,7 @@ public class ApiTransitService {
       .withServiceDateRanges(serviceDateRanges)
       .withArrivalDeparture(ArrivalDeparture.BOTH)
       .withNumberOfDepartures(Integer.MAX_VALUE)
-      .withCancellationInclusion(CancellationInclusion.ONLY_CANCELLATIONS)
+      .withCancellationPolicy(CancellationPolicy.ONLY_CANCELLATIONS)
       .build();
 
     return transitService
