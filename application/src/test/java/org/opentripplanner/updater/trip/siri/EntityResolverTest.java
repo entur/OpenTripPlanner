@@ -2,17 +2,19 @@ package org.opentripplanner.updater.trip.siri;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
+import java.util.function.UnaryOperator;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.LocalTimeParser;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.SiteRepository;
 import org.opentripplanner.transit.service.TimetableRepository;
-import uk.org.siri.siri21.DatedVehicleJourneyRef;
-import uk.org.siri.siri21.EstimatedVehicleJourney;
 
 class EntityResolverTest {
 
@@ -61,25 +63,25 @@ class EntityResolverTest {
    */
   @Test
   void resolveDatedServiceJourneyIdFromServiceJourneyCode() {
-    var resolver = newResolver();
-    var journey = new EstimatedVehicleJourney();
-    journey.setEstimatedVehicleJourneyCode("RUT:ServiceJourney:1234");
+    var journey = journey(builder ->
+      builder.withEstimatedVehicleJourneyCode("RUT:ServiceJourney:1234")
+    );
 
     assertEquals(
       new FeedScopedId(FEED_ID, "RUT:DatedServiceJourney:1234"),
-      resolver.resolveDatedServiceJourneyId(journey)
+      newResolver().resolveDatedServiceJourneyId(journey)
     );
   }
 
   @Test
   void resolveDatedServiceJourneyIdFromDatedServiceJourneyCode() {
-    var resolver = newResolver();
-    var journey = new EstimatedVehicleJourney();
-    journey.setEstimatedVehicleJourneyCode("RUT:DatedServiceJourney:1234");
+    var journey = journey(builder ->
+      builder.withEstimatedVehicleJourneyCode("RUT:DatedServiceJourney:1234")
+    );
 
     assertEquals(
       new FeedScopedId(FEED_ID, "RUT:DatedServiceJourney:1234"),
-      resolver.resolveDatedServiceJourneyId(journey)
+      newResolver().resolveDatedServiceJourneyId(journey)
     );
   }
 
@@ -89,21 +91,27 @@ class EntityResolverTest {
    */
   @Test
   void resolveDatedServiceJourneyIdFromDatedVehicleJourneyRef() {
-    var resolver = newResolver();
-    var journey = new EstimatedVehicleJourney();
-    var ref = new DatedVehicleJourneyRef();
-    ref.setValue("RUT:DatedServiceJourney:5678");
-    journey.setDatedVehicleJourneyRef(ref);
-    journey.setEstimatedVehicleJourneyCode("RUT:ServiceJourney:1234");
+    var journey = journey(builder ->
+      builder
+        .withDatedVehicleJourneyRef("RUT:DatedServiceJourney:5678")
+        .withEstimatedVehicleJourneyCode("RUT:ServiceJourney:1234")
+    );
 
     assertEquals(
       new FeedScopedId(FEED_ID, "RUT:DatedServiceJourney:5678"),
-      resolver.resolveDatedServiceJourneyId(journey)
+      newResolver().resolveDatedServiceJourneyId(journey)
     );
   }
 
   private static EntityResolver newResolver() {
     var transitService = new DefaultTransitService(new TimetableRepository());
     return new EntityResolver(transitService, FEED_ID);
+  }
+
+  private static EstimatedVehicleJourneyWrapper journey(UnaryOperator<SiriEtBuilder> configure) {
+    var timeParser = new LocalTimeParser(ZoneId.of("Europe/Oslo"), LocalDate.of(2026, 6, 29));
+    return EstimatedVehicleJourneyWrapper.of(
+      configure.apply(new SiriEtBuilder(timeParser)).buildEstimatedVehicleJourney()
+    );
   }
 }
