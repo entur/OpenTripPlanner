@@ -83,7 +83,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Correctly handle missing realtime time updates via SIRI [#7754](https://github.com/opentripplanner/OpenTripPlanner/pull/7754)
 - Use prepared geometries for walkable area building [#7333](https://github.com/opentripplanner/OpenTripPlanner/pull/7333)
 - Add transactional repository and snapshot framework [#7745](https://github.com/opentripplanner/OpenTripPlanner/pull/7745)
-- Remove  vehicle routing optimization and deprecate its API [#7741](https://github.com/opentripplanner/OpenTripPlanner/pull/7741)
+- Remove vehicle routing optimization and deprecate its API [#7741](https://github.com/opentripplanner/OpenTripPlanner/pull/7741)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
