@@ -926,7 +926,7 @@ public class GraphQLDataFetchers {
     public DataFetcher<Object> stopLocation();
   }
 
-  /** A canceled stop call (arrival/departure) together with the trip on service date it belongs to. */
+  /** A stop call together with the trip on service date it belongs to. */
   public interface GraphQLStopCallForTripOnServiceDate {
     public DataFetcher<TripTimeOnDate> stopCall();
     public DataFetcher<TripOnServiceDate> tripOnServiceDate();

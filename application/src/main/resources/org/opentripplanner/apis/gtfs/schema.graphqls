@@ -2560,11 +2560,11 @@ type StopCall {
   stopLocation: CallStopLocation!
 }
 
-"A canceled stop call (arrival/departure) together with the trip on service date it belongs to."
+"A stop call together with the trip on service date it belongs to."
 type StopCallForTripOnServiceDate {
-  "The canceled arrival/departure at the stop."
+  "A stop call which belongs to the trip on a service date."
   stopCall: StopCall!
-  "The trip on service date that this canceled stop call belongs to."
+  "The trip on service date that the stop call belongs to."
   tripOnServiceDate: TripOnServiceDate!
 }
 
