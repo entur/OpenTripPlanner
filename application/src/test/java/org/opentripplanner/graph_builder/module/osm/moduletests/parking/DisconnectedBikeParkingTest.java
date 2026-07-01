@@ -17,8 +17,8 @@ import org.opentripplanner.street.graph.GraphDataFetcher;
 /// centroid entrance so the routing algorithm can reach it.
 class DisconnectedBikeParkingTest {
 
-  /// Unlike car parking, no {@code IsolatedParkAndRide} issue is emitted for disconnected bike
-  /// parking, because the majority of bike facilities are not connected to the street network.
+  /// Unlike car parking, no issue is emitted for disconnected bike parking, because the majority of
+  /// bike facilities are not connected to the street network.
   @Test
   void disconnectedBikeParkingGetsArtificialCentroidEntrance() {
     var n1 = OsmNode.of().withId(1).withLatLon(0.0, 0.0).build();
