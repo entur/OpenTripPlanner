@@ -126,16 +126,6 @@ public class TestCall implements CallWrapper {
   }
 
   @Override
-  public CallStatusEnumeration getArrivalStatus() {
-    return arrivalStatus;
-  }
-
-  @Override
-  public ArrivalBoardingActivityEnumeration getArrivalBoardingActivity() {
-    return arrivalBoardingActivity;
-  }
-
-  @Override
   public ZonedDateTime getAimedDepartureTime() {
     return aimedDepartureTime;
   }
@@ -151,18 +141,28 @@ public class TestCall implements CallWrapper {
   }
 
   @Override
-  public CallStatusEnumeration getDepartureStatus() {
-    return departureStatus;
+  public PickDropChange dropOff() {
+    return PickDropChange.ofArrival(cancellation, arrivalStatus, arrivalBoardingActivity);
   }
 
   @Override
-  public DepartureBoardingActivityEnumeration getDepartureBoardingActivity() {
-    return departureBoardingActivity;
+  public PickDropChange pickUp() {
+    return PickDropChange.ofDeparture(cancellation, departureStatus, departureBoardingActivity);
   }
 
   @Override
   public boolean isRecorded() {
     return isRecorded;
+  }
+
+  @Override
+  public boolean hasArrived() {
+    return isRecorded || arrivalStatus == CallStatusEnumeration.ARRIVED;
+  }
+
+  @Override
+  public boolean hasDeparted() {
+    return isRecorded && actualDepartureTime != null;
   }
 
   public static class TestCallBuilder {

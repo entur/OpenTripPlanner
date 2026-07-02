@@ -21,7 +21,6 @@ import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateException;
-import org.opentripplanner.updater.trip.siri.mapping.PickDropMapper;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
 /**
@@ -246,13 +245,15 @@ class ModifiedTripBuilder {
         final int stopIndex = i;
         builder.stops.with(stopIndex, callStop);
 
-        PickDropMapper.mapPickUpType(call, builder.pickups.original(stopIndex)).ifPresent(value ->
-          builder.pickups.with(stopIndex, value)
-        );
+        call
+          .pickUp()
+          .applyTo(builder.pickups.original(stopIndex))
+          .ifPresent(value -> builder.pickups.with(stopIndex, value));
 
-        PickDropMapper.mapDropOffType(call, builder.dropoffs.original(stopIndex)).ifPresent(value ->
-          builder.dropoffs.with(stopIndex, value)
-        );
+        call
+          .dropOff()
+          .applyTo(builder.dropoffs.original(stopIndex))
+          .ifPresent(value -> builder.dropoffs.with(stopIndex, value));
 
         alreadyVisited.add(call);
         break;
