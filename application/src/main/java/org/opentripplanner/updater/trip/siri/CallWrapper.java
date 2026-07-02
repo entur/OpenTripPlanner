@@ -4,8 +4,10 @@ import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import org.opentripplanner.transit.model.timetable.OccupancyStatus;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.updater.trip.siri.mapping.OccupancyMapper;
 import org.opentripplanner.utils.lang.StringUtils;
 import uk.org.siri.siri21.ArrivalBoardingActivityEnumeration;
 import uk.org.siri.siri21.CallStatusEnumeration;
@@ -13,7 +15,6 @@ import uk.org.siri.siri21.DepartureBoardingActivityEnumeration;
 import uk.org.siri.siri21.EstimatedCall;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
 import uk.org.siri.siri21.NaturalLanguageStringStructure;
-import uk.org.siri.siri21.OccupancyEnumeration;
 import uk.org.siri.siri21.RecordedCall;
 import uk.org.siri.siri21.StopPointRefStructure;
 
@@ -103,7 +104,7 @@ public interface CallWrapper {
   Boolean isCancellation();
   Boolean isPredictionInaccurate();
   boolean isExtraCall();
-  OccupancyEnumeration getOccupancy();
+  OccupancyStatus getOccupancy();
   List<NaturalLanguageStringStructure> getDestinationDisplays();
   ZonedDateTime getAimedArrivalTime();
   ZonedDateTime getExpectedArrivalTime();
@@ -165,8 +166,10 @@ public interface CallWrapper {
     }
 
     @Override
-    public OccupancyEnumeration getOccupancy() {
-      return call.getOccupancy();
+    public OccupancyStatus getOccupancy() {
+      return call.getOccupancy() == null
+        ? null
+        : OccupancyMapper.mapOccupancyStatus(call.getOccupancy());
     }
 
     @Override
@@ -279,8 +282,10 @@ public interface CallWrapper {
     }
 
     @Override
-    public OccupancyEnumeration getOccupancy() {
-      return call.getOccupancy();
+    public OccupancyStatus getOccupancy() {
+      return call.getOccupancy() == null
+        ? null
+        : OccupancyMapper.mapOccupancyStatus(call.getOccupancy());
     }
 
     @Override

@@ -2,6 +2,8 @@ package org.opentripplanner.updater.trip.siri;
 
 import java.time.ZonedDateTime;
 import java.util.List;
+import org.opentripplanner.transit.model.timetable.OccupancyStatus;
+import org.opentripplanner.updater.trip.siri.mapping.OccupancyMapper;
 import uk.org.siri.siri21.ArrivalBoardingActivityEnumeration;
 import uk.org.siri.siri21.CallStatusEnumeration;
 import uk.org.siri.siri21.DepartureBoardingActivityEnumeration;
@@ -99,8 +101,8 @@ public class TestCall implements CallWrapper {
   }
 
   @Override
-  public OccupancyEnumeration getOccupancy() {
-    return occupancy;
+  public OccupancyStatus getOccupancy() {
+    return occupancy == null ? null : OccupancyMapper.mapOccupancyStatus(occupancy);
   }
 
   @Override

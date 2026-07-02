@@ -16,13 +16,13 @@ import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.StopLocation;
+import org.opentripplanner.transit.model.timetable.OccupancyStatus;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.siri.mapping.PickDropMapper;
 import org.opentripplanner.utils.time.ServiceDateUtils;
-import uk.org.siri.siri21.OccupancyEnumeration;
 
 /**
  * A helper class for creating new StopPattern and TripTimes based on a SIRI-ET
@@ -38,7 +38,7 @@ class ModifiedTripBuilder {
   private final List<CallWrapper> calls;
   private final boolean cancellation;
   private final boolean added;
-  private final OccupancyEnumeration occupancy;
+  private final OccupancyStatus occupancy;
   private final boolean predictionInaccurate;
   private final String dataSource;
 
@@ -75,7 +75,7 @@ class ModifiedTripBuilder {
     EntityResolver entityResolver,
     List<CallWrapper> calls,
     boolean cancellation,
-    OccupancyEnumeration occupancy,
+    OccupancyStatus occupancy,
     boolean predictionInaccurate,
     String dataSource,
     boolean added

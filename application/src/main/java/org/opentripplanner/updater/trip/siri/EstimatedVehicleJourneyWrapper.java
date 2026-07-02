@@ -5,10 +5,13 @@ import static org.opentripplanner.updater.trip.siri.support.NaturalLanguageStrin
 
 import java.util.List;
 import javax.annotation.Nullable;
+import org.opentripplanner.transit.model.basic.TransitMode;
+import org.opentripplanner.transit.model.timetable.OccupancyStatus;
+import org.opentripplanner.updater.alert.siri.mapping.SiriTransportModeMapper;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.updater.trip.siri.mapping.OccupancyMapper;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
-import uk.org.siri.siri21.OccupancyEnumeration;
 import uk.org.siri.siri21.VehicleModesEnumeration;
 
 /**
@@ -167,8 +170,11 @@ final class EstimatedVehicleJourneyWrapper {
     return journey.getVehicleModes().contains(VehicleModesEnumeration.RAIL);
   }
 
-  List<VehicleModesEnumeration> vehicleModes() {
-    return journey.getVehicleModes();
+  /**
+   * The OTP transit mode of this journey, derived from its SIRI vehicle modes.
+   */
+  TransitMode transitMode() {
+    return SiriTransportModeMapper.mapTransitMainMode(journey.getVehicleModes());
   }
 
   /* Descriptive information */
@@ -188,8 +194,10 @@ final class EstimatedVehicleJourneyWrapper {
   }
 
   @Nullable
-  OccupancyEnumeration occupancy() {
-    return journey.getOccupancy();
+  OccupancyStatus occupancy() {
+    return journey.getOccupancy() == null
+      ? null
+      : OccupancyMapper.mapOccupancyStatus(journey.getOccupancy());
   }
 
   @Nullable
