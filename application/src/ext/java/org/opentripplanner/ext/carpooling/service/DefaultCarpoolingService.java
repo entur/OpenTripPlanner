@@ -56,7 +56,6 @@ import org.opentripplanner.street.service.StreetLimitationParametersService;
 import org.opentripplanner.streetadapter.StreetSearchRequestMapper;
 import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.model.site.StopLocation;
-import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.transit.service.TransitServiceResolver;
 import org.opentripplanner.utils.time.TimeUtils;
 import org.slf4j.Logger;
@@ -144,7 +143,6 @@ public class DefaultCarpoolingService implements CarpoolingService {
    * @param repository provides access to active driver trips, must not be null
    * @param streetLimitationParametersService provides street routing configuration including
    *        speed limits, must not be null
-   * @param transitService provides timezone from GTFS agency data for time conversions, must not be null
    * @param vertexCreationService creates request-scoped, bidirectionally-linked temporary vertices
    *        from coordinates, must not be null
    * @throws NullPointerException if any parameter is null
@@ -152,7 +150,6 @@ public class DefaultCarpoolingService implements CarpoolingService {
   public DefaultCarpoolingService(
     CarpoolingRepository repository,
     StreetLimitationParametersService streetLimitationParametersService,
-    TransitService transitService,
     VertexCreationService vertexCreationService
   ) {
     this.repository = repository;
