@@ -51,7 +51,6 @@ record CarpoolingServiceTestContext(
     var service = new DefaultCarpoolingService(
       repository,
       STREET_LIMITATION_PARAMETERS,
-      transitService,
       vertexCreationService
     );
     return new CarpoolingServiceTestContext(
