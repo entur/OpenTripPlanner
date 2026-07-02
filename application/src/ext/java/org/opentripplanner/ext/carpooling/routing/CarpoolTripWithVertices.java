@@ -1,27 +1,20 @@
 package org.opentripplanner.ext.carpooling.routing;
 
 import java.util.List;
-import java.util.Objects;
-import javax.annotation.Nullable;
 import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
-import org.opentripplanner.ext.carpooling.util.StreetVertexUtils;
 import org.opentripplanner.street.model.vertex.Vertex;
 
 /**
- * Pairs a {@link CarpoolTrip} with its resolved street graph vertices.
+ * Pairs a {@link CarpoolTrip} with the street graph vertices its route points resolve to, one
+ * vertex per route point, in route order.
  * <p>
- * CarpoolTrip is an immutable domain entity and should not hold mutable routing state.
- * This class provides that association for the duration of a routing request, keeping
- * CarpoolTrip free of graph-level concerns.
- * <p>
- * The vertices list is in the same order as the trip's stops/route points.
+ * The vertices are permanent graph vertices, resolved once per trip at ingest by
+ * {@link CarpoolTripVertexResolver}, so an instance is valid for the trip's whole lifetime.
+ * CarpoolTrip itself is an immutable domain entity and stays free of graph-level concerns; this
+ * record provides that association for routing.
  */
-public class CarpoolTripWithVertices {
-
-  private final CarpoolTrip trip;
-  private final List<Vertex> vertices;
-
-  public CarpoolTripWithVertices(CarpoolTrip trip, List<Vertex> vertices) {
+public record CarpoolTripWithVertices(CarpoolTrip trip, List<Vertex> vertices) {
+  public CarpoolTripWithVertices {
     if (vertices.size() != trip.stops().size()) {
       throw new IllegalArgumentException(
         "Number of vertices (%d) does not match number of stops (%d)".formatted(
@@ -30,37 +23,6 @@ public class CarpoolTripWithVertices {
         )
       );
     }
-    this.trip = trip;
-    this.vertices = List.copyOf(vertices);
-  }
-
-  /**
-   * Resolves vertices for the trip's route points using the given utilities. Driver route
-   * points are always linked in CAR mode since the driver traverses the entire trip.
-   *
-   * @return the trip with vertices, or null if any route point could not be linked to the graph
-   */
-  @Nullable
-  public static CarpoolTripWithVertices create(
-    CarpoolTrip trip,
-    StreetVertexUtils streetVertexUtils
-  ) {
-    var vertices = trip
-      .routePoints()
-      .stream()
-      .map(streetVertexUtils::createDriverWaypointVertex)
-      .toList();
-    if (vertices.stream().anyMatch(Objects::isNull)) {
-      return null;
-    }
-    return new CarpoolTripWithVertices(trip, vertices);
-  }
-
-  public CarpoolTrip trip() {
-    return trip;
-  }
-
-  public List<Vertex> vertices() {
-    return vertices;
+    vertices = List.copyOf(vertices);
   }
 }

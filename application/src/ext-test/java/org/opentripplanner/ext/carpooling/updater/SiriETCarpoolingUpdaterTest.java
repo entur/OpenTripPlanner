@@ -1,9 +1,16 @@
 package org.opentripplanner.ext.carpooling.updater;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.cancelledJourney;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.journeyWithAllButOneCallCancelled;
 import static org.opentripplanner.ext.carpooling.CarpoolEstimatedVehicleJourneyData.malformedNonCancelledJourney;
@@ -13,7 +20,9 @@ import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.ext.carpooling.CarpoolTripWithVerticesTestData;
 import org.opentripplanner.ext.carpooling.internal.DefaultCarpoolingRepository;
+import org.opentripplanner.ext.carpooling.routing.CarpoolTripVertexResolver;
 import org.opentripplanner.framework.io.HttpHeaders;
 import org.opentripplanner.updater.trip.siri.updater.DefaultSiriETUpdaterParameters;
 
@@ -23,11 +32,16 @@ class SiriETCarpoolingUpdaterTest {
 
   private DefaultCarpoolingRepository repository;
   private SiriETCarpoolingUpdater updater;
+  private CarpoolTripVertexResolver resolver;
   private final CarpoolSiriMapper mapper = new CarpoolSiriMapper(FEED_ID);
 
   @BeforeEach
   void setUp() {
     repository = new DefaultCarpoolingRepository();
+    resolver = mock(CarpoolTripVertexResolver.class);
+    when(resolver.resolve(any())).thenAnswer(invocation ->
+      CarpoolTripWithVerticesTestData.withDummyVertices(invocation.getArgument(0))
+    );
     var params = new DefaultSiriETUpdaterParameters(
       "carpool-test",
       FEED_ID,
@@ -41,7 +55,7 @@ class SiriETCarpoolingUpdaterTest {
       HttpHeaders.empty(),
       false
     );
-    updater = new SiriETCarpoolingUpdater(params, repository);
+    updater = new SiriETCarpoolingUpdater(params, repository, resolver);
   }
 
   @Test
@@ -79,6 +93,27 @@ class SiriETCarpoolingUpdaterTest {
   }
 
   @Test
+  void processEstimatedVehicleJourney_unresolvableRoutePoint_dropsTrip() {
+    doReturn(null).when(resolver).resolve(any());
+
+    updater.processEstimatedVehicleJourney(minimalCompleteJourney());
+
+    assertTrue(repository.getCarpoolTrips().isEmpty());
+  }
+
+  @Test
+  void processEstimatedVehicleJourney_unchangedGeometry_reusesStoredVertices() {
+    var journey = minimalCompleteJourney();
+    updater.processEstimatedVehicleJourney(journey);
+    var storedVertices = repository.getCarpoolTrips().iterator().next().vertices();
+
+    updater.processEstimatedVehicleJourney(journey);
+
+    verify(resolver, times(1)).resolve(any());
+    assertEquals(storedVertices, repository.getCarpoolTrips().iterator().next().vertices());
+  }
+
+  @Test
   void processEstimatedVehicleJourney_malformedNonCancellation_doesNotRemoveOrReplaceExistingTrip() {
     // Sanity-check the fixture: a direct mapper call must throw, otherwise the updater test
     // below would silently degrade into "upsert replaces the seeded trip" and still pass.
@@ -106,6 +141,6 @@ class SiriETCarpoolingUpdaterTest {
     return repository
       .getCarpoolTrips()
       .stream()
-      .anyMatch(t -> t.getId().equals(id));
+      .anyMatch(t -> t.trip().getId().equals(id));
   }
 }

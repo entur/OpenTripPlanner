@@ -114,6 +114,7 @@ public class SpeedTest {
       new DefaultVehicleParkingRepository(),
       timetableRepository,
       new DefaultCarpoolingRepository(),
+      null,
       new TimetableSnapshotManager(
         (DefaultTripCalendars) timetableRepository.getTripCalendar(),
         null,

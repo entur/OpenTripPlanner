@@ -3,8 +3,12 @@ package org.opentripplanner.ext.carpooling.updater;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
+import org.opentripplanner.ext.carpooling.model.CarpoolTrip;
+import org.opentripplanner.ext.carpooling.routing.CarpoolTripVertexResolver;
+import org.opentripplanner.ext.carpooling.routing.CarpoolTripWithVertices;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.support.siri.SiriFileLoader;
 import org.opentripplanner.updater.support.siri.SiriHttpLoader;
@@ -20,7 +24,10 @@ import uk.org.siri.siri21.EstimatedVehicleJourney;
 import uk.org.siri.siri21.ServiceDelivery;
 
 /**
- * Update OTP stop timetables from some a Siri-ET HTTP sources.
+ * Polls carpool driver trips from a SIRI-ET HTTP source and maintains them in the
+ * {@link CarpoolingRepository}. Each trip's route points are resolved to permanent, car-reachable
+ * street vertices before insertion, so everything in the repository is routable as stored and no
+ * per-request linking or reachability probing is needed for driver trips.
  */
 public class SiriETCarpoolingUpdater extends PollingGraphUpdater {
 
@@ -38,15 +45,18 @@ public class SiriETCarpoolingUpdater extends PollingGraphUpdater {
   private final EstimatedTimetableSource updateSource;
 
   private final CarpoolingRepository repository;
+  private final CarpoolTripVertexResolver vertexResolver;
   private final CarpoolSiriMapper mapper;
 
   public SiriETCarpoolingUpdater(
     DefaultSiriETUpdaterParameters config,
-    CarpoolingRepository repository
+    CarpoolingRepository repository,
+    CarpoolTripVertexResolver vertexResolver
   ) {
     super(config);
     this.updateSource = new SiriETHttpTripUpdateSource(config, siriLoader(config));
     this.repository = repository;
+    this.vertexResolver = vertexResolver;
     this.blockReadinessUntilInitialized = config.blockReadinessUntilInitialized();
 
     LOG.info("Creating SIRI-ET updater running every {}: {}", pollingPeriod(), updateSource);
@@ -120,8 +130,11 @@ public class SiriETCarpoolingUpdater extends PollingGraphUpdater {
   }
 
   /**
-   * Maps a single estimated vehicle journey to a carpool trip and upserts it, or removes the
-   * trip when the journey is cancelled or has fewer than 2 non-cancelled calls.
+   * Maps a single estimated vehicle journey to a carpool trip, resolves its route points to
+   * permanent street vertices, and upserts the result. The trip is removed instead when the
+   * journey is cancelled, has fewer than 2 non-cancelled calls, or has a route point no car can
+   * reach — an unresolvable trip could never be routed, so rejecting it here surfaces bad feed
+   * geometry once, in the updater log, rather than as silently empty routing responses.
    */
   void processEstimatedVehicleJourney(EstimatedVehicleJourney estimatedVehicleJourney) {
     try {
@@ -135,10 +148,34 @@ public class SiriETCarpoolingUpdater extends PollingGraphUpdater {
         repository.removeCarpoolTrip(tripId);
         return;
       }
-      repository.upsertCarpoolTrip(carpoolTrip);
+      var tripWithVertices = resolveVertices(carpoolTrip);
+      if (tripWithVertices == null) {
+        LOG.warn(
+          "Dropping carpool trip {}: a route point has no car-reachable street vertex",
+          tripId
+        );
+        repository.removeCarpoolTrip(tripId);
+        return;
+      }
+      repository.upsertCarpoolTrip(tripWithVertices);
     } catch (Exception e) {
       LOG.warn("Failed to process EstimatedVehicleJourney: {}", e.getMessage());
     }
+  }
+
+  /**
+   * Resolves the trip's route points to permanent street vertices, or returns {@code null} when a
+   * route point cannot be resolved. When an update leaves the route-point geometry unchanged — the
+   * common case for booking updates, which only touch budgets and times — the stored trip's
+   * vertices are reused instead of re-linking and re-probing every point on every poll.
+   */
+  @Nullable
+  private CarpoolTripWithVertices resolveVertices(CarpoolTrip trip) {
+    var existing = repository.getCarpoolTrip(trip.getId());
+    if (existing != null && existing.trip().routePoints().equals(trip.routePoints())) {
+      return new CarpoolTripWithVertices(trip, existing.vertices());
+    }
+    return vertexResolver.resolve(trip);
   }
 
   @Override

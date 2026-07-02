@@ -10,8 +10,9 @@ import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
 
 /**
- * Creates temporary, request-scoped graph vertices for carpooling — one flavor for the
- * passenger's pickup/dropoff and one for each point along the driver's trip. Both flavors
+ * Creates temporary graph vertices for carpooling — one flavor for the passenger's pickup/dropoff
+ * (request-scoped) and one for each point along the driver's trip (created at trip ingest while
+ * the route points are resolved to permanent vertices, and disposed right after). Both flavors
  * always link {@code BIDIRECTIONAL} (as a {@link LocationType#VISIT_VIA_LOCATION}), because
  * carpool routing passes <em>through</em> these points rather than starting or ending at them.
  *
@@ -48,8 +49,9 @@ import org.opentripplanner.street.search.TraverseMode;
  * <h2>Cleanup</h2>
  *
  * All vertices and their temporary edges are registered with the caller's
- * {@link TemporaryVerticesContainer} via {@link VertexCreationService}; when the container
- * is closed at the end of the request, everything added here is yanked from the graph.
+ * {@link TemporaryVerticesContainer} via {@link VertexCreationService}; when the caller closes
+ * the container — at the end of the request, or as soon as a trip's route points are resolved —
+ * everything added here is yanked from the graph.
  */
 public class StreetVertexUtils {
 
@@ -84,9 +86,9 @@ public class StreetVertexUtils {
 
   /**
    * Creates a fresh, car-linked vertex for a driver trip waypoint. Driver trips do not pass
-   * through OTP's request-linking pipeline, so their intermediate stops are always linked
-   * on-demand — and they must be linked in {@link TraverseMode#CAR} because only the driver
-   * traverses those vertices.
+   * through OTP's request-linking pipeline; their route points are linked here while the trip
+   * resolver picks a permanent vertex for each of them — and they must be linked in
+   * {@link TraverseMode#CAR} because only the driver traverses those points.
    */
   @Nullable
   public Vertex createDriverWaypointVertex(WgsCoordinate coord) {

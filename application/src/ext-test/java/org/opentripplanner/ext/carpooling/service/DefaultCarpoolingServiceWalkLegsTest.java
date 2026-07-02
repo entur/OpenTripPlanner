@@ -12,7 +12,6 @@ import java.time.ZonedDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.ext.carpooling.CarpoolTripTestData;
-import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.model.CarpoolLeg;
 import org.opentripplanner.ext.carpooling.model.CarpoolTripBuilder;
 import org.opentripplanner.model.GenericLocation;
@@ -73,7 +72,7 @@ class DefaultCarpoolingServiceWalkLegsTest extends GraphRoutingTest {
   );
 
   private DefaultCarpoolingService service;
-  private CarpoolingRepository repository;
+  private CarpoolingServiceTestContext context;
 
   @BeforeEach
   void setUp() {
@@ -111,9 +110,8 @@ class DefaultCarpoolingServiceWalkLegsTest extends GraphRoutingTest {
       }
     );
 
-    var context = CarpoolingServiceTestContext.of(model);
+    context = CarpoolingServiceTestContext.of(model);
     service = context.service();
-    repository = context.repository();
   }
 
   private RouteRequest buildDirectCarpoolRequest(ZonedDateTime dateTime) {
@@ -139,7 +137,7 @@ class DefaultCarpoolingServiceWalkLegsTest extends GraphRoutingTest {
   void passengerOnPedestrianOnlyEdge_emitsWalkLegsAroundCarpoolLeg() {
     var departureTime = SEARCH_TIME.plusMinutes(10);
     var trip = CarpoolTripTestData.createSimpleTripWithTime(TRIP_START, TRIP_END, departureTime);
-    repository.upsertCarpoolTrip(trip);
+    context.upsertTrip(trip);
 
     var request = buildDirectCarpoolRequest(SEARCH_TIME);
     var results = service.routeDirect(request);
@@ -278,7 +276,7 @@ class DefaultCarpoolingServiceWalkLegsTest extends GraphRoutingTest {
         ContactInfo.of().withBookingUrl("https://book.example.com").build()
       )
       .build();
-    repository.upsertCarpoolTrip(trip);
+    context.upsertTrip(trip);
 
     var results = service.routeDirect(buildDirectCarpoolRequest(SEARCH_TIME));
     assertFalse(results.isEmpty());

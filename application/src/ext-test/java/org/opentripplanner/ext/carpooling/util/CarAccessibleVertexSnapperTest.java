@@ -11,9 +11,14 @@ import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
+import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
+import org.opentripplanner.routing.linking.internal.VertexCreationService;
+import org.opentripplanner.street.geometry.WgsCoordinate;
+import org.opentripplanner.street.linking.TemporaryVerticesContainer;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
 import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
+import org.opentripplanner.street.model.vertex.TemporaryVertex;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 
 class CarAccessibleVertexSnapperTest extends GraphRoutingTest {
@@ -495,5 +500,62 @@ class CarAccessibleVertexSnapperTest extends GraphRoutingTest {
       reachabilitySnapper.isCarAccessible(v[0]),
       "The island must stay rejected: its only way out is the mode-blind temporary bridge"
     );
+  }
+
+  /**
+   * {@code snapToPermanentVertex} never accepts a request-scoped temporary vertex, even when it is
+   * the cheapest car-accessible one; the plain snap does. A coordinate linked mid-edge on a
+   * drivable street {@code A --(100 m)-- B} produces exactly that shape: the linking's splitter
+   * vertices carry drivable partial edges and are the nearest car-accessible vertices to the
+   * linked location, but they are disposed with the linking — only an edge endpoint may be stored.
+   */
+  @Test
+  void snapToPermanentVertex_skipsTemporaryVertices() {
+    var v = new IntersectionVertex[2];
+    var model = modelOf(
+      new GraphRoutingTest.Builder() {
+        @Override
+        public void build() {
+          v[0] = intersection("A", 60.0000, 10.0000);
+          v[1] = intersection("B", 60.0000, 10.0018);
+          street(v[0], v[1], 100, StreetTraversalPermission.ALL, StreetTraversalPermission.ALL);
+        }
+      }
+    );
+    var vertexCreationService = new VertexCreationService(
+      VertexLinkerTestFactory.of(model.graph())
+    );
+    var reachabilitySnapper = new CarAccessibleVertexSnapper(50, 200);
+
+    try (var temporaryVerticesContainer = new TemporaryVerticesContainer()) {
+      var linked = new StreetVertexUtils(
+        vertexCreationService,
+        temporaryVerticesContainer
+      ).createDriverWaypointVertex(new WgsCoordinate(60.0000, 10.0005));
+      assertNotNull(linked);
+
+      var plain = reachabilitySnapper.snapPickup(
+        StreetSearchRequest.DEFAULT,
+        linked,
+        Duration.ofMinutes(10)
+      );
+      var permanent = reachabilitySnapper.snapToPermanentVertex(
+        StreetSearchRequest.DEFAULT,
+        linked,
+        Duration.ofMinutes(10)
+      );
+
+      assertNotNull(plain);
+      assertTrue(
+        plain.vertex() instanceof TemporaryVertex,
+        "The plain snap accepts the linking's own splitter vertex"
+      );
+      assertNotNull(permanent);
+      assertEquals(
+        v[0],
+        permanent.vertex(),
+        "The permanent snap must walk on to the nearer edge endpoint"
+      );
+    }
   }
 }

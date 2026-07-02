@@ -70,7 +70,8 @@ import org.opentripplanner.street.search.strategy.DominanceFunctions;
  * Use {@link #snapPickup} when the walker departs from {@code vertexToSnap} (forward search,
  * outgoing edges) and {@link #snapDropoff} when the walker arrives at it (reverse search, incoming
  * edges). The returned walk path is always in chronological order, from the walk's start vertex to
- * its end vertex.
+ * its end vertex. {@link #snapToPermanentVertex} additionally restricts the accepted target to
+ * permanent graph vertices, for callers that store the result beyond the current linking.
  */
 public final class CarAccessibleVertexSnapper {
 
@@ -158,7 +159,7 @@ public final class CarAccessibleVertexSnapper {
     Vertex vertexToSnap,
     Duration maxWalk
   ) {
-    return snap(baseRequest, vertexToSnap, maxWalk, false);
+    return snap(baseRequest, vertexToSnap, maxWalk, false, false);
   }
 
   /**
@@ -174,7 +175,23 @@ public final class CarAccessibleVertexSnapper {
     Vertex vertexToSnap,
     Duration maxWalk
   ) {
-    return snap(baseRequest, vertexToSnap, maxWalk, true);
+    return snap(baseRequest, vertexToSnap, maxWalk, true, false);
+  }
+
+  /**
+   * Like {@link #snapPickup}, but accepts only permanent graph vertices, never request-scoped
+   * temporary ones. Use when the result must outlive the temporary linking that produced
+   * {@code vertexToSnap}: the linked vertex and its split neighbours are disposed with their
+   * {@code TemporaryVerticesContainer}, while the vertex returned here can be stored — e.g. for
+   * the lifetime of a carpool trip.
+   */
+  @Nullable
+  public SnapResult snapToPermanentVertex(
+    StreetSearchRequest baseRequest,
+    Vertex vertexToSnap,
+    Duration maxWalk
+  ) {
+    return snap(baseRequest, vertexToSnap, maxWalk, false, true);
   }
 
   /**
@@ -193,17 +210,20 @@ public final class CarAccessibleVertexSnapper {
    * @param maxWalk walking-time budget for reaching a car-accessible vertex.
    * @param arriveBy {@code false} for a pickup (walker departs from {@code vertexToSnap}),
    *        {@code true} for a dropoff (walker arrives at it).
-   * @return the snap result, or {@code null} if no car-accessible vertex is reachable within
-   *         {@code maxWalk}.
+   * @param permanentOnly when {@code true}, request-scoped temporary vertices are never accepted
+   *        as the snap target, so the result can outlive the linking that produced the input.
+   * @return the snap result, or {@code null} if no acceptable car-accessible vertex is reachable
+   *         within {@code maxWalk}.
    */
   @Nullable
   private SnapResult snap(
     StreetSearchRequest baseRequest,
     Vertex vertexToSnap,
     Duration maxWalk,
-    boolean arriveBy
+    boolean arriveBy,
+    boolean permanentOnly
   ) {
-    if (isCarAccessible(vertexToSnap)) {
+    if (isAcceptableTarget(vertexToSnap, permanentOnly)) {
       return new SnapResult(vertexToSnap, null);
     }
 
@@ -219,7 +239,7 @@ public final class CarAccessibleVertexSnapper {
     // search runs single-threaded so no synchronization is needed.
     State[] foundRef = new State[1];
     SearchTerminationStrategy<State> terminator = state -> {
-      if (isCarAccessible(state.getVertex())) {
+      if (isAcceptableTarget(state.getVertex(), permanentOnly)) {
         foundRef[0] = state;
         return true;
       }
@@ -258,6 +278,13 @@ public final class CarAccessibleVertexSnapper {
       return new SnapResult(best.getVertex(), null);
     }
     return new SnapResult(best.getVertex(), path);
+  }
+
+  private boolean isAcceptableTarget(Vertex vertex, boolean permanentOnly) {
+    if (permanentOnly && vertex instanceof TemporaryVertex) {
+      return false;
+    }
+    return isCarAccessible(vertex);
   }
 
   /**
