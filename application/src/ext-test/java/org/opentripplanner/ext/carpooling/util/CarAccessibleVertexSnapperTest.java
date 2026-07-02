@@ -1,9 +1,11 @@
 package org.opentripplanner.ext.carpooling.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.opentripplanner.street.model.edge.TemporaryFreeEdge.createTemporaryFreeEdge;
 
 import java.time.Duration;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.vertex.IntersectionVertex;
+import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
 
 class CarAccessibleVertexSnapperTest extends GraphRoutingTest {
@@ -19,6 +22,14 @@ class CarAccessibleVertexSnapperTest extends GraphRoutingTest {
   private IntersectionVertex B;
   private IntersectionVertex C;
   private IntersectionVertex D;
+
+  /**
+   * Deliberately small probe distances so the reachability check accepts curbs in these compact
+   * test graphs, whose car edges span only tens of metres. Production distances are hundreds of
+   * metres; the reachability-specific tests below construct their own snapper with graph-matched
+   * distances.
+   */
+  private final CarAccessibleVertexSnapper snapper = new CarAccessibleVertexSnapper(20, 60);
 
   /**
    * Graph layout:
@@ -61,11 +72,7 @@ class CarAccessibleVertexSnapperTest extends GraphRoutingTest {
 
   @Test
   void alreadyCarAccessibleVertex_returnsSameVertexWithoutWalk() {
-    var result = CarAccessibleVertexSnapper.snapPickup(
-      StreetSearchRequest.DEFAULT,
-      D,
-      Duration.ofMinutes(10)
-    );
+    var result = snapper.snapPickup(StreetSearchRequest.DEFAULT, D, Duration.ofMinutes(10));
     assertNotNull(result);
     assertEquals(D, result.vertex());
     assertNull(result.walkPath());
@@ -73,11 +80,7 @@ class CarAccessibleVertexSnapperTest extends GraphRoutingTest {
 
   @Test
   void pedestrianOnlyVertex_withinBudget_snapsToNearestCarAccessible() {
-    var result = CarAccessibleVertexSnapper.snapPickup(
-      StreetSearchRequest.DEFAULT,
-      A,
-      Duration.ofMinutes(10)
-    );
+    var result = snapper.snapPickup(StreetSearchRequest.DEFAULT, A, Duration.ofMinutes(10));
     assertNotNull(result);
     assertEquals(C, result.vertex());
     assertNotNull(result.walkPath());
@@ -86,21 +89,13 @@ class CarAccessibleVertexSnapperTest extends GraphRoutingTest {
 
   @Test
   void pedestrianOnlyVertex_budgetTooTight_returnsNull() {
-    var result = CarAccessibleVertexSnapper.snapPickup(
-      StreetSearchRequest.DEFAULT,
-      A,
-      Duration.ofSeconds(5)
-    );
+    var result = snapper.snapPickup(StreetSearchRequest.DEFAULT, A, Duration.ofSeconds(5));
     assertNull(result);
   }
 
   @Test
   void arriveBySearch_walksBackwardsAlongIncomingEdges() {
-    var result = CarAccessibleVertexSnapper.snapDropoff(
-      StreetSearchRequest.DEFAULT,
-      A,
-      Duration.ofMinutes(10)
-    );
+    var result = snapper.snapDropoff(StreetSearchRequest.DEFAULT, A, Duration.ofMinutes(10));
     assertNotNull(result);
     assertEquals(C, result.vertex());
     assertNotNull(result.walkPath());
@@ -169,11 +164,7 @@ class CarAccessibleVertexSnapperTest extends GraphRoutingTest {
       }
     );
 
-    var result = CarAccessibleVertexSnapper.snapPickup(
-      StreetSearchRequest.DEFAULT,
-      holder[0],
-      Duration.ofMinutes(10)
-    );
+    var result = snapper.snapPickup(StreetSearchRequest.DEFAULT, holder[0], Duration.ofMinutes(10));
 
     assertNotNull(result);
     assertEquals(
@@ -252,11 +243,7 @@ class CarAccessibleVertexSnapperTest extends GraphRoutingTest {
       }
     );
 
-    var result = CarAccessibleVertexSnapper.snapPickup(
-      StreetSearchRequest.DEFAULT,
-      holder[0],
-      Duration.ofMinutes(10)
-    );
+    var result = snapper.snapPickup(StreetSearchRequest.DEFAULT, holder[0], Duration.ofMinutes(10));
 
     assertNotNull(result);
     assertNotNull(result.walkPath(), "S is pedestrian-only — a real walk path is expected");
@@ -281,12 +268,8 @@ class CarAccessibleVertexSnapperTest extends GraphRoutingTest {
       .withWalk(b -> b.withReluctance(4.0))
       .build();
 
-    var lowResult = CarAccessibleVertexSnapper.snapPickup(lowReluctance, A, Duration.ofMinutes(10));
-    var highResult = CarAccessibleVertexSnapper.snapPickup(
-      highReluctance,
-      A,
-      Duration.ofMinutes(10)
-    );
+    var lowResult = snapper.snapPickup(lowReluctance, A, Duration.ofMinutes(10));
+    var highResult = snapper.snapPickup(highReluctance, A, Duration.ofMinutes(10));
 
     assertNotNull(lowResult);
     assertNotNull(highResult);
@@ -299,6 +282,218 @@ class CarAccessibleVertexSnapperTest extends GraphRoutingTest {
     assertTrue(
       highWeight > lowWeight * 2,
       "Weight should scale with walk reluctance: low=" + lowWeight + ", high=" + highWeight
+    );
+  }
+
+  /**
+   * A curb on a car network that extends beyond the escape distance in both directions is accepted.
+   * Graph: {@code O --(ped)-- P --(car)-- P1 --(car)-- P2}, with P–P1–P2 spanning ~111 m of
+   * two-way car street; a car can both drive away from P and reach it, so the pedestrian origin O
+   * snaps to P.
+   */
+  @Test
+  void connectedCarVertex_isAccepted() {
+    var v = new IntersectionVertex[4];
+    modelOf(
+      new GraphRoutingTest.Builder() {
+        @Override
+        public void build() {
+          v[0] = intersection("O", 60.0000, 10.0000);
+          v[1] = intersection("P", 60.0000, 10.0010);
+          v[2] = intersection("P1", 60.0000, 10.0020);
+          v[3] = intersection("P2", 60.0000, 10.0030);
+          street(
+            v[0],
+            v[1],
+            60,
+            StreetTraversalPermission.PEDESTRIAN,
+            StreetTraversalPermission.PEDESTRIAN
+          );
+          street(v[1], v[2], 60, StreetTraversalPermission.ALL, StreetTraversalPermission.ALL);
+          street(v[2], v[3], 60, StreetTraversalPermission.ALL, StreetTraversalPermission.ALL);
+        }
+      }
+    );
+
+    var reachabilitySnapper = new CarAccessibleVertexSnapper(100, 250);
+    var result = reachabilitySnapper.snapPickup(
+      StreetSearchRequest.DEFAULT,
+      v[0],
+      Duration.ofMinutes(10)
+    );
+
+    assertNotNull(result);
+    assertEquals(v[1], result.vertex());
+  }
+
+  /**
+   * A curb whose only car edges form a tiny disconnected island — car-permitting "on paper" but no
+   * car can drive to or from it beyond the island — is rejected, and the snapper walks on to a
+   * genuinely reachable curb. Graph: {@code IslC --(car)-- Isl --(ped)-- O --(ped)-- Q --(car)--
+   * Q1 --(car)-- Q2}. The island {@code Isl↔IslC} spans only ~33 m (below the 100 m escape
+   * distance), while {@code Q–Q1–Q2} spans ~111 m; Isl is closer to O but rejected, so O snaps to
+   * Q.
+   */
+  @Test
+  void islandCarVertex_isRejected_snapsToReachableCurb() {
+    var v = new IntersectionVertex[6];
+    modelOf(
+      new GraphRoutingTest.Builder() {
+        @Override
+        public void build() {
+          v[0] = intersection("O", 60.0000, 10.0000);
+          v[1] = intersection("Isl", 60.0000, 10.0006);
+          v[2] = intersection("IslC", 60.0000, 10.0012);
+          v[3] = intersection("Q", 60.0000, 9.9990);
+          v[4] = intersection("Q1", 60.0000, 9.9980);
+          v[5] = intersection("Q2", 60.0000, 9.9970);
+          street(
+            v[0],
+            v[1],
+            40,
+            StreetTraversalPermission.PEDESTRIAN,
+            StreetTraversalPermission.PEDESTRIAN
+          );
+          street(v[1], v[2], 40, StreetTraversalPermission.ALL, StreetTraversalPermission.ALL);
+          street(
+            v[0],
+            v[3],
+            60,
+            StreetTraversalPermission.PEDESTRIAN,
+            StreetTraversalPermission.PEDESTRIAN
+          );
+          street(v[3], v[4], 60, StreetTraversalPermission.ALL, StreetTraversalPermission.ALL);
+          street(v[4], v[5], 60, StreetTraversalPermission.ALL, StreetTraversalPermission.ALL);
+        }
+      }
+    );
+
+    var reachabilitySnapper = new CarAccessibleVertexSnapper(100, 250);
+    var result = reachabilitySnapper.snapPickup(
+      StreetSearchRequest.DEFAULT,
+      v[0],
+      Duration.ofMinutes(10)
+    );
+
+    assertNotNull(result);
+    assertEquals(
+      v[3],
+      result.vertex(),
+      "Should skip the island Isl and snap to the connected curb Q"
+    );
+  }
+
+  /**
+   * A curb a car can be driven <em>to</em> but not away <em>from</em> (or vice versa) is rejected:
+   * mid-route pickups require both directions. Graph (all car edges one-way, reverse pedestrian):
+   * {@code U2 --> U1 --> T --> Td}, with T linked to the pedestrian origin O. A car can reach T
+   * from far up the {@code U2→U1→T} chain (~111 m), but leaving T dead-ends at Td after only
+   * ~67 m — below the 100 m escape distance — so the forward probe fails and T is rejected. No
+   * other curb is reachable, so the snap returns {@code null}.
+   */
+  @Test
+  void directionalDeadEndVertex_isRejected() {
+    var v = new IntersectionVertex[5];
+    modelOf(
+      new GraphRoutingTest.Builder() {
+        @Override
+        public void build() {
+          v[0] = intersection("O", 60.0000, 10.0000);
+          v[1] = intersection("T", 60.0000, 10.0006);
+          v[2] = intersection("U1", 60.0000, 10.0016);
+          v[3] = intersection("U2", 60.0000, 10.0026);
+          v[4] = intersection("Td", 60.0000, 9.9994);
+          street(
+            v[0],
+            v[1],
+            40,
+            StreetTraversalPermission.PEDESTRIAN,
+            StreetTraversalPermission.PEDESTRIAN
+          );
+          // One-way car toward T: U2 → U1 → T. T gains incoming car; walkers may go back (pedestrian).
+          street(
+            v[3],
+            v[2],
+            60,
+            StreetTraversalPermission.ALL,
+            StreetTraversalPermission.PEDESTRIAN
+          );
+          street(
+            v[2],
+            v[1],
+            60,
+            StreetTraversalPermission.ALL,
+            StreetTraversalPermission.PEDESTRIAN
+          );
+          // One-way car away from T into a dead-end: T → Td. T gains outgoing car, but it leads nowhere.
+          street(
+            v[1],
+            v[4],
+            40,
+            StreetTraversalPermission.ALL,
+            StreetTraversalPermission.PEDESTRIAN
+          );
+        }
+      }
+    );
+
+    var reachabilitySnapper = new CarAccessibleVertexSnapper(100, 250);
+    var result = reachabilitySnapper.snapPickup(
+      StreetSearchRequest.DEFAULT,
+      v[0],
+      Duration.ofMinutes(10)
+    );
+
+    assertNull(result, "T can be arrived at but not departed far enough; no reachable curb exists");
+  }
+
+  /**
+   * A permanent vertex's reachability verdict is a function of the permanent street graph only.
+   * Temporary linking is visible to every concurrent search and {@code TemporaryFreeEdge}s perform
+   * no mode check, so a temporary hub joining a stranded island to the mainland offers the probe a
+   * way out that no car can actually drive — and, once cached, the wrong verdict would outlive the
+   * hub. The probe must ignore temporary edges: the island stays rejected while the bridge exists.
+   * <p>
+   * Graph: {@code IslC --(car, ~33 m)-- Isl}, {@code M1 --(car)-- M2 --(car)-- M3} (~111 m), and a
+   * {@code TemporaryStreetLocation} hub with free edges in both directions to both {@code Isl} and
+   * {@code M1}.
+   */
+  @Test
+  void permanentVertexVerdict_ignoresTemporaryEdges() {
+    var v = new IntersectionVertex[5];
+    var hubHolder = new TemporaryStreetLocation[1];
+    modelOf(
+      new GraphRoutingTest.Builder() {
+        @Override
+        public void build() {
+          v[0] = intersection("Isl", 60.0000, 10.0000);
+          v[1] = intersection("IslC", 60.0000, 10.0006);
+          v[2] = intersection("M1", 60.0000, 9.9994);
+          v[3] = intersection("M2", 60.0000, 9.9984);
+          v[4] = intersection("M3", 60.0000, 9.9974);
+          street(v[0], v[1], 40, StreetTraversalPermission.ALL, StreetTraversalPermission.ALL);
+          street(v[2], v[3], 60, StreetTraversalPermission.ALL, StreetTraversalPermission.ALL);
+          street(v[3], v[4], 60, StreetTraversalPermission.ALL, StreetTraversalPermission.ALL);
+
+          var hub = streetLocation("bridge", 60.0000, 9.9997);
+          createTemporaryFreeEdge(v[0], hub);
+          link(hub, v[2]);
+          createTemporaryFreeEdge(v[2], hub);
+          link(hub, v[0]);
+          hubHolder[0] = hub;
+        }
+      }
+    );
+
+    var reachabilitySnapper = new CarAccessibleVertexSnapper(100, 250);
+
+    assertTrue(
+      reachabilitySnapper.isCarAccessible(v[2]),
+      "The mainland curb M1 is genuinely car-accessible"
+    );
+    assertFalse(
+      reachabilitySnapper.isCarAccessible(v[0]),
+      "The island must stay rejected: its only way out is the mode-blind temporary bridge"
     );
   }
 }
