@@ -5,6 +5,8 @@ import static java.time.LocalDate.MIN;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.utils.time.ServiceDateUtils;
@@ -24,6 +26,12 @@ import org.opentripplanner.utils.time.ServiceDateUtils;
 public final class LocalDateRange {
 
   private static final LocalDateRange UNBOUNDED = new LocalDateRange(MIN, MAX);
+
+  /**
+   * Upper limit on the number of days {@link #asLocalDates(LocalDate, LocalDate)} is allowed to
+   * enumerate. This is a guard against accidentally materializing an enormous list of dates.
+   */
+  private static final int MAX_DAYS_AS_LOCAL_DATES = 10000;
 
   private final LocalDate inclusiveStart;
   private final LocalDate exclusiveEnd;
@@ -144,6 +152,51 @@ public final class LocalDateRange {
       throw new IllegalArgumentException("ranges do not overlap: " + this + " and " + other);
     }
     return new LocalDateRange(newStart, newEnd);
+  }
+
+  /**
+   * Enumerate the dates in this range as a list, narrowing each open side to the given defaults.
+   * <p>
+   * The effective range is the intersection of this range with
+   * {@code [defaultStart, defaultEndExclusive)}: the start is the later of this range's start and
+   * {@code defaultStart}, and the exclusive end is the earlier of this range's end and
+   * {@code defaultEndExclusive}. This makes the enumerated range as small as possible. When the two
+   * do not overlap an empty list is returned.
+   *
+   * @param defaultStart        the start used when this range is unbounded (or wider) at the start
+   * @param defaultEndExclusive the exclusive end used when this range is unbounded (or wider) at the
+   *                            end
+   * @throws IllegalArgumentException if the effective range spans more than
+   *                                  {@value #MAX_DAYS_AS_LOCAL_DATES} days
+   */
+  public List<LocalDate> asLocalDates(LocalDate defaultStart, LocalDate defaultEndExclusive) {
+    LocalDate start = ServiceDateUtils.max(inclusiveStart, defaultStart);
+    LocalDate endExclusive = ServiceDateUtils.min(exclusiveEnd, defaultEndExclusive);
+
+    if (!start.isBefore(endExclusive)) {
+      return List.of();
+    }
+
+    long days = ChronoUnit.DAYS.between(start, endExclusive);
+    if (days > MAX_DAYS_AS_LOCAL_DATES) {
+      throw new IllegalArgumentException(
+        "The date range [" +
+          start +
+          ", " +
+          endExclusive +
+          ") spans " +
+          days +
+          " days, which exceeds the limit of " +
+          MAX_DAYS_AS_LOCAL_DATES +
+          " days."
+      );
+    }
+
+    List<LocalDate> dates = new ArrayList<>((int) days);
+    for (LocalDate date = start; date.isBefore(endExclusive); date = date.plusDays(1)) {
+      dates.add(date);
+    }
+    return dates;
   }
 
   /**

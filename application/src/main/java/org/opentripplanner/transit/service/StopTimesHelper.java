@@ -17,7 +17,6 @@ import java.util.List;
 import java.util.Queue;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import org.opentripplanner.core.model.time.LocalDateRange;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTimesInPattern;
 import org.opentripplanner.model.TripTimeOnDate;
@@ -134,10 +133,17 @@ public class StopTimesHelper {
     Matcher<TripTimeOnDate> matcher
   ) {
     boolean includeCancellations = request.cancellationPolicy().includesCancellations();
+    ZoneId zone = transitService.getTimeZone();
+    LocalDate defaultStart = ServiceDateUtils.asServiceDay(
+      ServiceDateUtils.asStartOfService(transitService.getTransitServiceStarts(), zone)
+    );
+    LocalDate defaultEndExclusive = ServiceDateUtils.asServiceDay(
+      ServiceDateUtils.asStartOfService(transitService.getTransitServiceEnds(), zone)
+    ).plusDays(1);
     return request
       .serviceDateRanges()
       .stream()
-      .flatMap(range -> serviceDates(range).stream())
+      .flatMap(range -> range.asLocalDates(defaultStart, defaultEndExclusive).stream())
       .distinct()
       .flatMap(serviceDate ->
         request
@@ -150,30 +156,6 @@ public class StopTimesHelper {
           )
       )
       .filter(matcher::match);
-  }
-
-  /**
-   * The service dates contained in the given range. Ranges that are open on either side are clamped
-   * to the transit service period.
-   */
-  private List<LocalDate> serviceDates(LocalDateRange range) {
-    ZoneId zone = transitService.getTimeZone();
-    LocalDate start = !range.isUnboundedStart()
-      ? range.getStartInclusive()
-      : ServiceDateUtils.asServiceDay(
-          ServiceDateUtils.asStartOfService(transitService.getTransitServiceStarts(), zone)
-        );
-    LocalDate endExclusive = !range.isUnboundedEnd()
-      ? range.getEndExclusive()
-      : ServiceDateUtils.asServiceDay(
-          ServiceDateUtils.asStartOfService(transitService.getTransitServiceEnds(), zone)
-        ).plusDays(1);
-
-    List<LocalDate> dates = new ArrayList<>();
-    for (LocalDate date = start; date.isBefore(endExclusive); date = date.plusDays(1)) {
-      dates.add(date);
-    }
-    return dates;
   }
 
   /**
