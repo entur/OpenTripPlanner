@@ -128,7 +128,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
   /**
    * Snaps passenger origin/destination and transit stops onto vertices a car can genuinely reach
-   * and leave. Per-vertex reachability verdicts are cached and depend only on the static street
+   * and leave. The service is application-scoped, so per-vertex reachability verdicts are computed
+   * once per curb and reused across requests — the verdict depends only on the static street
    * graph.
    */
   private final CarAccessibleVertexSnapper carVertexSnapper =
