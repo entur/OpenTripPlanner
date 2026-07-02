@@ -158,32 +158,36 @@ public final class LocalDateRange {
    * Enumerate the dates in this range as a list, narrowing each open side to the given defaults.
    * <p>
    * The effective range is the intersection of this range with
-   * {@code [defaultStart, defaultEndExclusive)}: the start is the later of this range's start and
-   * {@code defaultStart}, and the exclusive end is the earlier of this range's end and
-   * {@code defaultEndExclusive}. This makes the enumerated range as small as possible. When the two
-   * do not overlap an empty list is returned.
+   * {@code [defaultInclusiveStart, defaultExclusiveEnd)}: the start is the later of this range's
+   * start and {@code defaultInclusiveStart}, and the exclusive end is the earlier of this range's
+   * end and {@code defaultExclusiveEnd}. This makes the enumerated range as small as possible. When
+   * the two do not overlap an empty list is returned.
    *
-   * @param defaultStart        the start used when this range is unbounded (or wider) at the start
-   * @param defaultEndExclusive the exclusive end used when this range is unbounded (or wider) at the
-   *                            end
+   * @param defaultInclusiveStart the start used when this range is unbounded (or wider) at the
+   *                              start
+   * @param defaultExclusiveEnd   the exclusive end used when this range is unbounded (or wider) at
+   *                              the end
    * @throws IllegalArgumentException if the effective range spans more than
    *                                  {@value #MAX_DAYS_AS_LOCAL_DATES} days
    */
-  public List<LocalDate> asLocalDates(LocalDate defaultStart, LocalDate defaultEndExclusive) {
-    LocalDate start = ServiceDateUtils.max(inclusiveStart, defaultStart);
-    LocalDate endExclusive = ServiceDateUtils.min(exclusiveEnd, defaultEndExclusive);
+  public List<LocalDate> asLocalDates(
+    LocalDate defaultInclusiveStart,
+    LocalDate defaultExclusiveEnd
+  ) {
+    LocalDate effectiveInclusiveStart = ServiceDateUtils.max(inclusiveStart, defaultInclusiveStart);
+    LocalDate effectiveExclusiveEnd = ServiceDateUtils.min(exclusiveEnd, defaultExclusiveEnd);
 
-    if (!start.isBefore(endExclusive)) {
+    if (!effectiveInclusiveStart.isBefore(effectiveExclusiveEnd)) {
       return List.of();
     }
 
-    long days = ChronoUnit.DAYS.between(start, endExclusive);
+    long days = ChronoUnit.DAYS.between(effectiveInclusiveStart, effectiveExclusiveEnd);
     if (days > MAX_DAYS_AS_LOCAL_DATES) {
       throw new IllegalArgumentException(
         "The date range [" +
-          start +
+          effectiveInclusiveStart +
           ", " +
-          endExclusive +
+          effectiveExclusiveEnd +
           ") spans " +
           days +
           " days, which exceeds the limit of " +
@@ -193,7 +197,11 @@ public final class LocalDateRange {
     }
 
     List<LocalDate> dates = new ArrayList<>((int) days);
-    for (LocalDate date = start; date.isBefore(endExclusive); date = date.plusDays(1)) {
+    for (
+      LocalDate date = effectiveInclusiveStart;
+      date.isBefore(effectiveExclusiveEnd);
+      date = date.plusDays(1)
+    ) {
       dates.add(date);
     }
     return dates;
