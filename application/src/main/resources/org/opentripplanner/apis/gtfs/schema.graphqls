@@ -2394,7 +2394,7 @@ type Stop implements Node & PlaceInterface {
     transit service period are returned. Defining a range is recommended.
     """
     serviceDateRanges: [LocalDateRangeInput!]
-  ): [StopCallForTripOnServiceDate!]!
+  ): [StopCallOnTripOnServiceDate!]!
   "The cluster which this stop is part of"
   cluster: Cluster @deprecated(reason : "Not implemented")
   "Stop code which is visible at the stop"
@@ -2561,7 +2561,7 @@ type StopCall {
 }
 
 "A stop call together with the trip on service date it belongs to."
-type StopCallForTripOnServiceDate {
+type StopCallOnTripOnServiceDate {
   "A stop call which belongs to the trip on a service date."
   stopCall: StopCall!
   "The trip on service date that the stop call belongs to."

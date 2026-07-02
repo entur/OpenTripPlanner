@@ -6,7 +6,7 @@ import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 /**
  * A canceled stop call together with the {@link TripOnServiceDate} it belongs to.
  */
-public record StopCallForTripOnServiceDate(
+public record StopCallOnTripOnServiceDate(
   TripOnServiceDate tripOnServiceDate,
   TripTimeOnDate stopCall
 ) {}

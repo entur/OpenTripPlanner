@@ -3,12 +3,12 @@ package org.opentripplanner.apis.gtfs.datafetchers;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import org.opentripplanner.apis.gtfs.generated.GraphQLDataFetchers;
-import org.opentripplanner.apis.gtfs.model.StopCallForTripOnServiceDate;
+import org.opentripplanner.apis.gtfs.model.StopCallOnTripOnServiceDate;
 import org.opentripplanner.model.TripTimeOnDate;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 
-public class StopCallForTripOnServiceDateImpl
-  implements GraphQLDataFetchers.GraphQLStopCallForTripOnServiceDate {
+public class StopCallOnTripOnServiceDateImpl
+  implements GraphQLDataFetchers.GraphQLStopCallOnTripOnServiceDate {
 
   @Override
   public DataFetcher<TripTimeOnDate> stopCall() {
@@ -20,7 +20,7 @@ public class StopCallForTripOnServiceDateImpl
     return environment -> getSource(environment).tripOnServiceDate();
   }
 
-  private StopCallForTripOnServiceDate getSource(DataFetchingEnvironment environment) {
+  private StopCallOnTripOnServiceDate getSource(DataFetchingEnvironment environment) {
     return environment.getSource();
   }
 }

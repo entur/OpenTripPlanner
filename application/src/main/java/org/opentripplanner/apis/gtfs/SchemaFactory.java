@@ -59,8 +59,8 @@ import org.opentripplanner.apis.gtfs.datafetchers.RouteTypeImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.RoutingErrorImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.StairsUseImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.StepFeatureTypeResolver;
-import org.opentripplanner.apis.gtfs.datafetchers.StopCallForTripOnServiceDateImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.StopCallImpl;
+import org.opentripplanner.apis.gtfs.datafetchers.StopCallOnTripOnServiceDateImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.StopGeometriesImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.StopImpl;
 import org.opentripplanner.apis.gtfs.datafetchers.StopOnRouteImpl;
@@ -207,7 +207,7 @@ public class SchemaFactory {
         .type(typeWiring.build(DependentFareProductImpl.class))
         .type(typeWiring.build(TripOnServiceDateImpl.class))
         .type(typeWiring.build(StopCallImpl.class))
-        .type(typeWiring.build(StopCallForTripOnServiceDateImpl.class))
+        .type(typeWiring.build(StopCallOnTripOnServiceDateImpl.class))
         .type(typeWiring.build(TripOccupancyImpl.class))
         .type(typeWiring.build(LegTimeImpl.class))
         .type(typeWiring.build(RealTimeEstimateImpl.class))

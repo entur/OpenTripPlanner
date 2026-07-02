@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
-import org.opentripplanner.apis.gtfs.model.StopCallForTripOnServiceDate;
+import org.opentripplanner.apis.gtfs.model.StopCallOnTripOnServiceDate;
 import org.opentripplanner.core.model.time.LocalDateRange;
 import org.opentripplanner.model.TripTimeOnDate;
 import org.opentripplanner.model.plan.Leg;
@@ -96,7 +96,7 @@ public class ApiTransitService {
    * call is paired with the {@link TripOnServiceDate} it belongs to, which is synthesized when no
    * real one exists.
    */
-  public List<StopCallForTripOnServiceDate> findCanceledStopCalls(
+  public List<StopCallOnTripOnServiceDate> findCanceledStopCalls(
     StopLocation stop,
     List<LocalDateRange> serviceDateRanges
   ) {
@@ -110,7 +110,7 @@ public class ApiTransitService {
     return transitService
       .findTripTimesOnDate(request)
       .stream()
-      .map(call -> new StopCallForTripOnServiceDate(resolveTripOnServiceDate(call), call))
+      .map(call -> new StopCallOnTripOnServiceDate(resolveTripOnServiceDate(call), call))
       .toList();
   }
 

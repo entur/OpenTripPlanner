@@ -18,7 +18,7 @@ import org.opentripplanner.apis.gtfs.GraphQLRequestContext;
 import org.opentripplanner.apis.gtfs.GraphQLUtils;
 import org.opentripplanner.apis.gtfs.generated.GraphQLDataFetchers;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
-import org.opentripplanner.apis.gtfs.model.StopCallForTripOnServiceDate;
+import org.opentripplanner.apis.gtfs.model.StopCallOnTripOnServiceDate;
 import org.opentripplanner.apis.gtfs.service.ApiTransitService;
 import org.opentripplanner.apis.gtfs.support.filter.PatternByDateFilterUtil;
 import org.opentripplanner.apis.gtfs.support.time.LocalDateRangeUtil;
@@ -135,7 +135,7 @@ public class StopImpl implements GraphQLDataFetchers.GraphQLStop {
   }
 
   @Override
-  public DataFetcher<Iterable<StopCallForTripOnServiceDate>> canceledCalls() {
+  public DataFetcher<Iterable<StopCallOnTripOnServiceDate>> canceledCalls() {
     return environment -> {
       var args = new GraphQLTypes.GraphQLStopCanceledCallsArgs(environment.getArguments());
       var rawRanges = args.getGraphQLServiceDateRanges();
