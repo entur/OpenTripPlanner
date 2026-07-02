@@ -19,6 +19,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.InvalidVehicleParkingCapacity;
 import org.opentripplanner.graph_builder.issues.IsolatedParkAndRide;
+import org.opentripplanner.graph_builder.issues.ParkAndRideWalkAccessibilityMismatch;
 import org.opentripplanner.osm.OsmOpeningHoursParser;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmNode;
@@ -214,12 +215,15 @@ class ParkingProcessor {
 
     var creativeName = nameParkAndRideEntity(entity);
 
-    var isCarAccessible = hasAnyCarAccessibleAccess(accessVertices);
-
     List<VehicleParking.VehicleParkingEntranceCreator> entrances =
       createParkingEntrancesFromAccessVertices(accessVertices, creativeName, entity);
 
-    if (entrances.isEmpty() || (isCarParkAndRide && !isCarAccessible)) {
+    var access = checkParkingAreaAccessibility(accessVertices);
+    if (access.walkMismatch()) {
+      issueStore.add(new ParkAndRideWalkAccessibilityMismatch(entity));
+    }
+
+    if (entrances.isEmpty() || (isCarParkAndRide && !access.carAccessible())) {
       // This P+R is not connected to the drivable street network.
       // We create an artificial entrance to the centroid and add an issue.
       // The solution would be to connect it to the street network in OSM.
@@ -244,9 +248,9 @@ class ParkingProcessor {
     return vehicleParking;
   }
 
-  /// Do the vertices have any car-accessible access?
-  private static boolean hasAnyCarAccessibleAccess(Set<VertexAndName> accessVertices) {
-    // Check P+R accessibility by walking and driving.
+  private static ParkingAreaAccessibility checkParkingAreaAccessibility(
+    Set<VertexAndName> accessVertices
+  ) {
     boolean walkAccessibleIn = false;
     boolean carAccessibleIn = false;
     boolean walkAccessibleOut = false;
@@ -274,13 +278,10 @@ class ParkingProcessor {
         }
       }
     }
-
-    if (walkAccessibleIn != walkAccessibleOut) {
-      LOG.error(
-        "P+R walk IN/OUT accessibility mismatch! Please have a look as this should not happen."
-      );
-    }
-    return carAccessibleIn && carAccessibleOut;
+    return new ParkingAreaAccessibility(
+      carAccessibleIn && carAccessibleOut,
+      walkAccessibleIn != walkAccessibleOut
+    );
   }
 
   /**
@@ -295,10 +296,6 @@ class ParkingProcessor {
     OsmEntity entity,
     boolean isCarPark
   ) {
-    LOG.debug(
-      "Creating an artificial entrance for {} as it's not linked to the street network",
-      entity.url()
-    );
     return List.of(builder ->
       builder
         .entranceId(
@@ -473,3 +470,5 @@ class ParkingProcessor {
 }
 
 record VertexAndName(I18NString name, IntersectionVertex vertex) {}
+
+record ParkingAreaAccessibility(boolean carAccessible, boolean walkMismatch) {}
