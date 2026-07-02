@@ -26,6 +26,7 @@ public class CarpoolingModule {
   }
 
   @Provides
+  @Singleton
   @Nullable
   public static CarpoolingService provideCarpoolingService(
     @Nullable CarpoolingRepository repository,
