@@ -437,17 +437,17 @@ class ParkingProcessor {
 record VertexAndName(I18NString name, IntersectionVertex vertex) {}
 
 record ParkingAreaAccessibility(Set<VertexAndName> accessVertices) {
-  private static final Predicate<Edge> PREDICATE_WALKABLE = e ->
-    e instanceof StreetEdge se && se.canTraverse(TraverseMode.CAR);
   private static final Predicate<Edge> PREDICATE_DRIVABLE = e ->
+    e instanceof StreetEdge se && se.canTraverse(TraverseMode.CAR);
+  private static final Predicate<Edge> PREDICATE_WALKABLE = e ->
     e instanceof StreetEdge se && se.canTraverse(TraverseMode.WALK);
 
   boolean carAccessible() {
     return (
       accessVertices
         .stream()
-        .anyMatch(a -> a.vertex().hasAnyIncomingMatching(PREDICATE_WALKABLE)) &&
-      accessVertices.stream().anyMatch(a -> a.vertex().hasAnyOutgoingMatching(PREDICATE_WALKABLE))
+        .anyMatch(a -> a.vertex().hasAnyIncomingMatching(PREDICATE_DRIVABLE)) &&
+      accessVertices.stream().anyMatch(a -> a.vertex().hasAnyOutgoingMatching(PREDICATE_DRIVABLE))
     );
   }
 
@@ -455,8 +455,8 @@ record ParkingAreaAccessibility(Set<VertexAndName> accessVertices) {
     return (
       accessVertices
         .stream()
-        .anyMatch(a -> a.vertex().hasAnyIncomingMatching(PREDICATE_DRIVABLE)) !=
-      accessVertices.stream().anyMatch(a1 -> a1.vertex().hasAnyOutgoingMatching(PREDICATE_DRIVABLE))
+        .anyMatch(a -> a.vertex().hasAnyIncomingMatching(PREDICATE_WALKABLE)) !=
+      accessVertices.stream().anyMatch(a1 -> a1.vertex().hasAnyOutgoingMatching(PREDICATE_WALKABLE))
     );
   }
 }
