@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.function.Predicate;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.core.model.i18n.I18NString;
@@ -218,7 +219,7 @@ class ParkingProcessor {
     List<VehicleParking.VehicleParkingEntranceCreator> entrances =
       createParkingEntrancesFromAccessVertices(accessVertices, creativeName, entity);
 
-    var access = checkParkingAreaAccessibility(accessVertices);
+    var access = new ParkingAreaAccessibility(accessVertices);
     if (access.walkMismatch()) {
       issueStore.add(new ParkAndRideWalkAccessibilityMismatch(entity));
     }
@@ -246,42 +247,6 @@ class ParkingProcessor {
     vehicleParkingHelper.linkVehicleParkingToGraph(vehicleParking);
 
     return vehicleParking;
-  }
-
-  private static ParkingAreaAccessibility checkParkingAreaAccessibility(
-    Set<VertexAndName> accessVertices
-  ) {
-    boolean walkAccessibleIn = false;
-    boolean carAccessibleIn = false;
-    boolean walkAccessibleOut = false;
-    boolean carAccessibleOut = false;
-    for (VertexAndName access : accessVertices) {
-      var accessVertex = access.vertex();
-      for (Edge incoming : accessVertex.getIncoming()) {
-        if (incoming instanceof StreetEdge streetEdge) {
-          if (streetEdge.canTraverse(TraverseMode.WALK)) {
-            walkAccessibleIn = true;
-          }
-          if (streetEdge.canTraverse(TraverseMode.CAR)) {
-            carAccessibleIn = true;
-          }
-        }
-      }
-      for (Edge outgoing : accessVertex.getOutgoing()) {
-        if (outgoing instanceof StreetEdge streetEdge) {
-          if (streetEdge.canTraverse(TraverseMode.WALK)) {
-            walkAccessibleOut = true;
-          }
-          if (streetEdge.canTraverse(TraverseMode.CAR)) {
-            carAccessibleOut = true;
-          }
-        }
-      }
-    }
-    return new ParkingAreaAccessibility(
-      carAccessibleIn && carAccessibleOut,
-      walkAccessibleIn != walkAccessibleOut
-    );
   }
 
   /**
@@ -471,4 +436,27 @@ class ParkingProcessor {
 
 record VertexAndName(I18NString name, IntersectionVertex vertex) {}
 
-record ParkingAreaAccessibility(boolean carAccessible, boolean walkMismatch) {}
+record ParkingAreaAccessibility(Set<VertexAndName> accessVertices) {
+  private static final Predicate<Edge> PREDICATE_WALKABLE = e ->
+    e instanceof StreetEdge se && se.canTraverse(TraverseMode.CAR);
+  private static final Predicate<Edge> PREDICATE_DRIVABLE = e ->
+    e instanceof StreetEdge se && se.canTraverse(TraverseMode.WALK);
+
+  boolean carAccessible() {
+    return (
+      accessVertices
+        .stream()
+        .anyMatch(a -> a.vertex().hasAnyIncomingMatching(PREDICATE_WALKABLE)) &&
+      accessVertices.stream().anyMatch(a -> a.vertex().hasAnyOutgoingMatching(PREDICATE_WALKABLE))
+    );
+  }
+
+  boolean walkMismatch() {
+    return (
+      accessVertices
+        .stream()
+        .anyMatch(a -> a.vertex().hasAnyIncomingMatching(PREDICATE_DRIVABLE)) !=
+      accessVertices.stream().anyMatch(a1 -> a1.vertex().hasAnyOutgoingMatching(PREDICATE_DRIVABLE))
+    );
+  }
+}
