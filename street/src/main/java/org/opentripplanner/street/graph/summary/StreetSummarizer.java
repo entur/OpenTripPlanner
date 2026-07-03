@@ -1,4 +1,4 @@
-package org.opentripplanner.street.graph;
+package org.opentripplanner.street.graph.summary;
 
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
@@ -15,6 +15,7 @@ import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.VehicleParkingEntranceVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 
+/// Converts edges and vertices to human-readable strings, useful for test assertions.
 class StreetSummarizer {
 
   private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat(

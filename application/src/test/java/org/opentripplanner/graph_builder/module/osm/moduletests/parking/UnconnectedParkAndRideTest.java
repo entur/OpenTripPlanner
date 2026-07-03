@@ -12,7 +12,7 @@ import org.opentripplanner.osm.TestOsmProvider;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.street.graph.Graph;
-import org.opentripplanner.street.graph.GraphDataFetcher;
+import org.opentripplanner.street.graph.summary.GraphSummarizer;
 
 /// Tests that an entrance vertex is created for parking lots that are not connected to the rest
 /// of the street network.
@@ -54,7 +54,7 @@ class UnconnectedParkAndRideTest {
       .build()
       .buildGraph();
 
-    var fetcher = new GraphDataFetcher(graph);
+    var fetcher = new GraphSummarizer(graph);
 
     assertWithMessage("Unexpected edges. Check graph at %s", fetcher.geoJsonUrl())
       .that(fetcher.summarizeEdges())

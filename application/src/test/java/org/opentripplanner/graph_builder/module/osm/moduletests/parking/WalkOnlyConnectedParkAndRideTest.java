@@ -10,7 +10,7 @@ import org.opentripplanner.osm.TestOsmProvider;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmWay;
 import org.opentripplanner.street.graph.Graph;
-import org.opentripplanner.street.graph.GraphDataFetcher;
+import org.opentripplanner.street.graph.summary.GraphSummarizer;
 
 /// Tests that a car parking lot connected to the street network only via walk-accessible edges
 /// receives an artificial car-accessible entrance.
@@ -56,7 +56,7 @@ class WalkOnlyConnectedParkAndRideTest {
       .build()
       .buildGraph();
 
-    var fetcher = new GraphDataFetcher(graph);
+    var fetcher = new GraphSummarizer(graph);
 
     assertWithMessage("Unexpected edges. Check graph at %s", fetcher.geoJsonUrl())
       .that(fetcher.summarizeEdges())

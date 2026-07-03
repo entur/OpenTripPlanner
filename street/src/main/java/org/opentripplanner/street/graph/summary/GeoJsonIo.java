@@ -1,4 +1,4 @@
-package org.opentripplanner.street.graph;
+package org.opentripplanner.street.graph.summary;
 
 import com.bedatadriven.jackson.datatype.jts.JtsModule;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -31,10 +31,6 @@ public class GeoJsonIo {
     } catch (JsonProcessingException e) {
       throw new RuntimeException(e);
     }
-  }
-
-  public static String toUrl(Graph graph) {
-    return toUrl(graph.getEdges(), graph.getVertices());
   }
 
   public static String toUrl(Collection<Edge> edges, Collection<Vertex> vertices) {
