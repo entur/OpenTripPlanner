@@ -121,10 +121,16 @@ class EstimatedVehicleJourneyWrapperTest {
   }
 
   @Test
-  void estimatedVehicleJourneyCode() {
-    var journey = builder().withEstimatedVehicleJourneyCode("EVJ:1").buildEstimatedVehicleJourney();
+  void code() {
+    var journey = builder()
+      .withEstimatedVehicleJourneyCode("RUT:ServiceJourney:1234")
+      .buildEstimatedVehicleJourney();
 
-    assertEquals("EVJ:1", EstimatedVehicleJourneyWrapper.of(journey).estimatedVehicleJourneyCode());
+    var code = EstimatedVehicleJourneyWrapper.of(journey).code();
+
+    // The EstimatedVehicleJourneyCode can be viewed as either entity type.
+    assertEquals("RUT:ServiceJourney:1234", code.asServiceJourneyId());
+    assertEquals("RUT:DatedServiceJourney:1234", code.asDatedServiceJourneyId());
   }
 
   @Test
@@ -243,7 +249,7 @@ class EstimatedVehicleJourneyWrapperTest {
     assertNull(wrapper.lineRef());
     assertNull(wrapper.operatorRef());
     assertNull(wrapper.datedVehicleJourneyRef());
-    assertNull(wrapper.estimatedVehicleJourneyCode());
+    assertNull(wrapper.code());
     assertNull(wrapper.vehicleJourneyIdAndServiceDate());
     assertNull(wrapper.internalPlanningCode());
     assertNull(wrapper.replacedDatedVehicleJourneyRef());

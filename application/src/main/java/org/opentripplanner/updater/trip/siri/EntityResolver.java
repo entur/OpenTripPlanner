@@ -65,9 +65,9 @@ public class EntityResolver {
     }
 
     // It is possible that the trip has previously been added, resolve the added trip
-    if (journey.estimatedVehicleJourneyCode() != null) {
-      var adapter = new EstimatedVehicleJourneyCodeAdapter(journey.estimatedVehicleJourneyCode());
-      var addedTrip = transitService.getTrip(resolveId(adapter.getServiceJourneyId()));
+    var code = journey.code();
+    if (code != null) {
+      var addedTrip = transitService.getTrip(resolveId(code.asServiceJourneyId()));
       if (addedTrip != null) {
         return addedTrip;
       }
@@ -130,9 +130,11 @@ public class EntityResolver {
       return resolveId(journey.datedVehicleJourneyRef());
     }
 
-    if (journey.estimatedVehicleJourneyCode() != null) {
-      var adapter = new EstimatedVehicleJourneyCodeAdapter(journey.estimatedVehicleJourneyCode());
-      return resolveId(adapter.getDatedServiceJourneyId());
+    // The added TripOnServiceDate is registered under the DatedServiceJourney-normalized id, so the
+    // code must be viewed the same way here for the read path to match the write path.
+    var code = journey.code();
+    if (code != null) {
+      return resolveId(code.asDatedServiceJourneyId());
     }
 
     return null;

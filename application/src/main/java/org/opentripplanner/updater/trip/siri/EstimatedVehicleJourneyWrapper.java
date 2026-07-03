@@ -20,9 +20,15 @@ final class EstimatedVehicleJourneyWrapper {
   private final EstimatedVehicleJourney journey;
   private final List<CallWrapper> calls;
 
+  @Nullable
+  private final EstimatedVehicleJourneyCode code;
+
   private EstimatedVehicleJourneyWrapper(EstimatedVehicleJourney journey, List<CallWrapper> calls) {
     this.journey = journey;
     this.calls = calls;
+    this.code = journey.getEstimatedVehicleJourneyCode() != null
+      ? new EstimatedVehicleJourneyCode(journey.getEstimatedVehicleJourneyCode())
+      : null;
   }
 
   /* Construction and validation */
@@ -84,11 +90,13 @@ final class EstimatedVehicleJourneyWrapper {
   /* Trip identification */
 
   /**
-   * A code used to build the id of an extra-journey.
+   * The EstimatedVehicleJourneyCode of an extra journey, used to identify the added trip. It can be
+   * viewed as either a {@code ServiceJourney} or a {@code DatedServiceJourney} id. {@code null} when
+   * the journey carries no code.
    */
   @Nullable
-  String estimatedVehicleJourneyCode() {
-    return journey.getEstimatedVehicleJourneyCode();
+  EstimatedVehicleJourneyCode code() {
+    return code;
   }
 
   /**
