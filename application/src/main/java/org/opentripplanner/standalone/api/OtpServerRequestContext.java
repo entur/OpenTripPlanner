@@ -109,6 +109,7 @@ public interface OtpServerRequestContext {
    */
   WorldEnvelopeService worldEnvelopeService();
 
+  @HttpRequestScoped
   RealtimeVehicleService realtimeVehicleService();
 
   VehicleRentalService vehicleRentalService();

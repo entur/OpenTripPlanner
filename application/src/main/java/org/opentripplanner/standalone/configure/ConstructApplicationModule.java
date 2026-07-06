@@ -25,7 +25,7 @@ import org.opentripplanner.routing.fares.FareService;
 import org.opentripplanner.routing.fares.FareServiceFactory;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
-import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
+import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.service.vehicleparking.VehicleParkingService;
 import org.opentripplanner.service.vehiclerental.VehicleRentalService;
@@ -54,7 +54,7 @@ public class ConstructApplicationModule {
     TransitService transitService,
     RegularTransferService transferService,
     WorldEnvelopeService worldEnvelopeService,
-    RealtimeVehicleService realtimeVehicleService,
+    RealtimeVehicleRepository realtimeVehicleRepository,
     VehicleRentalService vehicleRentalService,
     VehicleParkingService vehicleParkingService,
     List<RideHailingService> rideHailingServices,
@@ -92,7 +92,7 @@ public class ConstructApplicationModule {
       Metrics.globalRegistry,
       ojpApiParameters,
       raptorConfig,
-      realtimeVehicleService,
+      realtimeVehicleRepository,
       rideHailingServices,
       defaultRequest,
       streetLimitationParametersService,
