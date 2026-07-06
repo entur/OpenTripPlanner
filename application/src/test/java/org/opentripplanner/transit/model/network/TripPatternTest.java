@@ -138,6 +138,23 @@ class TripPatternTest {
   }
 
   @Test
+  void containsSameStopsAs() {
+    assertTrue(SUBJECT.containsSameStopsAs(SUBJECT.copy().build()));
+
+    var sameStopsOtherRoute = TripPattern.of(id("other-route-pattern"))
+      .withRoute(TimetableRepositoryForTest.route("anotherId").build())
+      .withStopPattern(TimetableRepositoryForTest.stopPattern(STOP_A, STOP_B, STOP_C))
+      .build();
+    assertTrue(SUBJECT.containsSameStopsAs(sameStopsOtherRoute));
+
+    var otherStops = TripPattern.of(id("other-stops-pattern"))
+      .withRoute(ROUTE)
+      .withStopPattern(TimetableRepositoryForTest.stopPattern(STOP_A, STOP_B))
+      .build();
+    assertFalse(SUBJECT.containsSameStopsAs(otherStops));
+  }
+
+  @Test
   void containsAnyStopId() {
     assertFalse(SUBJECT.containsAnyStopId(List.of()));
     assertFalse(SUBJECT.containsAnyStopId(List.of(id("not-in-pattern"))));

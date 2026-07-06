@@ -144,7 +144,8 @@ public class ApiTransitService {
       .filter(
         tripPattern ->
           tripPattern != null &&
-          tripPattern.isModifiedFromTripPatternWithEqualStops(originalPattern)
+          tripPattern.isStopPatternModifiedInRealTime() &&
+          tripPattern.containsSameStopsAs(originalPattern)
       );
   }
 }

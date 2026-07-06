@@ -367,15 +367,11 @@ public final class TripPattern
   /* METHODS THAT DELEGATE TO THE SCHEDULED TIMETABLE */
 
   /**
-   * Checks that this is TripPattern is based off the provided TripPattern and contains the same stops
+   * Checks that this TripPattern contains the same stops as the provided TripPattern
    * (but not necessarily with same pickup and dropoff values).
    */
-  public boolean isModifiedFromTripPatternWithEqualStops(TripPattern other) {
-    return (
-      isModified() &&
-      originalTripPattern.equals(other) &&
-      getStopPattern().stopsEqual(other.getStopPattern())
-    );
+  public boolean containsSameStopsAs(TripPattern other) {
+    return getStopPattern().stopsEqual(other.getStopPattern());
   }
 
   /**

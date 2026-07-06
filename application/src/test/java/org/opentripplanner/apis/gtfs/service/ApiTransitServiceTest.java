@@ -129,6 +129,57 @@ class ApiTransitServiceTest {
     assertEquals(List.of(TRIP_1_ID, TRIP_2_ID), tripIds);
   }
 
+  /**
+   * Tests that a trip with a skipped stop is returned when its route shares the modified stop
+   * pattern with a trip of another route. The two trips get the same real-time pattern from the
+   * pattern cache (keyed by stop pattern only), whose originalTripPattern belongs to the first
+   * trip's route. Matching real-time patterns by that field instead of by stop sequence used to
+   * hide the second trip.
+   */
+  @Test
+  void skipStopInTripsFromDifferentRoutesWithSameStops() {
+    var trip1Input = TripInput.of(TRIP_1_ID)
+      .withRoute(envBuilder.route("Route1"))
+      .addStop(STOP_A, "12:00:00", "12:00:00")
+      .addStop(STOP_B, "12:30:00", "12:30:00")
+      .addStop(STOP_C, "13:00:00", "13:00:00");
+    var trip2Input = TripInput.of(TRIP_2_ID)
+      .withRoute(envBuilder.route("Route2"))
+      .addStop(STOP_A, "12:10:00", "12:10:00")
+      .addStop(STOP_B, "12:40:00", "12:40:00")
+      .addStop(STOP_C, "13:10:00", "13:10:00");
+    var env = envBuilder.addTrip(trip1Input).addTrip(trip2Input).build();
+    var rt = GtfsRtTestHelper.of(env);
+
+    var res = rt.applyTripUpdates(
+      List.of(
+        skipSecondStop(rt.tripUpdateScheduled(TRIP_1_ID)),
+        skipSecondStop(rt.tripUpdateScheduled(TRIP_2_ID))
+      ),
+      FULL_DATASET
+    );
+    assertSuccess(res);
+    var transitService = env.transitService();
+    var service = new ApiTransitService(transitService);
+
+    var trip2 = transitService.getTrip(id(TRIP_2_ID));
+    var scheduledPattern2 = transitService.findPattern(trip2);
+    var calls = service.getTripTimeOnDatesForPatternAtStopIncludingTripsWithSkippedStops(
+      STOP_A,
+      scheduledPattern2,
+      T11_59,
+      Duration.ofHours(2),
+      Integer.MAX_VALUE,
+      ArrivalDeparture.BOTH
+    );
+
+    var tripIds = calls
+      .stream()
+      .map(t -> t.getTrip().getId().getId())
+      .toList();
+    assertThat(tripIds).contains(TRIP_2_ID);
+  }
+
   @Test
   void transitLegCalls() {
     var env = envBuilder.addTrip(TRIP1_INPUT).build();
