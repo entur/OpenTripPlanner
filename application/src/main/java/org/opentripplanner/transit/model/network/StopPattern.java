@@ -88,14 +88,15 @@ public final class StopPattern implements Serializable {
 
   /**
    * This has package local access since a StopPattern is a part of a TripPattern. To change it
-   * use the {@link TripPattern#copyPlannedStopPattern()} method.
+   * use the {@link TripPattern#copyStopPattern()} or
+   * {@link TripPattern#copyPlannedStopPattern(StopPattern)} method.
    */
   StopPatternBuilder copyOf() {
     return new StopPatternBuilder(this, null);
   }
 
   StopPatternBuilder copyOf(StopPattern realTime) {
-    return new StopPatternBuilder(this, realTime);
+    return new StopPatternBuilder(this, Objects.requireNonNull(realTime));
   }
 
   public int hashCode() {

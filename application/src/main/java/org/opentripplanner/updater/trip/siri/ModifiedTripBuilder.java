@@ -31,7 +31,13 @@ import uk.org.siri.siri21.OccupancyEnumeration;
 class ModifiedTripBuilder {
 
   private final TripTimes existingTripTimes;
+
+  /** The pattern the trip is currently running on, possibly a real-time-modified pattern. */
   private final TripPattern pattern;
+
+  /** The trip's planned pattern, on which the real-time modifications are based. */
+  private final TripPattern plannedPattern;
+
   private final LocalDate serviceDate;
   private final ZoneId zoneId;
   private final EntityResolver entityResolver;
@@ -45,6 +51,7 @@ class ModifiedTripBuilder {
   public ModifiedTripBuilder(
     TripTimes existingTripTimes,
     TripPattern pattern,
+    TripPattern plannedPattern,
     EstimatedVehicleJourneyWrapper journey,
     LocalDate serviceDate,
     ZoneId zoneId,
@@ -52,6 +59,7 @@ class ModifiedTripBuilder {
   ) {
     this.existingTripTimes = existingTripTimes;
     this.pattern = pattern;
+    this.plannedPattern = plannedPattern;
     this.serviceDate = serviceDate;
     this.zoneId = zoneId;
     this.entityResolver = entityResolver;
@@ -70,6 +78,7 @@ class ModifiedTripBuilder {
   public ModifiedTripBuilder(
     TripTimes existingTripTimes,
     TripPattern pattern,
+    TripPattern plannedPattern,
     LocalDate serviceDate,
     ZoneId zoneId,
     EntityResolver entityResolver,
@@ -82,6 +91,7 @@ class ModifiedTripBuilder {
   ) {
     this.existingTripTimes = existingTripTimes;
     this.pattern = pattern;
+    this.plannedPattern = plannedPattern;
     this.serviceDate = serviceDate;
     this.zoneId = zoneId;
     this.entityResolver = entityResolver;
@@ -118,7 +128,12 @@ class ModifiedTripBuilder {
 
     StopPattern stopPattern;
     try {
-      stopPattern = createStopPattern(pattern, calls, entityResolver);
+      stopPattern = createStopPattern(
+        plannedPattern,
+        pattern.getStopPattern(),
+        calls,
+        entityResolver
+      );
     } catch (UpdateException e) {
       throw e.withTripId(existingTripTimes.getTrip().getId());
     }
@@ -129,7 +144,7 @@ class ModifiedTripBuilder {
 
     applyUpdates(builder);
 
-    if (!pattern.getStopPattern().equals(stopPattern)) {
+    if (!plannedPattern.getStopPattern().equals(stopPattern)) {
       builder.withModifiedTripPattern();
     }
 
@@ -206,19 +221,21 @@ class ModifiedTripBuilder {
   }
 
   /**
-   * Creates a new StopPattern, based on an existing pattern, and list of calls. The stops can be
-   * replaced with stops belonging to the same Station/StopPlace. The PickDrop values are updated
-   * as well.
+   * Creates a new StopPattern, based on the trip's planned pattern, and list of calls. The stops
+   * can be replaced with stops belonging to the same Station/StopPlace. The PickDrop values are
+   * updated as well. If the resulting stop pattern is equal to {@code currentStopPattern} (the
+   * stop pattern of the pattern the trip is currently running on), that instance is reused.
    * Precondition: the number of calls is equal to the number of stops in the pattern (this is
    * verified before calling this method).
    */
   static StopPattern createStopPattern(
-    TripPattern pattern,
+    TripPattern plannedPattern,
+    StopPattern currentStopPattern,
     List<CallWrapper> calls,
     EntityResolver entityResolver
   ) throws UpdateException {
-    int numberOfStops = pattern.numberOfStops();
-    var builder = pattern.copyPlannedStopPattern();
+    int numberOfStops = plannedPattern.numberOfStops();
+    var builder = plannedPattern.copyPlannedStopPattern(currentStopPattern);
 
     Set<CallWrapper> alreadyVisited = new HashSet<>();
     // modify updated stop-times
@@ -261,9 +278,6 @@ class ModifiedTripBuilder {
         throw UpdateException.ofStopIndex(STOP_MISMATCH, i);
       }
     }
-    var newStopPattern = builder.build();
-    return (pattern.isModified() && pattern.getStopPattern().equals(newStopPattern))
-      ? pattern.getStopPattern()
-      : newStopPattern;
+    return builder.build();
   }
 }

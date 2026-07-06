@@ -213,17 +213,28 @@ public final class TripPattern
   }
 
   /**
-   * Return the "original"/planned stop pattern as a builder. This is used when a realtime-update
-   * contains a full set of stops/pickup/dropoff for a pattern. This will wipe out any changes
-   * to the stop-pattern from previous updates.
-   * <p>
-   * Be aware, if the same update is applied twice, then the first instance will be reused to avoid
-   * unnecessary objects creation and gc.
+   * Return a copy of this pattern's stop pattern as a builder, to create a modified version of it.
    */
-  public StopPattern.StopPatternBuilder copyPlannedStopPattern() {
-    return isModified()
-      ? originalTripPattern.stopPattern.copyOf(stopPattern)
-      : stopPattern.copyOf();
+  public StopPattern.StopPatternBuilder copyStopPattern() {
+    return stopPattern.copyOf();
+  }
+
+  /**
+   * Return this pattern's stop pattern as a builder, to apply a real-time update to it. This must
+   * be called on the trip's planned pattern: a real-time update contains the full set of
+   * stops/pickup/dropoff for a trip, and basing the copy on the planned stop pattern wipes out any
+   * changes to the stop-pattern from previous updates.
+   * <p>
+   * Be aware, if the same update is applied twice, then the {@code currentRealTime} instance will
+   * be reused to avoid unnecessary objects creation and gc.
+   * <p>
+   * Use {@link #copyStopPattern()} instead if there is no current realtime stop pattern.
+   *
+   * @param currentRealTime the stop pattern of the pattern the trip is currently running on, used
+   *                        for instance reuse only
+   */
+  public StopPattern.StopPatternBuilder copyPlannedStopPattern(StopPattern currentRealTime) {
+    return stopPattern.copyOf(Objects.requireNonNull(currentRealTime));
   }
 
   /**
@@ -372,7 +383,7 @@ public final class TripPattern
    */
   public boolean isModifiedFromTripPatternWithEqualStops(TripPattern other) {
     return (
-      isModified() &&
+      originalTripPattern != null &&
       originalTripPattern.equals(other) &&
       getStopPattern().stopsEqual(other.getStopPattern())
     );
@@ -454,15 +465,6 @@ public final class TripPattern
   }
 
   /**
-   * @deprecated This method is not clearly defined. Use {@link #isStopPatternModifiedInRealTime()}
-   * or {@link #isRealTimeTripPattern()} if possible, or clarify what this is needed for.
-   */
-  @Deprecated
-  public boolean isModified() {
-    return originalTripPattern != null;
-  }
-
-  /**
    * Returns trip headsign from the scheduled timetables or from the original pattern's scheduled
    * timetables if this pattern is added by realtime and the stop sequence has not changed apart
    * from pickup/dropoff values.
@@ -540,7 +542,7 @@ public final class TripPattern
    * is added through a realtime update. The pickup and dropoff values don't have to be the same.
    */
   private boolean containsSameStopsAsOriginalPattern() {
-    return isModified() && getStops().equals(originalTripPattern.getStops());
+    return originalTripPattern != null && getStops().equals(originalTripPattern.getStops());
   }
 
   /**

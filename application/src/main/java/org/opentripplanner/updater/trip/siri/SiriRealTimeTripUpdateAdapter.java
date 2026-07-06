@@ -231,11 +231,19 @@ public class SiriRealTimeTripUpdateAdapter {
       throw UpdateException.of(trip != null ? trip.getId() : null, NO_START_DATE);
     }
 
+    // The pattern the trip is currently running on, possibly a realtime-modified pattern
     TripPattern pattern;
+    // The trip's planned pattern: the scheduled pattern for scheduled trips, or the pattern
+    // created together with the trip for realtime-added trips. The realtime modifications of a
+    // trip are based on its planned pattern, not on the pattern the trip is currently running
+    // on: an update contains the full set of stops/pickup/dropoff for the trip and must wipe
+    // out changes from previous updates.
+    TripPattern plannedPattern;
 
     if (trip != null) {
       // Found exact match
       pattern = transitEditorService.findPattern(trip);
+      plannedPattern = pattern;
     } else if (fuzzyTripMatcher != null) {
       // No exact match found - search for trips based on arrival-times/stop-patterns
       var tripAndPattern = fuzzyTripMatcher.match(
@@ -246,6 +254,7 @@ public class SiriRealTimeTripUpdateAdapter {
       );
       trip = tripAndPattern.trip();
       pattern = tripAndPattern.tripPattern();
+      plannedPattern = transitEditorService.findPattern(trip);
     } else {
       throw UpdateException.of(null, TRIP_NOT_FOUND);
     }
@@ -259,6 +268,7 @@ public class SiriRealTimeTripUpdateAdapter {
     var tripUpdate = new ModifiedTripBuilder(
       existingTripTimes,
       pattern,
+      plannedPattern,
       journey,
       serviceDate,
       transitEditorService.getTimeZone(),

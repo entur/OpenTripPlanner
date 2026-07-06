@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip.siri;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 
@@ -153,6 +154,7 @@ class ModifiedTripBuilderTest {
     var result = new ModifiedTripBuilder(
       TRIP_TIMES,
       PATTERN,
+      PATTERN,
       SERVICE_DATE,
       timetableRepository.getTimeZone(),
       entityResolver,
@@ -171,6 +173,7 @@ class ModifiedTripBuilderTest {
   void testUpdateCancellation() {
     var tripUpdate = new ModifiedTripBuilder(
       TRIP_TIMES,
+      PATTERN,
       PATTERN,
       SERVICE_DATE,
       timetableRepository.getTimeZone(),
@@ -210,6 +213,7 @@ class ModifiedTripBuilderTest {
   void testUpdateSameStops() {
     var tripUpdate = new ModifiedTripBuilder(
       TRIP_TIMES,
+      PATTERN,
       PATTERN,
       SERVICE_DATE,
       timetableRepository.getTimeZone(),
@@ -256,6 +260,7 @@ class ModifiedTripBuilderTest {
     var tripUpdate = new ModifiedTripBuilder(
       TRIP_TIMES,
       PATTERN,
+      PATTERN,
       SERVICE_DATE,
       timetableRepository.getTimeZone(),
       entityResolver,
@@ -297,6 +302,7 @@ class ModifiedTripBuilderTest {
   void testUpdateSameStopsDepartEarly() {
     var tripUpdate = new ModifiedTripBuilder(
       TRIP_TIMES,
+      PATTERN,
       PATTERN,
       SERVICE_DATE,
       timetableRepository.getTimeZone(),
@@ -342,6 +348,7 @@ class ModifiedTripBuilderTest {
   void testUpdateUpdatedStop() {
     var tripUpdate = new ModifiedTripBuilder(
       TRIP_TIMES,
+      PATTERN,
       PATTERN,
       SERVICE_DATE,
       timetableRepository.getTimeZone(),
@@ -393,6 +400,7 @@ class ModifiedTripBuilderTest {
     // No change in stops should result in original pattern
     var result = ModifiedTripBuilder.createStopPattern(
       PATTERN,
+      PATTERN.getStopPattern(),
       List.of(
         TestCall.of().withStopPointRef(STOP_A_1.getId().getId()).build(),
         TestCall.of().withStopPointRef(STOP_B_1.getId().getId()).build(),
@@ -409,6 +417,7 @@ class ModifiedTripBuilderTest {
     // Change in stations should result in new pattern
     var result = ModifiedTripBuilder.createStopPattern(
       PATTERN,
+      PATTERN.getStopPattern(),
       List.of(
         TestCall.of().withStopPointRef(STOP_A_2.getId().getId()).build(),
         TestCall.of().withStopPointRef(STOP_B_1.getId().getId()).build(),
@@ -438,6 +447,7 @@ class ModifiedTripBuilderTest {
     assertFailure(UpdateErrorType.STOP_MISMATCH, () ->
       ModifiedTripBuilder.createStopPattern(
         PATTERN,
+        PATTERN.getStopPattern(),
         List.of(
           TestCall.of().withStopPointRef(STOP_A_1.getId().getId()).build(),
           TestCall.of().withStopPointRef(STOP_D.getId().getId()).build(),
@@ -453,6 +463,7 @@ class ModifiedTripBuilderTest {
     // Cancellation of a call should be reflected in PickDrop
     var result = ModifiedTripBuilder.createStopPattern(
       PATTERN,
+      PATTERN.getStopPattern(),
       List.of(
         TestCall.of().withStopPointRef(STOP_A_1.getId().getId()).build(),
         TestCall.of().withStopPointRef(STOP_B_1.getId().getId()).build(),
@@ -484,6 +495,7 @@ class ModifiedTripBuilderTest {
     // Cancellation of a call should be reflected in PickDrop
     var result = ModifiedTripBuilder.createStopPattern(
       PATTERN,
+      PATTERN.getStopPattern(),
       List.of(
         TestCall.of().withStopPointRef(STOP_A_1.getId().getId()).build(),
         TestCall.of()
@@ -511,6 +523,62 @@ class ModifiedTripBuilderTest {
 
     assertEquals(PickDrop.SCHEDULED, newPattern.getAlightType(2));
     assertEquals(PickDrop.SCHEDULED, newPattern.getBoardType(2));
+  }
+
+  @Test
+  void testCreateStopPatternRebasedOnPlannedPattern() {
+    // A first update cancels a call and moves the trip to a realtime stop pattern
+    var cancelledStopPattern = ModifiedTripBuilder.createStopPattern(
+      PATTERN,
+      PATTERN.getStopPattern(),
+      List.of(
+        TestCall.of().withStopPointRef(STOP_A_1.getId().getId()).build(),
+        TestCall.of().withStopPointRef(STOP_B_1.getId().getId()).build(),
+        TestCall.of().withStopPointRef(STOP_C_1.getId().getId()).withCancellation(true).build()
+      ),
+      entityResolver
+    );
+
+    // A second update without the cancellation is based on the planned pattern, not on the
+    // current realtime stop pattern, and reverts the trip to the planned stop pattern
+    var revertedStopPattern = ModifiedTripBuilder.createStopPattern(
+      PATTERN,
+      cancelledStopPattern,
+      List.of(
+        TestCall.of().withStopPointRef(STOP_A_1.getId().getId()).build(),
+        TestCall.of().withStopPointRef(STOP_B_1.getId().getId()).build(),
+        TestCall.of().withStopPointRef(STOP_C_1.getId().getId()).build()
+      ),
+      entityResolver
+    );
+
+    assertSame(PATTERN.getStopPattern(), revertedStopPattern);
+  }
+
+  @Test
+  void testCreateStopPatternReusesCurrentRealTimeInstance() {
+    List<CallWrapper> calls = List.of(
+      TestCall.of().withStopPointRef(STOP_A_1.getId().getId()).build(),
+      TestCall.of().withStopPointRef(STOP_B_1.getId().getId()).build(),
+      TestCall.of().withStopPointRef(STOP_C_1.getId().getId()).withCancellation(true).build()
+    );
+    var cancelledStopPattern = ModifiedTripBuilder.createStopPattern(
+      PATTERN,
+      PATTERN.getStopPattern(),
+      calls,
+      entityResolver
+    );
+
+    // Applying the same update twice reuses the current realtime stop pattern instance
+    // to avoid unnecessary object creation
+    var repeatedStopPattern = ModifiedTripBuilder.createStopPattern(
+      PATTERN,
+      cancelledStopPattern,
+      calls,
+      entityResolver
+    );
+
+    assertSame(cancelledStopPattern, repeatedStopPattern);
   }
 
   private static ZonedDateTime zonedDateTime(int hour, int minute) {

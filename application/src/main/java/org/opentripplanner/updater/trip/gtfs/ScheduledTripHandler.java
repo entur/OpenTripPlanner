@@ -91,7 +91,7 @@ class ScheduledTripHandler {
     // If there are stops with different pickup / drop off, or replaced stops, we need to change the pattern from the scheduled one
     if (!updatedPickup.isEmpty() || !updatedDropoff.isEmpty() || !newStops.isEmpty()) {
       StopPattern newStopPattern = pattern
-        .copyPlannedStopPattern()
+        .copyStopPattern()
         .updatePickups(updatedPickup)
         .updateDropoffs(updatedDropoff)
         .replaceStops(newStops)
