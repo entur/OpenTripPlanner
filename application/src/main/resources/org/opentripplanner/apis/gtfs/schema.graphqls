@@ -1050,6 +1050,17 @@ type Money {
   currency: Currency!
 }
 
+"""
+A textual message about a transit entity that is already known at planning time.
+
+It is not intended to convey real-time or emergency updates of the transit system but information that
+is known well ahead of time.
+"""
+type Notice {
+  "Textual representation of the message"
+  text: String
+}
+
 type OpeningHours {
   """
   Opening hours for the selected dates using the local time of the parking lot.
@@ -2270,6 +2281,8 @@ type Route implements Node {
   ): String
   "Transport mode of this route, e.g. `BUS`"
   mode: TransitMode
+  "Notices of this trip which are known ahead of time."
+  notices: [Notice!]! @deprecated(reason : "Experimental API that can be changed without notice.")
   "List of patterns which operate on this route"
   patterns(
     """
@@ -2800,6 +2813,8 @@ type Trip implements Node {
   link in a DatedServiceJourney.
   """
   isReplacement: Boolean!
+  "Notices of the trip that are known ahead of time."
+  notices: [Notice!]! @deprecated(reason : "Experimental API that can be changed without notice.")
   """
   The latest real-time occupancy information for the latest occurance of this
   trip.
