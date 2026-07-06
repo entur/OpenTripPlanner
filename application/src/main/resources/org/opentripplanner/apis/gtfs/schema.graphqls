@@ -1144,7 +1144,7 @@ type Pattern implements Node {
   """
   name: String
   "Original Trip pattern for changed patterns"
-  originalTripPattern: Pattern
+  originalTripPattern: Pattern @deprecated(reason : "The \"original\" pattern is a per-trip relationship, but this field is resolved per-pattern from a single, arbitrarily picked trip currently running on this pattern. It is best-effort only: it can differ between trips sharing this pattern and returns null once the pattern no longer has any running trips. This field is scheduled for removal.")
   "Coordinates of the route of this pattern in Google polyline encoded format"
   patternGeometry: Geometry
   "The route this pattern runs on"

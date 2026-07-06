@@ -245,6 +245,25 @@ public class TimetableSnapshot {
   }
 
   /**
+   * Return the distinct trips that have real-time trip times on the given pattern in this
+   * snapshot, over all service dates. For a trip pattern created by a real-time update — whose
+   * scheduled timetable is empty — this is the only way to navigate from the pattern to its
+   * trips. A trip is not returned anymore if a later update has moved it to another pattern.
+   */
+  public List<Trip> listTrips(TripPattern pattern) {
+    SortedSet<Timetable> sortedTimetables = timetables.get(pattern.getId());
+    if (sortedTimetables == null) {
+      return List.of();
+    }
+    return sortedTimetables
+      .stream()
+      .flatMap(timetable -> timetable.getTripTimes().stream())
+      .map(TripTimes::getTrip)
+      .distinct()
+      .toList();
+  }
+
+  /**
    * @return if any trip patterns were modified
    */
   public boolean hasNewTripPatternsForModifiedTrips() {

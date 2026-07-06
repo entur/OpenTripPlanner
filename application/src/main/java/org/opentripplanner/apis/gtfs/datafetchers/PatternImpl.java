@@ -158,8 +158,21 @@ public class PatternImpl implements GraphQLDataFetchers.GraphQLPattern {
 
   @Override
   public DataFetcher<String> headsign() {
-    return environment ->
-      GraphQLUtils.getTranslation(getSource(environment).getTripHeadsign(), environment);
+    return environment -> {
+      var pattern = getSource(environment);
+      var headsign = pattern.getTripHeadsign();
+      // A pattern created by a real-time update has no scheduled trip times, so its headsign is
+      // resolved from a trip currently running on it in the timetable snapshot.
+      if (headsign == null && pattern.isRealTimeTripPattern()) {
+        headsign = getTransitService(environment)
+          .listTrips(pattern)
+          .stream()
+          .findFirst()
+          .map(Trip::getHeadsign)
+          .orElse(null);
+      }
+      return GraphQLUtils.getTranslation(headsign, environment);
+    };
   }
 
   @Override
@@ -175,7 +188,23 @@ public class PatternImpl implements GraphQLDataFetchers.GraphQLPattern {
 
   @Override
   public DataFetcher<TripPattern> originalTripPattern() {
-    return environment -> getSource(environment).getOriginalTripPattern();
+    return environment -> {
+      var pattern = getSource(environment);
+      // Only real-time patterns with a modified stop sequence have a scheduled "original".
+      if (!pattern.isStopPatternModifiedInRealTime()) {
+        return null;
+      }
+      var transitService = getTransitService(environment);
+      // The pattern's "original" is a per-trip relationship, so resolve it from a trip currently
+      // running on the pattern. This picks the first such trip deterministically.
+      return transitService
+        .listTrips(pattern)
+        .stream()
+        .findFirst()
+        .map(transitService::findPattern)
+        .filter(original -> !original.equals(pattern))
+        .orElse(null);
+    };
   }
 
   @Override
