@@ -135,6 +135,10 @@ class ApiTransitServiceTest {
    * pattern cache (keyed by stop pattern only), whose originalTripPattern belongs to the first
    * trip's route. Matching real-time patterns by that field instead of by stop sequence used to
    * hide the second trip.
+   * <p>
+   * Because the two routes share one real-time pattern, querying either route's pattern returns
+   * both trips. This cross-route over-inclusion is a known limitation of the shared pattern cache
+   * (keyed by stop pattern only) and is asserted explicitly here to pin the behavior.
    */
   @Test
   void skipStopInTripsFromDifferentRoutesWithSameStops() {
@@ -177,7 +181,10 @@ class ApiTransitServiceTest {
       .stream()
       .map(t -> t.getTrip().getId().getId())
       .toList();
-    assertThat(tripIds).contains(TRIP_2_ID);
+    // TRIP_2 is the trip under test; TRIP_1 (the other route) is also present because both routes
+    // share the same real-time pattern (see the class comment on cross-route over-inclusion). They
+    // are ordered by departure time at STOP_A (TRIP_1 at 12:00, TRIP_2 at 12:10).
+    assertEquals(List.of(TRIP_1_ID, TRIP_2_ID), tripIds);
   }
 
   @Test

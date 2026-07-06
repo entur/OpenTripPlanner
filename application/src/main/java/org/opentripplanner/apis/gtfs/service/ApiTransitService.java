@@ -133,6 +133,13 @@ public class ApiTransitService {
   /**
    * Get a stream of {@link TripPattern} that were created real-time based of the provided pattern.
    * Only patterns that don't have removed (stops can still be skipped) or added stops are included.
+   * <p>
+   * Note: the real-time pattern cache is keyed by stop pattern only (see
+   * {@link org.opentripplanner.updater.trip.patterncache.TripPatternCache}), so trips of different
+   * routes that end up with the same modified stop pattern share a single real-time pattern. A
+   * returned pattern may therefore also carry trips of other routes, which then show up in the
+   * caller's departure list (cross-route over-inclusion). This is accepted as the lesser evil over
+   * the previous behavior, which hid the modified trips of all but one of the sharing routes.
    */
   private Stream<TripPattern> getRealtimeAddedPatternsAsStream(
     TripPattern originalPattern,

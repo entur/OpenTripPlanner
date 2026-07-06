@@ -12,6 +12,7 @@ import java.util.List;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.locationtech.jts.geom.LineString;
+import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.site.RegularStop;
@@ -146,6 +147,25 @@ class TripPatternTest {
       .withStopPattern(TimetableRepositoryForTest.stopPattern(STOP_A, STOP_B, STOP_C))
       .build();
     assertTrue(SUBJECT.containsSameStopsAs(sameStopsOtherRoute));
+
+    // Same stop sequence but different pickup/dropoff values (STOP_B skipped) still counts as the
+    // same stops - this is the real-time-modified case the method exists to identify, and it guards
+    // against comparing full stop patterns (which would also compare pickup/dropoff) by mistake.
+    var skippedStop = StopPattern.create(3);
+    skippedStop.stops.with(0, STOP_A);
+    skippedStop.stops.with(1, STOP_B);
+    skippedStop.stops.with(2, STOP_C);
+    skippedStop.pickups.with(0, PickDrop.SCHEDULED);
+    skippedStop.dropoffs.with(0, PickDrop.SCHEDULED);
+    skippedStop.pickups.with(1, PickDrop.NONE);
+    skippedStop.dropoffs.with(1, PickDrop.NONE);
+    skippedStop.pickups.with(2, PickDrop.SCHEDULED);
+    skippedStop.dropoffs.with(2, PickDrop.SCHEDULED);
+    var sameStopsStopSkipped = TripPattern.of(id("skipped-stop-pattern"))
+      .withRoute(ROUTE)
+      .withStopPattern(skippedStop.build())
+      .build();
+    assertTrue(SUBJECT.containsSameStopsAs(sameStopsStopSkipped));
 
     var otherStops = TripPattern.of(id("other-stops-pattern"))
       .withRoute(ROUTE)
