@@ -42,13 +42,7 @@ public class DefaultRealtimeVehicleRepository implements RealtimeVehicleReposito
       .stream()
       .filter(p -> p.getFeedId().equals(feedId))
       .forEach(temp::removeAll);
-    // transform keys and put all fresh updates into map
-    updates.forEach((pattern, vehicle) -> {
-      if (pattern.getOriginalTripPattern() != null) {
-        pattern = pattern.getOriginalTripPattern();
-      }
-      temp.put(pattern, vehicle);
-    });
+    temp.putAll(updates);
 
     vehicles = ImmutableListMultimap.copyOf(temp);
   }

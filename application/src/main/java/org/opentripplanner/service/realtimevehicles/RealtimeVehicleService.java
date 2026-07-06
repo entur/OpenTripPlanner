@@ -8,7 +8,7 @@ import org.opentripplanner.transit.model.timetable.Trip;
 
 /**
  * A read-only, request-scoped view over the {@link RealtimeVehicleRepository} that resolves
- * patterns created by real-time updates.
+ * patterns created by real-time updates against the timetable snapshot of the request.
  */
 public interface RealtimeVehicleService {
   /**

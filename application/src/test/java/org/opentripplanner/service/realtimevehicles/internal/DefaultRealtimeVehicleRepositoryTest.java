@@ -75,19 +75,4 @@ class DefaultRealtimeVehicleRepositoryTest {
     repository.setRealtimeVehiclesForFeed(FEED_ID, ImmutableListMultimap.of());
     assertEquals(List.of(VEHICLE), repository.getRealtimeVehicles(PATTERN2));
   }
-
-  @Test
-  void realtimeAddedPattern() {
-    var repository = new DefaultRealtimeVehicleRepository();
-    var realtimePattern = tripPattern("realtime-added", ROUTE)
-      .withStopPattern(STOP_PATTERN)
-      .withOriginalTripPattern(PATTERN1)
-      .withRealTimeStopPatternModified()
-      .build();
-    repository.setRealtimeVehiclesForFeed(
-      FEED_ID,
-      ImmutableListMultimap.of(realtimePattern, VEHICLE)
-    );
-    assertEquals(List.of(VEHICLE), repository.getRealtimeVehicles(PATTERN1));
-  }
 }

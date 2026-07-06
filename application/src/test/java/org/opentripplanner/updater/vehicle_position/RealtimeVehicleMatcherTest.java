@@ -336,6 +336,45 @@ public class RealtimeVehicleMatcherTest {
     assertEquals(0, repository.getRealtimeVehicles(pattern2).size());
   }
 
+  @Test
+  public void vehicleOnRealtimeModifiedPatternIsKeyedByScheduledPattern() {
+    var repository = new DefaultRealtimeVehicleRepository();
+    var trip = TimetableRepositoryForTest.trip(tripId).build();
+    var stopTimes = List.of(
+      testModel.stopTime(trip, 0),
+      testModel.stopTime(trip, 1),
+      testModel.stopTime(trip, 2)
+    );
+
+    var staticPattern = tripPattern(trip, stopTimes);
+    var realtimePattern = TripPattern.of(FeedScopedIdForTestFactory.id("realtime-pattern"))
+      .withStopPattern(new StopPattern(stopTimes))
+      .withRoute(ROUTE)
+      .withRealTimeStopPatternModified()
+      .build();
+
+    var tripForId = Map.of(scopedTripId, trip);
+    var patternForTrip = Map.of(trip, staticPattern);
+
+    var matcher = new RealtimeVehiclePatternMatcher(
+      TimetableRepositoryForTest.FEED_ID,
+      tripForId::get,
+      patternForTrip::get,
+      (t, date) -> realtimePattern,
+      ignored -> null,
+      repository,
+      zoneId,
+      null,
+      FEATURES
+    );
+
+    matcher.applyRealtimeVehicleUpdates(List.of(vehiclePosition(tripId)));
+
+    // the vehicle is keyed by the trip's scheduled pattern, not the realtime pattern it is
+    // currently running on
+    assertEquals(1, repository.getRealtimeVehicles(staticPattern).size());
+  }
+
   static Stream<Arguments> inferenceTestCases() {
     return Stream.of(
       Arguments.of("2022-04-05T15:26:04+02:00", null, "2022-04-05"),

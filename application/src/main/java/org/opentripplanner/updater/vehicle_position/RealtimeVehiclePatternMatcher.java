@@ -109,7 +109,10 @@ class RealtimeVehiclePatternMatcher {
     }
 
     // we take the list of vehicles and out of them create a MultiMap<TripPattern, RealtimeVehicle>
-    // that makes it very easy to update the vehicles in the service
+    // that makes it very easy to update the vehicles in the service.
+    // each vehicle is keyed by the pattern of its trip in the scheduled data — a stable key that
+    // does not depend on real-time pattern modifications; the service resolves lookups with
+    // realtime patterns at read time
     var vehicles = matchResults
       .stream()
       .collect(
@@ -385,7 +388,8 @@ class RealtimeVehiclePatternMatcher {
     // the trip times are only used for mapping the GTFS-RT stop_sequence back to a stop.
     // because new trips without trip times are created for realtime-updated ones, we explicitly
     // look at the static trips for the stop_sequence->stop mapping
-    var staticTripTimes = getStaticPattern.apply(trip).getScheduledTimetable().getTripTimes(trip);
+    var staticPattern = getStaticPattern.apply(trip);
+    var staticTripTimes = staticPattern.getScheduledTimetable().getTripTimes(trip);
     if (staticTripTimes == null) {
       throw UpdateException.of(scopedTripId, TRIP_NOT_FOUND_IN_PATTERN);
     }
@@ -398,8 +402,11 @@ class RealtimeVehiclePatternMatcher {
       staticTripTimes::stopPositionForGtfsSequence
     );
 
-    return new PatternAndRealtimeVehicle(pattern, newVehicle);
+    return new PatternAndRealtimeVehicle(staticPattern, newVehicle);
   }
 
+  /**
+   * A matched vehicle together with the pattern of its trip in the scheduled data.
+   */
   private record PatternAndRealtimeVehicle(TripPattern pattern, RealtimeVehicle vehicle) {}
 }

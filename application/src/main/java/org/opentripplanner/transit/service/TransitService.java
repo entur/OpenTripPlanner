@@ -227,6 +227,15 @@ public interface TransitService {
    */
   Collection<TripPattern> findPatterns(Route route);
 
+  /**
+   * Return the trips running on the given pattern. For a scheduled pattern this is the trips of
+   * its scheduled timetable, regardless of real-time modifications. For a pattern created by a
+   * real-time update — whose scheduled timetable is empty — the trips are looked up in the
+   * current timetable snapshot: a trip is not listed anymore if a later update has moved it to
+   * another pattern.
+   */
+  List<Trip> listTrips(TripPattern pattern);
+
   MultiModalStation findMultiModalStation(Station station);
 
   /**

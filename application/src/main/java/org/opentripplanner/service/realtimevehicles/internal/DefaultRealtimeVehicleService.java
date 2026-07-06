@@ -10,7 +10,10 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.service.TransitService;
 
 /**
- * A request-scoped view over the {@link RealtimeVehicleRepository}.
+ * A request-scoped view over the {@link RealtimeVehicleRepository}. Vehicles are stored in the
+ * repository keyed by the pattern of their trip in the scheduled data; this view resolves
+ * lookups with patterns created by real-time updates through the trips currently running on
+ * them, using the transit service — and thereby the timetable snapshot — of the request.
  * <p>
  * A new instance should be created for each request, with the request's {@link TransitService},
  * so that the whole request sees one consistent timetable snapshot.
@@ -28,15 +31,16 @@ public class DefaultRealtimeVehicleService implements RealtimeVehicleService {
     this.transitService = transitService;
   }
 
-  /**
-   * Gets the realtime vehicles for a given pattern. If the pattern is a realtime-added one
-   * then the original (scheduled) one is used for the lookup instead, so you receive the correct
-   * result no matter if you use the realtime or static information.
-   */
   @Override
   public List<RealtimeVehicle> getRealtimeVehicles(TripPattern pattern) {
-    if (pattern.getOriginalTripPattern() != null) {
-      pattern = pattern.getOriginalTripPattern();
+    if (pattern.isRealTimeTripPattern()) {
+      return transitService
+        .listTrips(pattern)
+        .stream()
+        .map(transitService::findPattern)
+        .distinct()
+        .flatMap(scheduledPattern -> repository.getRealtimeVehicles(scheduledPattern).stream())
+        .toList();
     }
     return repository.getRealtimeVehicles(pattern);
   }

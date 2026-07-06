@@ -14,9 +14,10 @@ import org.opentripplanner.transit.model.timetable.OccupancyStatus;
  */
 public interface RealtimeVehicleRepository {
   /**
-   * Stores all realtime vehicles for a given {@code feedId} and associates each with a pattern.
-   * If the pattern is a realtime-added one, then the original (scheduled) one is used as the key
-   * for the map storing the information.
+   * Stores all realtime vehicles for a given {@code feedId}. Each vehicle should be keyed by the
+   * pattern of its trip in the scheduled data — a stable key that does not depend on real-time
+   * modifications of the trip's pattern. Lookups with a realtime pattern are resolved to the
+   * stored keys by the {@link RealtimeVehicleService}.
    * <p>
    * Before storing the new vehicles, it removes the previous updates for the given {@code feedId}.
    */
@@ -24,7 +25,7 @@ public interface RealtimeVehicleRepository {
 
   /**
    * Get the vehicles stored for the given pattern key. This is a raw lookup: the pattern must be
-   * the exact key used when storing. Use
+   * the exact key used when storing, the pattern of the trip in the scheduled data. Use
    * {@link RealtimeVehicleService#getRealtimeVehicles(TripPattern)} to also resolve patterns
    * created by real-time updates.
    */

@@ -423,6 +423,14 @@ public class DefaultTransitService implements TransitEditorService {
   }
 
   @Override
+  public List<Trip> listTrips(TripPattern pattern) {
+    if (pattern.isRealTimeTripPattern()) {
+      return timetableSnapshot != null ? timetableSnapshot.listTrips(pattern) : List.of();
+    }
+    return pattern.scheduledTripsAsStream().toList();
+  }
+
+  @Override
   public MultiModalStation findMultiModalStation(Station station) {
     return this.timetableRepository.getSiteRepository().getMultiModalStationForStation(station);
   }
