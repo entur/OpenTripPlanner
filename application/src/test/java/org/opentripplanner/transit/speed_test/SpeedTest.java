@@ -23,7 +23,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.routing.api.response.RoutingResponse;
 import org.opentripplanner.routing.framework.DebugTimingAggregator;
 import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
-import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleService;
+import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.service.vehiclerental.internal.DefaultVehicleRentalService;
 import org.opentripplanner.standalone.OtpStartupInfo;
@@ -104,12 +104,13 @@ public class SpeedTest {
     this.expectedResultsByTcId = tcIO.readExpectedResults();
 
     var transitService = new DefaultTransitService(timetableRepository);
+    var realtimeVehicleRepository = new DefaultRealtimeVehicleRepository();
 
     UpdaterConfigurator.configure(
       graph,
       DeduplicatorService.NOOP,
       VertexLinkerTestFactory.of(graph),
-      new DefaultRealtimeVehicleService(transitService),
+      realtimeVehicleRepository,
       new DefaultVehicleRentalService(),
       new DefaultVehicleParkingRepository(),
       timetableRepository,
@@ -142,7 +143,7 @@ public class SpeedTest {
       timer.getRegistry(),
       null,
       raptorConfig,
-      TestServerContext.createRealtimeVehicleService(transitService),
+      realtimeVehicleRepository,
       List.of(),
       routerConfig.routingRequestDefaults(),
       TestServerContext.createStreetLimitationParametersService(),

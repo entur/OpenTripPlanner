@@ -24,8 +24,7 @@ import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
 import org.opentripplanner.routing.via.service.DefaultViaCoordinateTransferFactory;
-import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
-import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleService;
+import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleRepository;
 import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
 import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsService;
@@ -136,7 +135,7 @@ public class TestServerContext {
       Metrics.globalRegistry,
       routerConfig.ojpApiParameters(),
       raptorConfig,
-      createRealtimeVehicleService(transitService),
+      new DefaultRealtimeVehicleRepository(),
       List.of(),
       request,
       createStreetLimitationParametersService(),
@@ -178,10 +177,6 @@ public class TestServerContext {
       .build();
     repository.saveEnvelope(envelope);
     return new DefaultWorldEnvelopeService(repository);
-  }
-
-  public static RealtimeVehicleService createRealtimeVehicleService(TransitService transitService) {
-    return new DefaultRealtimeVehicleService(transitService);
   }
 
   public static VehicleRentalService createVehicleRentalService() {

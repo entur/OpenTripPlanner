@@ -29,7 +29,9 @@ import org.opentripplanner.routing.fares.FareService;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.service.DefaultRoutingService;
 import org.opentripplanner.routing.via.ViaCoordinateTransferFactory;
+import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
+import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleService;
 import org.opentripplanner.service.streetdetails.StreetDetailsService;
 import org.opentripplanner.service.vehicleparking.VehicleParkingService;
 import org.opentripplanner.service.vehiclerental.VehicleRentalService;
@@ -58,7 +60,7 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
   private final LinkingContextFactory linkingContextFactory;
   private final MeterRegistry meterRegistry;
   private final RaptorConfig<TripSchedule> raptorConfig;
-  private final RealtimeVehicleService realtimeVehicleService;
+  private final RealtimeVehicleRepository realtimeVehicleRepository;
   private final List<RideHailingService> rideHailingServices;
   private final RouteRequest routeRequestDefaults;
   private final StreetLimitationParametersService streetLimitationParametersService;
@@ -130,7 +132,7 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
     MeterRegistry meterRegistry,
     OjpApiParameters ojpApiParameters,
     RaptorConfig<TripSchedule> raptorConfig,
-    RealtimeVehicleService realtimeVehicleService,
+    RealtimeVehicleRepository realtimeVehicleRepository,
     List<RideHailingService> rideHailingServices,
     RouteRequest routeRequestDefaults,
     StreetLimitationParametersService streetLimitationParametersService,
@@ -165,7 +167,7 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
     this.meterRegistry = meterRegistry;
     this.ojpApiParameters = ojpApiParameters;
     this.raptorConfig = raptorConfig;
-    this.realtimeVehicleService = realtimeVehicleService;
+    this.realtimeVehicleRepository = realtimeVehicleRepository;
     this.rideHailingServices = rideHailingServices;
     this.routeRequestDefaults = routeRequestDefaults;
     this.streetLimitationParametersService = streetLimitationParametersService;
@@ -237,7 +239,7 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
 
   @Override
   public RealtimeVehicleService realtimeVehicleService() {
-    return realtimeVehicleService;
+    return new DefaultRealtimeVehicleService(realtimeVehicleRepository, transitService);
   }
 
   @Override
