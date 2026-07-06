@@ -32,6 +32,8 @@ import org.opentripplanner.model.StopTime;
 import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleRepository;
 import org.opentripplanner.standalone.config.routerconfig.updaters.VehiclePositionsUpdaterConfig;
 import org.opentripplanner.street.geometry.WgsCoordinate;
+import org.opentripplanner.transit.model.TransitTestEnvironment;
+import org.opentripplanner.transit.model.TripInput;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.Route;
@@ -373,6 +375,78 @@ public class RealtimeVehicleMatcherTest {
     // the vehicle is keyed by the trip's scheduled pattern, not the realtime pattern it is
     // currently running on
     assertEquals(1, repository.getRealtimeVehicles(staticPattern).size());
+    assertEquals(0, repository.getRealtimeVehicles(realtimePattern).size());
+  }
+
+  @Test
+  public void vehiclesSharingOneRealtimePatternAreKeyedByEachTripsScheduledPattern() {
+    var envBuilder = TransitTestEnvironment.of();
+    var stopA = envBuilder.stop("A");
+    var stopB = envBuilder.stop("B");
+    var stopC = envBuilder.stop("C");
+    var trip1Input = TripInput.of("trip1")
+      .withRoute(envBuilder.route("route1"))
+      .addStop(stopA, "0:01:00", "0:01:01")
+      .addStop(stopB, "0:01:10", "0:01:11")
+      .addStop(stopC, "0:01:20", "0:01:21");
+    var trip2Input = TripInput.of("trip2")
+      .withRoute(envBuilder.route("route2"))
+      .addStop(stopA, "0:02:00", "0:02:01")
+      .addStop(stopB, "0:02:10", "0:02:11")
+      .addStop(stopC, "0:02:20", "0:02:21");
+    var env = envBuilder.addTrip(trip1Input).addTrip(trip2Input).build();
+    var transitService = env.transitService();
+
+    var trip1 = transitService.getTrip(new FeedScopedId(env.feedId(), "trip1"));
+    var trip2 = transitService.getTrip(new FeedScopedId(env.feedId(), "trip2"));
+    // two distinct scheduled patterns, one per route
+    var scheduledPattern1 = transitService.findPattern(trip1);
+    var scheduledPattern2 = transitService.findPattern(trip2);
+
+    // a single realtime pattern shared by both trips: the TripPatternCache keys realtime
+    // patterns by StopPattern only, so two trips of different routes with the same modified stop
+    // pattern end up on one shared realtime pattern whose originalTripPattern points at whichever
+    // route created it first. This is the corner case the old originalTripPattern-based keying got
+    // wrong - it stored the other route's vehicles under this route's pattern.
+    var sharedRealtimePattern = TripPattern.of(new FeedScopedId(env.feedId(), "shared-realtime"))
+      .withStopPattern(scheduledPattern1.getStopPattern())
+      .withRoute(trip1.getRoute())
+      .withRealTimeStopPatternModified()
+      .withOriginalTripPattern(scheduledPattern1)
+      .build();
+
+    var repository = new DefaultRealtimeVehicleRepository();
+    var tripForId = Map.of(trip1.getId(), trip1, trip2.getId(), trip2);
+    var scheduledPatternForTrip = Map.of(trip1, scheduledPattern1, trip2, scheduledPattern2);
+
+    var matcher = new RealtimeVehiclePatternMatcher(
+      env.feedId(),
+      tripForId::get,
+      scheduledPatternForTrip::get,
+      (t, date) -> sharedRealtimePattern,
+      ignored -> Set.of(),
+      repository,
+      transitService.getTimeZone(),
+      null,
+      FEATURES
+    );
+
+    matcher.applyRealtimeVehicleUpdates(
+      List.of(vehiclePosition("trip1"), vehiclePosition("trip2"))
+    );
+
+    // each vehicle is keyed by its own trip's scheduled pattern, so a lookup on each route's
+    // scheduled pattern returns only that route's vehicle - not mis-attributed to the other
+    // route through the shared realtime pattern
+    var vehicles1 = repository.getRealtimeVehicles(scheduledPattern1);
+    var vehicles2 = repository.getRealtimeVehicles(scheduledPattern2);
+    assertEquals(1, vehicles1.size());
+    assertEquals("trip1", vehicles1.get(0).trip().getId().getId());
+    assertEquals(1, vehicles2.size());
+    assertEquals("trip2", vehicles2.get(0).trip().getId().getId());
+
+    // nothing is keyed under the shared realtime pattern itself
+    assertEquals(0, repository.getRealtimeVehicles(sharedRealtimePattern).size());
   }
 
   static Stream<Arguments> inferenceTestCases() {

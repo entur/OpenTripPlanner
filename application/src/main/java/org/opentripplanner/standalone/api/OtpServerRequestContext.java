@@ -109,6 +109,12 @@ public interface OtpServerRequestContext {
    */
   WorldEnvelopeService worldEnvelopeService();
 
+  /**
+   * Get a request-scoped {@link RealtimeVehicleService}. It is a view bound to the request's
+   * {@link TransitService} - and thereby its timetable snapshot - so that realtime-pattern lookups
+   * are resolved consistently within the request. It must not be shared across requests.
+   */
+  @HttpRequestScoped
   RealtimeVehicleService realtimeVehicleService();
 
   VehicleRentalService vehicleRentalService();
