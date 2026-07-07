@@ -51,7 +51,7 @@ class DuplicatedTripHandler {
       throw UpdateException.of(tripUpdate.tripId(), TRIP_NOT_FOUND);
     }
 
-    var serviceId = transitEditorService.getOrCreateServiceIdForDate(tripUpdate.serviceDate());
+    var serviceId = transitEditorService.getOrCreateServiceIdForDate(tripUpdate.startDate());
     if (serviceId == null) {
       throw UpdateException.of(tripUpdate.tripId(), OUTSIDE_SERVICE_PERIOD);
     }
@@ -94,10 +94,10 @@ class DuplicatedTripHandler {
 
     var tripOnServiceDate = TripOnServiceDate.of(newTripId)
       .withTrip(newTrip)
-      .withServiceDate(tripUpdate.serviceDate())
+      .withServiceDate(tripUpdate.startDate())
       .build();
 
-    var update = RealTimeTripUpdate.of(originalPattern, newTripTimes, tripUpdate.serviceDate())
+    var update = RealTimeTripUpdate.of(originalPattern, newTripTimes, tripUpdate.startDate())
       .withTripCreation(true)
       .withAddedTripOnServiceDate(tripOnServiceDate)
       .build();
@@ -107,7 +107,7 @@ class DuplicatedTripHandler {
   /// The spec is silent about how these ids should be constructed, so we create a new ID
   /// ourselves.
   private static FeedScopedId duplicatedTripId(TripUpdate tripUpdate) {
-    var localDateTime = tripUpdate.serviceDate().atTime(tripUpdate.startTime().orElseThrow());
+    var localDateTime = tripUpdate.startDate().atTime(tripUpdate.startTime().orElseThrow());
     return new FeedScopedId(
       tripUpdate.tripId().getFeedId(),
       tripUpdate.tripId().getId() + ":duplicated:" + localDateTime

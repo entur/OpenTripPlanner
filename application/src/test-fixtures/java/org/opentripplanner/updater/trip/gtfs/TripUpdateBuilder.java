@@ -27,7 +27,7 @@ public class TripUpdateBuilder {
 
   public TripUpdateBuilder(
     String tripId,
-    LocalDate serviceDate,
+    LocalDate startDate,
     GtfsRealtime.TripDescriptor.ScheduleRelationship scheduleRelationship,
     ZoneId zoneId
   ) {
@@ -35,21 +35,21 @@ public class TripUpdateBuilder {
 
     tripDescriptorBuilder.setTripId(tripId);
     tripDescriptorBuilder.setScheduleRelationship(scheduleRelationship);
-    tripDescriptorBuilder.setStartDate(ServiceDateUtils.asCompactString(serviceDate));
+    tripDescriptorBuilder.setStartDate(ServiceDateUtils.asCompactString(startDate));
 
     this.tripUpdateBuilder = GtfsRealtime.TripUpdate.newBuilder();
-    this.midnight = ServiceDateUtils.asStartOfService(serviceDate, zoneId);
+    this.midnight = ServiceDateUtils.asStartOfService(startDate, zoneId);
   }
 
   public TripUpdateBuilder(
     String tripId,
-    LocalDate serviceDate,
+    LocalDate startDate,
     GtfsRealtime.TripDescriptor.ScheduleRelationship scheduleRelationship,
     ZoneId zoneId,
     String tripHeadsign,
     String tripShortName
   ) {
-    this(tripId, serviceDate, scheduleRelationship, zoneId);
+    this(tripId, startDate, scheduleRelationship, zoneId);
     if (tripHeadsign != null) {
       tripUpdateBuilder.getTripPropertiesBuilder().setTripHeadsign(tripHeadsign);
     }
@@ -408,8 +408,8 @@ public class TripUpdateBuilder {
     return this;
   }
 
-  public TripUpdateBuilder withStartDate(LocalDate serviceDate) {
-    return this.withStartDate(ServiceDateUtils.asCompactString(serviceDate));
+  public TripUpdateBuilder withStartDate(LocalDate startDate) {
+    return this.withStartDate(ServiceDateUtils.asCompactString(startDate));
   }
 
   public TripUpdateBuilder withRouteId(String routeId) {
