@@ -1,10 +1,8 @@
 package org.opentripplanner.updater.trip.siri;
 
 import static java.lang.Boolean.TRUE;
-import static org.opentripplanner.updater.alert.siri.mapping.SiriTransportModeMapper.mapTransitMainMode;
 import static org.opentripplanner.updater.spi.UpdateErrorType.NO_START_DATE;
 import static org.opentripplanner.updater.spi.UpdateErrorType.UNKNOWN;
-import static org.opentripplanner.updater.trip.siri.support.NaturalLanguageStringHelper.getFirstStringFromList;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -17,6 +15,8 @@ import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.PickDrop;
+import org.opentripplanner.transit.model.basic.TransitMode;
+import org.opentripplanner.transit.model.timetable.OccupancyStatus;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.TripUpdateParser;
 import org.opentripplanner.updater.trip.model.DeferredTimeUpdate;
@@ -32,7 +32,6 @@ import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
-import org.opentripplanner.updater.trip.siri.mapping.OccupancyMapper;
 import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 import org.rutebanken.netex.model.BusSubmodeEnumeration;
@@ -67,9 +66,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     var updateType = determineUpdateType(journey);
 
     // For ADD_NEW_TRIP, EstimatedVehicleJourneyCode is required (SIRI Profile requirement)
-    if (
-      updateType == TripUpdateType.ADD_NEW_TRIP && journey.estimatedVehicleJourneyCode() == null
-    ) {
+    if (updateType == TripUpdateType.ADD_NEW_TRIP && journey.code() == null) {
       LOG.debug("ADD_NEW_TRIP requires EstimatedVehicleJourneyCode");
       throw UpdateException.noTripId(UNKNOWN);
     }
@@ -247,9 +244,9 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     }
 
     // EstimatedVehicleJourneyCode contains an encoded Trip ID
-    if (journey.estimatedVehicleJourneyCode() != null) {
-      var adapter = new EstimatedVehicleJourneyCodeAdapter(journey.estimatedVehicleJourneyCode());
-      return createId(adapter.getServiceJourneyId());
+    var code = journey.code();
+    if (code != null) {
+      return createId(code.asServiceJourneyId());
     }
 
     return null;
@@ -258,7 +255,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
   private List<ParsedStopTimeUpdate> parseStopTimeUpdates(
     List<CallWrapper> calls,
     LocalDate serviceDate,
-    @Nullable uk.org.siri.siri21.OccupancyEnumeration journeyOccupancy,
+    @Nullable OccupancyStatus journeyOccupancy,
     @Nullable Boolean journeyPredictionInaccurate
   ) {
     var result = new ArrayList<ParsedStopTimeUpdate>();
@@ -293,17 +290,14 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
       parsePickDropTypes(call, builder);
 
-      var displays = call.getDestinationDisplays();
-      if (displays != null && !displays.isEmpty()) {
-        String headsign = getFirstStringFromList(displays);
-        if (!headsign.isEmpty()) {
-          builder.withStopHeadsign(new NonLocalizedString(headsign));
-        }
+      String headsign = call.destinationDisplay();
+      if (!headsign.isEmpty()) {
+        builder.withStopHeadsign(new NonLocalizedString(headsign));
       }
 
       var effectiveOccupancy = call.getOccupancy() != null ? call.getOccupancy() : journeyOccupancy;
       if (effectiveOccupancy != null) {
-        builder.withOccupancy(OccupancyMapper.mapOccupancyStatus(effectiveOccupancy));
+        builder.withOccupancy(effectiveOccupancy);
       }
 
       result.add(builder.build());
@@ -391,43 +385,24 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     }
   }
 
-  // Map boarding activities directly without planned-value optimization.
-  // The parser doesn't have access to the scheduled pattern's pickup/dropoff values,
-  // so it always captures the boarding activity intent. The handler in
-  // UpdateExistingTripHandler.applyStopTimeUpdates() compares against the actual
-  // scheduled values from the pattern.
+  // Capture the pick/drop intent of each call end without the scheduled pattern's values, which
+  // the parser doesn't have. The wrapper's PickDropChange normalizes the SIRI boarding activity;
+  // resolving it against a non-routable placeholder yields the pure routability intent
+  // (SCHEDULED/NONE/CANCELLED). The handler's PickDropPolicy then reconciles this intent against
+  // the actual scheduled pickup/dropoff from the pattern.
   private void parsePickDropTypes(CallWrapper call, ParsedStopTimeUpdate.Builder builder) {
-    var arrivalActivity = call.getArrivalBoardingActivity();
-    if (arrivalActivity != null) {
-      builder.withDropoff(
-        switch (arrivalActivity) {
-          case ALIGHTING -> PickDrop.SCHEDULED;
-          case NO_ALIGHTING -> PickDrop.NONE;
-          case PASS_THRU -> PickDrop.CANCELLED;
-        }
-      );
-    }
-    var departureActivity = call.getDepartureBoardingActivity();
-    if (departureActivity != null) {
-      builder.withPickup(
-        switch (departureActivity) {
-          case BOARDING -> PickDrop.SCHEDULED;
-          case NO_BOARDING -> PickDrop.NONE;
-          case PASS_THRU -> PickDrop.CANCELLED;
-        }
-      );
-    }
+    call.dropOff().applyTo(PickDrop.NONE).ifPresent(builder::withDropoff);
+    call.pickUp().applyTo(PickDrop.NONE).ifPresent(builder::withPickup);
   }
 
   @Nullable
   private TripCreationInfo buildTripCreationInfo(EstimatedVehicleJourneyWrapper journey) {
-    String code = journey.estimatedVehicleJourneyCode();
+    var code = journey.code();
     if (code == null) {
       return null;
     }
 
-    var adapter = new EstimatedVehicleJourneyCodeAdapter(code);
-    var tripId = createId(adapter.getServiceJourneyId());
+    var tripId = createId(code.asServiceJourneyId());
     var builder = TripCreationInfo.builder(tripId);
 
     if (journey.lineRef() != null) {
@@ -441,7 +416,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       }
     }
 
-    String datedServiceJourneyId = adapter.getDatedServiceJourneyId();
+    String datedServiceJourneyId = code.asDatedServiceJourneyId();
     if (datedServiceJourneyId != null) {
       builder.withServiceId(createId(datedServiceJourneyId));
     }
@@ -456,14 +431,11 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       builder.withShortName(shortName);
     }
 
-    var modes = journey.vehicleModes();
-    if (!modes.isEmpty()) {
-      var mode = modes.get(0);
-      builder.withMode(mapTransitMainMode(List.of(mode)));
-      String submode = mapSubMode(mode);
-      if (submode != null) {
-        builder.withSubmode(submode);
-      }
+    var mode = journey.transitMode();
+    builder.withMode(mode);
+    String submode = mapSubMode(mode);
+    if (submode != null) {
+      builder.withSubmode(submode);
     }
 
     if (journey.operatorRef() != null) {
@@ -489,10 +461,10 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
   }
 
   @Nullable
-  private String mapSubMode(uk.org.siri.siri21.VehicleModesEnumeration mode) {
-    if (mode == uk.org.siri.siri21.VehicleModesEnumeration.BUS) {
+  private String mapSubMode(TransitMode mode) {
+    if (mode == TransitMode.BUS) {
       return BusSubmodeEnumeration.LOCAL_BUS.value();
-    } else if (mode == uk.org.siri.siri21.VehicleModesEnumeration.RAIL) {
+    } else if (mode == TransitMode.RAIL) {
       return RailSubmodeEnumeration.LOCAL.value();
     }
     return null;
