@@ -4,24 +4,23 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
-import org.opentripplanner.transit.model.network.TripPattern;
-import org.opentripplanner.transit.model.timetable.Trip;
-import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
- * Resolved data for adding new trips or updating previously added trips.
+ * Resolved data for the ADD_NEW_TRIP update type.
  * <p>
- * Used by {@link org.opentripplanner.updater.trip.handlers.AddNewTripHandler}.
- * <p>
- * If {@link #existingTrip()} is non-null, this is an update to a previously added trip.
- * Otherwise, this is a new trip creation.
+ * The classification between the two concrete cases is state-dependent and therefore made by
+ * {@link org.opentripplanner.updater.trip.NewTripResolver}, not by the (state-free) parsers:
+ * <ul>
+ *   <li>{@link ResolvedTripCreation} - the trip has never been integrated in the transit model
+ *       and must be created from scratch</li>
+ *   <li>{@link ResolvedAddedTripUpdate} - the trip was already added in real-time and this is a
+ *       subsequent update to it</li>
+ * </ul>
  */
-public final class ResolvedNewTrip {
+public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, ResolvedAddedTripUpdate {
 
   private final FormatPolicy formatPolicy;
-
-  @Nullable
   private final TripCreationInfo tripCreationInfo;
 
   @Nullable
@@ -29,100 +28,26 @@ public final class ResolvedNewTrip {
 
   private final LocalDate serviceDate;
   private final List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates;
-
-  // For updates to existing added trips
-  @Nullable
-  private final Trip existingTrip;
-
-  @Nullable
-  private final TripPattern existingPattern;
-
-  @Nullable
-  private final TripTimes existingTripTimes;
-
   private final boolean cancellation;
 
-  private ResolvedNewTrip(
-    FormatPolicy formatPolicy,
-    @Nullable TripCreationInfo tripCreationInfo,
-    @Nullable String dataSource,
+  protected ResolvedNewTrip(
+    ParsedAddNewTrip parsedUpdate,
     LocalDate serviceDate,
-    List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates,
-    @Nullable Trip existingTrip,
-    @Nullable TripPattern existingPattern,
-    @Nullable TripTimes existingTripTimes,
-    boolean cancellation
+    List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates
   ) {
-    this.formatPolicy = Objects.requireNonNull(formatPolicy, "formatPolicy must not be null");
-    this.tripCreationInfo = tripCreationInfo;
-    this.dataSource = dataSource;
+    this.formatPolicy = parsedUpdate.formatPolicy();
+    this.tripCreationInfo = parsedUpdate.tripCreationInfo();
+    this.dataSource = parsedUpdate.dataSource();
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
     this.resolvedStopTimeUpdates = Objects.requireNonNull(
       resolvedStopTimeUpdates,
       "resolvedStopTimeUpdates must not be null"
     );
-    this.existingTrip = existingTrip;
-    this.existingPattern = existingPattern;
-    this.existingTripTimes = existingTripTimes;
-    this.cancellation = cancellation;
+    this.cancellation = parsedUpdate.cancellation();
   }
-
-  /**
-   * Create for a brand new trip (no existing trip).
-   */
-  public static ResolvedNewTrip forNewTrip(
-    ParsedAddNewTrip parsedUpdate,
-    LocalDate serviceDate,
-    List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates
-  ) {
-    return new ResolvedNewTrip(
-      parsedUpdate.formatPolicy(),
-      parsedUpdate.tripCreationInfo(),
-      parsedUpdate.dataSource(),
-      serviceDate,
-      resolvedStopTimeUpdates,
-      null,
-      null,
-      null,
-      parsedUpdate.cancellation()
-    );
-  }
-
-  /**
-   * Create for updating an existing added trip.
-   */
-  public static ResolvedNewTrip forExistingAddedTrip(
-    ParsedAddNewTrip parsedUpdate,
-    LocalDate serviceDate,
-    List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates,
-    Trip existingTrip,
-    TripPattern existingPattern,
-    TripTimes existingTripTimes
-  ) {
-    return new ResolvedNewTrip(
-      parsedUpdate.formatPolicy(),
-      parsedUpdate.tripCreationInfo(),
-      parsedUpdate.dataSource(),
-      serviceDate,
-      resolvedStopTimeUpdates,
-      Objects.requireNonNull(existingTrip),
-      Objects.requireNonNull(existingPattern),
-      Objects.requireNonNull(existingTripTimes),
-      parsedUpdate.cancellation()
-    );
-  }
-
-  // ========== Resolved data accessors ==========
 
   public LocalDate serviceDate() {
     return serviceDate;
-  }
-
-  /**
-   * Returns true if this is an update to an existing added trip.
-   */
-  public boolean isUpdateToExistingTrip() {
-    return existingTrip != null;
   }
 
   /**
@@ -141,30 +66,6 @@ public final class ResolvedNewTrip {
     return cancellation;
   }
 
-  /**
-   * The existing trip if this is an update to a previously added trip.
-   */
-  @Nullable
-  public Trip existingTrip() {
-    return existingTrip;
-  }
-
-  /**
-   * The existing pattern if this is an update to a previously added trip.
-   */
-  @Nullable
-  public TripPattern existingPattern() {
-    return existingPattern;
-  }
-
-  /**
-   * The existing trip times if this is an update to a previously added trip.
-   */
-  @Nullable
-  public TripTimes existingTripTimes() {
-    return existingTripTimes;
-  }
-
   /** The behavioural {@link FormatPolicy} for this update, chosen once at the parser boundary. */
   public FormatPolicy formatPolicy() {
     return formatPolicy;
@@ -174,7 +75,6 @@ public final class ResolvedNewTrip {
     return resolvedStopTimeUpdates;
   }
 
-  @Nullable
   public TripCreationInfo tripCreationInfo() {
     return tripCreationInfo;
   }
@@ -182,19 +82,5 @@ public final class ResolvedNewTrip {
   @Nullable
   public String dataSource() {
     return dataSource;
-  }
-
-  @Override
-  public String toString() {
-    return (
-      "ResolvedNewTrip{" +
-      "serviceDate=" +
-      serviceDate +
-      ", isUpdateToExisting=" +
-      isUpdateToExistingTrip() +
-      ", existingTrip=" +
-      (existingTrip != null ? existingTrip.getId() : "null") +
-      '}'
-    );
   }
 }

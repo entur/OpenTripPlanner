@@ -2,14 +2,14 @@ package org.opentripplanner.updater.trip.handlers;
 
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
-import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
+import org.opentripplanner.updater.trip.model.ResolvedTripCreation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * Validates preconditions for {@link AddNewTripHandler}.
  * <p>
- * Checks (for new trip creation only, not updates to existing added trips):
+ * Checks:
  * <ul>
  *   <li>FAIL mode: all stops must be known</li>
  *   <li>Minimum stops (>= 2) on the original (pre-filter) list</li>
@@ -22,12 +22,7 @@ public class AddNewTripValidator implements TripUpdateValidator.ForNewTrip {
   private static final Logger LOG = LoggerFactory.getLogger(AddNewTripValidator.class);
 
   @Override
-  public void validate(ResolvedNewTrip resolvedUpdate) {
-    // Skip validation for updates to existing added trips
-    if (resolvedUpdate.isUpdateToExistingTrip()) {
-      return;
-    }
-
+  public void validate(ResolvedTripCreation resolvedUpdate) {
     var tripId = resolvedUpdate.tripCreationInfo().tripId();
     var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
 

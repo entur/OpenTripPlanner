@@ -11,6 +11,8 @@ import org.opentripplanner.updater.trip.model.ParsedDeleteTrip;
 import org.opentripplanner.updater.trip.model.ParsedModifyTrip;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
+import org.opentripplanner.updater.trip.model.ResolvedAddedTripUpdate;
+import org.opentripplanner.updater.trip.model.ResolvedTripCreation;
 
 /**
  * Default implementation of TripUpdateApplier that applies parsed trip updates to the transit
@@ -27,6 +29,9 @@ import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
  *   <li>{@link ParsedCancelTrip} → {@link TripRemovalResolver}</li>
  *   <li>{@link ParsedDeleteTrip} → {@link TripRemovalResolver}</li>
  * </ul>
+ * ADD_NEW_TRIP dispatches further on the resolved result: a trip not yet in the transit model
+ * is validated and created, while a previously added trip is routed to the added-trip update
+ * handler.
  */
 public class DefaultTripUpdateApplier implements TripUpdateApplier {
 
@@ -46,6 +51,7 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
   private final TripUpdateHandler.ForExistingTrip updateExistingHandler;
   private final TripUpdateHandler.ForExistingTrip modifyTripHandler;
   private final TripUpdateHandler.ForNewTrip addNewTripHandler;
+  private final TripUpdateHandler.ForAddedTripUpdate updateAddedTripHandler;
   private final TripUpdateHandler.ForTripRemoval cancelTripHandler;
   private final TripUpdateHandler.ForTripRemoval deleteTripHandler;
 
@@ -64,6 +70,7 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     TripUpdateHandler.ForExistingTrip updateExistingHandler,
     TripUpdateHandler.ForExistingTrip modifyTripHandler,
     TripUpdateHandler.ForNewTrip addNewTripHandler,
+    TripUpdateHandler.ForAddedTripUpdate updateAddedTripHandler,
     TripUpdateHandler.ForTripRemoval cancelTripHandler,
     TripUpdateHandler.ForTripRemoval deleteTripHandler
   ) {
@@ -77,6 +84,7 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
     this.updateExistingHandler = Objects.requireNonNull(updateExistingHandler);
     this.modifyTripHandler = Objects.requireNonNull(modifyTripHandler);
     this.addNewTripHandler = Objects.requireNonNull(addNewTripHandler);
+    this.updateAddedTripHandler = Objects.requireNonNull(updateAddedTripHandler);
     this.cancelTripHandler = Objects.requireNonNull(cancelTripHandler);
     this.deleteTripHandler = Objects.requireNonNull(deleteTripHandler);
   }
@@ -94,11 +102,13 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
         modifyTripValidator.validate(resolved);
         yield modifyTripHandler.handle(resolved);
       }
-      case ParsedAddNewTrip u -> {
-        var resolved = newTripResolver.resolve(u);
-        addNewTripValidator.validate(resolved);
-        yield addNewTripHandler.handle(resolved);
-      }
+      case ParsedAddNewTrip u -> switch (newTripResolver.resolve(u)) {
+        case ResolvedTripCreation creation -> {
+          addNewTripValidator.validate(creation);
+          yield addNewTripHandler.handle(creation);
+        }
+        case ResolvedAddedTripUpdate update -> updateAddedTripHandler.handle(update);
+      };
       case ParsedCancelTrip u -> cancelTripHandler.handle(tripRemovalResolver.resolve(u));
       case ParsedDeleteTrip u -> deleteTripHandler.handle(tripRemovalResolver.resolve(u));
     };

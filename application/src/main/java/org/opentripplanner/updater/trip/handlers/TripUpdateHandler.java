@@ -1,8 +1,9 @@
 package org.opentripplanner.updater.trip.handlers;
 
 import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.updater.trip.model.ResolvedAddedTripUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
-import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
+import org.opentripplanner.updater.trip.model.ResolvedTripCreation;
 import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
 
 /**
@@ -25,12 +26,21 @@ public final class TripUpdateHandler {
   }
 
   /**
-   * Handler for adding new trips or updating previously added trips.
-   * Used for ADD_NEW_TRIP update type.
+   * Handler for creating new trips that do not exist in the transit model.
+   * Used for ADD_NEW_TRIP updates resolved to a trip creation.
    */
   @FunctionalInterface
   public interface ForNewTrip {
-    TripUpdateResult handle(ResolvedNewTrip resolvedUpdate) throws UpdateException;
+    TripUpdateResult handle(ResolvedTripCreation resolvedUpdate) throws UpdateException;
+  }
+
+  /**
+   * Handler for updating previously added real-time trips.
+   * Used for ADD_NEW_TRIP updates resolved to an update of an already added trip.
+   */
+  @FunctionalInterface
+  public interface ForAddedTripUpdate {
+    TripUpdateResult handle(ResolvedAddedTripUpdate resolvedUpdate) throws UpdateException;
   }
 
   /**
