@@ -11,6 +11,7 @@ import org.opentripplanner.updater.trip.handlers.DeleteTripHandler;
 import org.opentripplanner.updater.trip.handlers.ModifyTripHandler;
 import org.opentripplanner.updater.trip.handlers.ModifyTripValidator;
 import org.opentripplanner.updater.trip.handlers.RouteCreationStrategy;
+import org.opentripplanner.updater.trip.handlers.UpdateAddedTripHandler;
 import org.opentripplanner.updater.trip.handlers.UpdateExistingTripHandler;
 import org.opentripplanner.updater.trip.handlers.UpdateExistingTripValidator;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
@@ -75,6 +76,7 @@ public final class TripUpdateApplierFactory {
       tripPatternCache,
       routeCreationStrategy
     );
+    var updateAddedTripHandler = new UpdateAddedTripHandler();
     var cancelTripHandler = new CancelTripHandler();
     var deleteTripHandler = new DeleteTripHandler();
 
@@ -89,6 +91,7 @@ public final class TripUpdateApplierFactory {
       updateExistingHandler,
       modifyTripHandler,
       addNewTripHandler,
+      updateAddedTripHandler,
       cancelTripHandler,
       deleteTripHandler
     );
