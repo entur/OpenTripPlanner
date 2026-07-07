@@ -23,11 +23,6 @@ mvn test
 # Run tests with code coverage
 mvn jacoco:prepare-agent test
 
-# Run integration tests (tagged @Tag("integration")).
-# NOTE: activated by the 'it' system property, NOT a profile named 'it' — `-Pit` silently runs
-# the default test set (which EXCLUDES the integration group).
-mvn test -Dit          # equivalently: mvn test -PintegrationTests
-
 # Skip prettier during local builds
 mvn test -Dps          # equivalently: mvn test -PprettierSkip
 
@@ -56,7 +51,7 @@ java -Xmx2G -jar otp-shaded/target/otp-shaded-VERSION.jar [args]
 ## Testing
 
 - Unit tests: JUnit 5, organized by package structure
-- Integration tests: `mvn test -Dit`, tagged `@Tag("integration")`
+- Assertions: prefer the Google Truth library, especially for collections and optionals — it reads far better than the JUnit equivalents
 - Snapshot tests: API and itinerary tests use `.snap` files stored in git (regenerate with `-Pclean-test-snapshots`)
 - Speed tests: `test/performance/` (see Performance Testing)
 - Test data: use the smallest possible OSM extracts (see `doc/user/Preparing-OSM.md`)
@@ -79,7 +74,7 @@ Multi-module Maven project (root `pom.xml` `<modules>`):
 - **astar**: generic A\* shortest-path engine — `astar/src/main/java/org/opentripplanner/astar/` (`AStar`, `AStarBuilder`, `spi/`, `strategy/`, `model/`)
 - **street**: street graph model, linking and search — `street/src/main/java/org/opentripplanner/street/` (`model/edge/StreetEdge`, `model/vertex/Vertex`, `linking/VertexLinker`, `search/`, `geometry/`) plus the `service/vehicleparking` and `service/vehiclerental` domain services
 - **gtfs-realtime-protobuf**: GTFS-RT protocol buffer definitions
-- **application**: main OTP application — `application/src/main/java/org/opentripplanner/`. Key packages: `routing`, `transit`, `gtfs`, `netex`, `osm`, `graph_builder`, `apis`, `updater`, `service`, `standalone` (the `street` package is now its own module; application keeps a `streetadapter` bridge)
+- **application**: main OTP application — `application/src/main/java/org/opentripplanner/`. Key packages: `routing`, `transit`, `gtfs`, `netex`, `osm`, `graph_builder`, `apis`, `updater`, `service`, `standalone`, `streetadapter`
 - **otp-shaded**: produces the unified shaded JAR with all dependencies
 - **test/integration**: integration tests
 
@@ -99,7 +94,7 @@ Multi-module Maven project (root `pom.xml` `<modules>`):
 - Routing algorithm: `application/src/main/java/org/opentripplanner/routing/algorithm/`
 - Transfer optimization: `.../routing/algorithm/transferoptimization/`
 - Itinerary filter chain: `.../routing/algorithm/filterchain/`
-- Street routing (A\*): `astar/.../astar/` (generic engine) + `street/.../street/search/` (street-search layer: `StreetSearchBuilder`, heuristics, state)
+- Street routing (A\*): `astar/src/main/java/org/opentripplanner/astar/` (generic engine) + `street/src/main/java/org/opentripplanner/street/search/` (street-search layer: `StreetSearchBuilder`, heuristics, state)
 
 **APIs**
 - GraphQL APIs: `application/src/main/java/org/opentripplanner/apis/` (GraphiQL at `http://localhost:8080/graphiql` when running)
