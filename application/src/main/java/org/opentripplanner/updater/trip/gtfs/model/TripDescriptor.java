@@ -33,10 +33,14 @@ public class TripDescriptor {
       : Optional.empty();
   }
 
-  Optional<LocalDate> startDate() throws ParseException {
-    return tripDescriptor.hasStartDate()
-      ? Optional.of(ServiceDateUtils.parseString(tripDescriptor.getStartDate()))
-      : Optional.empty();
+  Optional<LocalDate> startDate() {
+    try {
+      return tripDescriptor.hasStartDate()
+        ? Optional.of(ServiceDateUtils.parseString(tripDescriptor.getStartDate()))
+        : Optional.empty();
+    } catch (ParseException e) {
+      throw UpdateException.of(UpdateErrorType.INVALID_INPUT_STRUCTURE);
+    }
   }
 
   Optional<LocalTime> startTime() {

@@ -6,7 +6,6 @@ import static org.opentripplanner.updater.trip.gtfs.model.GtfsRealtimeMapper.map
 
 import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
-import java.text.ParseException;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
@@ -79,16 +78,10 @@ public final class TripUpdate {
     if (startDate != null) {
       return startDate;
     }
-    try {
-      // TODO: figure out the correct service date. For the special case that a trip
-      // starts for example at 40:00, yesterday would probably be a better guess.
-      startDate = tripDescriptor.startDate().orElse(localDateNow.get());
-      return startDate;
-    } catch (ParseException e) {
-      throw new RuntimeException(
-        "TripDescription does not have a valid startDate: call validate() first."
-      );
-    }
+    // TODO: figure out the correct service date. For the special case that a trip
+    // starts for example at 40:00, yesterday would probably be a better guess.
+    startDate = tripDescriptor.startDate().orElse(localDateNow.get());
+    return startDate;
   }
 
   public ScheduleRelationship scheduleRelationship() {
@@ -113,11 +106,8 @@ public final class TripUpdate {
       throw UpdateException.noTripId(INVALID_INPUT_STRUCTURE);
     }
 
-    try {
-      tripDescriptor.startDate();
-    } catch (ParseException e) {
-      throw UpdateException.of(tripId(), INVALID_INPUT_STRUCTURE);
-    }
+    // exercise the getter, would throw an UpdateException if start date is malformed
+    tripDescriptor.startDate();
 
     var lastStopSequence = -1;
     for (StopTimeUpdate update : stopTimeUpdates()) {
@@ -138,11 +128,7 @@ public final class TripUpdate {
 
   /// Validates the requirement for the schedule relationship DUPLICATED.
   public void validateDuplicated() throws DataValidationException {
-    try {
-      if (tripDescriptor.startDate().isEmpty() || tripDescriptor.startTime().isEmpty()) {
-        throw UpdateException.of(tripId(), INVALID_INPUT_STRUCTURE);
-      }
-    } catch (ParseException e) {
+    if (tripDescriptor.startDate().isEmpty() || tripDescriptor.startTime().isEmpty()) {
       throw UpdateException.of(tripId(), INVALID_INPUT_STRUCTURE);
     }
   }
