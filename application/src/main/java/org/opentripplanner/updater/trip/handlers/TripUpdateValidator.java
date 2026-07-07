@@ -2,7 +2,7 @@ package org.opentripplanner.updater.trip.handlers;
 
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
-import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
+import org.opentripplanner.updater.trip.model.ResolvedTripCreation;
 
 /**
  * Validator interfaces for different types of trip updates.
@@ -25,11 +25,12 @@ public final class TripUpdateValidator {
   }
 
   /**
-   * Validator for adding new trips.
-   * Used for ADD_NEW_TRIP update type.
+   * Validator for creating new trips.
+   * Used for ADD_NEW_TRIP updates resolved to a trip creation. Updates to previously added
+   * trips are not validated here, matching the legacy behaviour.
    */
   @FunctionalInterface
   public interface ForNewTrip {
-    void validate(ResolvedNewTrip resolvedUpdate) throws UpdateException;
+    void validate(ResolvedTripCreation resolvedUpdate) throws UpdateException;
   }
 }

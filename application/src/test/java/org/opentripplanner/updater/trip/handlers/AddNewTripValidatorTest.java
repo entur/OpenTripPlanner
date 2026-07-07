@@ -19,7 +19,7 @@ import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TripResolver;
 import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
+import org.opentripplanner.updater.trip.model.ResolvedTripCreation;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
@@ -52,8 +52,8 @@ class AddNewTripValidatorTest {
     validator = new AddNewTripValidator();
   }
 
-  private ResolvedNewTrip resolve(ParsedAddNewTrip parsedUpdate) {
-    return resolver.resolve(parsedUpdate);
+  private ResolvedTripCreation resolve(ParsedAddNewTrip parsedUpdate) {
+    return (ResolvedTripCreation) resolver.resolve(parsedUpdate);
   }
 
   @Test
