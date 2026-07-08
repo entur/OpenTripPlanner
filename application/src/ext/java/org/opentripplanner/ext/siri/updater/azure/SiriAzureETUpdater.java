@@ -56,13 +56,15 @@ public class SiriAzureETUpdater implements SiriAzureMessageHandler {
 
   private Future<?> processMessage(List<EstimatedTimetableDeliveryStructure> updates) {
     return writeToGraphCallback.execute(context -> {
-      var result = adapter.applyEstimatedTimetable(
-        fuzzyTripMatching ? context.siriFuzzyTripMatcher() : null,
-        context.entityResolver(feedId),
-        feedId,
-        UpdateIncrementality.DIFFERENTIAL,
-        updates
-      );
+      var result = adapter
+        .forUpdate(context.mutableSnapshot())
+        .applyEstimatedTimetable(
+          fuzzyTripMatching ? context.siriFuzzyTripMatcher() : null,
+          context.entityResolver(feedId),
+          feedId,
+          UpdateIncrementality.DIFFERENTIAL,
+          updates
+        );
       ResultLogger.logUpdateResultErrors(feedId, "siri-et", result);
       recordMetrics.accept(result);
     });

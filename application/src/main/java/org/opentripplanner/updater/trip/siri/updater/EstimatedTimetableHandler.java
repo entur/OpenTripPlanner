@@ -37,12 +37,14 @@ public class EstimatedTimetableHandler {
     UpdateIncrementality updateMode,
     RealTimeUpdateContext context
   ) {
-    return adapter.applyEstimatedTimetable(
-      fuzzyTripMatching ? context.siriFuzzyTripMatcher() : null,
-      context.entityResolver(feedId),
-      feedId,
-      updateMode,
-      estimatedTimetableDeliveries
-    );
+    return adapter
+      .forUpdate(context.mutableSnapshot())
+      .applyEstimatedTimetable(
+        fuzzyTripMatching ? context.siriFuzzyTripMatcher() : null,
+        context.entityResolver(feedId),
+        feedId,
+        updateMode,
+        estimatedTimetableDeliveries
+      );
   }
 }

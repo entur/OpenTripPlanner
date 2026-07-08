@@ -82,14 +82,16 @@ public class GtfsRtTestHelper {
     List<GtfsRealtime.TripUpdate> updates,
     UpdateIncrementality incrementality
   ) {
-    UpdateResult updateResult = gtfsAdapter.applyTripUpdates(
-      null,
-      ForwardsDelayPropagationType.DEFAULT,
-      BackwardsDelayPropagationType.REQUIRED_NO_DATA,
-      incrementality,
-      updates,
-      transitTestEnvironment.feedId()
-    );
+    UpdateResult updateResult = gtfsAdapter
+      .forUpdate(transitTestEnvironment.timetableSnapshotManager().getTimetableSnapshotBuffer())
+      .applyTripUpdates(
+        null,
+        ForwardsDelayPropagationType.DEFAULT,
+        BackwardsDelayPropagationType.REQUIRED_NO_DATA,
+        incrementality,
+        updates,
+        transitTestEnvironment.feedId()
+      );
     commitTimetableSnapshot();
     return updateResult;
   }

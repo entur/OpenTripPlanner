@@ -260,14 +260,16 @@ public abstract class GtfsTest {
       for (FeedEntity feedEntity : feedEntityList) {
         updates.add(feedEntity.getTripUpdate());
       }
-      tripUpdateAdapter.applyTripUpdates(
-        null,
-        ForwardsDelayPropagationType.DEFAULT,
-        BackwardsDelayPropagationType.REQUIRED_NO_DATA,
-        UpdateIncrementality.DIFFERENTIAL,
-        updates,
-        FEED_ID
-      );
+      tripUpdateAdapter
+        .forUpdate(snapshotManager.getTimetableSnapshotBuffer())
+        .applyTripUpdates(
+          null,
+          ForwardsDelayPropagationType.DEFAULT,
+          BackwardsDelayPropagationType.REQUIRED_NO_DATA,
+          UpdateIncrementality.DIFFERENTIAL,
+          updates,
+          FEED_ID
+        );
       alertsUpdateHandler.update(feedMessage, null);
     } catch (FileNotFoundException _) {}
     serverContext = TestServerContext.createServerContext(

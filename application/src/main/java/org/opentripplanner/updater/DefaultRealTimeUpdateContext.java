@@ -12,6 +12,7 @@ import org.opentripplanner.updater.trip.siri.SiriFuzzyTripMatcher;
 public class DefaultRealTimeUpdateContext implements RealTimeUpdateContext {
 
   private final Graph graph;
+  private final MutableTimetableSnapshot timetableSnapshotBuffer;
   private final TransitService transitService;
   private SiriFuzzyTripMatcher siriFuzzyTripMatcher;
 
@@ -37,6 +38,7 @@ public class DefaultRealTimeUpdateContext implements RealTimeUpdateContext {
     MutableTimetableSnapshot timetableSnapshotBuffer
   ) {
     this.graph = graph;
+    this.timetableSnapshotBuffer = timetableSnapshotBuffer;
     this.transitService = new DefaultTransitService(timetableRepository, timetableSnapshotBuffer);
   }
 
@@ -45,6 +47,11 @@ public class DefaultRealTimeUpdateContext implements RealTimeUpdateContext {
    */
   public DefaultRealTimeUpdateContext(Graph graph, TimetableRepository timetableRepository) {
     this(graph, timetableRepository, null);
+  }
+
+  @Override
+  public MutableTimetableSnapshot mutableSnapshot() {
+    return timetableSnapshotBuffer;
   }
 
   @Override
