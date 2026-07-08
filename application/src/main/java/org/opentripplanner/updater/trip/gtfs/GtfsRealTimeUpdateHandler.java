@@ -10,13 +10,13 @@ import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.framework.DataValidationException;
+import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.ResultLogger;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
-import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
@@ -29,7 +29,7 @@ import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
  */
 public class GtfsRealTimeUpdateHandler {
 
-  private final TimetableSnapshotManager snapshotManager;
+  private final MutableTimetableSnapshot buffer;
   private final Supplier<LocalDate> localDateNow;
   private final ScheduledTripHandler scheduledTripHandler;
   private final NewTripHandler addedTripHandler;
@@ -37,14 +37,14 @@ public class GtfsRealTimeUpdateHandler {
   private final DuplicatedTripHandler duplicatedTripHandler;
 
   GtfsRealTimeUpdateHandler(
-    TimetableSnapshotManager snapshotManager,
+    MutableTimetableSnapshot buffer,
     Supplier<LocalDate> localDateNow,
     ScheduledTripHandler scheduledTripHandler,
     NewTripHandler addedTripHandler,
     CanceledTripHandler canceledTripHandler,
     DuplicatedTripHandler duplicatedTripHandler
   ) {
-    this.snapshotManager = snapshotManager;
+    this.buffer = buffer;
     this.localDateNow = localDateNow;
     this.scheduledTripHandler = scheduledTripHandler;
     this.addedTripHandler = addedTripHandler;
@@ -78,7 +78,7 @@ public class GtfsRealTimeUpdateHandler {
 
     if (updateIncrementality == FULL_DATASET) {
       // Remove all updates from the buffer
-      snapshotManager.clearBuffer(feedId);
+      buffer.clear(feedId);
     }
 
     for (var rawTripUpdate : updates) {

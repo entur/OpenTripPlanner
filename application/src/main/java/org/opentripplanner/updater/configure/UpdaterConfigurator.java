@@ -3,7 +3,6 @@ package org.opentripplanner.updater.configure;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.updater.SiriETCarpoolingUpdater;
@@ -12,6 +11,8 @@ import org.opentripplanner.ext.siri.updater.mqtt.SiriETMqttUpdater;
 import org.opentripplanner.ext.vehiclerentalservicedirectory.VehicleRentalServiceDirectoryFetcher;
 import org.opentripplanner.ext.vehiclerentalservicedirectory.api.VehicleRentalServiceDirectoryFetcherParameters;
 import org.opentripplanner.framework.io.OtpHttpClientFactory;
+import org.opentripplanner.framework.transaction.UpdateManager;
+import org.opentripplanner.framework.transaction.api.RepositoryHandle;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
@@ -19,15 +20,13 @@ import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.linking.VertexLinker;
 import org.opentripplanner.street.model.openinghours.OpeningHoursCalendarService;
 import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
+import org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot;
 import org.opentripplanner.transit.service.TimetableRepository;
-import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.GraphUpdaterManager;
 import org.opentripplanner.updater.GraphWriterService;
 import org.opentripplanner.updater.UpdatersParameters;
 import org.opentripplanner.updater.alert.gtfs.GtfsRealtimeAlertsUpdater;
 import org.opentripplanner.updater.spi.GraphUpdater;
-import org.opentripplanner.updater.spi.TimetableSnapshotFlush;
-import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdater;
 import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdater;
@@ -59,7 +58,11 @@ public class UpdaterConfigurator {
   private final VehicleRentalRepository vehicleRentalRepository;
   private final CarpoolingRepository carpoolingRepository;
   private final VehicleParkingRepository parkingRepository;
-  private final TimetableSnapshotManager snapshotManager;
+  private final UpdateManager updateManager;
+  private final RepositoryHandle<
+    ReadOnlyTimetableSnapshot,
+    MutableTimetableSnapshot
+  > timetableRepositoryHandle;
 
   private UpdaterConfigurator(
     Graph graph,
@@ -70,7 +73,8 @@ public class UpdaterConfigurator {
     VehicleParkingRepository parkingRepository,
     TimetableRepository timetableRepository,
     CarpoolingRepository carpoolingRepository,
-    TimetableSnapshotManager snapshotManager,
+    UpdateManager updateManager,
+    RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableRepositoryHandle,
     UpdatersParameters updatersParameters
   ) {
     this.graph = graph;
@@ -81,7 +85,8 @@ public class UpdaterConfigurator {
     this.timetableRepository = timetableRepository;
     this.updatersParameters = updatersParameters;
     this.parkingRepository = parkingRepository;
-    this.snapshotManager = snapshotManager;
+    this.updateManager = updateManager;
+    this.timetableRepositoryHandle = timetableRepositoryHandle;
     this.carpoolingRepository = carpoolingRepository;
   }
 
@@ -94,7 +99,8 @@ public class UpdaterConfigurator {
     VehicleParkingRepository parkingRepository,
     TimetableRepository timetableRepository,
     CarpoolingRepository carpoolingRepository,
-    TimetableSnapshotManager snapshotManager,
+    UpdateManager updateManager,
+    RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableRepositoryHandle,
     UpdatersParameters updatersParameters
   ) {
     new UpdaterConfigurator(
@@ -106,7 +112,8 @@ public class UpdaterConfigurator {
       parkingRepository,
       timetableRepository,
       carpoolingRepository,
-      snapshotManager,
+      updateManager,
+      timetableRepositoryHandle,
       updatersParameters
     ).configure();
   }
@@ -123,13 +130,13 @@ public class UpdaterConfigurator {
       )
     );
 
-    MutableTimetableSnapshot timetableSnapshotBuffer = snapshotManager.getTimetableSnapshotBuffer();
     var graphWriterService = new GraphWriterService(
-      new DefaultRealTimeUpdateContext(graph, timetableRepository, timetableSnapshotBuffer)
+      updateManager,
+      timetableRepositoryHandle,
+      graph,
+      timetableRepository
     );
     GraphUpdaterManager updaterManager = new GraphUpdaterManager(graphWriterService, updaters);
-
-    configureTimetableSnapshotFlush(graphWriterService, snapshotManager);
 
     updaterManager.startUpdaters();
 
@@ -255,33 +262,12 @@ public class UpdaterConfigurator {
   }
 
   private SiriRealTimeTripUpdateAdapter provideSiriAdapter() {
-    return new SiriRealTimeTripUpdateAdapter(timetableRepository, deduplicator, snapshotManager);
+    return new SiriRealTimeTripUpdateAdapter(timetableRepository, deduplicator);
   }
 
   private GtfsRealTimeTripUpdateAdapter provideGtfsAdapter() {
-    return new GtfsRealTimeTripUpdateAdapter(
-      timetableRepository,
-      deduplicator,
-      snapshotManager,
-      () -> LocalDate.now(timetableRepository.getTimeZone())
+    return new GtfsRealTimeTripUpdateAdapter(timetableRepository, deduplicator, () ->
+      LocalDate.now(timetableRepository.getTimeZone())
     );
-  }
-
-  /**
-   * If SIRI or GTFS real-time updaters are in use, configure a periodic flush of the timetable
-   * snapshot.
-   */
-  private void configureTimetableSnapshotFlush(
-    GraphWriterService graphWriterService,
-    TimetableSnapshotManager snapshotManager
-  ) {
-    graphWriterService
-      .getScheduler()
-      .scheduleWithFixedDelay(
-        new TimetableSnapshotFlush(snapshotManager),
-        0,
-        updatersParameters.timetableSnapshotParameters().maxSnapshotFrequency().toSeconds(),
-        TimeUnit.SECONDS
-      );
   }
 }
