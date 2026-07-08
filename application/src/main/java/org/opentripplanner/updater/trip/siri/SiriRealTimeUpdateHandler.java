@@ -18,13 +18,14 @@ import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Timetable;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
+import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
-import org.opentripplanner.updater.trip.TimetableSnapshotManager;
+import org.opentripplanner.updater.trip.TripUpdateApplicator;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
@@ -43,20 +44,20 @@ public class SiriRealTimeUpdateHandler {
   private static final Logger LOG = LoggerFactory.getLogger(SiriRealTimeUpdateHandler.class);
 
   private final TransitEditorService transitEditorService;
-  private final TimetableSnapshotManager snapshotManager;
+  private final MutableTimetableSnapshot buffer;
   private final TripPatternCache tripPatternCache;
   private final DeduplicatorService deduplicator;
   private final TripPatternIdGenerator tripPatternIdGenerator;
 
   SiriRealTimeUpdateHandler(
     TransitEditorService transitEditorService,
-    TimetableSnapshotManager snapshotManager,
+    MutableTimetableSnapshot buffer,
     TripPatternCache tripPatternCache,
     DeduplicatorService deduplicator,
     TripPatternIdGenerator tripPatternIdGenerator
   ) {
     this.transitEditorService = transitEditorService;
-    this.snapshotManager = snapshotManager;
+    this.buffer = buffer;
     this.tripPatternCache = tripPatternCache;
     this.deduplicator = deduplicator;
     this.tripPatternIdGenerator = tripPatternIdGenerator;
@@ -87,7 +88,7 @@ public class SiriRealTimeUpdateHandler {
 
     if (incrementality == FULL_DATASET) {
       // Remove all updates from the buffer
-      snapshotManager.clearBuffer(feedId);
+      buffer.clear(feedId);
     }
 
     for (var etDelivery : updates) {
@@ -197,7 +198,7 @@ public class SiriRealTimeUpdateHandler {
    * Snapshot timetable is used as source if initialised, trip patterns scheduled timetable if not.
    */
   private Timetable getCurrentTimetable(TripPattern tripPattern, LocalDate serviceDate) {
-    return snapshotManager.resolve(tripPattern, serviceDate);
+    return buffer.resolve(tripPattern, serviceDate);
   }
 
   private TripUpdate handleModifiedTrip(
@@ -224,7 +225,7 @@ public class SiriRealTimeUpdateHandler {
         journey,
         entityResolver,
         this::getCurrentTimetable,
-        snapshotManager::getNewTripPatternForModifiedTrip
+        buffer::getNewTripPatternForModifiedTrip
       );
       trip = tripAndPattern.trip();
       pattern = tripAndPattern.tripPattern();
@@ -278,7 +279,7 @@ public class SiriRealTimeUpdateHandler {
         journey,
         entityResolver,
         this::getCurrentTimetable,
-        snapshotManager::getNewTripPatternForModifiedTrip
+        buffer::getNewTripPatternForModifiedTrip
       );
 
       trip = tripAndPattern.trip();
@@ -344,7 +345,7 @@ public class SiriRealTimeUpdateHandler {
       .withRevertPreviousRealTimeUpdates(revertPreviousRealTimeUpdates)
       .withHideTripInScheduledPattern(tripUpdate.hideTripInScheduledPattern())
       .build();
-    var result = snapshotManager.updateBuffer(realTimeTripUpdate);
+    var result = TripUpdateApplicator.apply(buffer, realTimeTripUpdate);
     LOG.debug("Applied real-time data for trip {} on {}", trip, serviceDate);
     return result;
   }

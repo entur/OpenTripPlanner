@@ -3,12 +3,11 @@ package org.opentripplanner.updater.trip.siri;
 import static org.opentripplanner.updater.trip.UpdateIncrementality.DIFFERENTIAL;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
-import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
-import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
+import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.updater.spi.UpdateResult;
-import org.opentripplanner.updater.trip.siri.updater.EstimatedTimetableHandler;
 import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 
 public class SiriTestHelper {
@@ -20,8 +19,7 @@ public class SiriTestHelper {
     this.transitTestEnvironment = transitTestEnvironment;
     this.siriAdapter = new SiriRealTimeTripUpdateAdapter(
       transitTestEnvironment.timetableRepository(),
-      DeduplicatorService.NOOP,
-      transitTestEnvironment.timetableSnapshotManager()
+      DeduplicatorService.NOOP
     );
   }
 
@@ -51,28 +49,31 @@ public class SiriTestHelper {
     List<EstimatedTimetableDeliveryStructure> updates,
     boolean fuzzyMatching
   ) {
-    UpdateResult updateResult = getEstimatedTimetableHandler(fuzzyMatching).applyUpdate(
-      updates,
-      DIFFERENTIAL,
-      new DefaultRealTimeUpdateContext(
-        new Graph(),
-        transitTestEnvironment.timetableRepository(),
-        transitTestEnvironment.timetableSnapshotManager().getTimetableSnapshotBuffer()
-      )
-    );
-    commitTimetableSnapshot();
-    return updateResult;
-  }
-
-  private EstimatedTimetableHandler getEstimatedTimetableHandler(boolean fuzzyMatching) {
-    return new EstimatedTimetableHandler(
-      siriAdapter,
-      fuzzyMatching,
-      transitTestEnvironment.feedId()
-    );
-  }
-
-  private void commitTimetableSnapshot() {
-    transitTestEnvironment.timetableSnapshotManager().purgeAndCommit();
+    var resultRef = new AtomicReference<UpdateResult>();
+    try {
+      transitTestEnvironment
+        .updateManager()
+        .submit(ctx -> {
+          var buffer = ctx.repository(transitTestEnvironment.timetableHandle());
+          var timetableRepository = transitTestEnvironment.timetableRepository();
+          var feedId = transitTestEnvironment.feedId();
+          var transitService = new DefaultTransitService(timetableRepository, buffer);
+          resultRef.set(
+            siriAdapter
+              .forUpdate(buffer)
+              .applyEstimatedTimetable(
+                fuzzyMatching ? new SiriFuzzyTripMatcher(transitService) : null,
+                new EntityResolver(transitService, feedId),
+                feedId,
+                DIFFERENTIAL,
+                updates
+              )
+          );
+        })
+        .get();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    return resultRef.get();
   }
 }

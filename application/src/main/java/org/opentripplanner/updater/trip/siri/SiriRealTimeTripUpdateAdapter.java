@@ -4,7 +4,6 @@ import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
-import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
 
@@ -27,16 +26,13 @@ public class SiriRealTimeTripUpdateAdapter {
   private final TripPatternCache tripPatternCache;
 
   private final DeduplicatorService deduplicator;
-  private final TimetableSnapshotManager snapshotManager;
   private final TimetableRepository timetableRepository;
 
   public SiriRealTimeTripUpdateAdapter(
     TimetableRepository timetableRepository,
-    DeduplicatorService deduplicator,
-    TimetableSnapshotManager snapshotManager
+    DeduplicatorService deduplicator
   ) {
     this.deduplicator = deduplicator;
-    this.snapshotManager = snapshotManager;
     this.timetableRepository = timetableRepository;
     this.tripPatternCache = new TripPatternCache(tripPatternIdGenerator);
   }
@@ -49,7 +45,7 @@ public class SiriRealTimeTripUpdateAdapter {
   public SiriRealTimeUpdateHandler forUpdate(MutableTimetableSnapshot buffer) {
     return new SiriRealTimeUpdateHandler(
       new DefaultTransitService(timetableRepository, buffer),
-      snapshotManager,
+      buffer,
       tripPatternCache,
       deduplicator,
       tripPatternIdGenerator
