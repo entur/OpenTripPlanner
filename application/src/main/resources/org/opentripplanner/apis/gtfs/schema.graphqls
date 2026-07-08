@@ -1729,8 +1729,8 @@ type QueryType {
     nonpreferredTransferPenalty: Int,
     "The maximum number of itineraries to return. Default value: 3."
     numItineraries: Int = 3,
-    "When false, return itineraries using canceled trips. Default value: true."
-    omitCanceled: Boolean = true,
+    "When false, return itineraries using canceled trips. Default value: false."
+    omitCanceled: Boolean = false,
     "Optimization type for bicycling legs, e.g. prefer flat terrain. Default value: `QUICK`"
     optimize: OptimizeType,
     """
