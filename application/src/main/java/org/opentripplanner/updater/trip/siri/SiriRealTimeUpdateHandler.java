@@ -18,8 +18,6 @@ import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Timetable;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
-import org.opentripplanner.transit.service.DefaultTransitService;
-import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
@@ -36,45 +34,32 @@ import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
 
 /**
- * Adapts from SIRI-ET EstimatedTimetables to OTP's internal real-time data model.
+ * Update-scoped object produced by {@link SiriRealTimeTripUpdateAdapter#forUpdate}. Holds a
+ * per-task {@link TransitEditorService} backed by the update's mutable timetable snapshot, so all
+ * pattern and trip lookups within the task see in-progress real-time additions.
  */
 public class SiriRealTimeUpdateHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SiriRealTimeUpdateHandler.class);
 
-  /**
-   * Use an id generator to generate TripPattern ids for new TripPatterns created by RealTime
-   * updates.
-   */
-  private final TripPatternIdGenerator tripPatternIdGenerator = new TripPatternIdGenerator();
-  /**
-   * A synchronized cache of trip patterns that are added to the graph due to GTFS-real-time
-   * messages.
-   */
-  private final TripPatternCache tripPatternCache;
-
-  /**
-   * Long-lived transit editor service that has access to the timetable snapshot buffer.
-   * This differs from the usual use case where the transit service refers to the latest published
-   * timetable snapshot.
-   */
   private final TransitEditorService transitEditorService;
-
-  private final DeduplicatorService deduplicator;
   private final TimetableSnapshotManager snapshotManager;
+  private final TripPatternCache tripPatternCache;
+  private final DeduplicatorService deduplicator;
+  private final TripPatternIdGenerator tripPatternIdGenerator;
 
-  public SiriRealTimeUpdateHandler(
-    TimetableRepository timetableRepository,
+  SiriRealTimeUpdateHandler(
+    TransitEditorService transitEditorService,
+    TimetableSnapshotManager snapshotManager,
+    TripPatternCache tripPatternCache,
     DeduplicatorService deduplicator,
-    TimetableSnapshotManager snapshotManager
+    TripPatternIdGenerator tripPatternIdGenerator
   ) {
-    this.deduplicator = deduplicator;
+    this.transitEditorService = transitEditorService;
     this.snapshotManager = snapshotManager;
-    this.transitEditorService = new DefaultTransitService(
-      timetableRepository,
-      snapshotManager.getTimetableSnapshotBuffer()
-    );
-    this.tripPatternCache = new TripPatternCache(tripPatternIdGenerator);
+    this.tripPatternCache = tripPatternCache;
+    this.deduplicator = deduplicator;
+    this.tripPatternIdGenerator = tripPatternIdGenerator;
   }
 
   /**

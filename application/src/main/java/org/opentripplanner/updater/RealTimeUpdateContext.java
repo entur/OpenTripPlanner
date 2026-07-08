@@ -1,6 +1,7 @@
 package org.opentripplanner.updater;
 
 import org.opentripplanner.street.graph.Graph;
+import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealtimeFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.siri.EntityResolver;
@@ -11,6 +12,12 @@ import org.opentripplanner.updater.trip.siri.SiriFuzzyTripMatcher;
  * The services exposed should be used only from the GraphWriter thread.
  */
 public interface RealTimeUpdateContext {
+  /**
+   * Return the mutable timetable snapshot (write buffer) for this update task. Callers must only
+   * use this from the single writer thread.
+   */
+  MutableTimetableSnapshot mutableSnapshot();
+
   /**
    * Return the street model (graph).
    */

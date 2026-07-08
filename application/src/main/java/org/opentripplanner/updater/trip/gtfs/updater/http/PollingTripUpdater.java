@@ -6,7 +6,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.UpdateResult;
-import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeUpdateHandler;
+import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.updater.TripUpdateGraphWriterRunnable;
@@ -23,7 +23,7 @@ public class PollingTripUpdater extends PollingGraphUpdater {
   private static final Logger LOG = LoggerFactory.getLogger(PollingTripUpdater.class);
 
   private final HttpTripUpdateSource updateSource;
-  private final GtfsRealTimeUpdateHandler adapter;
+  private final GtfsRealTimeTripUpdateAdapter adapter;
 
   /**
    * Feed id that is used for the trip ids in the TripUpdates
@@ -48,7 +48,7 @@ public class PollingTripUpdater extends PollingGraphUpdater {
 
   public PollingTripUpdater(
     PollingTripUpdaterParameters parameters,
-    GtfsRealTimeUpdateHandler adapter
+    GtfsRealTimeTripUpdateAdapter adapter
   ) {
     super(parameters);
     // Create update streamer from preferences

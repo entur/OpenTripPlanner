@@ -59,7 +59,7 @@ import org.opentripplanner.updater.GraphWriterService;
 import org.opentripplanner.updater.alert.gtfs.AlertsUpdateHandler;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
-import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeUpdateHandler;
+import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 
@@ -72,7 +72,7 @@ public abstract class GtfsTest {
   public TimetableRepository timetableRepository;
 
   AlertsUpdateHandler alertsUpdateHandler;
-  GtfsRealTimeUpdateHandler tripUpdateAdapter;
+  GtfsRealTimeTripUpdateAdapter tripUpdateAdapter;
   TransitAlertServiceImpl alertPatchServiceImpl;
   public OtpServerRequestContext serverContext;
 
@@ -242,7 +242,7 @@ public abstract class GtfsTest {
       timetableRepository.copyTripCalendarForRealTimeUpdates()
     );
 
-    tripUpdateAdapter = new GtfsRealTimeUpdateHandler(
+    tripUpdateAdapter = new GtfsRealTimeTripUpdateAdapter(
       timetableRepository,
       new Deduplicator(),
       snapshotManager,
@@ -260,14 +260,16 @@ public abstract class GtfsTest {
       for (FeedEntity feedEntity : feedEntityList) {
         updates.add(feedEntity.getTripUpdate());
       }
-      tripUpdateAdapter.applyTripUpdates(
-        null,
-        ForwardsDelayPropagationType.DEFAULT,
-        BackwardsDelayPropagationType.REQUIRED_NO_DATA,
-        UpdateIncrementality.DIFFERENTIAL,
-        updates,
-        FEED_ID
-      );
+      tripUpdateAdapter
+        .forUpdate(snapshotManager.getTimetableSnapshotBuffer())
+        .applyTripUpdates(
+          null,
+          ForwardsDelayPropagationType.DEFAULT,
+          BackwardsDelayPropagationType.REQUIRED_NO_DATA,
+          UpdateIncrementality.DIFFERENTIAL,
+          updates,
+          FEED_ID
+        );
       alertsUpdateHandler.update(feedMessage, null);
     } catch (FileNotFoundException _) {}
     serverContext = TestServerContext.createServerContext(

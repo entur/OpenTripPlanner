@@ -15,11 +15,11 @@ import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagat
 public class GtfsRtTestHelper {
 
   private final TransitTestEnvironment transitTestEnvironment;
-  private final GtfsRealTimeUpdateHandler gtfsAdapter;
+  private final GtfsRealTimeTripUpdateAdapter gtfsAdapter;
 
   GtfsRtTestHelper(TransitTestEnvironment transitTestEnvironment) {
     this.transitTestEnvironment = transitTestEnvironment;
-    this.gtfsAdapter = new GtfsRealTimeUpdateHandler(
+    this.gtfsAdapter = new GtfsRealTimeTripUpdateAdapter(
       transitTestEnvironment.timetableRepository(),
       DeduplicatorService.NOOP,
       transitTestEnvironment.timetableSnapshotManager(),
@@ -82,14 +82,16 @@ public class GtfsRtTestHelper {
     List<GtfsRealtime.TripUpdate> updates,
     UpdateIncrementality incrementality
   ) {
-    UpdateResult updateResult = gtfsAdapter.applyTripUpdates(
-      null,
-      ForwardsDelayPropagationType.DEFAULT,
-      BackwardsDelayPropagationType.REQUIRED_NO_DATA,
-      incrementality,
-      updates,
-      transitTestEnvironment.feedId()
-    );
+    UpdateResult updateResult = gtfsAdapter
+      .forUpdate(transitTestEnvironment.timetableSnapshotManager().getTimetableSnapshotBuffer())
+      .applyTripUpdates(
+        null,
+        ForwardsDelayPropagationType.DEFAULT,
+        BackwardsDelayPropagationType.REQUIRED_NO_DATA,
+        incrementality,
+        updates,
+        transitTestEnvironment.feedId()
+      );
     commitTimetableSnapshot();
     return updateResult;
   }

@@ -28,10 +28,10 @@ import org.opentripplanner.updater.alert.gtfs.GtfsRealtimeAlertsUpdater;
 import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.spi.TimetableSnapshotFlush;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
-import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeUpdateHandler;
+import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdater;
 import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdater;
-import org.opentripplanner.updater.trip.siri.SiriRealTimeUpdateHandler;
+import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.updater.google.SiriETGooglePubsubUpdater;
 import org.opentripplanner.updater.vehicle_parking.AvailabilityDataSourceFactory;
 import org.opentripplanner.updater.vehicle_parking.VehicleParkingAvailabilityUpdater;
@@ -254,13 +254,16 @@ public class UpdaterConfigurator {
     return updaters;
   }
 
-  private SiriRealTimeUpdateHandler provideSiriAdapter() {
-    return new SiriRealTimeUpdateHandler(timetableRepository, deduplicator, snapshotManager);
+  private SiriRealTimeTripUpdateAdapter provideSiriAdapter() {
+    return new SiriRealTimeTripUpdateAdapter(timetableRepository, deduplicator, snapshotManager);
   }
 
-  private GtfsRealTimeUpdateHandler provideGtfsAdapter() {
-    return new GtfsRealTimeUpdateHandler(timetableRepository, deduplicator, snapshotManager, () ->
-      LocalDate.now(timetableRepository.getTimeZone())
+  private GtfsRealTimeTripUpdateAdapter provideGtfsAdapter() {
+    return new GtfsRealTimeTripUpdateAdapter(
+      timetableRepository,
+      deduplicator,
+      snapshotManager,
+      () -> LocalDate.now(timetableRepository.getTimeZone())
     );
   }
 

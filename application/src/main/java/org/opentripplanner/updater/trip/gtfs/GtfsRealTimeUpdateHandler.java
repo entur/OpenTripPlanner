@@ -9,10 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
-import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.transit.model.framework.DataValidationException;
-import org.opentripplanner.transit.service.DefaultTransitService;
-import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.ResultLogger;
 import org.opentripplanner.updater.spi.UpdateError;
@@ -24,11 +21,11 @@ import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
-import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
-import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
 
 /**
- * Adapts from GTFS-RT TripUpdates to OTP's internal real-time data model.
+ * Update-scoped object produced by {@link GtfsRealTimeTripUpdateAdapter#forUpdate}. Holds the
+ * per-task collaborators (sub-handlers constructed with an update-scoped {@code TransitEditorService})
+ * and applies GTFS-RT trip updates against the mutable timetable snapshot.
  */
 public class GtfsRealTimeUpdateHandler {
 
@@ -36,53 +33,30 @@ public class GtfsRealTimeUpdateHandler {
   private final Supplier<LocalDate> localDateNow;
   private final ScheduledTripHandler scheduledTripHandler;
   private final NewTripHandler addedTripHandler;
-  private final DuplicatedTripHandler duplicatedTripHandler;
   private final CanceledTripHandler canceledTripHandler;
+  private final DuplicatedTripHandler duplicatedTripHandler;
 
-  /**
-   * Constructor to allow tests to provide their own clock, not using system time.
-   */
-  public GtfsRealTimeUpdateHandler(
-    TimetableRepository timetableRepository,
-    DeduplicatorService deduplicator,
+  GtfsRealTimeUpdateHandler(
     TimetableSnapshotManager snapshotManager,
-    Supplier<LocalDate> localDateNow
+    Supplier<LocalDate> localDateNow,
+    ScheduledTripHandler scheduledTripHandler,
+    NewTripHandler addedTripHandler,
+    CanceledTripHandler canceledTripHandler,
+    DuplicatedTripHandler duplicatedTripHandler
   ) {
     this.snapshotManager = snapshotManager;
     this.localDateNow = localDateNow;
-
-    var transitEditorService = new DefaultTransitService(
-      timetableRepository,
-      snapshotManager.getTimetableSnapshotBuffer()
-    );
-    var tripTimesUpdater = new TripTimesUpdater(timetableRepository.getTimeZone(), deduplicator);
-    var tripPatternCache = new TripPatternCache(new TripPatternIdGenerator());
-
-    this.scheduledTripHandler = new ScheduledTripHandler(
-      transitEditorService,
-      snapshotManager,
-      tripTimesUpdater,
-      tripPatternCache
-    );
-    this.addedTripHandler = new NewTripHandler(
-      transitEditorService,
-      snapshotManager,
-      tripTimesUpdater,
-      tripPatternCache
-    );
-    this.duplicatedTripHandler = new DuplicatedTripHandler(
-      transitEditorService,
-      snapshotManager,
-      deduplicator
-    );
-    this.canceledTripHandler = new CanceledTripHandler(transitEditorService, snapshotManager);
+    this.scheduledTripHandler = scheduledTripHandler;
+    this.addedTripHandler = addedTripHandler;
+    this.canceledTripHandler = canceledTripHandler;
+    this.duplicatedTripHandler = duplicatedTripHandler;
   }
 
   /**
    * Method to apply a trip update list to the most recent version of the timetable snapshot. A
    * GTFS-RT feed is always applied against a single static feed (indicated by feedId).
    * <p>
-   * However, multi-feed support is not completed and we currently assume there is only one static
+   * However, multi-feed support is not completed, and we currently assume there is only one static
    * feed when matching IDs.
    *
    * @param backwardsDelayPropagationType Defines when delays are propagated to previous stops and
