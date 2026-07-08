@@ -168,13 +168,17 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
       boardStopArrival.stop()
     );
     if (boardingStopPos == -1) {
-      LOG.warn(
-        "Unexpected board stop position missing for trip {} at stop {} after {}.",
-        trip.pattern().debugInfo(),
-        boardStopArrival.stop(),
-        TimeUtils.timeToStrLong(boardStopArrival.arrivalTime())
-      );
-      return;
+      // In case of a constrained transfer, the boarding arrivalTime could be after the trip
+      // departure time, which is valid. We use the first depature time of the boarded trip
+      // here to find a valid bearding. This is slightly incorrect and may fail to find the
+      // correct departure for circular lines. There is not a good simple fix for this. A Fix would
+      // need to look up the constrained transfers and apply the logic done by the routing lgorithm.
+      // This logic is fragmented, so a larger refactoring is needed.
+      boardingStopPos = trip.findDepartureStopPosition(trip.departure(0), boardStopArrival.stop());
+      if (boardingStopPos == -1) {
+        logUnexpectedStopPosition("board", trip, boardStopArrival);
+        return;
+      }
     }
 
     int startRoutingAtStopPosition = trip.findArrivalStopPosition(
@@ -183,12 +187,7 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
     );
 
     if (startRoutingAtStopPosition == -1) {
-      LOG.warn(
-        "Unexpected alight stop position missing for trip {} at stop {} after {}.",
-        trip.pattern().debugInfo(),
-        alightArrival.stop(),
-        TimeUtils.timeToStrLong(alightArrival.arrivalTime())
-      );
+      logUnexpectedStopPosition("alight", trip, alightArrival);
       return;
     }
 
@@ -231,5 +230,19 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
     int arrivalTime = from.arrivalTime() + via.durationInSeconds();
     var to = stopArrivalFactory.createTransferStopArrival(from, via.transfer(), arrivalTime);
     transfersCache.add(to);
+  }
+
+  private static void logUnexpectedStopPosition(
+    String event,
+    RaptorTripSchedule trip,
+    ArrivalView<?> boardStopArrival
+  ) {
+    LOG.warn(
+      "Unexpected {} stop position missing for trip {} at stop {} after {}.",
+      event,
+      trip.pattern().debugInfo(),
+      boardStopArrival.stop(),
+      TimeUtils.timeToStrLong(boardStopArrival.arrivalTime())
+    );
   }
 }
