@@ -37,7 +37,7 @@ public class TripTimesSearch<T extends RaptorTripSchedule> {
     ArrivalView<S> arrival
   ) {
     var transit = arrival.transitPath();
-    var search = new TripTimesSearch<>(transit.trip(), transit.boardStop(), arrival.stop());
+    var search = new TripTimesSearch<>(transit.trip(), transit.boardStopIndex(), arrival.stop());
     return search.findTripTimesBefore(arrival.arrivalTime());
   }
 
@@ -49,7 +49,7 @@ public class TripTimesSearch<T extends RaptorTripSchedule> {
     ArrivalView<S> arrival
   ) {
     var transit = arrival.transitPath();
-    var search = new TripTimesSearch<>(transit.trip(), arrival.stop(), transit.boardStop());
+    var search = new TripTimesSearch<>(transit.trip(), arrival.stop(), transit.boardStopIndex());
     return search.findTripTimesAfter(arrival.arrivalTime());
   }
 
@@ -64,7 +64,7 @@ public class TripTimesSearch<T extends RaptorTripSchedule> {
     S extends RaptorTripSchedule
   > BoardAndAlightTime findTripForwardSearchApproximateTime(ArrivalView<S> arrival) {
     var t = arrival.transitPath();
-    return findTripTimes(t.trip(), t.boardStop(), arrival.stop(), arrival.arrivalTime());
+    return findTripTimes(t.trip(), t.boardStopIndex(), arrival.stop(), arrival.arrivalTime());
   }
 
   /**
@@ -78,7 +78,7 @@ public class TripTimesSearch<T extends RaptorTripSchedule> {
     S extends RaptorTripSchedule
   > BoardAndAlightTime findTripReverseSearchApproximateTime(ArrivalView<S> arrival) {
     var t = arrival.transitPath();
-    return findTripTimes(t.trip(), arrival.stop(), t.boardStop(), arrival.arrivalTime());
+    return findTripTimes(t.trip(), arrival.stop(), t.boardStopIndex(), arrival.arrivalTime());
   }
 
   /**

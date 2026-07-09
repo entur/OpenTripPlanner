@@ -40,7 +40,7 @@ final class Transit<T extends RaptorTripSchedule>
 
   @Override
   public ArrivalView<T> previous() {
-    return cursor.stop(round() - 1, boardStop(), this);
+    return cursor.stop(round() - 1, boardStopIndex(), this);
   }
 
   @Override
@@ -54,8 +54,13 @@ final class Transit<T extends RaptorTripSchedule>
   }
 
   @Override
-  public int boardStop() {
-    return arrival.boardStop();
+  public int boardStopIndex() {
+    return arrival.trip().pattern().stopIndex(boardStopPosition());
+  }
+
+  @Override
+  public int boardStopPosition() {
+    return arrival.boardStopPosition();
   }
 
   @Override

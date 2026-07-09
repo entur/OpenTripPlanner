@@ -20,7 +20,7 @@ public final class ForwardPathMapper<T extends RaptorTripSchedule> implements Pa
   private final RaptorSlackProvider slackProvider;
   private final RaptorCostCalculator<T> costCalculator;
   private final RaptorStopNameResolver stopNameResolver;
-  private final BoardAndAlightTimeSearch tripSearch;
+  private final org.opentripplanner.raptor.rangeraptor.path.BoardAndAlightTimeSearch tripSearch;
   private final RaptorPathConstrainedTransferSearch<T> transferConstraintsSearch;
 
   private int iterationDepartureTime = -1;

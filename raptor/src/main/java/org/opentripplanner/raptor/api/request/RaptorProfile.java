@@ -1,7 +1,6 @@
 package org.opentripplanner.raptor.api.request;
 
 import java.util.stream.Stream;
-import org.opentripplanner.raptor.rangeraptor.standard.MinTravelDurationRoutingStrategy;
 
 /**
  * Several implementation are implemented - with different behaviour. Use the one that suites your

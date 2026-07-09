@@ -6,7 +6,12 @@ public interface TransitPathView<T extends RaptorTripSchedule> {
   /**
    * Stop index where the transit path was boarded.
    */
-  int boardStop();
+  int boardStopIndex();
+
+  /**
+   * Stop position in the pattern where the transit path was boarded.
+   */
+  int boardStopPosition();
 
   /**
    * Trip used for transit.

@@ -3,9 +3,10 @@ package org.opentripplanner.raptor.spi;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.raptor._data.RaptorTestConstants;
 import org.opentripplanner.raptor._data.transit.TestTripPattern;
 
-public class RaptorTripPatternTest {
+public class RaptorTripPatternTest implements RaptorTestConstants {
 
   private final TestTripPattern subject = TestTripPattern.pattern("L12", 1, 1, 2, 3, 5, 7, 8, 1);
 
