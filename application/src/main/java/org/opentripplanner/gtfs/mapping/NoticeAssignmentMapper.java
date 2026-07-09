@@ -2,7 +2,6 @@ package org.opentripplanner.gtfs.mapping;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -56,14 +55,12 @@ class NoticeAssignmentMapper {
       .collect(Collectors.toMap(Trip::getId, Function.identity()));
     var routes = routeMapper.mappedRoutes();
     for (var assignment : assignments) {
-      for (var entry : mapOne(assignment, notices, trips, routes)) {
-        result.put(entry.getKey(), entry.getValue());
-      }
+      map(assignment, notices, trips, routes).forEach(e -> result.put(e.getKey(), e.getValue()));
     }
     return result;
   }
 
-  private List<Map.Entry<AbstractTransitEntity, Notice>> mapOne(
+  private Iterable<Map.Entry<AbstractTransitEntity, Notice>> map(
     NoticeAssignment assignment,
     Map<FeedScopedId, Notice> notices,
     Map<FeedScopedId, Trip> trips,
@@ -86,7 +83,7 @@ class NoticeAssignmentMapper {
     List<AbstractTransitEntity> entities = switch (assignment.getTableName()) {
       case routes -> ListUtils.ofNullable(routes.get(recordId));
       case trips -> ListUtils.ofNullable(trips.get(recordId));
-      case trip_segments -> new ArrayList<>(tripSegmentMapper.getStopTimeKeys(recordId));
+      case trip_segments -> List.copyOf(tripSegmentMapper.getStopTimeKeys(recordId));
     };
 
     if (entities.isEmpty()) {
@@ -100,9 +97,10 @@ class NoticeAssignmentMapper {
       return List.of();
     }
 
-    return entities
-      .stream()
-      .map(entity -> Map.entry(entity, notice))
-      .toList();
+    return () ->
+      entities
+        .stream()
+        .map(entity -> Map.entry(entity, notice))
+        .iterator();
   }
 }

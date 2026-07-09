@@ -6,8 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import org.onebusaway.gtfs.model.TripSegment;
-import org.onebusaway.gtfs.services.GtfsRelationalDao;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.model.StopTime;
+import org.opentripplanner.model.TripStopTimes;
 import org.opentripplanner.transit.model.timetable.StopTimeKey;
 
 /**
@@ -27,11 +28,15 @@ class TripSegmentMapper {
     this.idFactory = idFactory;
   }
 
-  void map(Collection<TripSegment> segments, GtfsRelationalDao data) {
+  void map(Collection<TripSegment> segments, TripStopTimes stopTimesByTrip) {
+    var stopTimesByTripId = new HashMap<FeedScopedId, List<StopTime>>();
+    for (var trip : stopTimesByTrip.keys()) {
+      stopTimesByTripId.put(trip.getId(), stopTimesByTrip.get(trip));
+    }
     for (var segment : segments) {
       mappedTripSegments.put(
         idFactory.createId(segment.getId(), "trip_segment_id"),
-        mapStopTimeKeys(segment, data)
+        mapStopTimeKeys(segment, stopTimesByTripId)
       );
     }
   }
@@ -50,13 +55,12 @@ class TripSegmentMapper {
    * index in the (sequence-ordered) list of the trip's stop times, not the GTFS
    * {@code stop_sequence}, to match how {@link StopTimeKey}s are referenced elsewhere in OTP.
    */
-  private List<StopTimeKey> mapStopTimeKeys(TripSegment segment, GtfsRelationalDao data) {
-    var trip = data.getTripForId(segment.getTripId());
-    if (trip == null) {
-      return List.of();
-    }
+  private List<StopTimeKey> mapStopTimeKeys(
+    TripSegment segment,
+    Map<FeedScopedId, List<StopTime>> stopTimesByTripId
+  ) {
     var tripId = idFactory.createId(segment.getTripId(), "trip_id in trip segment");
-    var stopTimes = data.getStopTimesForTrip(trip);
+    var stopTimes = stopTimesByTripId.getOrDefault(tripId, List.of());
     var result = new ArrayList<StopTimeKey>();
     for (int i = 0; i < stopTimes.size(); i++) {
       var stopSequence = stopTimes.get(i).getStopSequence();

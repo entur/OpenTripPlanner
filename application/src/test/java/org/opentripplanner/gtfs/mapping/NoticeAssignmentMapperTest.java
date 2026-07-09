@@ -4,16 +4,20 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.onebusaway.gtfs.model.AgencyAndIdFactory.obaId;
 
+import com.google.common.collect.Multimap;
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.onebusaway.gtfs.impl.GtfsRelationalDaoImpl;
 import org.onebusaway.gtfs.model.NoticeAssignment;
-import org.onebusaway.gtfs.model.StopTime;
 import org.onebusaway.gtfs.model.TripSegment;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssue;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issue.service.DefaultDataImportIssueStore;
+import org.opentripplanner.model.StopTime;
+import org.opentripplanner.model.TripStopTimes;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model.basic.Notice;
+import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
 
 class NoticeAssignmentMapperTest {
 
@@ -137,8 +141,35 @@ class NoticeAssignmentMapperTest {
 
   @Test
   void mapNoticeAssignmentOnTripSegment() {
+    // Stop sequences 20, 30 and 40 are within the segment's [from, to] range; their list indices
+    // 1, 2 and 3 are used as the StopTimeKey sequence, not the GTFS stop_sequence.
+    var result = mapTripSegment(20, 40);
+
+    assertEquals(3, result.size());
+    assertThat(sortedStopTimeKeyIds(result)).containsExactly("T1_#1", "T1_#2", "T1_#3");
+  }
+
+  @Test
+  void mapNoticeAssignmentOnSingleStopTripSegment() {
+    // A segment with the same from and to stop sequence covers a single stop time (index 2).
+    var result = mapTripSegment(30, 30);
+
+    assertEquals(1, result.size());
+    assertThat(sortedStopTimeKeyIds(result)).containsExactly("T1_#2");
+  }
+
+  /**
+   * Maps a notice assignment onto a trip segment spanning the given
+   * {@code [fromStopSequence, toStopSequence]} range. The trip has non-contiguous stop sequences
+   * 10, 20, 30, 40, 50 at list indices 0, 1, 2, 3, 4.
+   */
+  private static Multimap<AbstractTransitEntity, Notice> mapTripSegment(
+    int fromStopSequence,
+    int toStopSequence
+  ) {
     var routeMapper = createRouteMapper();
     var tripMapper = createTripMapper(routeMapper);
+    var trip = tripMapper.map(DATA.trip);
 
     var noticeMapper = new NoticeMapper(ID_FACTORY);
     noticeMapper.map(GTFS_NOTICE);
@@ -146,24 +177,21 @@ class NoticeAssignmentMapperTest {
     var segment = new TripSegment();
     segment.setId(obaId("SEG1"));
     segment.setTripId(DATA.trip.getId());
-    segment.setFromStopSequence(20);
-    segment.setToStopSequence(40);
+    segment.setFromStopSequence(fromStopSequence);
+    segment.setToStopSequence(toStopSequence);
 
-    // Non-contiguous stop sequences: 10, 20, 30, 40, 50 at list indices 0, 1, 2, 3, 4
-    var dao = new GtfsRelationalDaoImpl();
-    dao.saveEntity(DATA.trip);
-    var stopSequences = new int[] { 10, 20, 30, 40, 50 };
-    for (int i = 0; i < stopSequences.length; i++) {
+    var stopTimes = new ArrayList<StopTime>();
+    for (int stopSequence : new int[] { 10, 20, 30, 40, 50 }) {
       var stopTime = new StopTime();
-      stopTime.setId(i + 1);
-      stopTime.setTrip(DATA.trip);
-      stopTime.setStop(DATA.stop);
-      stopTime.setStopSequence(stopSequences[i]);
-      dao.saveEntity(stopTime);
+      stopTime.setTrip(trip);
+      stopTime.setStopSequence(stopSequence);
+      stopTimes.add(stopTime);
     }
+    var stopTimesByTrip = new TripStopTimes();
+    stopTimesByTrip.addAll(stopTimes);
 
     var tripSegmentMapper = new TripSegmentMapper(ID_FACTORY);
-    tripSegmentMapper.map(List.of(segment), dao);
+    tripSegmentMapper.map(List.of(segment), stopTimesByTrip);
 
     var mapper = createMapper(
       DataImportIssueStore.NOOP,
@@ -178,18 +206,16 @@ class NoticeAssignmentMapperTest {
     assignment.setTableName(NoticeAssignment.TableName.trip_segments);
     assignment.setRecordId(obaId("SEG1"));
 
-    var result = mapper.map(List.of(assignment));
+    return mapper.map(List.of(assignment));
+  }
 
-    // Stop sequences 20, 30 and 40 are within the segment's [from, to] range; their list indices
-    // 1, 2 and 3 are used as the StopTimeKey sequence, not the GTFS stop_sequence.
-    assertEquals(3, result.size());
-    var stopTimeKeyIds = result
+  private static List<String> sortedStopTimeKeyIds(Multimap<AbstractTransitEntity, Notice> result) {
+    return result
       .keySet()
       .stream()
       .map(e -> e.getId().getId())
       .sorted()
       .toList();
-    assertThat(stopTimeKeyIds).containsExactly("T1_#1", "T1_#2", "T1_#3");
   }
 
   @Test
