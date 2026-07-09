@@ -13,7 +13,6 @@ import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.framework.transaction.RepositoryRegistry;
 import org.opentripplanner.framework.transaction.UpdateManager;
@@ -143,7 +142,6 @@ public class TransactionFrameworkTest {
   }
 
   @Test
-  @Disabled("This test is flaky because the periodic commit scheduler is not guaranteed to fire before the task completes.")
   public void testPeriodicCommits() throws ExecutionException, InterruptedException {
     setupUpdateManagerWithPeriodicCommits();
     assertState(SCOPE_TXN_1, PIPPI);
@@ -151,7 +149,6 @@ public class TransactionFrameworkTest {
     // Task completes before the periodic scheduler fires its first commit.
     var f = updateManager.submit(c -> publishUsingRepositories(c, TOMMY));
     f.get();
-    assertState(SCOPE_TXN_1, PIPPI);
     awaitState(SCOPE_TXN_2, PIPPI, TOMMY);
 
     f = updateManager.submit(c -> publishNewDomainEvent(c, ANNIKA));
