@@ -146,17 +146,19 @@ class NoticeAssignmentMapperTest {
     var segment = new TripSegment();
     segment.setId(obaId("SEG1"));
     segment.setTripId(DATA.trip.getId());
-    segment.setFromStopSequence(2);
-    segment.setToStopSequence(4);
+    segment.setFromStopSequence(20);
+    segment.setToStopSequence(40);
 
+    // Non-contiguous stop sequences: 10, 20, 30, 40, 50 at list indices 0, 1, 2, 3, 4
     var dao = new GtfsRelationalDaoImpl();
     dao.saveEntity(DATA.trip);
-    for (int seq = 1; seq <= 5; seq++) {
+    var stopSequences = new int[] { 10, 20, 30, 40, 50 };
+    for (int i = 0; i < stopSequences.length; i++) {
       var stopTime = new StopTime();
-      stopTime.setId(seq);
+      stopTime.setId(i + 1);
       stopTime.setTrip(DATA.trip);
       stopTime.setStop(DATA.stop);
-      stopTime.setStopSequence(seq);
+      stopTime.setStopSequence(stopSequences[i]);
       dao.saveEntity(stopTime);
     }
 
@@ -178,7 +180,8 @@ class NoticeAssignmentMapperTest {
 
     var result = mapper.map(List.of(assignment));
 
-    // Stop sequences 2, 3 and 4 are within the segment's [from, to] range
+    // Stop sequences 20, 30 and 40 are within the segment's [from, to] range; their list indices
+    // 1, 2 and 3 are used as the StopTimeKey sequence, not the GTFS stop_sequence.
     assertEquals(3, result.size());
     var stopTimeKeyIds = result
       .keySet()
@@ -186,7 +189,7 @@ class NoticeAssignmentMapperTest {
       .map(e -> e.getId().getId())
       .sorted()
       .toList();
-    assertThat(stopTimeKeyIds).containsExactly("T1_#2", "T1_#3", "T1_#4");
+    assertThat(stopTimeKeyIds).containsExactly("T1_#1", "T1_#2", "T1_#3");
   }
 
   @Test

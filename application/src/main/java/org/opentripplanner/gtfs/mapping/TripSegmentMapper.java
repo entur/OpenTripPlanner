@@ -1,5 +1,6 @@
 package org.opentripplanner.gtfs.mapping;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -45,7 +46,9 @@ class TripSegmentMapper {
 
   /**
    * Returns a {@link StopTimeKey} for each of the trip's stop times whose stop sequence lies within
-   * the segment's {@code [fromStopSequence, toStopSequence]} range.
+   * the segment's {@code [fromStopSequence, toStopSequence]} range. The key uses the stop time's
+   * index in the (sequence-ordered) list of the trip's stop times, not the GTFS
+   * {@code stop_sequence}, to match how {@link StopTimeKey}s are referenced elsewhere in OTP.
    */
   private List<StopTimeKey> mapStopTimeKeys(TripSegment segment, GtfsRelationalDao data) {
     var trip = data.getTripForId(segment.getTripId());
@@ -53,15 +56,16 @@ class TripSegmentMapper {
       return List.of();
     }
     var tripId = idFactory.createId(segment.getTripId(), "trip_id in trip segment");
-    return data
-      .getStopTimesForTrip(trip)
-      .stream()
-      .filter(
-        st ->
-          st.getStopSequence() >= segment.getFromStopSequence() &&
-          st.getStopSequence() <= segment.getToStopSequence()
-      )
-      .map(st -> StopTimeKey.of(tripId, st.getStopSequence()).build())
-      .toList();
+    var stopTimes = data.getStopTimesForTrip(trip);
+    var result = new ArrayList<StopTimeKey>();
+    for (int i = 0; i < stopTimes.size(); i++) {
+      var stopSequence = stopTimes.get(i).getStopSequence();
+      if (
+        stopSequence >= segment.getFromStopSequence() && stopSequence <= segment.getToStopSequence()
+      ) {
+        result.add(StopTimeKey.of(tripId, i).build());
+      }
+    }
+    return result;
   }
 }
