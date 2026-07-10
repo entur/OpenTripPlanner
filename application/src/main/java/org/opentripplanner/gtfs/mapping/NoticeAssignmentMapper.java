@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.onebusaway.gtfs.model.NoticeAssignment;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
@@ -60,7 +61,7 @@ class NoticeAssignmentMapper {
     return result;
   }
 
-  private Iterable<Map.Entry<AbstractTransitEntity, Notice>> map(
+  private Stream<Map.Entry<AbstractTransitEntity, Notice>> map(
     NoticeAssignment assignment,
     Map<FeedScopedId, Notice> notices,
     Map<FeedScopedId, Trip> trips,
@@ -75,7 +76,7 @@ class NoticeAssignmentMapper {
         "Notice in notice assignment is missing for assignment %s",
         assignment
       );
-      return List.of();
+      return Stream.of();
     }
 
     var recordId = idFactory.createId(assignment.getRecordId(), "NoticeAssignment.recordId");
@@ -94,13 +95,9 @@ class NoticeAssignmentMapper {
         assignment.getTableName(),
         assignment.getRecordId()
       );
-      return List.of();
+      return Stream.of();
     }
 
-    return () ->
-      entities
-        .stream()
-        .map(entity -> Map.entry(entity, notice))
-        .iterator();
+    return entities.stream().map(entity -> Map.entry(entity, notice));
   }
 }
