@@ -170,9 +170,9 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
     if (boardingStopPos == -1) {
       // In case of a constrained transfer, the boarding arrivalTime could be after the trip
       // departure time, which is valid. We use the first depature time of the boarded trip
-      // here to find a valid bearding. This is slightly incorrect and may fail to find the
-      // correct departure for circular lines. There is not a good simple fix for this. A Fix would
-      // need to look up the constrained transfers and apply the logic done by the routing lgorithm.
+      // here to find a valid boarding. This is slightly incorrect and may fail to find the
+      // correct departure for circular lines. There is not a good simple fix for this. A fix would
+      // need to look up the constrained transfers and apply the logic done by the routing algorithm.
       // This logic is fragmented, so a larger refactoring is needed.
       boardingStopPos = trip.findDepartureStopPosition(trip.departure(0), boardStopArrival.stop());
       if (boardingStopPos == -1) {
