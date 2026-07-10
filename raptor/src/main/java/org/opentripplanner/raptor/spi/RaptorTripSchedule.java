@@ -25,36 +25,12 @@ public interface RaptorTripSchedule {
   int arrival(int stopPosInPattern);
 
   /**
-   * Search for the arrival time for the given stopIndex. This is not optimized for performance.
-   *
-   * @param startStopPos the stop position in pattern to start the search (inclusive).
-   * @param stopIndex    the stop index to find the arrival time for.
-   * @return the arrival time in seconds at the given stop
-   * @throws IndexOutOfBoundsException if {@code stopIndex} is not found
-   */
-  default int arrival(int startStopPos, int stopIndex) {
-    return arrival(pattern().findStopPositionAfter(startStopPos, stopIndex));
-  }
-
-  /**
    * The departure time at the given stop position in pattern.
    *
    * @param stopPosInPattern the stop position.
    * @return the departure time in seconds at the given stop
    */
   int departure(int stopPosInPattern);
-
-  /**
-   * Search for the departure time for the given stopIndex. This is not optimized for performance.
-   *
-   * @param startStopPos the stop position in pattern to start the search (inclusive).
-   * @param stopIndex    the stop index to find the departure time for.
-   * @return the departure time in seconds at the given stop
-   * @throws IndexOutOfBoundsException if stopIndex is not found
-   */
-  default int departure(int startStopPos, int stopIndex) {
-    return departure(pattern().findStopPositionAfter(startStopPos, stopIndex));
-  }
 
   /// The relative-travel-duration is a proxy for time spent on transit from the boarding stop to
   /// the alight stop. We do not know the alight stop, so it is impossible to calculate the
