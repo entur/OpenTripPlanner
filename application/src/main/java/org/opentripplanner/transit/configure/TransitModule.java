@@ -33,20 +33,6 @@ public abstract class TransitModule {
     return config.routerConfig().updaterConfig().timetableSnapshotParameters();
   }
 
-  /**
-   * Provides the currently published, immutable timetable snapshot for injection points outside the
-   * HTTP request context (e.g. {@link org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleService}).
-   * For request-scoped access, {@link org.opentripplanner.standalone.configure.ConstructApplicationModule}
-   * uses a pinned {@link org.opentripplanner.framework.transaction.api.TransactionScope} instead.
-   */
-  @Provides
-  public static ReadOnlyTimetableSnapshot timetableSnapshot(
-    RepositoryRegistry repositoryRegistry,
-    RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableRepositoryHandle
-  ) {
-    return timetableRepositoryHandle.repositorySnapshot(repositoryRegistry.scope());
-  }
-
   @Provides
   @Singleton
   public static RepositoryHandle<
