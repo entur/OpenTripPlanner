@@ -1,5 +1,7 @@
 package org.opentripplanner.raptor.spi;
 
+import org.opentripplanner.utils.lang.IntUtils;
+
 /**
  * This interface represents a trip pattern. A trip-pattern in the raptor context is just a list of
  * stops visited by ALL trips in the pattern. The stops must be ordered in the same sequence, with
@@ -82,9 +84,50 @@ public interface RaptorTripPattern {
   }
 
   /**
+   * Return the first occurrence of the stop position for the given stop index after the given
+   * startPosition(exclusive) where alighting is possible.
+   * <p>
+   * {@code -1} is returned if not found.
+   *
+   * @param startPos  the stop position in the pattern to start the search (exclusive). Note! Only
+   *                  defined for range {@code [0..N]}  (N = number of stops in the pattern).
+   * @param alightStopIndex the stopIndex to find
+   */
+  default int findAlightStopPositionBefore(int startPos, int alightStopIndex) {
+    IntUtils.requireInRange(startPos, 0, numberOfStopsInPattern(), "startPos");
+    for (int i = startPos - 1; i > 0; --i) {
+      if (alightStopIndex == stopIndex(i) && alightingPossibleAt(i)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /**
+   * Return the first occurrence of the stop position for the given stop index after the given
+   * startPos(exclusive) where alighting is possible. Note that the returned value might not be the
+   * only occurrence if the pattern goes in a loop.
+   * <p>
+   * {@code -1} is returned if not found.
+   *
+   * @param startPos  the stop position in the pattern to start the search (exclusive). Note! Only
+   *                  defined for range {@code [0..N-1]} (N = number of stops in the pattern).
+   * @param alightStopIndex the stopIndex to find
+   */
+  default int findAlightStopPositionAfter(int startPos, int alightStopIndex) {
+    IntUtils.requireInRange(startPos, 0, numberOfStopsInPattern() - 1, "startPos");
+    for (int i = startPos + 1; i < numberOfStopsInPattern(); ++i) {
+      if (alightStopIndex == stopIndex(i) && alightingPossibleAt(i)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /**
    * Return the first occurrence of the stop position for the given stop index before the given
-   * stopPosition. Note that the returned value might not be the only occurrence if the pattern
-   * goes in a loop.
+   * startPos(inclusive). Note that the returned value might not be the only occurrence if the
+   * pattern goes in a loop.
    * <p>
    * {@code -1} is returned if not found.
    *
@@ -94,6 +137,48 @@ public interface RaptorTripPattern {
   default int findStopPositionBefore(int startPos, int stopIndex) {
     for (int i = startPos; i >= 0; i--) {
       if (stopIndex == stopIndex(i)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /**
+   * Return the first occurrence of the stop position for the given stop index before the given
+   * startPos(exclusive). Note that the returned value might not be the only occurrence if the
+   * pattern goes in a loop.
+   * <p>
+   * {@code -1} is returned if not found.
+   *
+   * @param startPos  the stop position in the pattern to start the search (exclusive). Note! Only
+   *                  defined for range {@code [0..N-1]} (N = number of stops in the pattern).
+   * @param boardStopIndex the stopIndex to find
+   */
+  default int findBoardStopPositionBefore(int startPos, int boardStopIndex) {
+    IntUtils.requireInRange(startPos, 0, numberOfStopsInPattern() - 1, "startPos");
+    for (int i = startPos - 1; i >= 0; --i) {
+      if (boardStopIndex == stopIndex(i) && boardingPossibleAt(i)) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  /**
+   * Return the first occurrence of the stop position for the given stop index at or after the
+   * given startPos(inclusive). Note that the returned value might not be the only occurrence if
+   * the pattern goes in a loop.
+   * <p>
+   * {@code -1} is returned if not found.
+   *
+   * @param startPos the stop position in the pattern to start the search (inclusive). Note! Only
+   *    *            defined for range {@code [0..N-1]} (N = number of stops in the pattern).
+   * @param boardStopIndex the stopIndex to find
+   */
+  default int findBoardStopPositionAfter(int startPos, int boardStopIndex) {
+    IntUtils.requireInRange(startPos, 0, numberOfStopsInPattern() - 1, "startPos");
+    for (int i = startPos; i < numberOfStopsInPattern() - 1; ++i) {
+      if (boardStopIndex == stopIndex(i) && boardingPossibleAt(i)) {
         return i;
       }
     }
