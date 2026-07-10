@@ -37,57 +37,6 @@ class NoticeAssignmentMapperTest {
     GTFS_NOTICE.setDisplayText(NOTICE_TEXT);
   }
 
-  private static RouteMapper createRouteMapper() {
-    return new RouteMapper(
-      ID_FACTORY,
-      new AgencyMapper(ID_FACTORY),
-      new RouteNetworkAssignmentMapper(ID_FACTORY),
-      DataImportIssueStore.NOOP,
-      new TranslationHelper()
-    );
-  }
-
-  private static TripMapper createTripMapper(RouteMapper routeMapper) {
-    return new TripMapper(
-      ID_FACTORY,
-      routeMapper,
-      new DirectionMapper(DataImportIssueStore.NOOP),
-      new TranslationHelper()
-    );
-  }
-
-  private static NoticeAssignmentMapper createMapper(
-    DataImportIssueStore issueStore,
-    NoticeMapper noticeMapper,
-    TripMapper tripMapper,
-    RouteMapper routeMapper,
-    TripSegmentMapper tripSegmentMapper
-  ) {
-    return new NoticeAssignmentMapper(
-      ID_FACTORY,
-      issueStore,
-      noticeMapper,
-      tripMapper,
-      routeMapper,
-      tripSegmentMapper
-    );
-  }
-
-  private static NoticeAssignmentMapper createMapper(
-    DataImportIssueStore issueStore,
-    NoticeMapper noticeMapper,
-    TripMapper tripMapper,
-    RouteMapper routeMapper
-  ) {
-    return createMapper(
-      issueStore,
-      noticeMapper,
-      tripMapper,
-      routeMapper,
-      new TripSegmentMapper(ID_FACTORY)
-    );
-  }
-
   @Test
   void mapNoticeAssignmentOnRoute() {
     var routeMapper = createRouteMapper();
@@ -311,5 +260,56 @@ class NoticeAssignmentMapperTest {
     assertEquals(2, result.size());
     assertEquals(1, result.get(route).size());
     assertEquals(1, result.get(trip).size());
+  }
+
+  private static RouteMapper createRouteMapper() {
+    return new RouteMapper(
+      ID_FACTORY,
+      new AgencyMapper(ID_FACTORY),
+      new RouteNetworkAssignmentMapper(ID_FACTORY),
+      DataImportIssueStore.NOOP,
+      new TranslationHelper()
+    );
+  }
+
+  private static TripMapper createTripMapper(RouteMapper routeMapper) {
+    return new TripMapper(
+      ID_FACTORY,
+      routeMapper,
+      new DirectionMapper(DataImportIssueStore.NOOP),
+      new TranslationHelper()
+    );
+  }
+
+  private static NoticeAssignmentMapper createMapper(
+    DataImportIssueStore issueStore,
+    NoticeMapper noticeMapper,
+    TripMapper tripMapper,
+    RouteMapper routeMapper,
+    TripSegmentMapper tripSegmentMapper
+  ) {
+    return new NoticeAssignmentMapper(
+      ID_FACTORY,
+      issueStore,
+      noticeMapper,
+      tripMapper,
+      routeMapper,
+      tripSegmentMapper
+    );
+  }
+
+  private static NoticeAssignmentMapper createMapper(
+    DataImportIssueStore issueStore,
+    NoticeMapper noticeMapper,
+    TripMapper tripMapper,
+    RouteMapper routeMapper
+  ) {
+    return createMapper(
+      issueStore,
+      noticeMapper,
+      tripMapper,
+      routeMapper,
+      new TripSegmentMapper(ID_FACTORY)
+    );
   }
 }
