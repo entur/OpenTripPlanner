@@ -28,7 +28,7 @@ sealed class DefaultStopArrivalState<T extends RaptorTripSchedule>
   permits EgressStopArrivalState {
 
   /**
-   * Used to initialize all none time based attributes.
+   * Used to initialize all none-time-based attributes.
    */
   static final int NOT_SET = -1;
 
@@ -110,8 +110,8 @@ sealed class DefaultStopArrivalState<T extends RaptorTripSchedule>
   @Override
   public void arriveByTransit(int arrivalTime, int boardStopPosition, T trip) {
     this.onBoardArrivalTime = arrivalTime;
-    this.trip = trip;
     this.boardStopPosition = boardStopPosition;
+    this.trip = trip;
   }
 
   @Override

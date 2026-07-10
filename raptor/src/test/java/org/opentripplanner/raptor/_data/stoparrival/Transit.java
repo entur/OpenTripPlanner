@@ -38,11 +38,6 @@ class Transit extends AbstractStopArrival implements TransitPathView<TestTripSch
   }
 
   @Override
-  public int boardStopIndex() {
-    return previous().stop();
-  }
-
-  @Override
   public int boardStopPosition() {
     return boardStopPosition;
   }

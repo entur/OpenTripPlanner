@@ -54,11 +54,6 @@ final class Transit<T extends RaptorTripSchedule>
   }
 
   @Override
-  public int boardStopIndex() {
-    return arrival.trip().pattern().stopIndex(boardStopPosition());
-  }
-
-  @Override
   public int boardStopPosition() {
     return arrival.boardStopPosition();
   }
@@ -75,5 +70,9 @@ final class Transit<T extends RaptorTripSchedule>
   @Override
   public boolean arrivedOnBoard() {
     return true;
+  }
+
+  private int boardStopIndex() {
+    return arrival.trip().pattern().stopIndex(boardStopPosition());
   }
 }

@@ -68,8 +68,8 @@ class TransitStopArrivalC2Test {
   }
 
   @Test
-  public void boardStop() {
-    assertEquals(ACCESS_TO_STOP, subject.boardStopIndex());
+  public void boardStopPosition() {
+    assertEquals(0, subject.boardStopPosition());
   }
 
   @Test

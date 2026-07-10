@@ -32,11 +32,6 @@ final class TransitStopArrivalC2<T extends RaptorTripSchedule>
   }
 
   @Override
-  public int boardStopIndex() {
-    return trip.pattern().stopIndex(boardStopPosition);
-  }
-
-  @Override
   public int boardStopPosition() {
     return boardStopPosition;
   }
