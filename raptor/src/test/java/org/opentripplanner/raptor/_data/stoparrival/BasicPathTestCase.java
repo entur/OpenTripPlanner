@@ -294,8 +294,8 @@ public class BasicPathTestCase implements RaptorTestConstants {
       TRIP_3,
       L31_START,
       L31_END,
-      TRIP_3.findDepartureStopPosition(L31_START, STOP_D),
-      TRIP_3.findArrivalStopPosition(L31_END, STOP_E),
+      STOP_POS_0,
+      STOP_POS_1,
       EMPTY_CONSTRAINTS,
       LINE_31_C1,
       leg6
@@ -304,8 +304,8 @@ public class BasicPathTestCase implements RaptorTestConstants {
       TRIP_2,
       L21_START,
       L21_END,
-      TRIP_2.findDepartureStopPosition(L21_START, STOP_C),
-      TRIP_2.findArrivalStopPosition(L21_END, STOP_D),
+      STOP_POS_0,
+      STOP_POS_1,
       EMPTY_CONSTRAINTS,
       LINE_21_C1,
       leg5
@@ -323,8 +323,8 @@ public class BasicPathTestCase implements RaptorTestConstants {
       TRIP_1,
       L11_START,
       L11_END,
-      TRIP_1.findDepartureStopPosition(L11_START, STOP_A),
-      TRIP_1.findArrivalStopPosition(L11_END, STOP_B),
+      STOP_POS_0,
+      STOP_POS_1,
       EMPTY_CONSTRAINTS,
       LINE_11_C1,
       leg3

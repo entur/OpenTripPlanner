@@ -85,7 +85,7 @@ public class TestPathBuilder implements RaptorTestConstants {
     int boardStop = currentStop();
     // We use the last leg arrival-time as the earliest-board-time; this may cause problems for
     // testing circular routes. Create a new factory method if this happens.
-    int boardStopPosition = trip.findDepartureStopPosition(0, currentArrivalTime(), boardStop);
+    int boardStopPosition = trip.findDepartureStopPosition(currentArrivalTime(), boardStop);
     int alighttStopPosition = trip.pattern().findStopPositionAfter(boardStopPosition, alightStop);
     var baTime = new BoardAndAlightTime(trip, boardStopPosition, alighttStopPosition);
     builder.transit(trip, baTime);
