@@ -3,6 +3,7 @@ package org.opentripplanner.raptor._data.stoparrival;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.raptor._data.stoparrival.TestArrivals.access;
 import static org.opentripplanner.raptor._data.stoparrival.TestArrivals.bus;
+import static org.opentripplanner.raptor._data.stoparrival.TestArrivals.busReverseSearch;
 import static org.opentripplanner.raptor._data.stoparrival.TestArrivals.egress;
 import static org.opentripplanner.raptor._data.stoparrival.TestArrivals.transfer;
 import static org.opentripplanner.raptor._data.transit.TestTripPattern.pattern;
@@ -240,10 +241,34 @@ public class BasicPathTestCase implements RaptorTestConstants {
     ArrivalView<TestTripSchedule> nextArrival, egress;
     nextArrival = access(STOP_E, EGRESS_END, EGRESS_START, EGRESS_C1, EGRESS_C2);
     // Board slack is subtracted from the arrival time to get the latest possible
-    nextArrival = bus(1, STOP_D, L31_START, LINE_31_C1, LINE_31_C2, TRIP_3, nextArrival);
-    nextArrival = bus(2, STOP_C, L21_START, LINE_21_C1, LINE_21_C2, TRIP_2, nextArrival);
+    nextArrival = busReverseSearch(
+      1,
+      STOP_D,
+      L31_START,
+      LINE_31_C1,
+      LINE_31_C2,
+      TRIP_3,
+      nextArrival
+    );
+    nextArrival = busReverseSearch(
+      2,
+      STOP_C,
+      L21_START,
+      LINE_21_C1,
+      LINE_21_C2,
+      TRIP_2,
+      nextArrival
+    );
     nextArrival = transfer(2, STOP_B, TX_END, TX_START, TX_C1, nextArrival);
-    nextArrival = bus(3, STOP_A, L11_START, LINE_11_C1, LINE_11_C2, TRIP_1, nextArrival);
+    nextArrival = busReverseSearch(
+      3,
+      STOP_A,
+      L11_START,
+      LINE_11_C1,
+      LINE_11_C2,
+      TRIP_1,
+      nextArrival
+    );
     egress = egress(ACCESS_END, ACCESS_START, ACCESS_C1, ACCESS_C2, nextArrival);
     return new DestinationArrival<>(
       egress.egressPath().egress(),

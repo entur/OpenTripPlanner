@@ -36,7 +36,7 @@ public final class ForwardPathMapper<T extends RaptorTripSchedule> implements Pa
     this.slackProvider = slackProvider;
     this.costCalculator = costCalculator;
     this.stopNameResolver = stopNameResolver;
-    this.tripSearch = forwardSearch(useApproximateTripTimesSearch);
+    this.tripSearch = TripTimesSearch::findTripForwardSearch;
     this.transferConstraintsSearch = transferConstraintsSearch;
     lifeCycle.onSetupIteration(this::setRangeRaptorIterationDepartureTime);
   }
@@ -72,12 +72,6 @@ public final class ForwardPathMapper<T extends RaptorTripSchedule> implements Pa
     pathBuilder.c2(destinationArrival.c2());
 
     return pathBuilder.build();
-  }
-
-  private static BoardAndAlightTimeSearch forwardSearch(boolean useApproximateTimeSearch) {
-    return useApproximateTimeSearch
-      ? TripTimesSearch::findTripForwardSearchApproximateTime
-      : TripTimesSearch::findTripForwardSearch;
   }
 
   private void setRangeRaptorIterationDepartureTime(int iterationDepartureTime) {

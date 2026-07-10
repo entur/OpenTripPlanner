@@ -40,7 +40,7 @@ public final class ReversePathMapper<T extends RaptorTripSchedule> implements Pa
     this.costCalculator = costCalculator;
     this.stopNameResolver = stopNameResolver;
     this.transferConstraintsSearch = transferConstraintsSearch;
-    this.tripSearch = tripTimesSearch(useApproximateTripTimesSearch);
+    this.tripSearch = TripTimesSearch::findTripReverseSearch;
   }
 
   @Override
@@ -77,11 +77,5 @@ public final class ReversePathMapper<T extends RaptorTripSchedule> implements Pa
       }
       arrival = arrival.previous();
     }
-  }
-
-  private static BoardAndAlightTimeSearch tripTimesSearch(boolean useApproximateTimeSearch) {
-    return useApproximateTimeSearch
-      ? TripTimesSearch::findTripReverseSearchApproximateTime
-      : TripTimesSearch::findTripReverseSearch;
   }
 }
