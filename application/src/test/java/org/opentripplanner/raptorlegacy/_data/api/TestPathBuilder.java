@@ -97,7 +97,9 @@ public class TestPathBuilder implements RaptorTestConstants {
     // testing routes visiting the same stop more than once. Create a new factory
     // method if this happens.
     int boardStopPosition = trip.findDepartureStopPosition(startTime, boardStop);
-    int alightStopPosition = trip.pattern().findStopPositionAfter(boardStopPosition, alightStop);
+    int alightStopPosition = trip
+      .pattern()
+      .findAlightStopPositionAfter(boardStopPosition, alightStop);
     var baTime = new BoardAndAlightTime(trip, boardStopPosition, alightStopPosition);
     builder.transit(trip, baTime);
     return this;
