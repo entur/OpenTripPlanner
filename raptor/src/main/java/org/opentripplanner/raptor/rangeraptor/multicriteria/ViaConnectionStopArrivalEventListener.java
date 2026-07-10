@@ -235,14 +235,14 @@ public final class ViaConnectionStopArrivalEventListener<T extends RaptorTripSch
   private static void logUnexpectedStopPosition(
     String event,
     RaptorTripSchedule trip,
-    ArrivalView<?> boardStopArrival
+    ArrivalView<?> stopArrival
   ) {
     LOG.warn(
       "Unexpected {} stop position missing for trip {} at stop {} after {}.",
       event,
       trip.pattern().debugInfo(),
-      boardStopArrival.stop(),
-      TimeUtils.timeToStrLong(boardStopArrival.arrivalTime())
+      stopArrival.stop(),
+      TimeUtils.timeToStrLong(stopArrival.arrivalTime())
     );
   }
 }
