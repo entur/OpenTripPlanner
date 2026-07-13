@@ -1,5 +1,6 @@
 package org.opentripplanner.updater.trip.siri;
 
+import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.DefaultTransitService;
@@ -28,12 +29,17 @@ public class SiriRealTimeTripUpdateAdapter {
   private final DeduplicatorService deduplicator;
   private final TimetableRepository timetableRepository;
 
+  @Nullable
+  private final SiriFuzzyTripMatcherCache siriFuzzyTripMatcherCache;
+
   public SiriRealTimeTripUpdateAdapter(
     TimetableRepository timetableRepository,
-    DeduplicatorService deduplicator
+    DeduplicatorService deduplicator,
+    @Nullable SiriFuzzyTripMatcherCache siriFuzzyTripMatcherCache
   ) {
     this.deduplicator = deduplicator;
     this.timetableRepository = timetableRepository;
+    this.siriFuzzyTripMatcherCache = siriFuzzyTripMatcherCache;
     this.tripPatternCache = new TripPatternCache(tripPatternIdGenerator);
   }
 
@@ -43,9 +49,14 @@ public class SiriRealTimeTripUpdateAdapter {
    * buffer, so all pattern and trip lookups within the task see in-progress real-time additions.
    */
   public SiriRealTimeUpdateHandler forUpdate(MutableTimetableSnapshot buffer) {
+    var transitService = new DefaultTransitService(timetableRepository, buffer);
+    var fuzzyTripMatcher = siriFuzzyTripMatcherCache != null
+      ? new SiriFuzzyTripMatcher(siriFuzzyTripMatcherCache, transitService)
+      : null;
     return new SiriRealTimeUpdateHandler(
-      new DefaultTransitService(timetableRepository, buffer),
+      transitService,
       buffer,
+      fuzzyTripMatcher,
       tripPatternCache,
       deduplicator,
       tripPatternIdGenerator

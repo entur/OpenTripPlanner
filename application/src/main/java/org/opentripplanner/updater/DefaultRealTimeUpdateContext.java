@@ -7,14 +7,12 @@ import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealtimeFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.siri.EntityResolver;
-import org.opentripplanner.updater.trip.siri.SiriFuzzyTripMatcher;
 
 public class DefaultRealTimeUpdateContext implements RealTimeUpdateContext {
 
   private final Graph graph;
   private final MutableTimetableSnapshot timetableSnapshotBuffer;
   private final TransitService transitService;
-  private SiriFuzzyTripMatcher siriFuzzyTripMatcher;
 
   /**
    * The context needs the mutable snapshot so that entity lookups (trips, routes, patterns) see
@@ -62,14 +60,6 @@ public class DefaultRealTimeUpdateContext implements RealTimeUpdateContext {
   @Override
   public TransitService transitService() {
     return transitService;
-  }
-
-  @Override
-  public synchronized SiriFuzzyTripMatcher siriFuzzyTripMatcher() {
-    if (siriFuzzyTripMatcher == null) {
-      siriFuzzyTripMatcher = new SiriFuzzyTripMatcher(transitService);
-    }
-    return siriFuzzyTripMatcher;
   }
 
   @Override
