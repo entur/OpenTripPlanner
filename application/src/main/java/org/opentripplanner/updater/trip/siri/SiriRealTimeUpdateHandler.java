@@ -45,6 +45,10 @@ public class SiriRealTimeUpdateHandler {
 
   private final TransitEditorService transitEditorService;
   private final MutableTimetableSnapshot buffer;
+
+  @Nullable
+  private final SiriFuzzyTripMatcher fuzzyTripMatcher;
+
   private final TripPatternCache tripPatternCache;
   private final DeduplicatorService deduplicator;
   private final TripPatternIdGenerator tripPatternIdGenerator;
@@ -52,12 +56,14 @@ public class SiriRealTimeUpdateHandler {
   SiriRealTimeUpdateHandler(
     TransitEditorService transitEditorService,
     MutableTimetableSnapshot buffer,
+    @Nullable SiriFuzzyTripMatcher fuzzyTripMatcher,
     TripPatternCache tripPatternCache,
     DeduplicatorService deduplicator,
     TripPatternIdGenerator tripPatternIdGenerator
   ) {
     this.transitEditorService = transitEditorService;
     this.buffer = buffer;
+    this.fuzzyTripMatcher = fuzzyTripMatcher;
     this.tripPatternCache = tripPatternCache;
     this.deduplicator = deduplicator;
     this.tripPatternIdGenerator = tripPatternIdGenerator;
@@ -72,7 +78,6 @@ public class SiriRealTimeUpdateHandler {
    * @param updates    SIRI EstimatedTimetable deliveries that should be applied atomically.
    */
   public UpdateResult applyEstimatedTimetable(
-    @Nullable SiriFuzzyTripMatcher fuzzyTripMatcher,
     EntityResolver entityResolver,
     String feedId,
     UpdateIncrementality incrementality,
@@ -97,7 +102,7 @@ public class SiriRealTimeUpdateHandler {
         LOG.debug("Handling {} EstimatedVehicleJourneys.", journeys.size());
         for (EstimatedVehicleJourney journey : journeys) {
           try {
-            successes.add(apply(journey, transitEditorService, fuzzyTripMatcher, entityResolver));
+            successes.add(apply(journey, transitEditorService, entityResolver));
           } catch (UpdateException e) {
             errors.add(
               e
@@ -117,7 +122,6 @@ public class SiriRealTimeUpdateHandler {
   private UpdateSuccess apply(
     EstimatedVehicleJourney journey,
     TransitEditorService transitService,
-    @Nullable SiriFuzzyTripMatcher fuzzyTripMatcher,
     EntityResolver entityResolver
   ) throws UpdateException {
     var journeyWrapper = EstimatedVehicleJourneyWrapper.of(journey);

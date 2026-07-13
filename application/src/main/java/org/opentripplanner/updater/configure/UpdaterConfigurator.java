@@ -3,6 +3,7 @@ package org.opentripplanner.updater.configure;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.updater.SiriETCarpoolingUpdater;
@@ -30,6 +31,7 @@ import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdater;
 import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdater;
+import org.opentripplanner.updater.trip.siri.SiriFuzzyTripMatcherCache;
 import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.updater.google.SiriETGooglePubsubUpdater;
 import org.opentripplanner.updater.vehicle_parking.AvailabilityDataSourceFactory;
@@ -63,6 +65,9 @@ public class UpdaterConfigurator {
     ReadOnlyTimetableSnapshot,
     MutableTimetableSnapshot
   > timetableRepositoryHandle;
+
+  @Nullable
+  private SiriFuzzyTripMatcherCache siriFuzzyTripMatcherCache;
 
   private UpdaterConfigurator(
     Graph graph,
@@ -211,22 +216,49 @@ public class UpdaterConfigurator {
       updaters.add(new PollingVehiclePositionUpdater(configItem, realtimeVehicleRepository));
     }
     for (var configItem : updatersParameters.getSiriETUpdaterParameters()) {
-      updaters.add(SiriUpdaterModule.createSiriETUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        SiriUpdaterModule.createSiriETUpdater(
+          configItem,
+          provideSiriAdapter(configItem.fuzzyTripMatching())
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriETCarpoolingUpdaterParameters()) {
       updaters.add(new SiriETCarpoolingUpdater(configItem, carpoolingRepository));
     }
     for (var configItem : updatersParameters.getSiriETLiteUpdaterParameters()) {
-      updaters.add(SiriUpdaterModule.createSiriETUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        SiriUpdaterModule.createSiriETUpdater(
+          configItem,
+          provideSiriAdapter(configItem.fuzzyTripMatching())
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriETGooglePubsubUpdaterParameters()) {
-      updaters.add(new SiriETGooglePubsubUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        new SiriETGooglePubsubUpdater(
+          configItem,
+          provideSiriAdapter(configItem.fuzzyTripMatching())
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriSXUpdaterParameters()) {
-      updaters.add(SiriUpdaterModule.createSiriSXUpdater(configItem, timetableRepository));
+      updaters.add(
+        SiriUpdaterModule.createSiriSXUpdater(
+          configItem,
+          timetableRepository,
+          siriFuzzyTripMatcherCache()
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriSXLiteUpdaterParameters()) {
-      updaters.add(SiriUpdaterModule.createSiriSXUpdater(configItem, timetableRepository));
+      updaters.add(
+        SiriUpdaterModule.createSiriSXUpdater(
+          configItem,
+          timetableRepository,
+          siriFuzzyTripMatcherCache()
+        )
+      );
     }
     for (var configItem : updatersParameters.getMqttGtfsRealtimeUpdaterParameters()) {
       updaters.add(new MqttGtfsRealtimeUpdater(configItem, provideGtfsAdapter()));
@@ -249,20 +281,41 @@ public class UpdaterConfigurator {
       }
     }
     for (var configItem : updatersParameters.getSiriAzureETUpdaterParameters()) {
-      updaters.add(SiriAzureUpdater.createETUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        SiriAzureUpdater.createETUpdater(
+          configItem,
+          provideSiriAdapter(configItem.isFuzzyTripMatching())
+        )
+      );
     }
     for (var configItem : updatersParameters.getSiriAzureSXUpdaterParameters()) {
-      updaters.add(SiriAzureUpdater.createSXUpdater(configItem, timetableRepository));
+      updaters.add(
+        SiriAzureUpdater.createSXUpdater(
+          configItem,
+          timetableRepository,
+          siriFuzzyTripMatcherCache()
+        )
+      );
     }
     for (var configItem : updatersParameters.getMqttSiriETUpdaterParameters()) {
-      updaters.add(new SiriETMqttUpdater(configItem, provideSiriAdapter()));
+      updaters.add(
+        new SiriETMqttUpdater(configItem, provideSiriAdapter(configItem.fuzzyTripMatching()))
+      );
     }
 
     return updaters;
   }
 
-  private SiriRealTimeTripUpdateAdapter provideSiriAdapter() {
-    return new SiriRealTimeTripUpdateAdapter(timetableRepository, deduplicator);
+  private SiriRealTimeTripUpdateAdapter provideSiriAdapter(boolean fuzzyTripMatching) {
+    var cache = fuzzyTripMatching ? siriFuzzyTripMatcherCache() : null;
+    return new SiriRealTimeTripUpdateAdapter(timetableRepository, deduplicator, cache);
+  }
+
+  private SiriFuzzyTripMatcherCache siriFuzzyTripMatcherCache() {
+    if (siriFuzzyTripMatcherCache == null) {
+      siriFuzzyTripMatcherCache = new SiriFuzzyTripMatcherCache(timetableRepository);
+    }
+    return siriFuzzyTripMatcherCache;
   }
 
   private GtfsRealTimeTripUpdateAdapter provideGtfsAdapter() {

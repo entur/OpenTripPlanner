@@ -14,12 +14,17 @@ public class SiriTestHelper {
 
   private final TransitTestEnvironment transitTestEnvironment;
   private final SiriRealTimeTripUpdateAdapter siriAdapter;
+  private final SiriRealTimeTripUpdateAdapter siriAdapterWithFuzzyMatching;
 
   SiriTestHelper(TransitTestEnvironment transitTestEnvironment) {
     this.transitTestEnvironment = transitTestEnvironment;
-    this.siriAdapter = new SiriRealTimeTripUpdateAdapter(
-      transitTestEnvironment.timetableRepository(),
-      DeduplicatorService.NOOP
+    var repo = transitTestEnvironment.timetableRepository();
+    this.siriAdapter = new SiriRealTimeTripUpdateAdapter(repo, DeduplicatorService.NOOP, null);
+    var cache = new SiriFuzzyTripMatcherCache(repo);
+    this.siriAdapterWithFuzzyMatching = new SiriRealTimeTripUpdateAdapter(
+      repo,
+      DeduplicatorService.NOOP,
+      cache
     );
   }
 
@@ -50,19 +55,21 @@ public class SiriTestHelper {
     boolean fuzzyMatching
   ) {
     var resultRef = new AtomicReference<UpdateResult>();
+    var adapter = fuzzyMatching ? siriAdapterWithFuzzyMatching : siriAdapter;
     try {
       transitTestEnvironment
         .updateManager()
         .submit(ctx -> {
           var buffer = ctx.repository(transitTestEnvironment.timetableHandle());
-          var timetableRepository = transitTestEnvironment.timetableRepository();
           var feedId = transitTestEnvironment.feedId();
-          var transitService = new DefaultTransitService(timetableRepository, buffer);
+          var transitService = new DefaultTransitService(
+            transitTestEnvironment.timetableRepository(),
+            buffer
+          );
           resultRef.set(
-            siriAdapter
+            adapter
               .forUpdate(buffer)
               .applyEstimatedTimetable(
-                fuzzyMatching ? new SiriFuzzyTripMatcher(transitService) : null,
                 new EntityResolver(transitService, feedId),
                 feedId,
                 DIFFERENTIAL,
