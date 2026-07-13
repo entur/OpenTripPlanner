@@ -156,6 +156,20 @@ class EstimatedVehicleJourneyWrapperTest {
     assertEquals("VEHICLE:1", EstimatedVehicleJourneyWrapper.of(journey).internalPlanningCode());
   }
 
+  @Test
+  void vehicleRef() {
+    var journey = builder().withVehicleRef("VEHICLE:1").buildEstimatedVehicleJourney();
+
+    assertEquals("VEHICLE:1", EstimatedVehicleJourneyWrapper.of(journey).vehicleRef());
+  }
+
+  @Test
+  void vehicleRefIsNullWhenAbsent() {
+    var journey = builder().buildEstimatedVehicleJourney();
+
+    assertNull(EstimatedVehicleJourneyWrapper.of(journey).vehicleRef());
+  }
+
   /* Replaced trips */
 
   @Test

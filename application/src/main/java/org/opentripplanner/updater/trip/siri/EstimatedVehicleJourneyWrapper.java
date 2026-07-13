@@ -128,6 +128,14 @@ final class EstimatedVehicleJourneyWrapper {
     return journey.getVehicleRef() != null ? journey.getVehicleRef().getValue() : null;
   }
 
+  /**
+   * The reference to the vehicle operating this journey.
+   */
+  @Nullable
+  String vehicleRef() {
+    return journey.getVehicleRef() != null ? journey.getVehicleRef().getValue() : null;
+  }
+
   /* Replaced trips */
 
   /**
