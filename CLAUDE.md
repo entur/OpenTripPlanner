@@ -1,10 +1,13 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this
+repository.
 
 ## Project Overview
 
-OpenTripPlanner (OTP) is an open source multi-modal trip planner focusing on travel by scheduled public transportation combined with bicycling, walking, and mobility services. This is OTP2 (dev-2.x branch), the second major version under active development.
+OpenTripPlanner (OTP) is an open source multi-modal trip planner focusing on travel by scheduled
+public transportation combined with bicycling, walking, and mobility services. This is OTP2 (dev-2.x
+branch), the second major version under active development.
 
 **Tech Stack:** Java 25, Maven, GraphQL API, GTFS/NeTEx transit data, OpenStreetMap
 
@@ -101,6 +104,7 @@ OTP is a multi-module Maven project:
 ### Key Components
 
 **Transit Routing (Raptor)**
+
 - Location: `raptor/src/main/java/org/opentripplanner/raptor/`
 - The core transit routing algorithm, based on the Raptor paper (Microsoft 2012)
 - Implements Range Raptor with multi-criteria pareto-optimal search
@@ -110,23 +114,27 @@ OTP is a multi-module Maven project:
 - `RoutingService` maps between OTP domain and Raptor's `RaptorRequest`/`RaptorPath`
 
 **Graph Building**
+
 - GTFS import: `application/src/main/java/org/opentripplanner/gtfs/`
 - NeTEx import: `application/src/main/java/org/opentripplanner/netex/`
 - OSM processing: `application/src/main/java/org/opentripplanner/osm/`
 - Graph builder: `application/src/main/java/org/opentripplanner/graph_builder/`
 
 **Routing Components**
+
 - Routing algorithm: `application/src/main/java/org/opentripplanner/routing/algorithm/`
 - Transfer optimization: `routing/algorithm/transferoptimization/`
 - Itinerary filter chain: `routing/algorithm/filterchain/`
-- Street routing (A*): `application/src/main/java/org/opentripplanner/astar/`
+- Street routing (A\*): `application/src/main/java/org/opentripplanner/astar/`
 
 **APIs**
+
 - GraphQL API: `application/src/main/java/org/opentripplanner/apis/`
 - GTFS GraphQL schema: Documented at http://localhost:8080/graphiql
 - Real-time updaters: `application/src/main/java/org/opentripplanner/updater/`
 
 **Configuration**
+
 - Location: `application/src/main/java/org/opentripplanner/standalone/config/`
 - Loads and parses JSON config files into POJOs
 - Config types: build-config.json, router-config.json, otp-config.json
@@ -145,6 +153,7 @@ Each documented component has a `package.md` file in its source directory.
 ## Development Guidelines (from DEVELOPMENT_DECISION_RECORDS.md)
 
 **Code Quality**
+
 - Scout Rule: Leave code better than you found it
 - Follow naming conventions from GTFS, NeTEx, or existing OTP code
 - Write JavaDoc for all public types, methods, and fields
@@ -153,23 +162,27 @@ Each documented component has a `package.md` file in its source directory.
 - Avoid feature envy and code duplication (DRY)
 
 **Architecture**
+
 - Use dependency injection (manual DI or Dagger)
 - Module wiring goes in `<module-name>/configure/<Module>Module.java`
 - Keep modules isolated with `api`, `spi`, and mapping layers
 - Avoid circular dependencies
 
 **Types**
+
 - Prefer immutable types over mutable
 - Use builders where appropriate
 - Be careful with records - only if proper encapsulation is possible
 
 **Testing**
+
 - Full branch test coverage preferred for non-trivial code
 - Unit tests for all business logic
 - Keep integration/system tests to a minimum
 - Test at the lowest practical level
 
 **Code Style**
+
 - Prettier formats code automatically (enforced in CI)
 - Spotless removes unused imports
 - Line width: 100 characters, 2-space indent
@@ -183,17 +196,20 @@ Each documented component has a `package.md` file in its source directory.
 5. All tests must pass, code must compile
 6. Participate in developer meetings for faster PR progress
 
-**Important:** This is an established project with high code quality expectations. Significant changes require discussion, documentation, and organizational commitment to maintenance.
+**Important:** This is an established project with high code quality expectations. Significant
+changes require discussion, documentation, and organizational commitment to maintenance.
 
 ## Git Workflow
 
 **IMPORTANT: Protected Branches**
+
 - **NEVER push directly to these branches:** `dev-2.x`, `main`, `master`, `main_config`
 - Always use feature branches for development work
 - When asked to push changes, always ask which remote to use before pushing
 - Ask which remote a feature branches should be pushed to for creating PRs to upstream
 
 **Branch Structure:**
+
 - Main development branch: `dev-2.x`
 - Release branch: `master` (releases only, fast-forward merges from dev-2.x)
 - All changes via pull requests with code review
@@ -201,10 +217,12 @@ Each documented component has a `package.md` file in its source directory.
 - Break large changes into smaller PRs tied together with an "epic issue"
 
 **Creating Pull Requests:**
+
 1. Create a feature branch (e.g., `my-feature`)
 2. Make commits on the feature branch
 3. Ask which remote to push the feature branch to: `git push -u entur my-feature`
-4. Create PR in upstream repository (`opentripplanner/OpenTripPlanner`) using `gh pr create --repo opentripplanner/OpenTripPlanner --head entur:my-feature --base dev-2.x`
+4. Create PR in upstream repository (`opentripplanner/OpenTripPlanner`) using
+   `gh pr create --repo opentripplanner/OpenTripPlanner --head entur:my-feature --base dev-2.x`
 
 ## Documentation
 
@@ -232,7 +250,8 @@ mvn --projects application exec:java -Dexec.mainClass="org.opentripplanner.trans
 
 Dashboard: https://otp-performance.leonard.io/
 
-**Critical:** All changes to Raptor must be tested with SpeedTest to ensure no performance regression.
+**Critical:** All changes to Raptor must be tested with SpeedTest to ensure no performance
+regression.
 
 ## Project Structure Notes
 
@@ -257,6 +276,7 @@ Dashboard: https://otp-performance.leonard.io/
 ## Sandbox Features
 
 Features not yet part of core OTP can be developed as Sandbox extensions. These must:
+
 - Be in their own package
 - Use feature flags (disabled by default)
 - Have conditional code blocks in core OTP
