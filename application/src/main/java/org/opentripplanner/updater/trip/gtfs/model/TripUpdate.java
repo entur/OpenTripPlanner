@@ -150,4 +150,10 @@ public final class TripUpdate {
   public Optional<GtfsRealtime.VehicleDescriptor> vehicle() {
     return tripUpdate.hasVehicle() ? Optional.of(tripUpdate.getVehicle()) : Optional.empty();
   }
+
+  public Optional<String> vehicleId() {
+    return vehicle()
+      .filter(GtfsRealtime.VehicleDescriptor::hasId)
+      .map(GtfsRealtime.VehicleDescriptor::getId);
+  }
 }
