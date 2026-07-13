@@ -414,6 +414,25 @@ class RealTimeTripTimesTest {
   }
 
   @Test
+  public void vehicleIdIsStoredAndRetrieved() {
+    var tripTimes = (RealTimeTripTimes) createInitialTripTimes()
+      .createRealTimeFromScheduledTimes()
+      .withVehicleId("BUS-42")
+      .build();
+
+    assertEquals("BUS-42", tripTimes.getVehicleId());
+  }
+
+  @Test
+  public void vehicleIdIsNullByDefault() {
+    var tripTimes = (RealTimeTripTimes) createInitialTripTimes()
+      .createRealTimeFromScheduledTimes()
+      .build();
+
+    assertNull(tripTimes.getVehicleId());
+  }
+
+  @Test
   public void validateNegativeHopTime() {
     var expMsg = "NEGATIVE_HOP_TIME for stop position 2 in trip Trip{F:testTripId RRtestTripId}.";
     var tt = createInitialTripTimes();

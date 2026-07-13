@@ -43,6 +43,9 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
 
   private final RealTimeTripState state;
 
+  @Nullable
+  private final String vehicleId;
+
   RealTimeTripTimes(RealTimeTripTimesBuilder builder) {
     scheduledTripTimes = builder.scheduledTripTimes();
     arrivalTimes = builder.arrivalTimes();
@@ -56,6 +59,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     hasArrived = builder.hasArrived();
     hasDeparted = builder.hasDeparted();
     state = builder.state();
+    vehicleId = builder.vehicleId();
     validateNonIncreasingTimes();
   }
 
@@ -75,6 +79,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     this.hasArrived = original.hasArrived;
     this.hasDeparted = original.hasDeparted;
     this.state = original.state;
+    this.vehicleId = original.vehicleId;
   }
 
   /**
@@ -96,6 +101,7 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     this.hasArrived = original.hasArrived;
     this.hasDeparted = original.hasDeparted;
     this.state = original.state;
+    this.vehicleId = original.vehicleId;
   }
 
   ScheduledTripTimes scheduledTripTimes() {
@@ -137,6 +143,11 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
   @Override
   public I18NString getTripHeadsign() {
     return tripHeadsign;
+  }
+
+  @Nullable
+  public String getVehicleId() {
+    return vehicleId;
   }
 
   /**
