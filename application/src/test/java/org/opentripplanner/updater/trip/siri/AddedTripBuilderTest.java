@@ -626,7 +626,8 @@ class AddedTripBuilderTest {
     ).build();
 
     var realTimeTimes = assertInstanceOf(RealTimeTripTimes.class, tripUpdate.tripTimes());
-    assertEquals("BUS-42", realTimeTimes.getVehicleId());
+    assertTrue(realTimeTimes.getVehicleId().isPresent());
+    assertEquals("BUS-42", realTimeTimes.getVehicleId().get());
   }
 
   @Test
@@ -656,7 +657,7 @@ class AddedTripBuilderTest {
     ).build();
 
     var realTimeTimes = assertInstanceOf(RealTimeTripTimes.class, tripUpdate.tripTimes());
-    assertNull(realTimeTimes.getVehicleId());
+    assertTrue(realTimeTimes.getVehicleId().isEmpty());
   }
 
   private static List<CallWrapper> getCalls(int hour) {

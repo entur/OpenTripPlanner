@@ -4,6 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
@@ -278,7 +279,8 @@ class ExtraCallTest implements RealtimeTestConstants {
       RealTimeTripTimes.class,
       env.tripData(TRIP_1_ID).tripTimes()
     );
-    assertEquals("BUS-42", realTimeTimes.getVehicleId());
+    assertTrue(realTimeTimes.getVehicleId().isPresent());
+    assertEquals("BUS-42", realTimeTimes.getVehicleId().get());
   }
 
   @Test
@@ -293,7 +295,7 @@ class ExtraCallTest implements RealtimeTestConstants {
       RealTimeTripTimes.class,
       env.tripData(TRIP_1_ID).tripTimes()
     );
-    assertNull(realTimeTimes.getVehicleId());
+    assertTrue(realTimeTimes.getVehicleId().isEmpty());
   }
 
   private List<EstimatedTimetableDeliveryStructure> updateWithExtraCall(SiriTestHelper siri) {
