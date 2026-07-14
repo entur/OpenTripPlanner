@@ -92,6 +92,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Curate CLAUDE.md for AI-agent usefulness and fix factual drift [#7766](https://github.com/opentripplanner/OpenTripPlanner/pull/7766)
 - Do not re-enable boarding at a cancelled SIRI call [#7797](https://github.com/opentripplanner/OpenTripPlanner/pull/7797)
 - Markdown prettier formatting [#7815](https://github.com/opentripplanner/OpenTripPlanner/pull/7815)
+- Report invalid line ref as DataImportIssue in NeTEx TripMapper [#7790](https://github.com/opentripplanner/OpenTripPlanner/pull/7790)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
