@@ -420,16 +420,17 @@ class RealTimeTripTimesTest {
       .withVehicleId("BUS-42")
       .build();
 
-    assertEquals("BUS-42", tripTimes.getVehicleId());
+    assertTrue(tripTimes.getVehicleId().isPresent());
+    assertEquals("BUS-42", tripTimes.getVehicleId().get());
   }
 
   @Test
-  public void vehicleIdIsNullByDefault() {
+  public void vehicleIdIsEmptyByDefault() {
     var tripTimes = (RealTimeTripTimes) createInitialTripTimes()
       .createRealTimeFromScheduledTimes()
       .build();
 
-    assertNull(tripTimes.getVehicleId());
+    assertTrue(tripTimes.getVehicleId().isEmpty());
   }
 
   @Test

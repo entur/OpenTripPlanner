@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.OptionalInt;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.accessibility.Accessibility;
@@ -145,9 +146,8 @@ public final class RealTimeTripTimes implements TripTimes<RealTimeTripTimes> {
     return tripHeadsign;
   }
 
-  @Nullable
-  public String getVehicleId() {
-    return vehicleId;
+  public Optional<String> getVehicleId() {
+    return Optional.ofNullable(vehicleId);
   }
 
   /**
