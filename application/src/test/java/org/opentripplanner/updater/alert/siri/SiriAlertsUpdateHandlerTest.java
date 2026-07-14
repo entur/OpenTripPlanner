@@ -86,7 +86,12 @@ public class SiriAlertsUpdateHandlerTest extends GtfsTest {
     if (transitService == null) {
       transitService = new DefaultTransitService(timetableRepository);
       timetableRepository.setUpdaterManager(
-        new GraphUpdaterManager(realTimeUpdateContext, List.of())
+        new GraphUpdaterManager(
+          runnable -> {
+            throw new UnsupportedOperationException();
+          },
+          List.of()
+        )
       );
     } else {
       transitAlertService.getAllAlerts().clear();
@@ -96,7 +101,8 @@ public class SiriAlertsUpdateHandlerTest extends GtfsTest {
       alertsUpdateHandler = new SiriAlertsUpdateHandler(
         FEED_ID,
         transitAlertService,
-        Duration.ZERO
+        Duration.ZERO,
+        null
       );
     }
   }

@@ -7,7 +7,6 @@ import static org.opentripplanner.standalone.config.framework.json.JsonSupport.n
 
 import com.google.common.util.concurrent.Futures;
 import java.util.List;
-import java.util.concurrent.Future;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -21,9 +20,8 @@ import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.GraphUpdaterManager;
-import org.opentripplanner.updater.GraphWriterRunnable;
 import org.opentripplanner.updater.spi.DataSource;
-import org.opentripplanner.updater.spi.GraphUpdater;
+import org.opentripplanner.updater.spi.WriteToGraphCallback;
 
 class VehicleParkingAvailabilityUpdaterTest {
 
@@ -116,25 +114,12 @@ class VehicleParkingAvailabilityUpdaterTest {
   }
 
   private void runUpdaterOnce(VehicleParkingAvailabilityUpdater updater) {
-    class GraphUpdaterMock extends GraphUpdaterManager {
-
-      private static final Graph GRAPH = new Graph();
-      private static final TimetableRepository TRANSIT_MODEL = new TimetableRepository();
-      public static final DefaultRealTimeUpdateContext REAL_TIME_UPDATE_CONTEXT =
-        new DefaultRealTimeUpdateContext(GRAPH, TRANSIT_MODEL);
-
-      public GraphUpdaterMock(List<GraphUpdater> updaters) {
-        super(REAL_TIME_UPDATE_CONTEXT, updaters);
-      }
-
-      @Override
-      public Future<?> execute(GraphWriterRunnable runnable) {
-        runnable.run(REAL_TIME_UPDATE_CONTEXT);
-        return Futures.immediateVoidFuture();
-      }
-    }
-
-    var graphUpdaterManager = new GraphUpdaterMock(List.of(updater));
+    var context = new DefaultRealTimeUpdateContext(new Graph(), new TimetableRepository());
+    WriteToGraphCallback callback = runnable -> {
+      runnable.run(context);
+      return Futures.immediateVoidFuture();
+    };
+    var graphUpdaterManager = new GraphUpdaterManager(callback, List.of(updater));
     graphUpdaterManager.startUpdaters();
     graphUpdaterManager.stop(false);
   }
