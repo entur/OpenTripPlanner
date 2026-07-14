@@ -90,6 +90,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Remove computation of artifical P+R intersection nodes [#7753](https://github.com/opentripplanner/OpenTripPlanner/pull/7753)
 - Explicitly check out base branch in post-merge workflow [#7812](https://github.com/opentripplanner/OpenTripPlanner/pull/7812)
 - Curate CLAUDE.md for AI-agent usefulness and fix factual drift [#7766](https://github.com/opentripplanner/OpenTripPlanner/pull/7766)
+- Do not re-enable boarding at a cancelled SIRI call [#7797](https://github.com/opentripplanner/OpenTripPlanner/pull/7797)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
