@@ -6,7 +6,6 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.updater.spi.UpdateErrorType.INVALID_ARRIVAL_TIME;
 import static org.opentripplanner.updater.spi.UpdateErrorType.INVALID_DEPARTURE_TIME;
@@ -1110,7 +1109,8 @@ public class TripTimesUpdaterTest {
     );
 
     assertInstanceOf(RealTimeTripTimes.class, p.tripTimes());
-    assertEquals("BUS-42", ((RealTimeTripTimes) p.tripTimes()).getVehicleId());
+    assertTrue(p.tripTimes().getVehicleId().isPresent());
+    assertEquals("BUS-42", p.tripTimes().getVehicleId().get());
   }
 
   @Test
@@ -1127,7 +1127,7 @@ public class TripTimesUpdaterTest {
     );
 
     assertInstanceOf(RealTimeTripTimes.class, p.tripTimes());
-    assertNull(((RealTimeTripTimes) p.tripTimes()).getVehicleId());
+    assertTrue(p.tripTimes().getVehicleId().isEmpty());
   }
 
   private static TripDescriptor.Builder tripDescriptorBuilder() {
