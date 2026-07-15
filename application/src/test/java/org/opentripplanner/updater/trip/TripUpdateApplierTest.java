@@ -10,10 +10,9 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
-import org.opentripplanner.updater.trip.handlers.TripUpdateResult;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
-import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.model.TripReference;
+import org.opentripplanner.updater.trip.model.TripRevision;
 
 class TripUpdateApplierTest {
 
@@ -24,7 +23,7 @@ class TripUpdateApplierTest {
     var env = TransitTestEnvironment.of().build();
     var tripId = new FeedScopedId(env.feedId(), "trip1");
     var tripRef = TripReference.ofTripId(tripId);
-    var parsedUpdate = ParsedUpdateExisting.builder(tripRef, SERVICE_DATE).build();
+    var parsedUpdate = TripRevision.builder(tripRef, SERVICE_DATE).build();
 
     var applier = new MockTripUpdateApplier(true);
 
@@ -36,7 +35,7 @@ class TripUpdateApplierTest {
     var env = TransitTestEnvironment.of().build();
     var tripId = new FeedScopedId(env.feedId(), "trip1");
     var tripRef = TripReference.ofTripId(tripId);
-    var parsedUpdate = ParsedUpdateExisting.builder(tripRef, SERVICE_DATE).build();
+    var parsedUpdate = TripRevision.builder(tripRef, SERVICE_DATE).build();
 
     var applier = new MockTripUpdateApplier(false);
 

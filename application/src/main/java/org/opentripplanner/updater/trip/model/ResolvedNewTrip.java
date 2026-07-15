@@ -31,7 +31,7 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
   private final boolean cancellation;
 
   protected ResolvedNewTrip(
-    ParsedAddNewTrip parsedUpdate,
+    TripAddition parsedUpdate,
     LocalDate serviceDate,
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates
   ) {

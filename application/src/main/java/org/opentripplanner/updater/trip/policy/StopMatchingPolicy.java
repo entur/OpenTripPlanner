@@ -10,7 +10,7 @@ import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 
 /**
  * Resolves each stop time update to a position in the scheduled pattern. This replaces the
- * format-divergent {@code StopUpdateStrategy} enum and the FULL/PARTIAL branch in the handler.
+ * format-divergent {@code StopUpdateStrategy} enum and the FULL/PARTIAL branch in the apply path.
  * <p>
  * Matching is stateful within one trip update: {@link #newCursor} returns a fresh {@link Cursor}
  * that advances as the updates are iterated, so a circular route (the same stop id appearing twice)

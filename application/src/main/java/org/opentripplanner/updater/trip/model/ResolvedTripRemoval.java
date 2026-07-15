@@ -11,8 +11,8 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
 /**
  * Resolved data for cancelling or deleting trips.
  * <p>
- * Used by {@link org.opentripplanner.updater.trip.handlers.CancelTripHandler}
- * and {@link org.opentripplanner.updater.trip.handlers.DeleteTripHandler}.
+ * Used by {@link org.opentripplanner.updater.trip.TripCanceller}
+ * and {@link org.opentripplanner.updater.trip.TripDeleter}.
  */
 public final class ResolvedTripRemoval {
 

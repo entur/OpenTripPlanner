@@ -18,7 +18,7 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
-import org.opentripplanner.updater.trip.model.ParsedExistingTripUpdate;
+import org.opentripplanner.updater.trip.model.ExistingTripUpdate;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TripReference;
@@ -70,7 +70,7 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
   @Override
   public TripAndPattern match(
     TripReference tripReference,
-    ParsedExistingTripUpdate parsedUpdate,
+    ExistingTripUpdate parsedUpdate,
     LocalDate serviceDate
   ) {
     ensureCacheInitialized();

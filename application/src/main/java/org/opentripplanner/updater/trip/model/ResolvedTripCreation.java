@@ -7,12 +7,12 @@ import java.util.List;
  * Resolved data for creating a brand new trip that does not exist in the transit model,
  * neither in the scheduled data nor as a previously added real-time trip.
  * <p>
- * Used by {@link org.opentripplanner.updater.trip.handlers.AddNewTripHandler}.
+ * Used by {@link org.opentripplanner.updater.trip.TripCreator}.
  */
 public final class ResolvedTripCreation extends ResolvedNewTrip {
 
   public ResolvedTripCreation(
-    ParsedAddNewTrip parsedUpdate,
+    TripAddition parsedUpdate,
     LocalDate serviceDate,
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates
   ) {
