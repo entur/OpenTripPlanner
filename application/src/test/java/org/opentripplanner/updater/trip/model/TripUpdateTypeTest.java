@@ -8,6 +8,6 @@ class TripUpdateTypeTest {
 
   @Test
   void allValuesExist() {
-    assertEquals(5, TripUpdateType.values().length);
+    assertEquals(6, TripUpdateType.values().length);
   }
 }

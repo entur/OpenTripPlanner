@@ -1,5 +1,7 @@
 package org.opentripplanner.updater.trip.gtfs;
 
+import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED;
+import static org.opentripplanner.updater.trip.UpdateIncrementality.DIFFERENTIAL;
 import static org.opentripplanner.updater.trip.UpdateIncrementality.FULL_DATASET;
 
 import com.google.transit.realtime.GtfsRealtime;
@@ -29,6 +31,7 @@ import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.handlers.GtfsRtRouteCreationStrategy;
+import org.opentripplanner.updater.trip.model.ParsedDuplicateTrip;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
 import org.slf4j.Logger;
@@ -149,7 +152,7 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
 
     for (GtfsRealtime.TripUpdate update : updates) {
       try {
-        successes.add(apply(update, applier));
+        successes.add(apply(update, applier, updateIncrementality));
       } catch (UpdateException e) {
         errors.add(e.toError());
       }
@@ -160,9 +163,24 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
     return UpdateResult.of(successes, errors);
   }
 
-  private UpdateSuccess apply(GtfsRealtime.TripUpdate update, DefaultTripUpdateApplier applier) {
+  private UpdateSuccess apply(
+    GtfsRealtime.TripUpdate update,
+    DefaultTripUpdateApplier applier,
+    UpdateIncrementality updateIncrementality
+  ) {
     // Parse the GTFS-RT message
     var parsedUpdate = parser.parse(update);
+
+    // out of precaution we don't allow the combination of differential and DUPLICATED
+    // it's not clear what the semantics of this would be and particular how cancellation of a
+    // duplicated trip would work.
+    // please get in touch with the dev team if you need this functionality.
+    if (parsedUpdate instanceof ParsedDuplicateTrip && updateIncrementality == DIFFERENTIAL) {
+      throw UpdateException.of(
+        parsedUpdate.tripReference().tripId(),
+        NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED
+      );
+    }
 
     // Apply the parsed update
     var tripUpdateResult = applier.apply(parsedUpdate);

@@ -144,7 +144,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         }
         yield builder.build();
       }
-      case CANCEL_TRIP, DELETE_TRIP -> throw new IllegalStateException(
+      case CANCEL_TRIP, DELETE_TRIP, DUPLICATE_TRIP -> throw new IllegalStateException(
         "Unexpected update type: " + updateType
       );
     };
