@@ -152,8 +152,8 @@ public class UpdaterConfigurator {
     }
     // Otherwise add it to the graph
     else {
-      timetableRepository.setUpdaterManager(updaterManager);
-      timetableRepository.setGraphWriterService(graphWriterService);
+      timetableRepository.initUpdaterManager(updaterManager);
+      timetableRepository.initGraphWriterService(graphWriterService);
     }
   }
 

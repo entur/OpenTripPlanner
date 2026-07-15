@@ -33,7 +33,6 @@ import org.opentripplanner.routing.impl.TransitAlertServiceImpl;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
-import org.opentripplanner.updater.GraphUpdaterManager;
 import org.opentripplanner.updater.RealTimeUpdateContext;
 import uk.org.ifopt.siri21.StopPlaceRef;
 import uk.org.siri.siri21.AffectedLineStructure;
@@ -85,14 +84,6 @@ public class SiriAlertsUpdateHandlerTest extends GtfsTest {
     realTimeUpdateContext = new DefaultRealTimeUpdateContext(graph, timetableRepository);
     if (transitService == null) {
       transitService = new DefaultTransitService(timetableRepository);
-      timetableRepository.setUpdaterManager(
-        new GraphUpdaterManager(
-          runnable -> {
-            throw new UnsupportedOperationException();
-          },
-          List.of()
-        )
-      );
     } else {
       transitAlertService.getAllAlerts().clear();
     }

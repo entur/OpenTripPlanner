@@ -196,9 +196,9 @@ public abstract class GtfsTest {
     alertsUpdateHandler = new AlertsUpdateHandler(false);
     graph = new Graph();
     timetableRepository = new TimetableRepository(new SiteRepository());
-    timetableRepository.setUpdaterManager(
+    timetableRepository.initUpdaterManager(
       new GraphUpdaterManager(
-        runnable -> {
+        _ -> {
           throw new UnsupportedOperationException();
         },
         List.of()
