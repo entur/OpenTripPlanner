@@ -10,14 +10,14 @@ import javax.annotation.Nullable;
  * <p>
  * The type hierarchy mirrors the resolver structure:
  * <ul>
- *   <li>{@link ParsedExistingTripUpdate} → ExistingTripResolver (UPDATE_EXISTING, MODIFY_TRIP)</li>
- *   <li>{@link ParsedAddNewTrip} → NewTripResolver (ADD_NEW_TRIP)</li>
- *   <li>{@link ParsedTripRemoval} → TripRemovalResolver (CANCEL_TRIP, DELETE_TRIP)</li>
- *   <li>{@link ParsedDuplicateTrip} → DuplicateTripResolver (DUPLICATE_TRIP)</li>
+ *   <li>{@link ExistingTripUpdate} → ExistingTripResolver (UPDATE_EXISTING, MODIFY_TRIP)</li>
+ *   <li>{@link TripAddition} → NewTripResolver (ADD_NEW_TRIP)</li>
+ *   <li>{@link TripRemoval} → TripRemovalResolver (CANCEL_TRIP, DELETE_TRIP)</li>
+ *   <li>{@link TripDuplication} → DuplicateTripResolver (DUPLICATE_TRIP)</li>
  * </ul>
  */
 public sealed interface ParsedTripUpdate
-  permits ParsedExistingTripUpdate, ParsedAddNewTrip, ParsedTripRemoval, ParsedDuplicateTrip {
+  permits ExistingTripUpdate, TripAddition, TripRemoval, TripDuplication {
   TripReference tripReference();
 
   @Nullable

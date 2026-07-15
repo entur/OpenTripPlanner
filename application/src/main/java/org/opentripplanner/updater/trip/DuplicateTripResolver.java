@@ -7,11 +7,11 @@ import java.util.Objects;
 import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateException;
-import org.opentripplanner.updater.trip.model.ParsedDuplicateTrip;
 import org.opentripplanner.updater.trip.model.ResolvedDuplicateTrip;
+import org.opentripplanner.updater.trip.model.TripDuplication;
 
 /**
- * Resolves a {@link ParsedDuplicateTrip} into a {@link ResolvedDuplicateTrip}: looks up the
+ * Resolves a {@link TripDuplication} into a {@link ResolvedDuplicateTrip}: looks up the
  * original scheduled trip, its pattern and scheduled times, and the service id/code for the
  * duplicated trip's service date.
  */
@@ -24,12 +24,12 @@ public class DuplicateTripResolver {
   }
 
   /**
-   * Resolve a ParsedDuplicateTrip against the transit model.
+   * Resolve a TripDuplication against the transit model.
    *
    * @throws UpdateException if the original trip cannot be found or the service date is outside
    *                         the service period
    */
-  public ResolvedDuplicateTrip resolve(ParsedDuplicateTrip parsedUpdate) {
+  public ResolvedDuplicateTrip resolve(TripDuplication parsedUpdate) {
     var tripId = parsedUpdate.tripReference().tripId();
 
     var originalTrip = transitService.getTrip(tripId);

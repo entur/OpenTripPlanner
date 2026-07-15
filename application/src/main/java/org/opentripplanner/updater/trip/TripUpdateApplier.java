@@ -1,7 +1,6 @@
 package org.opentripplanner.updater.trip;
 
 import org.opentripplanner.updater.spi.UpdateException;
-import org.opentripplanner.updater.trip.handlers.TripUpdateResult;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 
 /**

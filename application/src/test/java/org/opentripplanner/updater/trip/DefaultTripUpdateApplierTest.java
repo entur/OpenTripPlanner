@@ -18,11 +18,10 @@ import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
-import org.opentripplanner.updater.trip.handlers.GtfsRtRouteCreationStrategy;
-import org.opentripplanner.updater.trip.model.ParsedCancelTrip;
-import org.opentripplanner.updater.trip.model.ParsedDeleteTrip;
-import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
+import org.opentripplanner.updater.trip.model.TripCancellation;
+import org.opentripplanner.updater.trip.model.TripDeletion;
 import org.opentripplanner.updater.trip.model.TripReference;
+import org.opentripplanner.updater.trip.model.TripRevision;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
 
@@ -76,10 +75,7 @@ class DefaultTripUpdateApplierTest {
 
   @Test
   void testUpdateExisting_tripNotFound() {
-    var update = ParsedUpdateExisting.builder(
-      TripReference.builder().build(),
-      LocalDate.now()
-    ).build();
+    var update = TripRevision.builder(TripReference.builder().build(), LocalDate.now()).build();
 
     var exception = assertThrows(UpdateException.class, () -> applier.apply(update));
     assertEquals(UpdateErrorType.TRIP_NOT_FOUND, exception.errorType());
@@ -87,7 +83,7 @@ class DefaultTripUpdateApplierTest {
 
   @Test
   void testCancelTrip_tripNotFound() {
-    var update = new ParsedCancelTrip(TripReference.builder().build(), LocalDate.now(), null, null);
+    var update = new TripCancellation(TripReference.builder().build(), LocalDate.now(), null, null);
 
     var exception = assertThrows(UpdateException.class, () -> applier.apply(update));
     assertEquals(UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND, exception.errorType());
@@ -95,7 +91,7 @@ class DefaultTripUpdateApplierTest {
 
   @Test
   void testDeleteTrip_tripNotFound() {
-    var update = new ParsedDeleteTrip(TripReference.builder().build(), LocalDate.now(), null, null);
+    var update = new TripDeletion(TripReference.builder().build(), LocalDate.now(), null, null);
 
     var exception = assertThrows(UpdateException.class, () -> applier.apply(update));
     assertEquals(UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND, exception.errorType());
@@ -105,7 +101,7 @@ class DefaultTripUpdateApplierTest {
   void testDeleteTrip_byTripId_success() {
     var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
     var tripRef = TripReference.ofTripId(tripId);
-    var update = new ParsedDeleteTrip(tripRef, env.defaultServiceDate(), null, null);
+    var update = new TripDeletion(tripRef, env.defaultServiceDate(), null, null);
 
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
@@ -120,7 +116,7 @@ class DefaultTripUpdateApplierTest {
   void testDeleteTrip_byTripOnServiceDateId_success() {
     var tripOnServiceDateId = new FeedScopedId(FEED_ID, TRIP_ON_SERVICE_DATE_ID);
     var tripRef = TripReference.builder().withTripOnServiceDateId(tripOnServiceDateId).build();
-    var update = new ParsedDeleteTrip(tripRef, env.defaultServiceDate(), null, null);
+    var update = new TripDeletion(tripRef, env.defaultServiceDate(), null, null);
 
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
@@ -136,7 +132,7 @@ class DefaultTripUpdateApplierTest {
   void testDeleteTrip_appliedToSnapshot() {
     var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
     var tripRef = TripReference.ofTripId(tripId);
-    var update = new ParsedDeleteTrip(tripRef, env.defaultServiceDate(), null, null);
+    var update = new TripDeletion(tripRef, env.defaultServiceDate(), null, null);
 
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
@@ -155,7 +151,7 @@ class DefaultTripUpdateApplierTest {
   void testCancelTrip_byTripId_success() {
     var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
     var tripRef = TripReference.ofTripId(tripId);
-    var update = new ParsedCancelTrip(tripRef, env.defaultServiceDate(), null, null);
+    var update = new TripCancellation(tripRef, env.defaultServiceDate(), null, null);
 
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
@@ -170,7 +166,7 @@ class DefaultTripUpdateApplierTest {
   void testCancelTrip_byTripOnServiceDateId_success() {
     var tripOnServiceDateId = new FeedScopedId(FEED_ID, TRIP_ON_SERVICE_DATE_ID);
     var tripRef = TripReference.builder().withTripOnServiceDateId(tripOnServiceDateId).build();
-    var update = new ParsedCancelTrip(tripRef, env.defaultServiceDate(), null, null);
+    var update = new TripCancellation(tripRef, env.defaultServiceDate(), null, null);
 
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
@@ -186,7 +182,7 @@ class DefaultTripUpdateApplierTest {
   void testCancelTrip_appliedToSnapshot() {
     var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
     var tripRef = TripReference.ofTripId(tripId);
-    var update = new ParsedCancelTrip(tripRef, env.defaultServiceDate(), null, null);
+    var update = new TripCancellation(tripRef, env.defaultServiceDate(), null, null);
 
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 

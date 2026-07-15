@@ -11,7 +11,7 @@ import org.opentripplanner.transit.model.timetable.Trip;
 /**
  * Resolved data for duplicating an existing scheduled trip.
  * <p>
- * Used by {@link org.opentripplanner.updater.trip.handlers.DuplicateTripHandler}.
+ * Used by {@link org.opentripplanner.updater.trip.TripDuplicator}.
  *
  * @param originalTrip the scheduled trip to duplicate
  * @param originalPattern the pattern of the original trip

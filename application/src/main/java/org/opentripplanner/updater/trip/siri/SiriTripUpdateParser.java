@@ -20,16 +20,16 @@ import org.opentripplanner.transit.model.timetable.OccupancyStatus;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.TripUpdateParser;
 import org.opentripplanner.updater.trip.model.DeferredTimeUpdate;
-import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
-import org.opentripplanner.updater.trip.model.ParsedCancelTrip;
-import org.opentripplanner.updater.trip.model.ParsedModifyTrip;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
-import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
+import org.opentripplanner.updater.trip.model.TripAddition;
+import org.opentripplanner.updater.trip.model.TripCancellation;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
+import org.opentripplanner.updater.trip.model.TripModification;
 import org.opentripplanner.updater.trip.model.TripReference;
+import org.opentripplanner.updater.trip.model.TripRevision;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 import org.opentripplanner.utils.lang.StringUtils;
@@ -81,16 +81,16 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
     // Handle plain cancellation (no stop times needed).
     // Exceptions where the cancellation flag is instead carried on the parsed update:
-    // - MODIFY_TRIP (extra call): carried into ParsedModifyTrip so ModifyTripHandler can mark the
+    // - MODIFY_TRIP (extra call): carried into TripModification so TripModifier can mark the
     //   trip cancelled on the extra-call pattern, preserving the extra stop information.
-    // - ADD_NEW_TRIP (extra journey): carried into ParsedAddNewTrip so the extra journey is added
+    // - ADD_NEW_TRIP (extra journey): carried into TripAddition so the extra journey is added
     //   in cancelled state rather than rejected as a cancellation of a non-existent trip.
     if (
       journey.isCancellation() &&
       updateType != TripUpdateType.MODIFY_TRIP &&
       updateType != TripUpdateType.ADD_NEW_TRIP
     ) {
-      return new ParsedCancelTrip(
+      return new TripCancellation(
         tripReference,
         psd.serviceDate(),
         psd.aimedDepartureTime(),
@@ -108,7 +108,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
     return switch (updateType) {
       case UPDATE_EXISTING -> {
-        var builder = ParsedUpdateExisting.builder(tripReference, psd.serviceDate())
+        var builder = TripRevision.builder(tripReference, psd.serviceDate())
           .withFormatPolicy(FormatPolicy.siri())
           .withDataSource(journey.dataSource())
           .withStopTimeUpdates(stopTimeUpdates);
@@ -118,7 +118,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         yield builder.build();
       }
       case MODIFY_TRIP -> {
-        var builder = ParsedModifyTrip.builder(tripReference, psd.serviceDate())
+        var builder = TripModification.builder(tripReference, psd.serviceDate())
           .withFormatPolicy(FormatPolicy.siri())
           .withDataSource(journey.dataSource())
           .withStopTimeUpdates(stopTimeUpdates)
@@ -134,7 +134,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         if (creationInfo == null) {
           throw UpdateException.noTripId(UNKNOWN);
         }
-        var builder = ParsedAddNewTrip.builder(tripReference, psd.serviceDate(), creationInfo)
+        var builder = TripAddition.builder(tripReference, psd.serviceDate(), creationInfo)
           .withFormatPolicy(FormatPolicy.siri())
           .withDataSource(journey.dataSource())
           .withStopTimeUpdates(stopTimeUpdates)
@@ -388,7 +388,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
   // Capture the pick/drop intent of each call end without the scheduled pattern's values, which
   // the parser doesn't have. The wrapper's PickDropChange normalizes the SIRI boarding activity;
   // resolving it against a non-routable placeholder yields the pure routability intent
-  // (SCHEDULED/NONE/CANCELLED). The handler's PickDropPolicy then reconciles this intent against
+  // (SCHEDULED/NONE/CANCELLED). The apply side's PickDropPolicy then reconciles this intent against
   // the actual scheduled pickup/dropoff from the pattern.
   private void parsePickDropTypes(CallWrapper call, ParsedStopTimeUpdate.Builder builder) {
     call.dropOff().applyTo(PickDrop.NONE).ifPresent(builder::withDropoff);
