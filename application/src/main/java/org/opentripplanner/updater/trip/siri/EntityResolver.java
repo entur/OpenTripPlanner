@@ -37,7 +37,7 @@ public class EntityResolver {
    * EstimatedVehicleJourneyCode (for a trip that was previously added by a real-time message).
    */
   @Nullable
-  public Trip resolveTrip(EstimatedVehicleJourneyWrapper journey) {
+  Trip resolveTrip(EstimatedVehicleJourneyWrapper journey) {
     var vehicleJourneyIdAndServiceDate = journey.vehicleJourneyIdAndServiceDate();
     if (vehicleJourneyIdAndServiceDate != null) {
       Trip trip = resolveTrip(vehicleJourneyIdAndServiceDate.vehicleJourneyId());
@@ -124,7 +124,7 @@ public class EntityResolver {
    *
    * @see org.opentripplanner.transit.service.TimetableRepository#findStopByScheduledStopPoint(FeedScopedId)
    */
-  public RegularStop resolveQuay(String stopPointRef) {
+  RegularStop resolveQuay(String stopPointRef) {
     var id = resolveId(stopPointRef);
     return transitService
       .findStopByScheduledStopPoint(id)
@@ -134,11 +134,11 @@ public class EntityResolver {
   /**
    * Resolve a {@link Route} from a line id.
    */
-  public Route resolveRoute(String lineRef) {
+  Route resolveRoute(String lineRef) {
     return transitService.getRoute(resolveId(lineRef));
   }
 
-  public Operator resolveOperator(String operatorRef) {
+  Operator resolveOperator(String operatorRef) {
     return transitService.getOperator(resolveId(operatorRef));
   }
 
@@ -155,7 +155,7 @@ public class EntityResolver {
    * Return {@code null} if none of these strategies succeed.
    */
   @Nullable
-  public LocalDate resolveServiceDate(EstimatedVehicleJourneyWrapper journey) {
+  LocalDate resolveServiceDate(EstimatedVehicleJourneyWrapper journey) {
     var vehicleJourneyIdAndServiceDate = journey.vehicleJourneyIdAndServiceDate();
     if (
       vehicleJourneyIdAndServiceDate != null && vehicleJourneyIdAndServiceDate.serviceDate() != null
