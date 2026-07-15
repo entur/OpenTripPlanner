@@ -91,7 +91,7 @@ class AddNewTripValidatorTest {
 
     var ex = assertThrows(UpdateException.class, () -> validator.validate(resolve(parsedUpdate)));
     assertEquals(UpdateErrorType.UNKNOWN_STOP, ex.errorType());
-    assertEquals(1, ex.stopIndex());
+    assertEquals(1, ex.stopPosition());
   }
 
   @Test

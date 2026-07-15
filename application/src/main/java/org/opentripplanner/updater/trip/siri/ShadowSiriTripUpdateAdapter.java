@@ -104,10 +104,7 @@ public class ShadowSiriTripUpdateAdapter implements SiriTripUpdateAdapter {
       snapshotManager.getTimetableSnapshotBuffer()
     );
 
-    var tripPatternCache = new TripPatternCache(
-      new TripPatternIdGenerator(),
-      transitEditorService::findPattern
-    );
+    var tripPatternCache = new TripPatternCache(new TripPatternIdGenerator());
     this.parser = new SiriTripUpdateParser(feedId, transitEditorService.getTimeZone());
 
     FuzzyTripMatcher fuzzyMatcher = fuzzyTripMatching

@@ -1,7 +1,7 @@
 package org.opentripplanner.updater.trip.gtfs;
 
 import static org.opentripplanner.updater.spi.UpdateErrorType.INVALID_INPUT_STRUCTURE;
-import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_DUPLICATED;
+import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED;
 import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_UNSCHEDULED;
 
 import com.google.transit.realtime.GtfsRealtime;
@@ -39,6 +39,7 @@ import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
+import org.opentripplanner.utils.time.TimeUtils;
 
 /**
  * Parser for GTFS-RT TripUpdate messages into the common ParsedTripUpdate model.
@@ -73,7 +74,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
     var tripId = tripUpdate.tripId();
     var scheduleRelationship = tripUpdate.scheduleRelationship();
-    LocalDate serviceDate = tripUpdate.serviceDate();
+    LocalDate serviceDate = tripUpdate.startDate();
 
     var tripReference = buildTripReference(tripId, tripUpdate, serviceDate);
     var updateType = mapScheduleRelationship(scheduleRelationship);
@@ -81,7 +82,9 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     if (updateType == null) {
       throw switch (scheduleRelationship) {
         case UNSCHEDULED -> UpdateException.of(tripId, NOT_IMPLEMENTED_UNSCHEDULED);
-        case DUPLICATED -> UpdateException.of(tripId, NOT_IMPLEMENTED_DUPLICATED);
+        // TODO: the legacy adapter now supports DUPLICATED for FULL_DATASET feeds (#7761) -
+        //  implement it in the unified path as well.
+        case DUPLICATED -> UpdateException.of(tripId, NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED);
         default -> UpdateException.of(tripId, INVALID_INPUT_STRUCTURE);
       };
     }
@@ -154,7 +157,9 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
     tripUpdate.routeId().ifPresent(builder::withRouteId);
 
-    tripUpdate.startTime().ifPresent(builder::withStartTime);
+    tripUpdate
+      .startTime()
+      .ifPresent(time -> builder.withStartTime(TimeUtils.timeToStrCompact(time.toSecondOfDay())));
 
     tripUpdate
       .descriptor()

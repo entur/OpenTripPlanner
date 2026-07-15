@@ -70,10 +70,7 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
       timetableRepository,
       snapshotManager.getTimetableSnapshotBuffer()
     );
-    this.tripPatternCache = new TripPatternCache(
-      tripPatternIdGenerator,
-      transitEditorService::findPattern
-    );
+    this.tripPatternCache = new TripPatternCache(tripPatternIdGenerator);
     this.parser = new SiriTripUpdateParser(feedId, transitEditorService.getTimeZone());
 
     FuzzyTripMatcher fuzzyMatcher = fuzzyTripMatching
