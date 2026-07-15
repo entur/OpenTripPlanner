@@ -61,10 +61,7 @@ class DefaultTripUpdateApplierTest {
 
     transitService = (TransitEditorService) env.transitService();
     snapshotManager = env.timetableSnapshotManager();
-    var tripPatternCache = new TripPatternCache(
-      new TripPatternIdGenerator(),
-      env.transitService()::findPattern
-    );
+    var tripPatternCache = new TripPatternCache(new TripPatternIdGenerator());
     applier = TripUpdateApplierFactory.create(
       env.feedId(),
       TIME_ZONE,

@@ -83,8 +83,7 @@ class UpdateExistingTripHandlerTest {
     var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
     var stopResolver = new StopResolver(env.transitService());
     var tripPatternCache = new org.opentripplanner.updater.trip.patterncache.TripPatternCache(
-      new org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator(),
-      env.transitService()::findPattern
+      new org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator()
     );
     resolver = new ExistingTripResolver(
       transitService,
@@ -449,7 +448,7 @@ class UpdateExistingTripHandlerTest {
         handler.handle(resolveStation(parsedUpdate))
       );
       assertEquals(UpdateErrorType.STOP_MISMATCH, ex.errorType());
-      assertEquals(0, ex.stopIndex());
+      assertEquals(0, ex.stopPosition());
     }
 
     @Test
@@ -615,7 +614,7 @@ class UpdateExistingTripHandlerTest {
         handler.handle(resolveStation(parsedUpdate))
       );
       assertEquals(UpdateErrorType.STOP_MISMATCH, ex.errorType());
-      assertEquals(0, ex.stopIndex());
+      assertEquals(0, ex.stopPosition());
     }
   }
 

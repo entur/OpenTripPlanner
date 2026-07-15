@@ -112,10 +112,7 @@ public class ShadowGtfsTripUpdateAdapter implements GtfsTripUpdateAdapter {
       snapshotManager.getTimetableSnapshotBuffer()
     );
 
-    this.tripPatternCache = new TripPatternCache(
-      new TripPatternIdGenerator(),
-      transitEditorService::findPattern
-    );
+    this.tripPatternCache = new TripPatternCache(new TripPatternIdGenerator());
 
     this.parser = new GtfsRtTripUpdateParser(
       forwardsDelayPropagationType,

@@ -85,8 +85,7 @@ class ModifyTripHandlerTest {
       var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
       var stopResolver = new StopResolver(env.transitService());
       var tripPatternCache = new org.opentripplanner.updater.trip.patterncache.TripPatternCache(
-        new org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator(),
-        env.transitService()::findPattern
+        new org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator()
       );
       resolver = new ExistingTripResolver(
         transitService,
@@ -337,8 +336,7 @@ class ModifyTripHandlerTest {
       var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
       var stopResolver = new StopResolver(env.transitService());
       var tripPatternCache = new org.opentripplanner.updater.trip.patterncache.TripPatternCache(
-        new org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator(),
-        env.transitService()::findPattern
+        new org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator()
       );
       resolver = new ExistingTripResolver(
         transitService,
