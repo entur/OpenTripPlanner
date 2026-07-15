@@ -8,6 +8,7 @@ import org.opentripplanner.updater.trip.handlers.AddNewTripHandler;
 import org.opentripplanner.updater.trip.handlers.AddNewTripValidator;
 import org.opentripplanner.updater.trip.handlers.CancelTripHandler;
 import org.opentripplanner.updater.trip.handlers.DeleteTripHandler;
+import org.opentripplanner.updater.trip.handlers.DuplicateTripHandler;
 import org.opentripplanner.updater.trip.handlers.ModifyTripHandler;
 import org.opentripplanner.updater.trip.handlers.ModifyTripValidator;
 import org.opentripplanner.updater.trip.handlers.RouteCreationStrategy;
@@ -60,6 +61,7 @@ public final class TripUpdateApplierFactory {
       serviceDateResolver,
       snapshotManager
     );
+    var duplicateTripResolver = new DuplicateTripResolver(transitService);
 
     // Validators
     var updateExistingValidator = new UpdateExistingTripValidator();
@@ -79,12 +81,14 @@ public final class TripUpdateApplierFactory {
     var updateAddedTripHandler = new UpdateAddedTripHandler();
     var cancelTripHandler = new CancelTripHandler();
     var deleteTripHandler = new DeleteTripHandler();
+    var duplicateTripHandler = new DuplicateTripHandler(deduplicator);
 
     return new DefaultTripUpdateApplier(
       transitService,
       existingTripResolver,
       newTripResolver,
       tripRemovalResolver,
+      duplicateTripResolver,
       updateExistingValidator,
       modifyTripValidator,
       addNewTripValidator,
@@ -93,7 +97,8 @@ public final class TripUpdateApplierFactory {
       addNewTripHandler,
       updateAddedTripHandler,
       cancelTripHandler,
-      deleteTripHandler
+      deleteTripHandler,
+      duplicateTripHandler
     );
   }
 }
