@@ -1,7 +1,6 @@
 package org.opentripplanner.updater.trip.gtfs;
 
 import static org.opentripplanner.updater.spi.UpdateErrorType.INVALID_INPUT_STRUCTURE;
-import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED;
 import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_UNSCHEDULED;
 
 import com.google.transit.realtime.GtfsRealtime;
@@ -27,6 +26,7 @@ import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
 import org.opentripplanner.updater.trip.model.ParsedCancelTrip;
 import org.opentripplanner.updater.trip.model.ParsedDeleteTrip;
+import org.opentripplanner.updater.trip.model.ParsedDuplicateTrip;
 import org.opentripplanner.updater.trip.model.ParsedModifyTrip;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
@@ -82,9 +82,6 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     if (updateType == null) {
       throw switch (scheduleRelationship) {
         case UNSCHEDULED -> UpdateException.of(tripId, NOT_IMPLEMENTED_UNSCHEDULED);
-        // TODO: the legacy adapter now supports DUPLICATED for FULL_DATASET feeds (#7761) -
-        //  implement it in the unified path as well.
-        case DUPLICATED -> UpdateException.of(tripId, NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED);
         default -> UpdateException.of(tripId, INVALID_INPUT_STRUCTURE);
       };
     }
@@ -99,6 +96,14 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     }
     if (updateType == TripUpdateType.DELETE_TRIP) {
       return new ParsedDeleteTrip(tripReference, serviceDate, null, null);
+    }
+    if (updateType == TripUpdateType.DUPLICATE_TRIP) {
+      tripUpdate.validateDuplicated();
+      return new ParsedDuplicateTrip(
+        tripReference,
+        serviceDate,
+        tripUpdate.startTime().orElseThrow()
+      );
     }
 
     var stopTimeUpdates = parseStopTimeUpdates(
@@ -126,7 +131,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
         .withFormatPolicy(gtfsPolicy)
         .withStopTimeUpdates(stopTimeUpdates)
         .build();
-      case CANCEL_TRIP, DELETE_TRIP -> throw new IllegalStateException(
+      case CANCEL_TRIP, DELETE_TRIP, DUPLICATE_TRIP -> throw new IllegalStateException(
         "Unexpected update type: " + updateType
       );
     };
@@ -144,7 +149,8 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       case DELETED -> TripUpdateType.DELETE_TRIP;
       case NEW, ADDED -> TripUpdateType.ADD_NEW_TRIP;
       case REPLACEMENT -> TripUpdateType.MODIFY_TRIP;
-      case UNSCHEDULED, DUPLICATED -> null;
+      case DUPLICATED -> TripUpdateType.DUPLICATE_TRIP;
+      case UNSCHEDULED -> null;
     };
   }
 

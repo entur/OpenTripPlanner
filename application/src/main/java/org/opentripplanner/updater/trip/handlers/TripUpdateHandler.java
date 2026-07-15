@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip.handlers;
 
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedAddedTripUpdate;
+import org.opentripplanner.updater.trip.model.ResolvedDuplicateTrip;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.ResolvedTripCreation;
 import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
@@ -50,5 +51,14 @@ public final class TripUpdateHandler {
   @FunctionalInterface
   public interface ForTripRemoval {
     TripUpdateResult handle(ResolvedTripRemoval resolvedUpdate) throws UpdateException;
+  }
+
+  /**
+   * Handler for duplicating an existing scheduled trip at a new start time.
+   * Used for DUPLICATE_TRIP update types.
+   */
+  @FunctionalInterface
+  public interface ForDuplicateTrip {
+    TripUpdateResult handle(ResolvedDuplicateTrip resolvedUpdate) throws UpdateException;
   }
 }

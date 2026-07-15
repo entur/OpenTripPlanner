@@ -11,4 +11,5 @@ public enum TripUpdateType {
   DELETE_TRIP,
   ADD_NEW_TRIP,
   MODIFY_TRIP,
+  DUPLICATE_TRIP,
 }

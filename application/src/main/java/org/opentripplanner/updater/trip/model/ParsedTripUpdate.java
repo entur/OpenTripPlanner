@@ -13,10 +13,11 @@ import javax.annotation.Nullable;
  *   <li>{@link ParsedExistingTripUpdate} → ExistingTripResolver (UPDATE_EXISTING, MODIFY_TRIP)</li>
  *   <li>{@link ParsedAddNewTrip} → NewTripResolver (ADD_NEW_TRIP)</li>
  *   <li>{@link ParsedTripRemoval} → TripRemovalResolver (CANCEL_TRIP, DELETE_TRIP)</li>
+ *   <li>{@link ParsedDuplicateTrip} → DuplicateTripResolver (DUPLICATE_TRIP)</li>
  * </ul>
  */
 public sealed interface ParsedTripUpdate
-  permits ParsedExistingTripUpdate, ParsedAddNewTrip, ParsedTripRemoval {
+  permits ParsedExistingTripUpdate, ParsedAddNewTrip, ParsedTripRemoval, ParsedDuplicateTrip {
   TripReference tripReference();
 
   @Nullable
