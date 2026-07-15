@@ -3,9 +3,9 @@ package org.opentripplanner.updater.vehicle_parking;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.when;
 
-import com.google.common.util.concurrent.Futures;
 import java.time.Duration;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.Mockito;
@@ -27,6 +27,7 @@ import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.GraphUpdaterManager;
 import org.opentripplanner.updater.spi.DataSource;
 import org.opentripplanner.updater.spi.WriteToGraphCallback;
+import org.opentripplanner.utils.lang.RunnableUtils;
 
 class VehicleParkingUpdaterTest {
 
@@ -265,9 +266,13 @@ class VehicleParkingUpdaterTest {
   private void runUpdaterOnce() {
     WriteToGraphCallback callback = runnable -> {
       runnable.run(realTimeUpdateContext);
-      return Futures.immediateVoidFuture();
+      return CompletableFuture.completedFuture(null);
     };
-    var graphUpdaterManager = new GraphUpdaterManager(callback, List.of(vehicleParkingUpdater));
+    var graphUpdaterManager = new GraphUpdaterManager(
+      callback,
+      RunnableUtils.NOOP,
+      List.of(vehicleParkingUpdater)
+    );
     graphUpdaterManager.startUpdaters();
     graphUpdaterManager.stop(false);
   }

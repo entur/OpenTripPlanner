@@ -5,8 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.standalone.config.framework.json.JsonSupport.newNodeAdapterForTest;
 
-import com.google.common.util.concurrent.Futures;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -22,6 +22,7 @@ import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
 import org.opentripplanner.updater.GraphUpdaterManager;
 import org.opentripplanner.updater.spi.DataSource;
 import org.opentripplanner.updater.spi.WriteToGraphCallback;
+import org.opentripplanner.utils.lang.RunnableUtils;
 
 class VehicleParkingAvailabilityUpdaterTest {
 
@@ -117,9 +118,13 @@ class VehicleParkingAvailabilityUpdaterTest {
     var context = new DefaultRealTimeUpdateContext(new Graph(), new TimetableRepository());
     WriteToGraphCallback callback = runnable -> {
       runnable.run(context);
-      return Futures.immediateVoidFuture();
+      return CompletableFuture.completedFuture(null);
     };
-    var graphUpdaterManager = new GraphUpdaterManager(callback, List.of(updater));
+    var graphUpdaterManager = new GraphUpdaterManager(
+      callback,
+      RunnableUtils.NOOP,
+      List.of(updater)
+    );
     graphUpdaterManager.startUpdaters();
     graphUpdaterManager.stop(false);
   }

@@ -50,11 +50,13 @@ import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.service.SiteRepository;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.GraphUpdaterManager;
+import org.opentripplanner.updater.GraphWriterService;
 import org.opentripplanner.updater.alert.gtfs.AlertsUpdateHandler;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
+import org.opentripplanner.utils.lang.RunnableUtils;
 
 /** Common base class for many test classes which need to load a GTFS feed in preparation for tests. */
 public abstract class GtfsTest {
@@ -197,12 +199,7 @@ public abstract class GtfsTest {
     graph = new Graph();
     timetableRepository = new TimetableRepository(new SiteRepository());
     timetableRepository.initUpdaterManager(
-      new GraphUpdaterManager(
-        _ -> {
-          throw new UnsupportedOperationException();
-        },
-        List.of()
-      )
+      new GraphUpdaterManager(GraphWriterService.NOOP, RunnableUtils.NOOP, List.of())
     );
     TransferRepository transferRepository = TransferServiceTestFactory.defaultTransferRepository();
 

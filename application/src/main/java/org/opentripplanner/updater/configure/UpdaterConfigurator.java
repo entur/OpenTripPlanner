@@ -141,19 +141,21 @@ public class UpdaterConfigurator {
       graph,
       timetableRepository
     );
-    GraphUpdaterManager updaterManager = new GraphUpdaterManager(graphWriterService, updaters);
+    var updaterManager = new GraphUpdaterManager(
+      graphWriterService,
+      graphWriterService::stop,
+      updaters
+    );
 
     updaterManager.startUpdaters();
 
     // Stop the updater manager if it contains nothing
     if (updaterManager.numberOfUpdaters() == 0) {
       updaterManager.stop();
-      graphWriterService.stop();
     }
     // Otherwise add it to the graph
     else {
       timetableRepository.initUpdaterManager(updaterManager);
-      timetableRepository.initGraphWriterService(graphWriterService);
     }
   }
 
@@ -161,10 +163,6 @@ public class UpdaterConfigurator {
     GraphUpdaterManager updaterManager = timetableRepository.getUpdaterManager();
     if (updaterManager != null) {
       updaterManager.stop();
-    }
-    GraphWriterService graphWriterService = timetableRepository.getGraphWriterService();
-    if (graphWriterService != null) {
-      graphWriterService.stop();
     }
   }
 
