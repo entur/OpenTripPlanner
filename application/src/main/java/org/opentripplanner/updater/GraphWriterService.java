@@ -43,7 +43,7 @@ public class GraphWriterService implements WriteToGraphCallback {
   }
 
   @Override
-  public Future<?> execute(GraphWriterRunnable runnable) {
+  public Future<Void> execute(GraphWriterRunnable runnable) {
     return updateManager.submit(ctx -> {
       var mutableSnapshot = ctx.repository(timetableHandle);
       var context = new DefaultRealTimeUpdateContext(graph, timetableRepository, mutableSnapshot);

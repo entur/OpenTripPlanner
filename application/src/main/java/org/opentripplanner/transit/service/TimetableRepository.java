@@ -50,7 +50,6 @@ import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.updater.GraphUpdaterManager;
-import org.opentripplanner.updater.GraphWriterService;
 import org.opentripplanner.updater.configure.UpdaterConfigurator;
 import org.opentripplanner.utils.lang.ObjectUtils;
 import org.opentripplanner.utils.logging.PowerOfTwoThrottle;
@@ -107,7 +106,6 @@ public class TimetableRepository implements Serializable {
   private boolean timeZoneExplicitlySet = false;
 
   private transient GraphUpdaterManager updaterManager = null;
-  private transient GraphWriterService graphWriterService = null;
 
   private boolean hasFrequencyService = false;
   private boolean hasScheduledService = false;
@@ -505,18 +503,6 @@ public class TimetableRepository implements Serializable {
     assertModificationsAllowed();
     invalidateIndex();
     flexTripsById.put(id, flexTrip);
-  }
-
-  public GraphWriterService getGraphWriterService() {
-    return graphWriterService;
-  }
-
-  public void initGraphWriterService(GraphWriterService graphWriterService) {
-    this.graphWriterService = ObjectUtils.requireNotInitialized(
-      "graphWriterService",
-      this.graphWriterService,
-      graphWriterService
-    );
   }
 
   /**

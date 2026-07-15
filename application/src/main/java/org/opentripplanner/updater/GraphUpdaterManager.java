@@ -47,8 +47,11 @@ public class GraphUpdaterManager implements GraphUpdaterStatus {
    */
   private final List<GraphUpdater> updaterList = new ArrayList<>();
 
+  private final Runnable shutdownGraphWriter;
+
   public GraphUpdaterManager(
     WriteToGraphCallback writeToGraphCallback,
+    Runnable shutdownGraphWriter,
     List<GraphUpdater> updaters
   ) {
     var updaterThreadFactory = new ThreadFactoryBuilder().setNameFormat("updater-%d").build();
@@ -57,6 +60,7 @@ public class GraphUpdaterManager implements GraphUpdaterStatus {
       updaterThreadFactory
     );
     this.nonPollingUpdaterPool = Executors.newCachedThreadPool(updaterThreadFactory);
+    this.shutdownGraphWriter = shutdownGraphWriter;
 
     for (GraphUpdater updater : updaters) {
       updaterList.add(updater);
@@ -129,6 +133,7 @@ public class GraphUpdaterManager implements GraphUpdaterStatus {
       if (!ok) {
         LOG.warn("Timeout waiting for updaters to finish.");
       }
+      shutdownGraphWriter.run();
     } catch (InterruptedException e) {
       LOG.warn("Interrupted while waiting for updaters to finish.");
     }
