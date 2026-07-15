@@ -10,17 +10,17 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
-import org.opentripplanner.updater.trip.model.ParsedTripRemoval;
 import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
+import org.opentripplanner.updater.trip.model.TripRemoval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Resolves a {@link ParsedTripRemoval} into a {@link ResolvedTripRemoval} for cancelling
+ * Resolves a {@link TripRemoval} into a {@link ResolvedTripRemoval} for cancelling
  * or deleting trips.
  * <p>
- * Used for CANCEL_TRIP ({@link org.opentripplanner.updater.trip.model.ParsedCancelTrip})
- * and DELETE_TRIP ({@link org.opentripplanner.updater.trip.model.ParsedDeleteTrip}).
+ * Used for CANCEL_TRIP ({@link org.opentripplanner.updater.trip.model.TripCancellation})
+ * and DELETE_TRIP ({@link org.opentripplanner.updater.trip.model.TripDeletion}).
  * <p>
  * This resolver looks up scheduled trips first, then checks for previously added (real-time)
  * trips via the snapshot manager.
@@ -58,7 +58,7 @@ public class TripRemovalResolver {
    * @return the resolved data
    * @throws UpdateException if trip cannot be found at all
    */
-  public ResolvedTripRemoval resolve(ParsedTripRemoval parsedUpdate) {
+  public ResolvedTripRemoval resolve(TripRemoval parsedUpdate) {
     // Resolve service date
     LocalDate serviceDate = serviceDateResolver.resolveServiceDate(parsedUpdate);
 
@@ -83,7 +83,7 @@ public class TripRemovalResolver {
 
     // If the resolved pattern is itself a real-time added pattern (i.e., this trip was added via
     // real-time, not in the static schedule), look up the RT timetable times and treat the trip
-    // as a previously-added trip so that AbstractTripRemovalHandler preserves the "added" flag.
+    // as a previously-added trip so that TripRemover preserves the "added" flag.
     if (pattern.isRealTimeTripPattern() && !pattern.isStopPatternModifiedInRealTime()) {
       if (snapshotManager != null) {
         var rtTimetable = snapshotManager.resolve(pattern, serviceDate);
@@ -108,11 +108,11 @@ public class TripRemovalResolver {
 
     // Cancellation of a scheduled trip always reverts any previous real-time modifications
     // (quay changes, time updates) and marks the trip as cancelled on the scheduled pattern.
-    // AbstractTripRemovalHandler sets revertPreviousRealTimeUpdates=true so that any existing
+    // TripRemover sets revertPreviousRealTimeUpdates=true so that any existing
     // RT-modified pattern entry for this trip is cleared from the snapshot.
     //
     // Note: extra call cancellations (SIRI Cancellation=true with extra call stops) are NOT
-    // routed here — they go through ModifyTripHandler instead (see SiriTripUpdateParser).
+    // routed here — they go through TripModifier instead (see SiriTripUpdateParser).
     return ResolvedTripRemoval.forScheduledTrip(serviceDate, trip, pattern, tripTimes, dataSource);
   }
 

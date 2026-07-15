@@ -1,0 +1,45 @@
+package org.opentripplanner.updater.trip;
+
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.updater.trip.model.ResolvedTripCreation;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Validates preconditions for the {@link TripCreator}, before the new trip is built.
+ * <p>
+ * Checks:
+ * <ul>
+ *   <li>FAIL mode: all stops must be known</li>
+ *   <li>Minimum stops (>= 2) on the original (pre-filter) list</li>
+ * </ul>
+ * IGNORE-mode filtering and the post-filter minimum check stay in the {@link TripCreator}
+ * since they involve transformation, not pure validation.
+ */
+public class AddNewTripValidator {
+
+  private static final Logger LOG = LoggerFactory.getLogger(AddNewTripValidator.class);
+
+  public void validate(ResolvedTripCreation resolvedUpdate) {
+    var tripId = resolvedUpdate.tripCreationInfo().tripId();
+    var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
+
+    // FAIL mode: strict validation - fail on unknown stops
+    if (resolvedUpdate.formatPolicy().unknownStop().failOnUnknownStop()) {
+      for (int i = 0; i < stopTimeUpdates.size(); i++) {
+        var stopUpdate = stopTimeUpdates.get(i);
+        if (stopUpdate.stop() == null) {
+          LOG.debug("ADD_TRIP: Unknown stop {} in added trip", stopUpdate.stopReference());
+          throw UpdateException.of(tripId, UpdateErrorType.UNKNOWN_STOP, i);
+        }
+      }
+    }
+
+    // Minimum stops check on original list
+    if (stopTimeUpdates.size() < 2) {
+      LOG.debug("ADD_TRIP: Trip {} has fewer than 2 stops", tripId);
+      throw UpdateException.of(tripId, UpdateErrorType.TOO_FEW_STOPS);
+    }
+  }
+}

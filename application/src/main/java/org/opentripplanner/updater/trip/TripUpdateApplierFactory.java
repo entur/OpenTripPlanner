@@ -4,23 +4,13 @@ import java.time.ZoneId;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.transit.service.TransitEditorService;
-import org.opentripplanner.updater.trip.handlers.AddNewTripHandler;
-import org.opentripplanner.updater.trip.handlers.AddNewTripValidator;
-import org.opentripplanner.updater.trip.handlers.CancelTripHandler;
-import org.opentripplanner.updater.trip.handlers.DeleteTripHandler;
-import org.opentripplanner.updater.trip.handlers.DuplicateTripHandler;
-import org.opentripplanner.updater.trip.handlers.ModifyTripHandler;
-import org.opentripplanner.updater.trip.handlers.ModifyTripValidator;
-import org.opentripplanner.updater.trip.handlers.RouteCreationStrategy;
-import org.opentripplanner.updater.trip.handlers.UpdateAddedTripHandler;
-import org.opentripplanner.updater.trip.handlers.UpdateExistingTripHandler;
-import org.opentripplanner.updater.trip.handlers.UpdateExistingTripValidator;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 
 /**
- * Composition root for {@link DefaultTripUpdateApplier}: wires the shared resolvers, the per-type
- * validators and the per-type handlers. This is plain manual DI (the {@code updater.trip} package
- * uses no Dagger).
+ * Composition root for {@link DefaultTripUpdateApplier}: wires the shared resolvers into the
+ * per-type domain operations ({@link TripReviser}, {@link TripModifier}, {@link TripAdder},
+ * {@link TripCanceller}, {@link TripDeleter}, {@link TripDuplicator}). This is plain manual DI
+ * (the {@code updater.trip} package uses no Dagger).
  */
 public final class TripUpdateApplierFactory {
 
@@ -63,42 +53,22 @@ public final class TripUpdateApplierFactory {
     );
     var duplicateTripResolver = new DuplicateTripResolver(transitService);
 
-    // Validators
-    var updateExistingValidator = new UpdateExistingTripValidator();
-    var modifyTripValidator = new ModifyTripValidator();
-    var addNewTripValidator = new AddNewTripValidator();
-
-    // Handlers - pure transformers, no snapshot manager dependency
-    var updateExistingHandler = new UpdateExistingTripHandler(tripPatternCache);
-    var modifyTripHandler = new ModifyTripHandler(transitService, deduplicator, tripPatternCache);
-    var addNewTripHandler = new AddNewTripHandler(
+    // Per-type domain operations
+    var tripCreator = new TripCreator(
       feedId,
       transitService,
       deduplicator,
       tripPatternCache,
       routeCreationStrategy
     );
-    var updateAddedTripHandler = new UpdateAddedTripHandler();
-    var cancelTripHandler = new CancelTripHandler();
-    var deleteTripHandler = new DeleteTripHandler();
-    var duplicateTripHandler = new DuplicateTripHandler(deduplicator);
 
     return new DefaultTripUpdateApplier(
-      transitService,
-      existingTripResolver,
-      newTripResolver,
-      tripRemovalResolver,
-      duplicateTripResolver,
-      updateExistingValidator,
-      modifyTripValidator,
-      addNewTripValidator,
-      updateExistingHandler,
-      modifyTripHandler,
-      addNewTripHandler,
-      updateAddedTripHandler,
-      cancelTripHandler,
-      deleteTripHandler,
-      duplicateTripHandler
+      new TripReviser(existingTripResolver, tripPatternCache),
+      new TripModifier(existingTripResolver, transitService, deduplicator, tripPatternCache),
+      new TripAdder(newTripResolver, tripCreator, new AddedTripReviser()),
+      new TripCanceller(tripRemovalResolver),
+      new TripDeleter(tripRemovalResolver),
+      new TripDuplicator(duplicateTripResolver, deduplicator)
     );
   }
 }

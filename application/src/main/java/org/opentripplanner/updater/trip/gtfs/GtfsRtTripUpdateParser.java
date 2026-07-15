@@ -23,20 +23,20 @@ import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagat
 import org.opentripplanner.updater.trip.gtfs.model.AddedRoute;
 import org.opentripplanner.updater.trip.gtfs.model.StopTimeUpdate;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
-import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
-import org.opentripplanner.updater.trip.model.ParsedCancelTrip;
-import org.opentripplanner.updater.trip.model.ParsedDeleteTrip;
-import org.opentripplanner.updater.trip.model.ParsedDuplicateTrip;
-import org.opentripplanner.updater.trip.model.ParsedModifyTrip;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
-import org.opentripplanner.updater.trip.model.ParsedUpdateExisting;
 import org.opentripplanner.updater.trip.model.RouteCreationInfo;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.StopResolutionStrategy;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
+import org.opentripplanner.updater.trip.model.TripAddition;
+import org.opentripplanner.updater.trip.model.TripCancellation;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
+import org.opentripplanner.updater.trip.model.TripDeletion;
+import org.opentripplanner.updater.trip.model.TripDuplication;
+import org.opentripplanner.updater.trip.model.TripModification;
 import org.opentripplanner.updater.trip.model.TripReference;
+import org.opentripplanner.updater.trip.model.TripRevision;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 import org.opentripplanner.utils.time.TimeUtils;
@@ -92,18 +92,14 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     );
 
     if (updateType == TripUpdateType.CANCEL_TRIP) {
-      return new ParsedCancelTrip(tripReference, serviceDate, null, null);
+      return new TripCancellation(tripReference, serviceDate, null, null);
     }
     if (updateType == TripUpdateType.DELETE_TRIP) {
-      return new ParsedDeleteTrip(tripReference, serviceDate, null, null);
+      return new TripDeletion(tripReference, serviceDate, null, null);
     }
     if (updateType == TripUpdateType.DUPLICATE_TRIP) {
       tripUpdate.validateDuplicated();
-      return new ParsedDuplicateTrip(
-        tripReference,
-        serviceDate,
-        tripUpdate.startTime().orElseThrow()
-      );
+      return new TripDuplication(tripReference, serviceDate, tripUpdate.startTime().orElseThrow());
     }
 
     var stopTimeUpdates = parseStopTimeUpdates(
@@ -114,16 +110,16 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     );
 
     return switch (updateType) {
-      case UPDATE_EXISTING -> ParsedUpdateExisting.builder(tripReference, serviceDate)
+      case UPDATE_EXISTING -> TripRevision.builder(tripReference, serviceDate)
         .withFormatPolicy(gtfsPolicy)
         .withStopTimeUpdates(stopTimeUpdates)
         .build();
-      case MODIFY_TRIP -> ParsedModifyTrip.builder(tripReference, serviceDate)
+      case MODIFY_TRIP -> TripModification.builder(tripReference, serviceDate)
         .withFormatPolicy(gtfsPolicy)
         .withStopTimeUpdates(stopTimeUpdates)
         .withTripCreationInfo(buildTripCreationInfo(tripId, tripUpdate))
         .build();
-      case ADD_NEW_TRIP -> ParsedAddNewTrip.builder(
+      case ADD_NEW_TRIP -> TripAddition.builder(
         tripReference,
         serviceDate,
         buildTripCreationInfo(tripId, tripUpdate)

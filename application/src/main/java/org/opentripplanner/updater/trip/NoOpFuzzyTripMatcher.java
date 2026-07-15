@@ -3,7 +3,7 @@ package org.opentripplanner.updater.trip;
 import java.time.LocalDate;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
-import org.opentripplanner.updater.trip.model.ParsedExistingTripUpdate;
+import org.opentripplanner.updater.trip.model.ExistingTripUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
 
 /**
@@ -19,7 +19,7 @@ public class NoOpFuzzyTripMatcher implements FuzzyTripMatcher {
   @Override
   public TripAndPattern match(
     TripReference tripReference,
-    ParsedExistingTripUpdate parsedUpdate,
+    ExistingTripUpdate parsedUpdate,
     LocalDate serviceDate
   ) {
     throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);

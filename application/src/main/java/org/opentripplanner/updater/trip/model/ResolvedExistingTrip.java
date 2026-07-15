@@ -12,8 +12,8 @@ import org.opentripplanner.updater.trip.policy.FormatPolicy;
 /**
  * Resolved data for updates to existing scheduled trips.
  * <p>
- * Used by {@link org.opentripplanner.updater.trip.handlers.UpdateExistingTripHandler}
- * and {@link org.opentripplanner.updater.trip.handlers.ModifyTripHandler}.
+ * Used by {@link org.opentripplanner.updater.trip.TripReviser}
+ * and {@link org.opentripplanner.updater.trip.TripModifier}.
  */
 public final class ResolvedExistingTrip {
 
@@ -37,7 +37,7 @@ public final class ResolvedExistingTrip {
   private final List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates;
 
   public ResolvedExistingTrip(
-    ParsedExistingTripUpdate parsedUpdate,
+    ExistingTripUpdate parsedUpdate,
     LocalDate serviceDate,
     Trip trip,
     TripPattern pattern,
@@ -49,8 +49,8 @@ public final class ResolvedExistingTrip {
     this.tripCreationInfo = parsedUpdate.tripCreationInfo();
     this.dataSource = parsedUpdate.dataSource();
     this.hasStopSequences = parsedUpdate.hasStopSequences();
-    this.cancellation = parsedUpdate instanceof ParsedModifyTrip pmt ? pmt.isCancellation() : false;
-    this.extraJourney = parsedUpdate instanceof ParsedModifyTrip pmt2
+    this.cancellation = parsedUpdate instanceof TripModification pmt ? pmt.isCancellation() : false;
+    this.extraJourney = parsedUpdate instanceof TripModification pmt2
       ? pmt2.isExtraJourney()
       : false;
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
@@ -138,7 +138,7 @@ public final class ResolvedExistingTrip {
 
   /**
    * Returns true if this update carries a trip-level cancellation flag (SIRI {@code isCancellation=true}).
-   * Used by {@link org.opentripplanner.updater.trip.handlers.ModifyTripHandler} to mark the trip
+   * Used by {@link org.opentripplanner.updater.trip.TripModifier} to mark the trip
    * as cancelled on the modified pattern (e.g. extra call with cancellation).
    */
   public boolean isCancellation() {
@@ -147,7 +147,7 @@ public final class ResolvedExistingTrip {
 
   /**
    * Returns true if the update is for a SIRI extra journey (ExtraJourney=true) that also carries
-   * extra calls. Used by {@link org.opentripplanner.updater.trip.handlers.ModifyTripHandler} to
+   * extra calls. Used by {@link org.opentripplanner.updater.trip.TripModifier} to
    * also mark the modified trip as added, mirroring the legacy {@code ExtraCallTripBuilder}.
    */
   public boolean isExtraJourney() {

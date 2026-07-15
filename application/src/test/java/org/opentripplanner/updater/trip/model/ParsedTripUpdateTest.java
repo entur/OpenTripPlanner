@@ -24,9 +24,9 @@ class ParsedTripUpdateTest {
 
   @Test
   void updateExistingBuilderCreatesMinimalUpdate() {
-    var update = ParsedUpdateExisting.builder(TRIP_REF, SERVICE_DATE).build();
+    var update = TripRevision.builder(TRIP_REF, SERVICE_DATE).build();
 
-    assertInstanceOf(ParsedUpdateExisting.class, update);
+    assertInstanceOf(TripRevision.class, update);
     assertEquals(TRIP_REF, update.tripReference());
     assertEquals(SERVICE_DATE, update.serviceDate());
     assertTrue(update.stopTimeUpdates().isEmpty());
@@ -40,7 +40,7 @@ class ParsedTripUpdateTest {
       .withArrivalUpdate(TimeUpdate.ofDelay(60))
       .build();
 
-    var update = ParsedUpdateExisting.builder(TRIP_REF, SERVICE_DATE)
+    var update = TripRevision.builder(TRIP_REF, SERVICE_DATE)
       .withStopTimeUpdates(List.of(stopTimeUpdate))
       .build();
 
@@ -57,7 +57,7 @@ class ParsedTripUpdateTest {
       .withDepartureUpdate(TimeUpdate.ofDelay(120))
       .build();
 
-    var update = ParsedUpdateExisting.builder(TRIP_REF, SERVICE_DATE)
+    var update = TripRevision.builder(TRIP_REF, SERVICE_DATE)
       .addStopTimeUpdate(stopTimeUpdate1)
       .addStopTimeUpdate(stopTimeUpdate2)
       .build();
@@ -69,9 +69,9 @@ class ParsedTripUpdateTest {
   void addNewTripBuilderRequiresTripCreationInfo() {
     var tripCreationInfo = TripCreationInfo.builder(TRIP_ID).build();
 
-    var update = ParsedAddNewTrip.builder(TRIP_REF, SERVICE_DATE, tripCreationInfo).build();
+    var update = TripAddition.builder(TRIP_REF, SERVICE_DATE, tripCreationInfo).build();
 
-    assertInstanceOf(ParsedAddNewTrip.class, update);
+    assertInstanceOf(TripAddition.class, update);
     assertEquals(tripCreationInfo, update.tripCreationInfo());
     assertNotNull(update.tripCreationInfo());
   }
@@ -83,37 +83,33 @@ class ParsedTripUpdateTest {
       org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
 
-    var update = ParsedUpdateExisting.builder(TRIP_REF, SERVICE_DATE)
-      .withFormatPolicy(policy)
-      .build();
+    var update = TripRevision.builder(TRIP_REF, SERVICE_DATE).withFormatPolicy(policy).build();
 
     assertEquals(policy, update.formatPolicy());
   }
 
   @Test
   void updateExistingWithDataSource() {
-    var update = ParsedUpdateExisting.builder(TRIP_REF, SERVICE_DATE)
-      .withDataSource("entur-siri")
-      .build();
+    var update = TripRevision.builder(TRIP_REF, SERVICE_DATE).withDataSource("entur-siri").build();
 
     assertEquals("entur-siri", update.dataSource());
   }
 
   @Test
-  void cancelTripIsInstanceOfParsedTripRemoval() {
-    var cancelUpdate = new ParsedCancelTrip(TRIP_REF, SERVICE_DATE, null, null);
+  void cancellationIsInstanceOfTripRemoval() {
+    var cancelUpdate = new TripCancellation(TRIP_REF, SERVICE_DATE, null, null);
 
-    assertInstanceOf(ParsedTripRemoval.class, cancelUpdate);
+    assertInstanceOf(TripRemoval.class, cancelUpdate);
     assertInstanceOf(ParsedTripUpdate.class, cancelUpdate);
     assertEquals(TRIP_REF, cancelUpdate.tripReference());
     assertEquals(SERVICE_DATE, cancelUpdate.serviceDate());
   }
 
   @Test
-  void deleteTripIsInstanceOfParsedTripRemoval() {
-    var deleteUpdate = new ParsedDeleteTrip(TRIP_REF, SERVICE_DATE, null, null);
+  void deletionIsInstanceOfTripRemoval() {
+    var deleteUpdate = new TripDeletion(TRIP_REF, SERVICE_DATE, null, null);
 
-    assertInstanceOf(ParsedTripRemoval.class, deleteUpdate);
+    assertInstanceOf(TripRemoval.class, deleteUpdate);
     assertInstanceOf(ParsedTripUpdate.class, deleteUpdate);
     assertEquals(TRIP_REF, deleteUpdate.tripReference());
     assertEquals(SERVICE_DATE, deleteUpdate.serviceDate());
@@ -121,21 +117,21 @@ class ParsedTripUpdateTest {
 
   @Test
   void sealedHierarchyTypeCheck() {
-    ParsedTripUpdate updateExisting = ParsedUpdateExisting.builder(TRIP_REF, SERVICE_DATE).build();
-    ParsedTripUpdate modifyTrip = ParsedModifyTrip.builder(TRIP_REF, SERVICE_DATE).build();
+    ParsedTripUpdate updateExisting = TripRevision.builder(TRIP_REF, SERVICE_DATE).build();
+    ParsedTripUpdate modifyTrip = TripModification.builder(TRIP_REF, SERVICE_DATE).build();
     var tripCreationInfo = TripCreationInfo.builder(TRIP_ID).build();
-    ParsedTripUpdate addNewTrip = ParsedAddNewTrip.builder(
+    ParsedTripUpdate addNewTrip = TripAddition.builder(
       TRIP_REF,
       SERVICE_DATE,
       tripCreationInfo
     ).build();
-    ParsedTripUpdate cancelTrip = new ParsedCancelTrip(TRIP_REF, SERVICE_DATE, null, null);
-    ParsedTripUpdate deleteTrip = new ParsedDeleteTrip(TRIP_REF, SERVICE_DATE, null, null);
+    ParsedTripUpdate cancelTrip = new TripCancellation(TRIP_REF, SERVICE_DATE, null, null);
+    ParsedTripUpdate deleteTrip = new TripDeletion(TRIP_REF, SERVICE_DATE, null, null);
 
-    assertInstanceOf(ParsedExistingTripUpdate.class, updateExisting);
-    assertInstanceOf(ParsedExistingTripUpdate.class, modifyTrip);
-    assertFalse(addNewTrip instanceof ParsedExistingTripUpdate);
-    assertInstanceOf(ParsedTripRemoval.class, cancelTrip);
-    assertInstanceOf(ParsedTripRemoval.class, deleteTrip);
+    assertInstanceOf(ExistingTripUpdate.class, updateExisting);
+    assertInstanceOf(ExistingTripUpdate.class, modifyTrip);
+    assertFalse(addNewTrip instanceof ExistingTripUpdate);
+    assertInstanceOf(TripRemoval.class, cancelTrip);
+    assertInstanceOf(TripRemoval.class, deleteTrip);
   }
 }

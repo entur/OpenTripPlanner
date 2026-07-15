@@ -23,6 +23,7 @@ import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
 import org.opentripplanner.updater.trip.FuzzyTripMatcher;
+import org.opentripplanner.updater.trip.GtfsRtRouteCreationStrategy;
 import org.opentripplanner.updater.trip.GtfsTripMatcher;
 import org.opentripplanner.updater.trip.NoOpFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
@@ -30,8 +31,7 @@ import org.opentripplanner.updater.trip.TripUpdateApplierFactory;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
-import org.opentripplanner.updater.trip.handlers.GtfsRtRouteCreationStrategy;
-import org.opentripplanner.updater.trip.model.ParsedDuplicateTrip;
+import org.opentripplanner.updater.trip.model.TripDuplication;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
 import org.slf4j.Logger;
@@ -175,7 +175,7 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
     // it's not clear what the semantics of this would be and particular how cancellation of a
     // duplicated trip would work.
     // please get in touch with the dev team if you need this functionality.
-    if (parsedUpdate instanceof ParsedDuplicateTrip && updateIncrementality == DIFFERENTIAL) {
+    if (parsedUpdate instanceof TripDuplication && updateIncrementality == DIFFERENTIAL) {
       throw UpdateException.of(
         parsedUpdate.tripReference().tripId(),
         NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED

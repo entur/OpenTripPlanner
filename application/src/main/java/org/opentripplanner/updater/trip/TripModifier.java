@@ -1,0 +1,152 @@
+package org.opentripplanner.updater.trip;
+
+import java.time.LocalDate;
+import java.util.Objects;
+import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
+import org.opentripplanner.transit.model.framework.DataValidationException;
+import org.opentripplanner.transit.model.network.TripPattern;
+import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
+import org.opentripplanner.transit.model.timetable.Trip;
+import org.opentripplanner.transit.model.timetable.TripTimesFactory;
+import org.opentripplanner.transit.service.TransitEditorService;
+import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
+import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
+import org.opentripplanner.updater.trip.model.TripModification;
+import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+/**
+ * Modifies a trip by replacing its stop pattern (rerouting it on the requested service date).
+ * <p>
+ * This covers two use cases:
+ * <ul>
+ *   <li><b>GTFS-RT REPLACEMENT</b>: Complete stop pattern replacement with full freedom</li>
+ *   <li><b>SIRI-ET EXTRA_CALL</b>: Insert extra stops, non-extra stops must match original</li>
+ * </ul>
+ * <p>
+ * The parsed update is anchored to a trip in the transit model by the
+ * {@link ExistingTripResolver} and validated before the modified pattern is built.
+ */
+public class TripModifier {
+
+  private static final Logger LOG = LoggerFactory.getLogger(TripModifier.class);
+
+  private final ExistingTripResolver resolver;
+  private final ModifyTripValidator validator = new ModifyTripValidator();
+  private final TransitEditorService transitService;
+  private final DeduplicatorService deduplicator;
+  private final TripPatternCache tripPatternCache;
+
+  public TripModifier(
+    ExistingTripResolver resolver,
+    TransitEditorService transitService,
+    DeduplicatorService deduplicator,
+    TripPatternCache tripPatternCache
+  ) {
+    this.resolver = Objects.requireNonNull(resolver);
+    this.transitService = Objects.requireNonNull(transitService);
+    this.deduplicator = Objects.requireNonNull(deduplicator);
+    this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
+  }
+
+  public TripUpdateResult modify(TripModification parsedUpdate) throws UpdateException {
+    var resolvedUpdate = resolver.resolve(parsedUpdate);
+    validator.validate(resolvedUpdate);
+    return modify(resolvedUpdate);
+  }
+
+  public TripUpdateResult modify(ResolvedExistingTrip resolvedUpdate) {
+    // All resolution already done by ExistingTripResolver
+    Trip trip = resolvedUpdate.trip();
+    TripPattern scheduledPattern = resolvedUpdate.scheduledPattern();
+    LocalDate serviceDate = resolvedUpdate.serviceDate();
+
+    LOG.debug(
+      "Modifying trip {} on pattern {} for date {}",
+      trip.getId(),
+      scheduledPattern.getId(),
+      serviceDate
+    );
+
+    var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
+
+    // Build the new stop pattern from stop time updates
+    var stopTimesAndPattern = NewStopPatternFactory.buildNewStopPattern(
+      trip,
+      stopTimeUpdates,
+      resolvedUpdate.formatPolicy().firstLastStopTime()
+    );
+
+    // Create scheduled trip times for the new pattern (used as baseline for real-time)
+    var scheduledTripTimes = TripTimesFactory.tripTimes(
+      trip,
+      stopTimesAndPattern.stopTimes(),
+      deduplicator
+    ).withServiceCode(transitService.getTripCalendars().getServiceCode(trip.getServiceId()));
+
+    // Validate scheduled times
+    try {
+      scheduledTripTimes.validateNonIncreasingTimes();
+    } catch (DataValidationException e) {
+      LOG.info("Invalid scheduled times for modified trip {}: {}", trip.getId(), e.getMessage());
+      throw DataValidationExceptionMapper.map(e);
+    }
+
+    // Create the new pattern - don't add scheduled times, only real-time times will be added
+    TripPattern newPattern = TripPattern.of(tripPatternCache.generatePatternId(trip))
+      .withRoute(trip.getRoute())
+      .withMode(trip.getMode())
+      .withNetexSubmode(trip.getNetexSubMode())
+      .withStopPattern(stopTimesAndPattern.stopPattern())
+      .withRealTimeStopPatternModified()
+      .withOriginalTripPattern(scheduledPattern)
+      .build();
+
+    // Create real-time trip times builder from scheduled
+    var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
+
+    // Apply real-time updates
+    StopTimeUpdates.applyRealTimeUpdates(
+      resolvedUpdate.tripCreationInfo(),
+      builder,
+      stopTimeUpdates
+    );
+
+    // Set state to MODIFIED (trip pattern was modified)
+    builder.withModifiedTripPattern();
+
+    // If this is a SIRI extra journey (ExtraJourney=true) that also carries extra calls, also mark
+    // the trip as added: an extra journey is never part of the static schedule. Mirrors the legacy
+    // ExtraCallTripBuilder, which sets added and modifiedTripPattern (and canceled) simultaneously.
+    if (resolvedUpdate.isExtraJourney()) {
+      builder.withAdded();
+    }
+
+    // If the SIRI message carries a trip-level cancellation flag (e.g. extra call + cancellation),
+    // mark the trip as cancelled on the modified pattern.
+    if (resolvedUpdate.isCancellation()) {
+      builder.withCanceled();
+    }
+
+    // Build and return the result with revert and deletion signals
+    try {
+      var realTimeTripUpdate = RealTimeTripUpdate.of(newPattern, builder.build(), serviceDate)
+        .withProducer(resolvedUpdate.dataSource())
+        .withRevertPreviousRealTimeUpdates(true)
+        .withHideTripInScheduledPattern(scheduledPattern)
+        .build();
+      LOG.debug(
+        "Modified trip {} on {} with new pattern {}",
+        trip.getId(),
+        serviceDate,
+        newPattern.getId()
+      );
+      return new TripUpdateResult(realTimeTripUpdate);
+    } catch (DataValidationException e) {
+      LOG.info("Invalid real-time data for modified trip {}: {}", trip.getId(), e.getMessage());
+      throw DataValidationExceptionMapper.map(e);
+    }
+  }
+}

@@ -10,16 +10,16 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
-import org.opentripplanner.updater.trip.model.ParsedAddNewTrip;
 import org.opentripplanner.updater.trip.model.ResolvedAddedTripUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedTripCreation;
+import org.opentripplanner.updater.trip.model.TripAddition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Resolves a {@link ParsedAddNewTrip} into a {@link ResolvedNewTrip}.
+ * Resolves a {@link TripAddition} into a {@link ResolvedNewTrip}.
  * <p>
  * Used for ADD_NEW_TRIP update type.
  * <p>
@@ -61,7 +61,7 @@ public class NewTripResolver {
    * @return the resolved data
    * @throws UpdateException if resolution fails
    */
-  public ResolvedNewTrip resolve(ParsedAddNewTrip parsedUpdate) {
+  public ResolvedNewTrip resolve(TripAddition parsedUpdate) {
     // Resolve service date
     LocalDate serviceDate = serviceDateResolver.resolveServiceDate(parsedUpdate);
 
@@ -104,7 +104,7 @@ public class NewTripResolver {
    * Resolve the pattern and baseline trip times for an update to a previously added trip.
    */
   private ResolvedAddedTripUpdate resolveAddedTripUpdate(
-    ParsedAddNewTrip parsedUpdate,
+    TripAddition parsedUpdate,
     LocalDate serviceDate,
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates,
     Trip trip
