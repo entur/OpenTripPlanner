@@ -17,10 +17,10 @@ import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
+import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripRevision;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 import org.opentripplanner.updater.trip.policy.StopMatchingPolicy;
 
@@ -69,7 +69,7 @@ class UpdateExistingTripValidatorTest {
     validator = new UpdateExistingTripValidator();
   }
 
-  private ResolvedExistingTrip resolve(TripRevision parsedUpdate) {
+  private ResolvedExistingTrip resolve(ScheduledTripUpdate parsedUpdate) {
     return resolver.resolve(parsedUpdate);
   }
 
@@ -85,7 +85,7 @@ class UpdateExistingTripValidatorTest {
       .withArrivalUpdate(TimeUpdate.ofDelay(60))
       .build();
 
-    var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+    var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(
         FormatPolicy.builder().withStopMatching(StopMatchingPolicy.BY_SEQUENCE_OR_ID).build()
       )
@@ -108,7 +108,7 @@ class UpdateExistingTripValidatorTest {
 
     var options = FormatPolicy.builder().withStopMatching(StopMatchingPolicy.POSITIONAL).build();
 
-    var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+    var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(options)
       .addStopTimeUpdate(stopUpdate)
       .build();
@@ -136,7 +136,7 @@ class UpdateExistingTripValidatorTest {
 
     var options = FormatPolicy.builder().withStopMatching(StopMatchingPolicy.POSITIONAL).build();
 
-    var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+    var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(options)
       .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate))
       .build();
@@ -176,7 +176,7 @@ class UpdateExistingTripValidatorTest {
 
     var options = FormatPolicy.builder().withStopMatching(StopMatchingPolicy.POSITIONAL).build();
 
-    var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+    var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(options)
       .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate, stopDUpdate))
       .build();
@@ -213,7 +213,7 @@ class UpdateExistingTripValidatorTest {
 
     var options = FormatPolicy.builder().withStopMatching(StopMatchingPolicy.POSITIONAL).build();
 
-    var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+    var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(options)
       .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate))
       .build();

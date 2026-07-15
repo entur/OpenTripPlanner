@@ -9,12 +9,12 @@ import javax.annotation.Nullable;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
- * A revision of an existing trip without stop pattern changes: delays, changed times and
+ * An update of an existing trip without stop pattern changes: delays, changed times and
  * per-stop details.
  * <p>
  * Maps to SIRI trip update or GTFS-RT SCHEDULED.
  */
-public final class TripRevision implements ExistingTripUpdate {
+public final class ScheduledTripUpdate implements ExistingTripUpdate {
 
   private final TripReference tripReference;
 
@@ -30,7 +30,7 @@ public final class TripRevision implements ExistingTripUpdate {
   @Nullable
   private final String dataSource;
 
-  TripRevision(
+  ScheduledTripUpdate(
     TripReference tripReference,
     @Nullable LocalDate serviceDate,
     @Nullable ZonedDateTime aimedDepartureTime,
@@ -87,7 +87,12 @@ public final class TripRevision implements ExistingTripUpdate {
   @Override
   public String toString() {
     return (
-      "TripRevision{" + "tripReference=" + tripReference + ", serviceDate=" + serviceDate + '}'
+      "ScheduledTripUpdate{" +
+      "tripReference=" +
+      tripReference +
+      ", serviceDate=" +
+      serviceDate +
+      '}'
     );
   }
 
@@ -137,8 +142,8 @@ public final class TripRevision implements ExistingTripUpdate {
       return this;
     }
 
-    public TripRevision build() {
-      return new TripRevision(
+    public ScheduledTripUpdate build() {
+      return new ScheduledTripUpdate(
         tripReference,
         serviceDate,
         aimedDepartureTime,

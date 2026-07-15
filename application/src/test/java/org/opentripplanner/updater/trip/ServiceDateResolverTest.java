@@ -16,8 +16,8 @@ import org.opentripplanner.transit.model.TripInput;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripRevision;
 
 /**
  * Tests for {@link ServiceDateResolver}.
@@ -61,7 +61,7 @@ class ServiceDateResolverTest {
     void resolveServiceDate_whenExplicitServiceDate_returnsIt() {
       var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
       var tripRef = TripReference.ofTripId(tripId);
-      var update = TripRevision.builder(tripRef, SERVICE_DATE).build();
+      var update = ScheduledTripUpdate.builder(tripRef, SERVICE_DATE).build();
 
       var result = resolver.resolveServiceDate(update);
 
@@ -72,7 +72,7 @@ class ServiceDateResolverTest {
     void resolveServiceDate_whenNoServiceDateAndNoAimedDeparture_throwsException() {
       var tripOnServiceDateId = new FeedScopedId(FEED_ID, "unknown-dsj");
       var tripRef = TripReference.builder().withTripOnServiceDateId(tripOnServiceDateId).build();
-      var update = TripRevision.builder(tripRef, null).build();
+      var update = ScheduledTripUpdate.builder(tripRef, null).build();
 
       // When tripOnServiceDateId doesn't resolve and there's no aimedDepartureTime,
       // the resolver falls through all strategies and reports NO_START_DATE
@@ -123,7 +123,7 @@ class ServiceDateResolverTest {
 
       var tripId = new FeedScopedId(FEED_ID, OVERNIGHT_TRIP_ID);
       var tripRef = TripReference.ofTripId(tripId);
-      var update = TripRevision.builder(tripRef, null)
+      var update = ScheduledTripUpdate.builder(tripRef, null)
         .withAimedDepartureTime(aimedDepartureTime)
         .build();
 
@@ -158,7 +158,7 @@ class ServiceDateResolverTest {
 
       var tripId = new FeedScopedId(FEED_ID, "day-trip");
       var tripRef = TripReference.ofTripId(tripId);
-      var update = TripRevision.builder(tripRef, null)
+      var update = ScheduledTripUpdate.builder(tripRef, null)
         .withAimedDepartureTime(aimedDepartureTime)
         .build();
 
@@ -176,7 +176,7 @@ class ServiceDateResolverTest {
       var unknownTripId = new FeedScopedId(FEED_ID, "unknown-trip");
       var tripRef = TripReference.ofTripId(unknownTripId);
 
-      var update = TripRevision.builder(tripRef, null)
+      var update = ScheduledTripUpdate.builder(tripRef, null)
         .withAimedDepartureTime(aimedDepartureTime)
         .build();
 

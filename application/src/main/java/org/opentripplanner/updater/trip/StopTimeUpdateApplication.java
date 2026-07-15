@@ -16,7 +16,7 @@ import org.opentripplanner.updater.trip.policy.StopReplacementPolicy;
 /**
  * Applies the stop time updates of one resolved existing-trip update to a {@link
  * RealTimeTripTimesBuilder}, accumulating the resulting changes into an immutable {@link
- * PatternModification}. This is the cohesive command run by the {@link TripReviser}.
+ * PatternModification}. This is the cohesive command run by the {@link ScheduledTripUpdater}.
  * <p>
  * Format divergence is resolved through the {@code FormatPolicy} carried by the resolved update:
  * stop matching, stop replacement, pick/drop and delay propagation are all asked of the policy

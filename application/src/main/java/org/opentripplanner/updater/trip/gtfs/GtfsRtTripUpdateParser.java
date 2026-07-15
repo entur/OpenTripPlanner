@@ -26,6 +26,7 @@ import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
 import org.opentripplanner.updater.trip.model.RouteCreationInfo;
+import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.StopResolutionStrategy;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
@@ -36,7 +37,6 @@ import org.opentripplanner.updater.trip.model.TripDeletion;
 import org.opentripplanner.updater.trip.model.TripDuplication;
 import org.opentripplanner.updater.trip.model.TripModification;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripRevision;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 import org.opentripplanner.utils.time.TimeUtils;
@@ -110,7 +110,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     );
 
     return switch (updateType) {
-      case UPDATE_EXISTING -> TripRevision.builder(tripReference, serviceDate)
+      case UPDATE_EXISTING -> ScheduledTripUpdate.builder(tripReference, serviceDate)
         .withFormatPolicy(gtfsPolicy)
         .withStopTimeUpdates(stopTimeUpdates)
         .build();

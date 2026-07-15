@@ -18,10 +18,10 @@ import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.TripCancellation;
 import org.opentripplanner.updater.trip.model.TripDeletion;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripRevision;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
 
@@ -75,7 +75,10 @@ class DefaultTripUpdateApplierTest {
 
   @Test
   void testUpdateExisting_tripNotFound() {
-    var update = TripRevision.builder(TripReference.builder().build(), LocalDate.now()).build();
+    var update = ScheduledTripUpdate.builder(
+      TripReference.builder().build(),
+      LocalDate.now()
+    ).build();
 
     var exception = assertThrows(UpdateException.class, () -> applier.apply(update));
     assertEquals(UpdateErrorType.TRIP_NOT_FOUND, exception.errorType());

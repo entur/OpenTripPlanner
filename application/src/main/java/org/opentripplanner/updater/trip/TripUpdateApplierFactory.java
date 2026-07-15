@@ -8,7 +8,7 @@ import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 
 /**
  * Composition root for {@link DefaultTripUpdateApplier}: wires the shared resolvers into the
- * per-type domain operations ({@link TripReviser}, {@link TripModifier}, {@link TripAdder},
+ * per-type domain operations ({@link ScheduledTripUpdater}, {@link TripModifier}, {@link TripAdder},
  * {@link TripCanceller}, {@link TripDeleter}, {@link TripDuplicator}). This is plain manual DI
  * (the {@code updater.trip} package uses no Dagger).
  */
@@ -63,9 +63,9 @@ public final class TripUpdateApplierFactory {
     );
 
     return new DefaultTripUpdateApplier(
-      new TripReviser(existingTripResolver, tripPatternCache),
+      new ScheduledTripUpdater(existingTripResolver, tripPatternCache),
       new TripModifier(existingTripResolver, transitService, deduplicator, tripPatternCache),
-      new TripAdder(newTripResolver, tripCreator, new AddedTripReviser()),
+      new TripAdder(newTripResolver, tripCreator, new AddedTripUpdater()),
       new TripCanceller(tripRemovalResolver),
       new TripDeleter(tripRemovalResolver),
       new TripDuplicator(duplicateTripResolver, deduplicator)

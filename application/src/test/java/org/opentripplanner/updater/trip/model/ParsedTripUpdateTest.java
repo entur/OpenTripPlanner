@@ -24,9 +24,9 @@ class ParsedTripUpdateTest {
 
   @Test
   void updateExistingBuilderCreatesMinimalUpdate() {
-    var update = TripRevision.builder(TRIP_REF, SERVICE_DATE).build();
+    var update = ScheduledTripUpdate.builder(TRIP_REF, SERVICE_DATE).build();
 
-    assertInstanceOf(TripRevision.class, update);
+    assertInstanceOf(ScheduledTripUpdate.class, update);
     assertEquals(TRIP_REF, update.tripReference());
     assertEquals(SERVICE_DATE, update.serviceDate());
     assertTrue(update.stopTimeUpdates().isEmpty());
@@ -40,7 +40,7 @@ class ParsedTripUpdateTest {
       .withArrivalUpdate(TimeUpdate.ofDelay(60))
       .build();
 
-    var update = TripRevision.builder(TRIP_REF, SERVICE_DATE)
+    var update = ScheduledTripUpdate.builder(TRIP_REF, SERVICE_DATE)
       .withStopTimeUpdates(List.of(stopTimeUpdate))
       .build();
 
@@ -57,7 +57,7 @@ class ParsedTripUpdateTest {
       .withDepartureUpdate(TimeUpdate.ofDelay(120))
       .build();
 
-    var update = TripRevision.builder(TRIP_REF, SERVICE_DATE)
+    var update = ScheduledTripUpdate.builder(TRIP_REF, SERVICE_DATE)
       .addStopTimeUpdate(stopTimeUpdate1)
       .addStopTimeUpdate(stopTimeUpdate2)
       .build();
@@ -83,14 +83,18 @@ class ParsedTripUpdateTest {
       org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType.REQUIRED_NO_DATA
     );
 
-    var update = TripRevision.builder(TRIP_REF, SERVICE_DATE).withFormatPolicy(policy).build();
+    var update = ScheduledTripUpdate.builder(TRIP_REF, SERVICE_DATE)
+      .withFormatPolicy(policy)
+      .build();
 
     assertEquals(policy, update.formatPolicy());
   }
 
   @Test
   void updateExistingWithDataSource() {
-    var update = TripRevision.builder(TRIP_REF, SERVICE_DATE).withDataSource("entur-siri").build();
+    var update = ScheduledTripUpdate.builder(TRIP_REF, SERVICE_DATE)
+      .withDataSource("entur-siri")
+      .build();
 
     assertEquals("entur-siri", update.dataSource());
   }
@@ -117,7 +121,7 @@ class ParsedTripUpdateTest {
 
   @Test
   void sealedHierarchyTypeCheck() {
-    ParsedTripUpdate updateExisting = TripRevision.builder(TRIP_REF, SERVICE_DATE).build();
+    ParsedTripUpdate updateExisting = ScheduledTripUpdate.builder(TRIP_REF, SERVICE_DATE).build();
     ParsedTripUpdate modifyTrip = TripModification.builder(TRIP_REF, SERVICE_DATE).build();
     var tripCreationInfo = TripCreationInfo.builder(TRIP_ID).build();
     ParsedTripUpdate addNewTrip = TripAddition.builder(

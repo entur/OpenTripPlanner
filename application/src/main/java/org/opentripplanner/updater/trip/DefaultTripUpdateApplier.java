@@ -2,12 +2,12 @@ package org.opentripplanner.updater.trip;
 
 import java.util.Objects;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.TripAddition;
 import org.opentripplanner.updater.trip.model.TripCancellation;
 import org.opentripplanner.updater.trip.model.TripDeletion;
 import org.opentripplanner.updater.trip.model.TripDuplication;
 import org.opentripplanner.updater.trip.model.TripModification;
-import org.opentripplanner.updater.trip.model.TripRevision;
 
 /**
  * Default implementation of TripUpdateApplier that applies parsed trip updates to the transit
@@ -18,7 +18,7 @@ import org.opentripplanner.updater.trip.model.TripRevision;
  * The applier is a pure dispatcher: it pattern-matches on the sealed {@link ParsedTripUpdate}
  * hierarchy and delegates each update type to the domain operation that applies it:
  * <ul>
- *   <li>{@link TripRevision} → {@link TripReviser}</li>
+ *   <li>{@link ScheduledTripUpdate} → {@link ScheduledTripUpdater}</li>
  *   <li>{@link TripModification} → {@link TripModifier}</li>
  *   <li>{@link TripAddition} → {@link TripAdder}</li>
  *   <li>{@link TripCancellation} → {@link TripCanceller}</li>
@@ -31,7 +31,7 @@ import org.opentripplanner.updater.trip.model.TripRevision;
  */
 public class DefaultTripUpdateApplier implements TripUpdateApplier {
 
-  private final TripReviser tripReviser;
+  private final ScheduledTripUpdater scheduledTripUpdater;
   private final TripModifier tripModifier;
   private final TripAdder tripAdder;
   private final TripCanceller tripCanceller;
@@ -43,14 +43,14 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
    * {@link TripUpdateApplierFactory#create} to obtain a fully wired instance.
    */
   DefaultTripUpdateApplier(
-    TripReviser tripReviser,
+    ScheduledTripUpdater scheduledTripUpdater,
     TripModifier tripModifier,
     TripAdder tripAdder,
     TripCanceller tripCanceller,
     TripDeleter tripDeleter,
     TripDuplicator tripDuplicator
   ) {
-    this.tripReviser = Objects.requireNonNull(tripReviser);
+    this.scheduledTripUpdater = Objects.requireNonNull(scheduledTripUpdater);
     this.tripModifier = Objects.requireNonNull(tripModifier);
     this.tripAdder = Objects.requireNonNull(tripAdder);
     this.tripCanceller = Objects.requireNonNull(tripCanceller);
@@ -61,7 +61,7 @@ public class DefaultTripUpdateApplier implements TripUpdateApplier {
   @Override
   public TripUpdateResult apply(ParsedTripUpdate parsedUpdate) {
     return switch (parsedUpdate) {
-      case TripRevision u -> tripReviser.revise(u);
+      case ScheduledTripUpdate u -> scheduledTripUpdater.update(u);
       case TripModification u -> tripModifier.modify(u);
       case TripAddition u -> tripAdder.add(u);
       case TripCancellation u -> tripCanceller.cancel(u);

@@ -15,13 +15,13 @@ import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.PatternModification;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
-import org.opentripplanner.updater.trip.model.TripRevision;
+import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Revises an existing scheduled trip with real-time data: delays, changed times and minor
+ * Updates an existing scheduled trip with real-time data: delays, changed times and minor
  * pattern adjustments such as replaced stops or pick/drop changes.
  * Maps to GTFS-RT SCHEDULED and SIRI-ET regular updates.
  * <p>
@@ -30,26 +30,26 @@ import org.slf4j.LoggerFactory;
  * {@link StopTimeUpdateApplication} command, and turn the resulting {@link PatternModification}
  * into the final pattern and real-time state.
  */
-public class TripReviser {
+public class ScheduledTripUpdater {
 
-  private static final Logger LOG = LoggerFactory.getLogger(TripReviser.class);
+  private static final Logger LOG = LoggerFactory.getLogger(ScheduledTripUpdater.class);
 
   private final ExistingTripResolver resolver;
   private final UpdateExistingTripValidator validator = new UpdateExistingTripValidator();
   private final TripPatternCache tripPatternCache;
 
-  public TripReviser(ExistingTripResolver resolver, TripPatternCache tripPatternCache) {
+  public ScheduledTripUpdater(ExistingTripResolver resolver, TripPatternCache tripPatternCache) {
     this.resolver = Objects.requireNonNull(resolver);
     this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
   }
 
-  public TripUpdateResult revise(TripRevision parsedUpdate) throws UpdateException {
+  public TripUpdateResult update(ScheduledTripUpdate parsedUpdate) throws UpdateException {
     var resolvedUpdate = resolver.resolve(parsedUpdate);
     validator.validate(resolvedUpdate);
-    return revise(resolvedUpdate);
+    return update(resolvedUpdate);
   }
 
-  public TripUpdateResult revise(ResolvedExistingTrip resolvedUpdate) {
+  public TripUpdateResult update(ResolvedExistingTrip resolvedUpdate) {
     // All resolution already done by ExistingTripResolver
     Trip trip = resolvedUpdate.trip();
     TripPattern scheduledPattern = resolvedUpdate.scheduledPattern();
