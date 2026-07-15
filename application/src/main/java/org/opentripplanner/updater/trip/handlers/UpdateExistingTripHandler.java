@@ -97,7 +97,11 @@ public class UpdateExistingTripHandler implements TripUpdateHandler.ForExistingT
       // Check if pattern actually changed (builder deduplicates)
       // Compare against the scheduled pattern to determine if we need a modified pattern
       if (!scheduledPattern.getStopPattern().equals(newStopPattern)) {
-        finalPattern = tripPatternCache.getOrCreateTripPattern(newStopPattern, trip);
+        finalPattern = tripPatternCache.getOrCreateTripPattern(
+          newStopPattern,
+          trip,
+          scheduledPattern
+        );
         patternChanged = true;
         patternToDeleteFrom = scheduledPattern;
       }
