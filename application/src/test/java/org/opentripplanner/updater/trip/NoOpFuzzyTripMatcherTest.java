@@ -8,8 +8,8 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripRevision;
 
 class NoOpFuzzyTripMatcherTest {
 
@@ -17,7 +17,10 @@ class NoOpFuzzyTripMatcherTest {
   void match_alwaysThrowsException() {
     var matcher = NoOpFuzzyTripMatcher.INSTANCE;
     var tripReference = TripReference.builder().build();
-    var parsedUpdate = TripRevision.builder(tripReference, LocalDate.of(2024, 1, 15)).build();
+    var parsedUpdate = ScheduledTripUpdate.builder(
+      tripReference,
+      LocalDate.of(2024, 1, 15)
+    ).build();
 
     var exception = assertThrows(UpdateException.class, () ->
       matcher.match(tripReference, parsedUpdate, LocalDate.of(2024, 1, 15))

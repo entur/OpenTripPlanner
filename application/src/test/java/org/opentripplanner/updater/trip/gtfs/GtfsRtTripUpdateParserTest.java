@@ -18,13 +18,13 @@ import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropaga
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTimeUpdate;
+import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripAddition;
 import org.opentripplanner.updater.trip.model.TripCancellation;
 import org.opentripplanner.updater.trip.model.TripDeletion;
 import org.opentripplanner.updater.trip.model.TripModification;
 import org.opentripplanner.updater.trip.model.TripRemoval;
-import org.opentripplanner.updater.trip.model.TripRevision;
 
 class GtfsRtTripUpdateParserTest {
 
@@ -67,7 +67,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(tripUpdate));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(tripUpdate));
 
     assertEquals(new FeedScopedId(FEED_ID, "trip1"), parsed.tripReference().tripId());
     assertEquals(TEST_DATE, parsed.serviceDate());
@@ -192,7 +192,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(tripUpdate));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(tripUpdate));
 
     assertEquals(1, parsed.stopTimeUpdates().size());
     var stopUpdate = parsed.stopTimeUpdates().get(0);
@@ -221,7 +221,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(tripUpdate));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(tripUpdate));
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertEquals(new FeedScopedId(FEED_ID, "stop1"), stopUpdate.stopReference().stopId());
@@ -279,7 +279,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(tripUpdate));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(tripUpdate));
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.stopHeadsign());
@@ -354,7 +354,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(tripUpdate));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(tripUpdate));
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.pickup());
@@ -420,7 +420,7 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(tripUpdate));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(tripUpdate));
 
     assertTrue(parsed.stopTimeUpdates().isEmpty());
   }
@@ -428,7 +428,7 @@ class GtfsRtTripUpdateParserTest {
   @Test
   void parseOptionsPreserved() {
     var parsed = assertInstanceOf(
-      TripRevision.class,
+      ScheduledTripUpdate.class,
       parser.parse(
         GtfsRealtime.TripUpdate.newBuilder()
           .setTrip(

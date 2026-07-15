@@ -9,7 +9,7 @@ import org.opentripplanner.transit.model.site.StopLocation;
  * Immutable record of the changes accumulated while applying the stop time updates of an existing
  * trip: which stops were replaced, which pickup/dropoff values changed, and whether there were
  * time updates, cancellations or no-data stops. Built by {@code StopTimeUpdateApplication}; consumed
- * by the {@code TripReviser} to decide whether a modified pattern is needed and how to mark the real-time state.
+ * by the {@code ScheduledTripUpdater} to decide whether a modified pattern is needed and how to mark the real-time state.
  */
 public final class PatternModification {
 

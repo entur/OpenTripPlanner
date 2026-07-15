@@ -11,7 +11,7 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
  * Resolved data for an update to a previously added real-time trip: the same trip is sent again
  * as ADD_NEW_TRIP after it has already been integrated in the transit model.
  * <p>
- * Used by {@link org.opentripplanner.updater.trip.AddedTripReviser}.
+ * Used by {@link org.opentripplanner.updater.trip.AddedTripUpdater}.
  */
 public final class ResolvedAddedTripUpdate extends ResolvedNewTrip {
 

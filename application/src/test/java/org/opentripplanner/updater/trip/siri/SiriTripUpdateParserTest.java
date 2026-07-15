@@ -18,12 +18,12 @@ import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTimeUpdate;
+import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.StopResolutionStrategy;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripAddition;
 import org.opentripplanner.updater.trip.model.TripCancellation;
 import org.opentripplanner.updater.trip.model.TripModification;
-import org.opentripplanner.updater.trip.model.TripRevision;
 
 /**
  * Tests for SiriTripUpdateParser.
@@ -53,7 +53,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(journey));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(journey));
 
     assertNull(parsed.tripReference().tripId());
     assertEquals(
@@ -171,7 +171,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(journey));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(journey));
 
     assertEquals(3, parsed.stopTimeUpdates().size());
     var cancelledStop = parsed.stopTimeUpdates().get(1);
@@ -186,7 +186,7 @@ class SiriTripUpdateParserTest {
       .withEstimatedCalls(calls -> calls.call("stop2").arriveAimedExpected("08:30", "08:32"))
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(journey));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(journey));
 
     assertEquals(2, parsed.stopTimeUpdates().size());
 
@@ -213,7 +213,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(journey));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(journey));
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertTrue(stopUpdate.predictionInaccurate());
@@ -232,7 +232,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(journey));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(journey));
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.stopHeadsign());
@@ -288,7 +288,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(journey));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(journey));
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.occupancy());
@@ -310,7 +310,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(journey));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(journey));
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
 
@@ -334,7 +334,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(journey));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(journey));
 
     assertEquals(
       ForwardsDelayPropagationType.NONE,
@@ -382,7 +382,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(journey));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(journey));
 
     assertEquals(3, parsed.stopTimeUpdates().size());
     assertEquals(
@@ -431,7 +431,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(journey));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(journey));
 
     assertEquals(2, parsed.stopTimeUpdates().size());
 
@@ -464,7 +464,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(journey));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(journey));
 
     assertEquals(2, parsed.stopTimeUpdates().size());
 
@@ -504,7 +504,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(journey));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(journey));
 
     assertEquals(3, parsed.stopTimeUpdates().size());
 
@@ -527,7 +527,7 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(journey));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(journey));
 
     assertEquals(1, parsed.stopTimeUpdates().size());
 
@@ -550,7 +550,7 @@ class SiriTripUpdateParserTest {
       .withEstimatedCalls(calls -> calls.call("stop2").arriveAimedExpected("08:30", "08:35"))
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(TripRevision.class, parser.parse(journey));
+    var parsed = assertInstanceOf(ScheduledTripUpdate.class, parser.parse(journey));
 
     assertEquals(2, parsed.stopTimeUpdates().size());
 

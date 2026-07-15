@@ -8,11 +8,11 @@ import org.opentripplanner.updater.trip.policy.FormatPolicy;
  * Common interface for updates to existing scheduled trips.
  * <p>
  * Used by {@link org.opentripplanner.updater.trip.ExistingTripResolver} for both
- * UPDATE_EXISTING ({@link TripRevision}) and MODIFY_TRIP ({@link TripModification}).
+ * UPDATE_EXISTING ({@link ScheduledTripUpdate}) and MODIFY_TRIP ({@link TripModification}).
  */
 public sealed interface ExistingTripUpdate
   extends ParsedTripUpdate
-  permits TripRevision, TripModification {
+  permits ScheduledTripUpdate, TripModification {
   List<ParsedStopTimeUpdate> stopTimeUpdates();
 
   FormatPolicy formatPolicy();

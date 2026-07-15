@@ -10,8 +10,8 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripRevision;
 
 class TripUpdateParserTest {
 
@@ -23,12 +23,12 @@ class TripUpdateParserTest {
     var tripRef = TripReference.ofTripId(tripId);
     var serviceDate = LocalDate.of(2024, 1, 15);
 
-    var expectedResult = TripRevision.builder(tripRef, serviceDate).build();
+    var expectedResult = ScheduledTripUpdate.builder(tripRef, serviceDate).build();
     var parser = new MockTripUpdateParser(expectedResult, null);
 
     var result = parser.parse("test-input");
 
-    assertInstanceOf(TripRevision.class, result);
+    assertInstanceOf(ScheduledTripUpdate.class, result);
     assertEquals(tripRef, result.tripReference());
   }
 

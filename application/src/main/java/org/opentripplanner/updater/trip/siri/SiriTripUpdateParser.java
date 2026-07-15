@@ -22,6 +22,7 @@ import org.opentripplanner.updater.trip.TripUpdateParser;
 import org.opentripplanner.updater.trip.model.DeferredTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTripUpdate;
+import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripAddition;
@@ -29,7 +30,6 @@ import org.opentripplanner.updater.trip.model.TripCancellation;
 import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.opentripplanner.updater.trip.model.TripModification;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripRevision;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 import org.opentripplanner.utils.lang.StringUtils;
@@ -108,7 +108,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
     return switch (updateType) {
       case UPDATE_EXISTING -> {
-        var builder = TripRevision.builder(tripReference, psd.serviceDate())
+        var builder = ScheduledTripUpdate.builder(tripReference, psd.serviceDate())
           .withFormatPolicy(FormatPolicy.siri())
           .withDataSource(journey.dataSource())
           .withStopTimeUpdates(stopTimeUpdates);

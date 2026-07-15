@@ -20,7 +20,7 @@ import org.slf4j.LoggerFactory;
  * Resolves a {@link ExistingTripUpdate} into a {@link ResolvedExistingTrip} for updates
  * to existing scheduled trips.
  * <p>
- * Used for UPDATE_EXISTING ({@link org.opentripplanner.updater.trip.model.TripRevision})
+ * Used for UPDATE_EXISTING ({@link org.opentripplanner.updater.trip.model.ScheduledTripUpdate})
  * and MODIFY_TRIP ({@link org.opentripplanner.updater.trip.model.TripModification}).
  * <p>
  * Resolution includes:

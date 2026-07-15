@@ -12,7 +12,7 @@ import org.opentripplanner.updater.trip.policy.FormatPolicy;
 /**
  * Resolved data for updates to existing scheduled trips.
  * <p>
- * Used by {@link org.opentripplanner.updater.trip.TripReviser}
+ * Used by {@link org.opentripplanner.updater.trip.ScheduledTripUpdater}
  * and {@link org.opentripplanner.updater.trip.TripModifier}.
  */
 public final class ResolvedExistingTrip {

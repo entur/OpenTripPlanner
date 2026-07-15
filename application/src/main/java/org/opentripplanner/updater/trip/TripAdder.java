@@ -12,28 +12,28 @@ import org.opentripplanner.updater.trip.model.TripAddition;
  * <p>
  * The {@link NewTripResolver} decides whether the message is the first occurrence of the trip
  * or a subsequent update to a trip added earlier: the first is created by the
- * {@link TripCreator}, the latter is revised by the {@link AddedTripReviser}.
+ * {@link TripCreator}, the latter is updated by the {@link AddedTripUpdater}.
  */
 public class TripAdder {
 
   private final NewTripResolver resolver;
   private final TripCreator tripCreator;
-  private final AddedTripReviser addedTripReviser;
+  private final AddedTripUpdater addedTripUpdater;
 
   public TripAdder(
     NewTripResolver resolver,
     TripCreator tripCreator,
-    AddedTripReviser addedTripReviser
+    AddedTripUpdater addedTripUpdater
   ) {
     this.resolver = Objects.requireNonNull(resolver);
     this.tripCreator = Objects.requireNonNull(tripCreator);
-    this.addedTripReviser = Objects.requireNonNull(addedTripReviser);
+    this.addedTripUpdater = Objects.requireNonNull(addedTripUpdater);
   }
 
   public TripUpdateResult add(TripAddition parsedUpdate) throws UpdateException {
     return switch (resolver.resolve(parsedUpdate)) {
       case ResolvedTripCreation creation -> tripCreator.create(creation);
-      case ResolvedAddedTripUpdate update -> addedTripReviser.revise(update);
+      case ResolvedAddedTripUpdate update -> addedTripUpdater.update(update);
     };
   }
 }

@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Utility methods for working with lists of resolved stop time updates, shared by
- * {@link TripCreator}, {@link AddedTripReviser} and {@link TripModifier}.
+ * {@link TripCreator}, {@link AddedTripUpdater} and {@link TripModifier}.
  */
 public final class StopTimeUpdates {
 

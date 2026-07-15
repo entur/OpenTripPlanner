@@ -11,18 +11,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Revises a previously added real-time trip: the same trip is sent again as
+ * Updates a previously added real-time trip: the same trip is sent again as
  * ADD_NEW_TRIP after it has already been integrated in the transit model (subsequent updates
  * to an extra journey). {@link TripAdder} routes these updates here.
  * <p>
  * The existing trip and pattern are reused verbatim; only the trip times are rebuilt from the
  * baseline times and the incoming call data.
  */
-public class AddedTripReviser {
+public class AddedTripUpdater {
 
-  private static final Logger LOG = LoggerFactory.getLogger(AddedTripReviser.class);
+  private static final Logger LOG = LoggerFactory.getLogger(AddedTripUpdater.class);
 
-  public TripUpdateResult revise(ResolvedAddedTripUpdate resolvedUpdate) {
+  public TripUpdateResult update(ResolvedAddedTripUpdate resolvedUpdate) {
     TripPattern pattern = resolvedUpdate.pattern();
     var tripTimes = resolvedUpdate.tripTimes();
     LocalDate serviceDate = resolvedUpdate.serviceDate();

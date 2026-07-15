@@ -5,7 +5,7 @@ import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 
 /**
- * Validates preconditions for the {@link TripReviser}, between resolution and the mutation of
+ * Validates preconditions for the {@link ScheduledTripUpdater}, between resolution and the mutation of
  * the trip times.
  * <p>
  * Checks FULL_UPDATE constraints:

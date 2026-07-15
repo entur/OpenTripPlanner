@@ -23,18 +23,18 @@ import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropaga
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
+import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripRevision;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 import org.opentripplanner.updater.trip.policy.StopMatchingPolicy;
 import org.opentripplanner.updater.trip.policy.StopReplacementPolicy;
 
 /**
- * Tests for {@link TripReviser}.
+ * Tests for {@link ScheduledTripUpdater}.
  */
-class TripReviserTest {
+class ScheduledTripUpdaterTest {
 
   private static final ZoneId TIME_ZONE = ZoneId.of("America/New_York");
 
@@ -52,7 +52,7 @@ class TripReviserTest {
   private TransitEditorService transitService;
   private TimetableSnapshotManager snapshotManager;
   private ExistingTripResolver resolver;
-  private TripReviser reviser;
+  private ScheduledTripUpdater updater;
 
   @BeforeEach
   void setUp() {
@@ -87,10 +87,10 @@ class TripReviserTest {
       NoOpFuzzyTripMatcher.INSTANCE,
       TIME_ZONE
     );
-    reviser = new TripReviser(resolver, tripPatternCache);
+    updater = new ScheduledTripUpdater(resolver, tripPatternCache);
   }
 
-  private ResolvedExistingTrip resolve(TripRevision parsedUpdate) {
+  private ResolvedExistingTrip resolve(ScheduledTripUpdate parsedUpdate) {
     return resolver.resolve(parsedUpdate);
   }
 
@@ -107,14 +107,14 @@ class TripReviserTest {
       .withDepartureUpdate(TimeUpdate.ofDelay(300))
       .build();
 
-    var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+    var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(
         FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
       )
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = reviser.revise(resolve(parsedUpdate));
+    var result = updater.update(resolve(parsedUpdate));
 
     assertNotNull(result);
 
@@ -157,14 +157,14 @@ class TripReviserTest {
       .withDepartureUpdate(TimeUpdate.ofDelay(300))
       .build();
 
-    var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+    var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(
         FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
       )
       .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate))
       .build();
 
-    var result = reviser.revise(resolve(parsedUpdate));
+    var result = updater.update(resolve(parsedUpdate));
 
     assertNotNull(result);
 
@@ -191,14 +191,14 @@ class TripReviserTest {
       .withDepartureUpdate(TimeUpdate.ofAbsolute(absoluteTime, STOP_B_ARRIVAL))
       .build();
 
-    var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+    var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(
         FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
       )
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = reviser.revise(resolve(parsedUpdate));
+    var result = updater.update(resolve(parsedUpdate));
 
     assertNotNull(result);
 
@@ -215,7 +215,7 @@ class TripReviserTest {
     var unknownTripId = new FeedScopedId(FEED_ID, "unknown-trip");
     var tripRef = TripReference.ofTripId(unknownTripId);
 
-    var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate()).build();
+    var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate()).build();
 
     // Resolution should fail because trip not found
     var ex = assertThrows(UpdateException.class, () -> resolver.resolve(parsedUpdate));
@@ -229,7 +229,7 @@ class TripReviserTest {
 
     // Use a date that has no service
     var differentDate = LocalDate.of(2099, 1, 1);
-    var parsedUpdate = TripRevision.builder(tripRef, differentDate).build();
+    var parsedUpdate = ScheduledTripUpdate.builder(tripRef, differentDate).build();
 
     // Resolution should fail because trip not running on this date
     var ex = assertThrows(UpdateException.class, () -> resolver.resolve(parsedUpdate));
@@ -248,14 +248,14 @@ class TripReviserTest {
       .withStatus(ParsedStopTimeUpdate.StopUpdateStatus.SKIPPED)
       .build();
 
-    var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+    var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(
         FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
       )
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = reviser.revise(resolve(parsedUpdate));
+    var result = updater.update(resolve(parsedUpdate));
 
     assertNotNull(result);
 
@@ -283,14 +283,14 @@ class TripReviserTest {
       .withDepartureUpdate(TimeUpdate.ofDelay(60))
       .build();
 
-    var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+    var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(
         FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
       )
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = reviser.revise(resolve(parsedUpdate));
+    var result = updater.update(resolve(parsedUpdate));
 
     assertNotNull(result);
 
@@ -319,14 +319,14 @@ class TripReviserTest {
       .withDepartureUpdate(TimeUpdate.ofDelay(300))
       .build();
 
-    var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+    var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
       .withFormatPolicy(
         FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
       )
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var result = reviser.revise(resolve(parsedUpdate));
+    var result = updater.update(resolve(parsedUpdate));
 
     assertNotNull(result);
 
@@ -378,7 +378,7 @@ class TripReviserTest {
       );
     }
 
-    private ResolvedExistingTrip resolveStation(TripRevision parsedUpdate) {
+    private ResolvedExistingTrip resolveStation(ScheduledTripUpdate parsedUpdate) {
       return stationResolver.resolve(parsedUpdate);
     }
 
@@ -403,12 +403,12 @@ class TripReviserTest {
         .withStopReplacement(StopReplacementPolicy.SAME_PARENT_STATION)
         .build();
 
-      var parsedUpdate = TripRevision.builder(tripRef, stationEnv.defaultServiceDate())
+      var parsedUpdate = ScheduledTripUpdate.builder(tripRef, stationEnv.defaultServiceDate())
         .withFormatPolicy(options)
         .addStopTimeUpdate(stopUpdate)
         .build();
 
-      var result = reviser.revise(resolveStation(parsedUpdate));
+      var result = updater.update(resolveStation(parsedUpdate));
 
       assertNotNull(result);
     }
@@ -433,13 +433,13 @@ class TripReviserTest {
         .withStopReplacement(StopReplacementPolicy.SAME_PARENT_STATION)
         .build();
 
-      var parsedUpdate = TripRevision.builder(tripRef, stationEnv.defaultServiceDate())
+      var parsedUpdate = ScheduledTripUpdate.builder(tripRef, stationEnv.defaultServiceDate())
         .withFormatPolicy(options)
         .addStopTimeUpdate(stopUpdate)
         .build();
 
       var ex = assertThrows(UpdateException.class, () ->
-        reviser.revise(resolveStation(parsedUpdate))
+        updater.update(resolveStation(parsedUpdate))
       );
       assertEquals(UpdateErrorType.STOP_MISMATCH, ex.errorType());
       assertEquals(0, ex.stopPosition());
@@ -463,12 +463,12 @@ class TripReviserTest {
         .withStopReplacement(StopReplacementPolicy.ANY_STOP)
         .build();
 
-      var parsedUpdate = TripRevision.builder(tripRef, stationEnv.defaultServiceDate())
+      var parsedUpdate = ScheduledTripUpdate.builder(tripRef, stationEnv.defaultServiceDate())
         .withFormatPolicy(options)
         .addStopTimeUpdate(stopUpdate)
         .build();
 
-      var result = reviser.revise(resolveStation(parsedUpdate));
+      var result = updater.update(resolveStation(parsedUpdate));
 
       assertNotNull(result);
     }
@@ -490,13 +490,13 @@ class TripReviserTest {
         .withStopReplacement(StopReplacementPolicy.NOT_ALLOWED)
         .build();
 
-      var parsedUpdate = TripRevision.builder(tripRef, stationEnv.defaultServiceDate())
+      var parsedUpdate = ScheduledTripUpdate.builder(tripRef, stationEnv.defaultServiceDate())
         .withFormatPolicy(options)
         .addStopTimeUpdate(stopUpdate)
         .build();
 
       var ex = assertThrows(UpdateException.class, () ->
-        reviser.revise(resolveStation(parsedUpdate))
+        updater.update(resolveStation(parsedUpdate))
       );
       assertEquals(UpdateErrorType.STOP_MISMATCH, ex.errorType());
     }
@@ -521,12 +521,12 @@ class TripReviserTest {
         .withStopReplacement(StopReplacementPolicy.NOT_ALLOWED)
         .build();
 
-      var parsedUpdate = TripRevision.builder(tripRef, stationEnv.defaultServiceDate())
+      var parsedUpdate = ScheduledTripUpdate.builder(tripRef, stationEnv.defaultServiceDate())
         .withFormatPolicy(options)
         .addStopTimeUpdate(stopUpdate)
         .build();
 
-      var result = reviser.revise(resolveStation(parsedUpdate));
+      var result = updater.update(resolveStation(parsedUpdate));
 
       assertNotNull(result);
     }
@@ -560,12 +560,12 @@ class TripReviserTest {
         .withStopMatching(StopMatchingPolicy.POSITIONAL)
         .build();
 
-      var parsedUpdate = TripRevision.builder(tripRef, stationEnv.defaultServiceDate())
+      var parsedUpdate = ScheduledTripUpdate.builder(tripRef, stationEnv.defaultServiceDate())
         .withFormatPolicy(options)
         .withStopTimeUpdates(List.of(stopA2Update, stopB1Update))
         .build();
 
-      var result = reviser.revise(resolveStation(parsedUpdate));
+      var result = updater.update(resolveStation(parsedUpdate));
 
       assertNotNull(result);
     }
@@ -599,13 +599,13 @@ class TripReviserTest {
         .withStopMatching(StopMatchingPolicy.POSITIONAL)
         .build();
 
-      var parsedUpdate = TripRevision.builder(tripRef, stationEnv.defaultServiceDate())
+      var parsedUpdate = ScheduledTripUpdate.builder(tripRef, stationEnv.defaultServiceDate())
         .withFormatPolicy(options)
         .withStopTimeUpdates(List.of(stopA1Update, stopB1Update))
         .build();
 
       var ex = assertThrows(UpdateException.class, () ->
-        reviser.revise(resolveStation(parsedUpdate))
+        updater.update(resolveStation(parsedUpdate))
       );
       assertEquals(UpdateErrorType.STOP_MISMATCH, ex.errorType());
       assertEquals(0, ex.stopPosition());
@@ -644,12 +644,12 @@ class TripReviserTest {
         BackwardsDelayPropagationType.NONE
       );
 
-      var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+      var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
         .withFormatPolicy(options)
         .withStopTimeUpdates(List.of(stopCUpdate, stopAUpdate))
         .build();
 
-      var result = reviser.revise(resolve(parsedUpdate));
+      var result = updater.update(resolve(parsedUpdate));
 
       assertNotNull(result);
       var updatedTimes = result.updatedTripTimes();
@@ -692,12 +692,12 @@ class TripReviserTest {
         BackwardsDelayPropagationType.NONE
       );
 
-      var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+      var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
         .withFormatPolicy(options)
         .addStopTimeUpdate(stopAUpdate)
         .build();
 
-      var result = reviser.revise(resolve(parsedUpdate));
+      var result = updater.update(resolve(parsedUpdate));
 
       assertNotNull(result);
       var updatedTimes = result.updatedTripTimes();
@@ -743,12 +743,12 @@ class TripReviserTest {
       // SIRI defaults: no propagation, FULL_UPDATE strategy
       var options = FormatPolicy.siri();
 
-      var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+      var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
         .withFormatPolicy(options)
         .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate))
         .build();
 
-      var result = reviser.revise(resolve(parsedUpdate));
+      var result = updater.update(resolve(parsedUpdate));
 
       assertNotNull(result);
       var updatedTimes = result.updatedTripTimes();
@@ -781,12 +781,12 @@ class TripReviserTest {
         BackwardsDelayPropagationType.REQUIRED
       );
 
-      var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+      var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
         .withFormatPolicy(options)
         .addStopTimeUpdate(stopBUpdate)
         .build();
 
-      var result = reviser.revise(resolve(parsedUpdate));
+      var result = updater.update(resolve(parsedUpdate));
 
       assertNotNull(result);
       var updatedTimes = result.updatedTripTimes();
@@ -822,12 +822,12 @@ class TripReviserTest {
         BackwardsDelayPropagationType.REQUIRED_NO_DATA
       );
 
-      var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+      var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
         .withFormatPolicy(options)
         .addStopTimeUpdate(stopBUpdate)
         .build();
 
-      var result = reviser.revise(resolve(parsedUpdate));
+      var result = updater.update(resolve(parsedUpdate));
 
       assertNotNull(result);
       var updatedTimes = result.updatedTripTimes();
@@ -873,12 +873,12 @@ class TripReviserTest {
         BackwardsDelayPropagationType.NONE
       );
 
-      var parsedUpdate = TripRevision.builder(tripRef, env.defaultServiceDate())
+      var parsedUpdate = ScheduledTripUpdate.builder(tripRef, env.defaultServiceDate())
         .withFormatPolicy(options)
         .withStopTimeUpdates(List.of(stopAUpdate, stopCUpdate))
         .build();
 
-      var result = reviser.revise(resolve(parsedUpdate));
+      var result = updater.update(resolve(parsedUpdate));
 
       assertNotNull(result);
       var updatedTimes = result.updatedTripTimes();
