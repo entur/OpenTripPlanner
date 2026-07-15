@@ -20,14 +20,13 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
-import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
 import org.opentripplanner.updater.trip.FuzzyTripMatcher;
 import org.opentripplanner.updater.trip.NoOpFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.SiriRouteCreationStrategy;
 import org.opentripplanner.updater.trip.SiriTripMatcher;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
-import org.opentripplanner.updater.trip.TripUpdateApplierFactory;
+import org.opentripplanner.updater.trip.TripUpdateDispatcher;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
@@ -60,7 +59,7 @@ public class ShadowSiriTripUpdateAdapter implements SiriTripUpdateAdapter {
   private final SiriRealTimeTripUpdateAdapter primaryAdapter;
   private final TimetableSnapshotManager snapshotManager;
   private final SiriTripUpdateParser parser;
-  private final DefaultTripUpdateApplier applier;
+  private final TripUpdateDispatcher dispatcher;
   private final String feedId;
 
   @Nullable
@@ -115,7 +114,7 @@ public class ShadowSiriTripUpdateAdapter implements SiriTripUpdateAdapter {
         )
       : NoOpFuzzyTripMatcher.INSTANCE;
 
-    this.applier = TripUpdateApplierFactory.create(
+    this.dispatcher = TripUpdateDispatcher.create(
       feedId,
       transitEditorService.getTimeZone(),
       transitEditorService,
@@ -189,7 +188,7 @@ public class ShadowSiriTripUpdateAdapter implements SiriTripUpdateAdapter {
     String shadowFailureReason = null;
     try {
       var parsedUpdate = parser.parse(journey);
-      var applyResult = applier.apply(parsedUpdate);
+      var applyResult = dispatcher.apply(parsedUpdate);
       shadowRecord = applyResult.realTimeTripUpdate();
     } catch (UpdateException e) {
       shadowFailureReason = "failed: " + e.errorType();

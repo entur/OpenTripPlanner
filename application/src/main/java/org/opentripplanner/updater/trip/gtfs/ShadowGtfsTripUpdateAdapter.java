@@ -27,7 +27,7 @@ import org.opentripplanner.updater.trip.GtfsRtRouteCreationStrategy;
 import org.opentripplanner.updater.trip.GtfsTripMatcher;
 import org.opentripplanner.updater.trip.NoOpFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
-import org.opentripplanner.updater.trip.TripUpdateApplierFactory;
+import org.opentripplanner.updater.trip.TripUpdateDispatcher;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
@@ -185,7 +185,7 @@ public class ShadowGtfsTripUpdateAdapter implements GtfsTripUpdateAdapter {
         ? new GtfsTripMatcher(transitEditorService)
         : NoOpFuzzyTripMatcher.INSTANCE;
 
-      var applier = TripUpdateApplierFactory.create(
+      var dispatcher = TripUpdateDispatcher.create(
         this.feedId,
         transitEditorService.getTimeZone(),
         transitEditorService,
@@ -197,7 +197,7 @@ public class ShadowGtfsTripUpdateAdapter implements GtfsTripUpdateAdapter {
       );
 
       var parsedUpdate = parser.parse(update);
-      var applyResult = applier.apply(parsedUpdate);
+      var applyResult = dispatcher.apply(parsedUpdate);
       shadowRecord = applyResult.realTimeTripUpdate();
     } catch (UpdateException e) {
       shadowFailureReason = "failed: " + e.errorType();

@@ -26,9 +26,9 @@ import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
 
 /**
- * Tests for DefaultTripUpdateApplier.
+ * Tests for TripUpdateDispatcher.
  */
-class DefaultTripUpdateApplierTest {
+class TripUpdateDispatcherTest {
 
   private static final String FEED_ID = FeedScopedIdForTestFactory.FEED_ID;
   private static final String TRIP_ID = "trip1";
@@ -36,7 +36,7 @@ class DefaultTripUpdateApplierTest {
   private static final ZoneId TIME_ZONE = ZoneId.of("America/New_York");
 
   private TransitTestEnvironment env;
-  private DefaultTripUpdateApplier applier;
+  private TripUpdateDispatcher dispatcher;
   private TransitEditorService transitService;
   private TimetableSnapshotManager snapshotManager;
 
@@ -61,7 +61,7 @@ class DefaultTripUpdateApplierTest {
     transitService = (TransitEditorService) env.transitService();
     snapshotManager = env.timetableSnapshotManager();
     var tripPatternCache = new TripPatternCache(new TripPatternIdGenerator());
-    applier = TripUpdateApplierFactory.create(
+    dispatcher = TripUpdateDispatcher.create(
       env.feedId(),
       TIME_ZONE,
       transitService,
@@ -80,7 +80,7 @@ class DefaultTripUpdateApplierTest {
       LocalDate.now()
     ).build();
 
-    var exception = assertThrows(UpdateException.class, () -> applier.apply(update));
+    var exception = assertThrows(UpdateException.class, () -> dispatcher.apply(update));
     assertEquals(UpdateErrorType.TRIP_NOT_FOUND, exception.errorType());
   }
 
@@ -88,7 +88,7 @@ class DefaultTripUpdateApplierTest {
   void testCancelTrip_tripNotFound() {
     var update = new TripCancellation(TripReference.builder().build(), LocalDate.now(), null, null);
 
-    var exception = assertThrows(UpdateException.class, () -> applier.apply(update));
+    var exception = assertThrows(UpdateException.class, () -> dispatcher.apply(update));
     assertEquals(UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND, exception.errorType());
   }
 
@@ -96,7 +96,7 @@ class DefaultTripUpdateApplierTest {
   void testDeleteTrip_tripNotFound() {
     var update = new TripDeletion(TripReference.builder().build(), LocalDate.now(), null, null);
 
-    var exception = assertThrows(UpdateException.class, () -> applier.apply(update));
+    var exception = assertThrows(UpdateException.class, () -> dispatcher.apply(update));
     assertEquals(UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND, exception.errorType());
   }
 
@@ -108,7 +108,7 @@ class DefaultTripUpdateApplierTest {
 
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
-    var result = applier.apply(update);
+    var result = dispatcher.apply(update);
 
     assertNotNull(result);
     assertEquals(tripId, result.updatedTripTimes().getTrip().getId());
@@ -123,7 +123,7 @@ class DefaultTripUpdateApplierTest {
 
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
-    var result = applier.apply(update);
+    var result = dispatcher.apply(update);
 
     assertNotNull(result);
     var expectedTripId = new FeedScopedId(FEED_ID, TRIP_ID);
@@ -139,7 +139,7 @@ class DefaultTripUpdateApplierTest {
 
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
-    var result = applier.apply(update);
+    var result = dispatcher.apply(update);
 
     assertNotNull(result);
     snapshotManager.updateBuffer(result.realTimeTripUpdate());
@@ -158,7 +158,7 @@ class DefaultTripUpdateApplierTest {
 
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
-    var result = applier.apply(update);
+    var result = dispatcher.apply(update);
 
     assertNotNull(result);
     assertEquals(tripId, result.updatedTripTimes().getTrip().getId());
@@ -173,7 +173,7 @@ class DefaultTripUpdateApplierTest {
 
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
-    var result = applier.apply(update);
+    var result = dispatcher.apply(update);
 
     assertNotNull(result);
     var expectedTripId = new FeedScopedId(FEED_ID, TRIP_ID);
@@ -189,7 +189,7 @@ class DefaultTripUpdateApplierTest {
 
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
-    var result = applier.apply(update);
+    var result = dispatcher.apply(update);
 
     assertNotNull(result);
     snapshotManager.updateBuffer(result.realTimeTripUpdate());

@@ -13,7 +13,7 @@ import org.opentripplanner.utils.time.ServiceDateUtils;
  * tripOnServiceDateId is present but no explicit service date).
  * <p>
  * The actual time conversion to seconds-since-start-of-service happens in the
- * applier stage when the service date has been resolved.
+ * apply stage when the service date has been resolved.
  */
 public final class DeferredTimeUpdate implements ParsedTimeUpdate {
 

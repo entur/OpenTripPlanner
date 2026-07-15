@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 
 /**
  * Format-independent representation of a trip update parsed from either SIRI-ET or GTFS-RT.
- * This sealed interface is the common model that both parsers produce and the applier consumes.
+ * This sealed interface is the common model that both parsers produce and the apply stage consumes.
  * <p>
  * The type hierarchy mirrors the resolver structure:
  * <ul>

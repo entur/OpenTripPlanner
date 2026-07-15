@@ -23,7 +23,7 @@ import org.opentripplanner.updater.trip.siri.updater.EstimatedTimetableHandler;
 
 /**
  * Integration tests for the new SIRI trip update adapter that uses the common trip update
- * infrastructure (SiriTripUpdateParser + DefaultTripUpdateApplier).
+ * infrastructure (SiriTripUpdateParser + TripUpdateDispatcher).
  */
 class SiriNewTripUpdateAdapterTest implements RealtimeTestConstants {
 

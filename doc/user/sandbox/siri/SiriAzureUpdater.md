@@ -87,8 +87,8 @@ Has to be present for authenticationMethod SharedAccessKey. This should be Prima
 
 Use the new trip updater implementation.
 
-When enabled, uses the new modular trip updater implementation based on
-`DefaultTripUpdateApplier`. This is experimental and should be used with caution.
+When enabled, uses the new modular trip updater implementation shared by
+SIRI-ET and GTFS-RT. This is experimental and should be used with caution.
 The default value is `false`, which uses the legacy implementation.
 
 
@@ -191,8 +191,8 @@ Has to be present for authenticationMethod SharedAccessKey. This should be Prima
 
 Use the new trip updater implementation.
 
-When enabled, uses the new modular trip updater implementation based on
-`DefaultTripUpdateApplier`. This is experimental and should be used with caution.
+When enabled, uses the new modular trip updater implementation shared by
+SIRI-ET and GTFS-RT. This is experimental and should be used with caution.
 The default value is `false`, which uses the legacy implementation.
 
 

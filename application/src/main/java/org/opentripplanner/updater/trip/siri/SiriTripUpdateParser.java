@@ -42,7 +42,7 @@ import uk.org.siri.siri21.EstimatedVehicleJourney;
 
 /**
  * Parser for SIRI EstimatedVehicleJourney messages into the common ParsedTripUpdate model.
- * This parser only parses SIRI messages - entity resolution and validation is done by the applier.
+ * This parser only parses SIRI messages - entity resolution and validation is done in the apply stage.
  */
 public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJourney> {
 
@@ -370,7 +370,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         builder.withDepartureUpdate(TimeUpdate.ofAbsolute(seconds, scheduled));
       }
     } else {
-      // Service date is unknown - create DeferredTimeUpdate for resolution in applier stage
+      // Service date is unknown - create DeferredTimeUpdate for resolution in the apply stage
       if (resolvedTimes.arrivalTime() != null) {
         builder.withArrivalUpdate(
           DeferredTimeUpdate.of(resolvedTimes.arrivalTime(), resolvedAimedTimes.arrivalTime())

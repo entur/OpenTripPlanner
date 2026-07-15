@@ -60,7 +60,7 @@ public class PollingTripUpdaterConfig {
         .since(V2_9)
         .summary(
           "Use the new unified trip update implementation. " +
-            "When true, uses the new DefaultTripUpdateApplier with common handlers. " +
+            "When true, uses the new format-independent implementation shared by SIRI-ET and GTFS-RT. " +
             "When false (default), uses the legacy GtfsRealTimeTripUpdateAdapter."
         )
         .asBoolean(false),

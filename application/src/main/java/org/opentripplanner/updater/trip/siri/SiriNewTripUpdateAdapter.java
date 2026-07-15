@@ -13,14 +13,13 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
-import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
 import org.opentripplanner.updater.trip.FuzzyTripMatcher;
 import org.opentripplanner.updater.trip.NoOpFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.SiriRouteCreationStrategy;
 import org.opentripplanner.updater.trip.SiriTripMatcher;
 import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
-import org.opentripplanner.updater.trip.TripUpdateApplierFactory;
+import org.opentripplanner.updater.trip.TripUpdateDispatcher;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
@@ -32,7 +31,7 @@ import uk.org.siri.siri21.EstimatedVehicleJourney;
 /**
  * New implementation of the SIRI-ET trip update adapter using the common trip update infrastructure.
  * This uses {@link SiriTripUpdateParser} to parse SIRI messages into {@link org.opentripplanner.updater.trip.model.ParsedTripUpdate}
- * and {@link DefaultTripUpdateApplier} to apply them.
+ * and {@link TripUpdateDispatcher} to apply them.
  * <p>
  * This is a drop-in replacement for {@link SiriRealTimeTripUpdateAdapter} when the new implementation
  * is enabled via the {@code useNewUpdaterImplementation} configuration option.
@@ -56,7 +55,7 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
   private final SiriTripUpdateParser parser;
   private final TransitEditorService transitEditorService;
   private final TimetableSnapshotManager snapshotManager;
-  private final DefaultTripUpdateApplier applier;
+  private final TripUpdateDispatcher dispatcher;
 
   public SiriNewTripUpdateAdapter(
     TimetableRepository timetableRepository,
@@ -81,7 +80,7 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
         )
       : NoOpFuzzyTripMatcher.INSTANCE;
 
-    this.applier = TripUpdateApplierFactory.create(
+    this.dispatcher = TripUpdateDispatcher.create(
       feedId,
       transitEditorService.getTimeZone(),
       transitEditorService,
@@ -148,7 +147,7 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
     var parsedUpdate = parser.parse(journey);
 
     // Apply the parsed update
-    var tripUpdateResult = applier.apply(parsedUpdate);
+    var tripUpdateResult = dispatcher.apply(parsedUpdate);
 
     // Commit the update to the snapshot and add any warnings
     return snapshotManager
