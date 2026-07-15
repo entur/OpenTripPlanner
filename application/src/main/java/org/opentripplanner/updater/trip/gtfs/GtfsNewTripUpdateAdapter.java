@@ -21,13 +21,12 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
-import org.opentripplanner.updater.trip.DefaultTripUpdateApplier;
 import org.opentripplanner.updater.trip.FuzzyTripMatcher;
 import org.opentripplanner.updater.trip.GtfsRtRouteCreationStrategy;
 import org.opentripplanner.updater.trip.GtfsTripMatcher;
 import org.opentripplanner.updater.trip.NoOpFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
-import org.opentripplanner.updater.trip.TripUpdateApplierFactory;
+import org.opentripplanner.updater.trip.TripUpdateDispatcher;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
@@ -40,7 +39,7 @@ import org.slf4j.LoggerFactory;
 /**
  * New implementation of the GTFS-RT trip update adapter using the common trip update infrastructure.
  * This uses {@link GtfsRtTripUpdateParser} to parse GTFS-RT messages into {@link org.opentripplanner.updater.trip.model.ParsedTripUpdate}
- * and {@link DefaultTripUpdateApplier} to apply them.
+ * and {@link TripUpdateDispatcher} to apply them.
  * <p>
  * This is a drop-in replacement for {@link GtfsRealTimeTripUpdateAdapter} when the new implementation
  * is enabled via the {@code useNewUpdaterImplementation} configuration option.
@@ -139,7 +138,7 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
       fuzzyMatcher = new GtfsTripMatcher(transitEditorService);
     }
 
-    var applier = TripUpdateApplierFactory.create(
+    var dispatcher = TripUpdateDispatcher.create(
       feedId,
       transitEditorService.getTimeZone(),
       transitEditorService,
@@ -152,7 +151,7 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
 
     for (GtfsRealtime.TripUpdate update : updates) {
       try {
-        successes.add(apply(update, applier, updateIncrementality));
+        successes.add(apply(update, dispatcher, updateIncrementality));
       } catch (UpdateException e) {
         errors.add(e.toError());
       }
@@ -165,7 +164,7 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
 
   private UpdateSuccess apply(
     GtfsRealtime.TripUpdate update,
-    DefaultTripUpdateApplier applier,
+    TripUpdateDispatcher dispatcher,
     UpdateIncrementality updateIncrementality
   ) {
     // Parse the GTFS-RT message
@@ -183,7 +182,7 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
     }
 
     // Apply the parsed update
-    var tripUpdateResult = applier.apply(parsedUpdate);
+    var tripUpdateResult = dispatcher.apply(parsedUpdate);
     var realTimeTripUpdate = tripUpdateResult.realTimeTripUpdate();
 
     // Cache the route if it's a new trip with route creation

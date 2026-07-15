@@ -19,7 +19,7 @@ import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagat
 
 /**
  * Integration tests for the new GTFS-RT trip update adapter that uses the common trip update
- * infrastructure (GtfsRtTripUpdateParser + DefaultTripUpdateApplier).
+ * infrastructure (GtfsRtTripUpdateParser + TripUpdateDispatcher).
  */
 class GtfsNewTripUpdateAdapterTest implements RealtimeTestConstants {
 

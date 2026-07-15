@@ -14,8 +14,7 @@ public interface SiriETUpdaterParameters
   boolean fuzzyTripMatching();
 
   /**
-   * Whether to use the new updater implementation based on common trip update handlers.
-   * When true, uses the new DefaultTripUpdateApplier with SiriTripUpdateParser.
+   * Whether to use the new unified updater implementation shared by SIRI-ET and GTFS-RT.
    * When false (default), uses the legacy SiriRealTimeTripUpdateAdapter.
    */
   boolean useNewUpdaterImplementation();
