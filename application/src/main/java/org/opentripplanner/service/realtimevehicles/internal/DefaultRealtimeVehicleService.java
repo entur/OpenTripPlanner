@@ -1,5 +1,9 @@
 package org.opentripplanner.service.realtimevehicles.internal;
 
+import static org.opentripplanner.transit.model.timetable.OccupancyStatus.NO_DATA_AVAILABLE;
+
+import java.time.Instant;
+import java.util.Comparator;
 import java.util.List;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
@@ -43,6 +47,15 @@ public class DefaultRealtimeVehicleService implements RealtimeVehicleService {
 
   @Override
   public OccupancyStatus getVehicleOccupancyStatus(Trip trip) {
-    return repository.getOccupancyStatus(trip.getId(), transitService.findPattern(trip));
+    TripPattern pattern = transitService.findPattern(trip);
+    if (pattern == null) {
+      return NO_DATA_AVAILABLE;
+    }
+    return getRealtimeVehicles(pattern)
+      .stream()
+      .filter(vehicle -> trip.getId().equals(vehicle.trip().getId()))
+      .max(Comparator.comparing(vehicle -> vehicle.time().orElse(Instant.MIN)))
+      .flatMap(RealtimeVehicle::occupancyStatus)
+      .orElse(NO_DATA_AVAILABLE);
   }
 }

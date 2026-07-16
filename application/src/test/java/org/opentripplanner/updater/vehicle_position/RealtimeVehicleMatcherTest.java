@@ -266,8 +266,12 @@ public class RealtimeVehicleMatcherTest {
     matcher.applyRealtimeVehicleUpdates(positions);
 
     // Check that occupancy for the trip is as set in original position
-    var occupancy = repository.getOccupancyStatus(trip.getId(), pattern);
-    assertEquals(OccupancyStatus.FEW_SEATS_AVAILABLE, occupancy);
+    var vehicles = repository.getRealtimeVehicles(pattern);
+    assertEquals(1, vehicles.size());
+    assertEquals(
+      OccupancyStatus.FEW_SEATS_AVAILABLE,
+      vehicles.get(0).occupancyStatus().orElseThrow()
+    );
   }
 
   @Test

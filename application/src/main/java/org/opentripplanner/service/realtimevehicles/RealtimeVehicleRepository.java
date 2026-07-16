@@ -2,10 +2,8 @@ package org.opentripplanner.service.realtimevehicles;
 
 import com.google.common.collect.Multimap;
 import java.util.List;
-import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle;
 import org.opentripplanner.transit.model.network.TripPattern;
-import org.opentripplanner.transit.model.timetable.OccupancyStatus;
 
 /**
  * Stores the realtime vehicles. There is one instance for the whole application: it is written
@@ -29,11 +27,4 @@ public interface RealtimeVehicleRepository {
    * created by real-time updates.
    */
   List<RealtimeVehicle> getRealtimeVehicles(TripPattern pattern);
-
-  /**
-   * Get the latest occupancy status for a certain trip on the given pattern key. As for
-   * {@link #getRealtimeVehicles(TripPattern)} the pattern must be the exact key used when
-   * storing.
-   */
-  OccupancyStatus getOccupancyStatus(FeedScopedId tripId, TripPattern pattern);
 }
