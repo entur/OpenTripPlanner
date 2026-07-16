@@ -14,7 +14,7 @@ import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateSuccess;
-import org.opentripplanner.updater.trip.TripUpdateApplicator;
+import org.opentripplanner.updater.trip.TripUpdateApplier;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 
@@ -102,7 +102,7 @@ class DuplicatedTripHandler {
       .withTripCreation(true)
       .withAddedTripOnServiceDate(tripOnServiceDate)
       .build();
-    return TripUpdateApplicator.apply(buffer, update);
+    return TripUpdateApplier.apply(buffer, update);
   }
 
   /// The spec is silent about how these ids should be constructed, so we create a new ID

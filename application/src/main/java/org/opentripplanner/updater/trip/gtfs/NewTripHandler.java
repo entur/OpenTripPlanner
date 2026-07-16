@@ -22,7 +22,7 @@ import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateSuccess;
-import org.opentripplanner.updater.trip.TripUpdateApplicator;
+import org.opentripplanner.updater.trip.TripUpdateApplier;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 
@@ -175,7 +175,7 @@ class NewTripHandler {
         )
         .withTripCreation(true);
     }
-    return TripUpdateApplicator.apply(buffer, builder.build());
+    return TripUpdateApplier.apply(buffer, builder.build());
   }
 
   /**

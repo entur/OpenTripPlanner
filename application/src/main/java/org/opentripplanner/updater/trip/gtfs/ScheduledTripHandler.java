@@ -16,7 +16,7 @@ import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateSuccess;
-import org.opentripplanner.updater.trip.TripUpdateApplicator;
+import org.opentripplanner.updater.trip.TripUpdateApplier;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
@@ -105,7 +105,7 @@ class ScheduledTripHandler {
         pattern
       );
 
-      return TripUpdateApplicator.apply(
+      return TripUpdateApplier.apply(
         buffer,
         RealTimeTripUpdate.of(newPattern, updatedTripTimes, tripUpdate.startDate())
           .withRevertPreviousRealTimeUpdates(true)
@@ -113,7 +113,7 @@ class ScheduledTripHandler {
           .build()
       );
     } else {
-      return TripUpdateApplicator.apply(
+      return TripUpdateApplier.apply(
         buffer,
         RealTimeTripUpdate.of(pattern, updatedTripTimes, tripUpdate.startDate())
           .withRevertPreviousRealTimeUpdates(true)

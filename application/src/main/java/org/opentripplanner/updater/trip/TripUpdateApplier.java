@@ -15,11 +15,11 @@ import org.slf4j.LoggerFactory;
  *   <li>Apply the main update.</li>
  * </ol>
  */
-public class TripUpdateApplicator {
+public class TripUpdateApplier {
 
-  private static final Logger LOG = LoggerFactory.getLogger(TripUpdateApplicator.class);
+  private static final Logger LOG = LoggerFactory.getLogger(TripUpdateApplier.class);
 
-  private TripUpdateApplicator() {}
+  private TripUpdateApplier() {}
 
   public static UpdateSuccess apply(MutableTimetableSnapshot buffer, RealTimeTripUpdate update) {
     var trip = update.updatedTripTimes().getTrip();

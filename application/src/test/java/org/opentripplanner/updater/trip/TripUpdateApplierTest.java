@@ -20,10 +20,10 @@ import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
 import org.opentripplanner.transit.model.timetable.Trip;
 
 /**
- * Tests for {@link TripUpdateApplicator}, covering the three-phase update logic that was
+ * Tests for {@link TripUpdateApplier}, covering the three-phase update logic that was
  * previously in {@code TimetableSnapshotManager.updateBuffer()}.
  */
-class TripUpdateApplicatorTest {
+class TripUpdateApplierTest {
 
   private static final LocalDate TODAY = LocalDate.of(2024, Month.MAY, 30);
 
@@ -90,7 +90,7 @@ class TripUpdateApplicatorTest {
       .withDepartureDelay(1, 60)
       .build();
 
-    TripUpdateApplicator.apply(
+    TripUpdateApplier.apply(
       buffer,
       RealTimeTripUpdate.of(SCHEDULED_PATTERN, rtTripTimes, TODAY).build()
     );
@@ -115,7 +115,7 @@ class TripUpdateApplicatorTest {
       .withDepartureDelay(1, 60)
       .build();
 
-    TripUpdateApplicator.apply(
+    TripUpdateApplier.apply(
       buffer,
       RealTimeTripUpdate.of(MODIFIED_PATTERN, rtTripTimes, TODAY)
         .withHideTripInScheduledPattern(SCHEDULED_PATTERN)
@@ -149,7 +149,7 @@ class TripUpdateApplicatorTest {
       .build();
 
     // Setup: move the trip to the modified pattern
-    TripUpdateApplicator.apply(
+    TripUpdateApplier.apply(
       buffer,
       RealTimeTripUpdate.of(MODIFIED_PATTERN, rtTripTimes, TODAY)
         .withHideTripInScheduledPattern(SCHEDULED_PATTERN)
@@ -160,7 +160,7 @@ class TripUpdateApplicatorTest {
     assertEquals(MODIFIED_PATTERN, buffer.getNewTripPatternForModifiedTrip(TRIP.getId(), TODAY));
 
     // Now revert and update on the scheduled pattern
-    TripUpdateApplicator.apply(
+    TripUpdateApplier.apply(
       buffer,
       RealTimeTripUpdate.of(SCHEDULED_PATTERN, rtTripTimes, TODAY)
         .withRevertPreviousRealTimeUpdates(true)
@@ -190,7 +190,7 @@ class TripUpdateApplicatorTest {
       .build();
 
     // Setup: move the trip to the first modified pattern
-    TripUpdateApplicator.apply(
+    TripUpdateApplier.apply(
       buffer,
       RealTimeTripUpdate.of(MODIFIED_PATTERN, rtTripTimes, TODAY)
         .withHideTripInScheduledPattern(SCHEDULED_PATTERN)
@@ -202,7 +202,7 @@ class TripUpdateApplicatorTest {
 
     // Now revert from the first modified pattern, delete from scheduled, and update on the
     // second modified pattern
-    TripUpdateApplicator.apply(
+    TripUpdateApplier.apply(
       buffer,
       RealTimeTripUpdate.of(SECOND_MODIFIED_PATTERN, rtTripTimes, TODAY)
         .withRevertPreviousRealTimeUpdates(true)
@@ -236,7 +236,7 @@ class TripUpdateApplicatorTest {
       .withCanceled()
       .build();
 
-    TripUpdateApplicator.apply(
+    TripUpdateApplier.apply(
       buffer,
       RealTimeTripUpdate.of(SCHEDULED_PATTERN, canceledTripTimes, TODAY)
         .withRevertPreviousRealTimeUpdates(true)
@@ -260,7 +260,7 @@ class TripUpdateApplicatorTest {
       .withDeleted()
       .build();
 
-    TripUpdateApplicator.apply(
+    TripUpdateApplier.apply(
       buffer,
       RealTimeTripUpdate.of(SCHEDULED_PATTERN, deletedTripTimes, TODAY)
         .withRevertPreviousRealTimeUpdates(true)
@@ -288,7 +288,7 @@ class TripUpdateApplicatorTest {
       .build();
 
     // Setup: move the trip to the modified pattern
-    TripUpdateApplicator.apply(
+    TripUpdateApplier.apply(
       buffer,
       RealTimeTripUpdate.of(MODIFIED_PATTERN, rtTripTimes, TODAY)
         .withHideTripInScheduledPattern(SCHEDULED_PATTERN)
@@ -302,7 +302,7 @@ class TripUpdateApplicatorTest {
     var canceledTripTimes = SCHEDULED_TRIP_TIMES.createRealTimeFromScheduledTimes()
       .withCanceled()
       .build();
-    TripUpdateApplicator.apply(
+    TripUpdateApplier.apply(
       buffer,
       RealTimeTripUpdate.of(SCHEDULED_PATTERN, canceledTripTimes, TODAY)
         .withRevertPreviousRealTimeUpdates(true)

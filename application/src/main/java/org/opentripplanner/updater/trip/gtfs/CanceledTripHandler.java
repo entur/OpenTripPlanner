@@ -11,7 +11,7 @@ import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateSuccess;
-import org.opentripplanner.updater.trip.TripUpdateApplicator;
+import org.opentripplanner.updater.trip.TripUpdateApplier;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 
@@ -61,7 +61,7 @@ class CanceledTripHandler {
               case CANCEL -> builder.withCanceled();
               case DELETE -> builder.withDeleted();
             }
-            return TripUpdateApplicator.apply(
+            return TripUpdateApplier.apply(
               buffer,
               RealTimeTripUpdate.of(addedPattern, builder.build(), tripUpdate.startDate()).build()
             );
@@ -86,7 +86,7 @@ class CanceledTripHandler {
       case CANCEL -> builder.withCanceled();
       case DELETE -> builder.withDeleted();
     }
-    return TripUpdateApplicator.apply(
+    return TripUpdateApplier.apply(
       buffer,
       RealTimeTripUpdate.of(pattern, builder.build(), tripUpdate.startDate())
         .withRevertPreviousRealTimeUpdates(true)

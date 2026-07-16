@@ -25,7 +25,7 @@ import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
-import org.opentripplanner.updater.trip.TripUpdateApplicator;
+import org.opentripplanner.updater.trip.TripUpdateApplier;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
@@ -349,7 +349,7 @@ public class SiriRealTimeUpdateHandler {
       .withRevertPreviousRealTimeUpdates(revertPreviousRealTimeUpdates)
       .withHideTripInScheduledPattern(tripUpdate.hideTripInScheduledPattern())
       .build();
-    var result = TripUpdateApplicator.apply(buffer, realTimeTripUpdate);
+    var result = TripUpdateApplier.apply(buffer, realTimeTripUpdate);
     LOG.debug("Applied real-time data for trip {} on {}", trip, serviceDate);
     return result;
   }
