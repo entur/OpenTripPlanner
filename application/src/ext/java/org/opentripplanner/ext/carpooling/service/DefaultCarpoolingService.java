@@ -128,12 +128,9 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
   /**
    * Snaps passenger origin/destination and transit stops onto vertices a car can genuinely reach
-   * and leave. The service is application-scoped, so per-vertex reachability verdicts are computed
-   * once and reused across requests — the verdict depends only on the static street
-   * graph.
+   * and leave.
    */
-  private final CarAccessibleVertexSnapper carVertexSnapper =
-    CarAccessibleVertexSnapper.createDefault();
+  private final CarAccessibleVertexSnapper carVertexSnapper;
 
   /**
    * Creates a new carpooling service with the specified dependencies.
@@ -141,17 +138,21 @@ public class DefaultCarpoolingService implements CarpoolingService {
    * The service is initialized with standard pre- and post-filters; both filter sets are
    * hardcoded today and could be made configurable in future versions.
    *
-   * @param repository provides access to active driver trips, must not be null
+   * @param repository provides access to active driver trips with their resolved street vertices,
+   *        must not be null
    * @param streetLimitationParametersService provides street routing configuration including
    *        speed limits, must not be null
    * @param vertexCreationService creates request-scoped, bidirectionally-linked temporary vertices
    *        from coordinates, must not be null
+   * @param carVertexSnapper snaps passenger-side locations onto car-reachable vertices, must not
+   *        be null
    * @throws NullPointerException if any parameter is null
    */
   public DefaultCarpoolingService(
     CarpoolingRepository repository,
     StreetLimitationParametersService streetLimitationParametersService,
-    VertexCreationService vertexCreationService
+    VertexCreationService vertexCreationService,
+    CarAccessibleVertexSnapper carVertexSnapper
   ) {
     this.repository = repository;
     this.streetLimitationParametersService = streetLimitationParametersService;
@@ -162,6 +163,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
       new BeelineEstimator(streetLimitationParametersService.maxCarSpeed())
     );
     this.vertexCreationService = vertexCreationService;
+    this.carVertexSnapper = carVertexSnapper;
   }
 
   /**
@@ -207,7 +209,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
     var candidateTrips = allTrips
       .stream()
-      .filter(trip -> preFilters.isCandidateTrip(trip, carpoolingRequest))
+      .filter(trip -> preFilters.isCandidateTrip(trip.trip(), carpoolingRequest))
       .toList();
 
     LOG.debug(
@@ -269,7 +271,8 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
       var insertionCandidates = candidateTrips
         .stream()
-        .map(trip -> {
+        .map(tripWithVertices -> {
+          var trip = tripWithVertices.trip();
           List<InsertionPosition> viablePositions = positionFinder.findViablePositions(
             trip,
             snappedPickup,
@@ -287,13 +290,6 @@ public class DefaultCarpoolingService implements CarpoolingService {
             viablePositions.size(),
             trip.getId()
           );
-
-          var tripWithVertices = CarpoolTripWithVertices.create(trip, streetVertexUtils);
-
-          if (tripWithVertices == null) {
-            LOG.error("Could not resolve vertices for trip {}", trip.getId());
-            return null;
-          }
 
           return insertionEvaluator.findBestInsertion(
             tripWithVertices,
@@ -387,7 +383,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
     var candidateTrips = allTrips
       .stream()
-      .filter(trip -> preFilters.isCandidateTrip(trip, carpoolingRequest))
+      .filter(trip -> preFilters.isCandidateTrip(trip.trip(), carpoolingRequest))
       .toList();
 
     if (candidateTrips.isEmpty()) {
@@ -493,12 +489,6 @@ public class DefaultCarpoolingService implements CarpoolingService {
         }
       }
 
-      var candidateTripsWithVertices = candidateTrips
-        .stream()
-        .map(carpoolTrip -> CarpoolTripWithVertices.create(carpoolTrip, streetVertexUtils))
-        .filter(Objects::nonNull)
-        .toList();
-
       // Sizes each leg's tree from OTP's own routed leg durations (cached per trip) and re-routes
       // any baseline leg the tree misses — see resolveLegDurations and the InsertionEvaluator
       // fallback below.
@@ -506,9 +496,9 @@ public class DefaultCarpoolingService implements CarpoolingService {
 
       // Each waypoint's tree only has to span its own leg plus the feasible insertion detour —
       // see driverLegTreeLimits.
-      var routableTrips = new ArrayList<CarpoolTripWithVertices>(candidateTripsWithVertices.size());
+      var routableTrips = new ArrayList<CarpoolTripWithVertices>(candidateTrips.size());
       var passengerTreeLimit = Duration.ZERO;
-      for (var tripWithVertices : candidateTripsWithVertices) {
+      for (var tripWithVertices : candidateTrips) {
         var legDurations = resolveLegDurations(tripWithVertices, baselineRouter);
         // A trip whose baseline cannot be routed within the carpool bound cannot carry a passenger:
         // skip it before sizing and building trees its baseline would fail to route in anyway.

@@ -6,11 +6,13 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
+import org.opentripplanner.ext.carpooling.routing.CarpoolTripVertexResolver;
 import org.opentripplanner.ext.carpooling.updater.SiriETCarpoolingUpdater;
 import org.opentripplanner.ext.siri.updater.azure.SiriAzureUpdater;
 import org.opentripplanner.ext.siri.updater.mqtt.SiriETMqttUpdater;
 import org.opentripplanner.ext.vehiclerentalservicedirectory.VehicleRentalServiceDirectoryFetcher;
 import org.opentripplanner.ext.vehiclerentalservicedirectory.api.VehicleRentalServiceDirectoryFetcherParameters;
+import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.framework.io.OtpHttpClientFactory;
 import org.opentripplanner.framework.transaction.UpdateManager;
 import org.opentripplanner.framework.transaction.api.RepositoryHandle;
@@ -59,6 +61,7 @@ public class UpdaterConfigurator {
   private final RealtimeVehicleRepository realtimeVehicleRepository;
   private final VehicleRentalRepository vehicleRentalRepository;
   private final CarpoolingRepository carpoolingRepository;
+  private final CarpoolTripVertexResolver carpoolTripVertexResolver;
   private final VehicleParkingRepository parkingRepository;
   private final UpdateManager updateManager;
   private final RepositoryHandle<
@@ -78,6 +81,7 @@ public class UpdaterConfigurator {
     VehicleParkingRepository parkingRepository,
     TimetableRepository timetableRepository,
     CarpoolingRepository carpoolingRepository,
+    CarpoolTripVertexResolver carpoolTripVertexResolver,
     UpdateManager updateManager,
     RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableRepositoryHandle,
     UpdatersParameters updatersParameters
@@ -93,6 +97,7 @@ public class UpdaterConfigurator {
     this.updateManager = updateManager;
     this.timetableRepositoryHandle = timetableRepositoryHandle;
     this.carpoolingRepository = carpoolingRepository;
+    this.carpoolTripVertexResolver = carpoolTripVertexResolver;
   }
 
   public static void configure(
@@ -104,6 +109,7 @@ public class UpdaterConfigurator {
     VehicleParkingRepository parkingRepository,
     TimetableRepository timetableRepository,
     CarpoolingRepository carpoolingRepository,
+    CarpoolTripVertexResolver carpoolTripVertexResolver,
     UpdateManager updateManager,
     RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableRepositoryHandle,
     UpdatersParameters updatersParameters
@@ -117,6 +123,7 @@ public class UpdaterConfigurator {
       parkingRepository,
       timetableRepository,
       carpoolingRepository,
+      carpoolTripVertexResolver,
       updateManager,
       timetableRepositoryHandle,
       updatersParameters
@@ -221,8 +228,12 @@ public class UpdaterConfigurator {
         )
       );
     }
-    for (var configItem : updatersParameters.getSiriETCarpoolingUpdaterParameters()) {
-      updaters.add(new SiriETCarpoolingUpdater(configItem, carpoolingRepository));
+    if (OTPFeature.CarPooling.isOn()) {
+      for (var configItem : updatersParameters.getSiriETCarpoolingUpdaterParameters()) {
+        updaters.add(
+          new SiriETCarpoolingUpdater(configItem, carpoolingRepository, carpoolTripVertexResolver)
+        );
+      }
     }
     for (var configItem : updatersParameters.getSiriETLiteUpdaterParameters()) {
       updaters.add(
