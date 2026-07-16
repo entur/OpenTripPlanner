@@ -13,6 +13,7 @@ import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.siri.mapping.OccupancyMapper;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
 import uk.org.siri.siri21.VehicleModesEnumeration;
+import uk.org.siri.siri21.VehicleRef;
 
 /**
  * A wrapper around a JAXB {@link EstimatedVehicleJourney} that also owns the parsed and validated
@@ -126,7 +127,8 @@ final class EstimatedVehicleJourneyWrapper {
    */
   @Nullable
   String vehicleRef() {
-    return journey.getVehicleRef() != null ? journey.getVehicleRef().getValue() : null;
+    VehicleRef vehicleRef = journey.getVehicleRef();
+    return vehicleRef != null && !vehicleRef.getValue().isBlank() ? vehicleRef.getValue() : null;
   }
 
   /* Replaced trips */

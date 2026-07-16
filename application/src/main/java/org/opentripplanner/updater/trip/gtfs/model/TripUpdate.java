@@ -18,6 +18,7 @@ import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.utils.lang.StringUtils;
 
 /**
  * A real-time update for trip, which may contain updated stop times and trip properties.
@@ -153,7 +154,7 @@ public final class TripUpdate {
 
   public Optional<String> vehicleId() {
     return vehicle()
-      .filter(GtfsRealtime.VehicleDescriptor::hasId)
+      .filter(v -> StringUtils.hasValue(v.getId()))
       .map(GtfsRealtime.VehicleDescriptor::getId);
   }
 }
