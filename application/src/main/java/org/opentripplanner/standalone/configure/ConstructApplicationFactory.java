@@ -53,7 +53,6 @@ import org.opentripplanner.service.vehiclerental.configure.VehicleRentalServiceM
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeService;
 import org.opentripplanner.service.worldenvelope.configure.WorldEnvelopeServiceModule;
-import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.standalone.config.ConfigModel;
 import org.opentripplanner.standalone.config.configure.ConfigModule;
 import org.opentripplanner.standalone.config.configure.DeduplicatorServiceModule;
@@ -145,8 +144,6 @@ public interface ConstructApplicationFactory {
 
   @StaticTransitService
   TransitService transitService();
-
-  OtpServerRequestContext createServerContext();
 
   RequestScopedFactory.Builder requestScopedFactoryBuilder();
 

@@ -9,7 +9,6 @@ import java.util.List;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleService;
 import org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle;
-import org.opentripplanner.transit.configure.StaticTransitService;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.OccupancyStatus;
 import org.opentripplanner.transit.model.timetable.Trip;
@@ -29,7 +28,7 @@ public class DefaultRealtimeVehicleService implements RealtimeVehicleService {
   @Inject
   public DefaultRealtimeVehicleService(
     RealtimeVehicleRepository repository,
-    @StaticTransitService TransitService transitService
+    TransitService transitService
   ) {
     this.repository = repository;
     this.transitService = transitService;

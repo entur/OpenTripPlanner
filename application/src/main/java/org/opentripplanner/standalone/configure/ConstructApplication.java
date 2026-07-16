@@ -27,7 +27,6 @@ import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingService;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
-import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.standalone.config.CommandLineParameters;
 import org.opentripplanner.standalone.config.ConfigModel;
@@ -198,11 +197,7 @@ public class ConstructApplication {
   private Application createApplication() {
     LOG.info("Wiring up and configuring server.");
     setupTransitRoutingServer();
-    return new OTPWebApplication(
-      routerConfig().server(),
-      this::createServerContext,
-      this::requestScopedComponent
-    );
+    return new OTPWebApplication(routerConfig().server(), this::requestScopedFactory);
   }
 
   private void setupTransitRoutingServer() {
@@ -353,11 +348,7 @@ public class ConstructApplication {
     return factory.raptorConfig();
   }
 
-  private OtpServerRequestContext createServerContext() {
-    return factory.createServerContext();
-  }
-
-  private RequestScopedFactory requestScopedComponent() {
+  private RequestScopedFactory requestScopedFactory() {
     return factory.requestScopedFactoryBuilder().build();
   }
 
