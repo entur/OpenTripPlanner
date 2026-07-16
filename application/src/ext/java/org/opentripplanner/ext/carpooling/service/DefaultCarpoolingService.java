@@ -128,6 +128,14 @@ public class DefaultCarpoolingService implements CarpoolingService {
   private final VertexCreationService vertexCreationService;
 
   /**
+   * Snaps passenger origin/destination and transit stops onto vertices a car can genuinely reach
+   * and leave. Per-vertex reachability verdicts are cached and depend only on the static street
+   * graph.
+   */
+  private final CarAccessibleVertexSnapper carVertexSnapper =
+    CarAccessibleVertexSnapper.createDefault();
+
+  /**
    * Creates a new carpooling service with the specified dependencies.
    * <p>
    * The service is initialized with standard pre- and post-filters; both filter sets are
@@ -238,12 +246,12 @@ public class DefaultCarpoolingService implements CarpoolingService {
         return List.of();
       }
 
-      var pickupSnap = CarAccessibleVertexSnapper.snapPickup(
+      var pickupSnap = carVertexSnapper.snapPickup(
         streetSearchRequest,
         passengerPickupVertex,
         maxWalkToCarpool
       );
-      var dropoffSnap = CarAccessibleVertexSnapper.snapDropoff(
+      var dropoffSnap = carVertexSnapper.snapDropoff(
         streetSearchRequest,
         passengerDropoffVertex,
         maxWalkToCarpool
@@ -407,12 +415,12 @@ public class DefaultCarpoolingService implements CarpoolingService {
       }
 
       var passengerSnap = accessOrEgress.isEgress()
-        ? CarAccessibleVertexSnapper.snapDropoff(
+        ? carVertexSnapper.snapDropoff(
             streetSearchRequest,
             passengerAccessEgressVertex,
             maxWalkToCarpool
           )
-        : CarAccessibleVertexSnapper.snapPickup(
+        : carVertexSnapper.snapPickup(
             streetSearchRequest,
             passengerAccessEgressVertex,
             maxWalkToCarpool
@@ -461,7 +469,7 @@ public class DefaultCarpoolingService implements CarpoolingService {
           accessOrEgress.isEgress()
         );
       // AreaStops are GTFS Flex zones — their linked vertex is a synthetic point inside the zone,
-      // not a real curb/platform a carpool driver could drop the passenger at, so skip them.
+      // not a real stop or platform a carpool driver could drop the passenger at, so skip them.
       var byStopId = new LinkedHashMap<FeedScopedId, NearbyStop>();
       for (var stop : foundStops) {
         if (transitServiceResolver.getStopLocation(stop.stopId) instanceof AreaStop) {
@@ -472,12 +480,12 @@ public class DefaultCarpoolingService implements CarpoolingService {
       var stopSnaps = new HashMap<NearbyStop, CarAccessibleVertexSnapper.SnapResult>();
       for (var stop : byStopId.values()) {
         var snap = accessOrEgress.isAccess()
-          ? CarAccessibleVertexSnapper.snapDropoff(
+          ? carVertexSnapper.snapDropoff(
               streetSearchRequest,
               stop.state.getVertex(),
               maxWalkToCarpool
             )
-          : CarAccessibleVertexSnapper.snapPickup(
+          : carVertexSnapper.snapPickup(
               streetSearchRequest,
               stop.state.getVertex(),
               maxWalkToCarpool

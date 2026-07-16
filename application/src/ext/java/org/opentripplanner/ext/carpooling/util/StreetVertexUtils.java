@@ -72,8 +72,8 @@ public class StreetVertexUtils {
 
   /**
    * Creates a bidirectionally-linked, walk-mode-linked passenger vertex. The passenger is a
-   * pedestrian reaching the curb, so {@code WALK} is the correct linking mode: the splitter it
-   * produces inherits the parent edge's permissions, so a walk-only edge yields a pedestrian
+   * pedestrian reaching the roadside, so {@code WALK} is the correct linking mode: the splitter
+   * it produces inherits the parent edge's permissions, so a walk-only edge yields a pedestrian
    * splitter (the snap's walk A* will expand past it) and a walk+car edge yields a car-capable
    * splitter the driver can pass through in either direction.
    */
