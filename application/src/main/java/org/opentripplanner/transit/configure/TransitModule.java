@@ -45,15 +45,12 @@ public abstract class TransitModule {
     RaptorTransitData scheduledRaptorTransitData,
     DefaultTripCalendars tripCalendars
   ) {
-    var timetableSnapshot = new TimetableSnapshot(scheduledRaptorTransitData, tripCalendars);
+    var mutableBuffer = new TimetableSnapshot(scheduledRaptorTransitData, tripCalendars);
     var timetableSnapshotLifecycle = new TimetableSnapshotLifecycle(
-      timetableSnapshot,
+      mutableBuffer,
       parameters.purgeExpiredData(),
       () -> LocalDate.now(timetableRepository.getTimeZone())
     );
-    return repositoryRegistry.registerRepositorySnapshot(
-      timetableSnapshot,
-      timetableSnapshotLifecycle
-    );
+    return repositoryRegistry.registerRepository(mutableBuffer, timetableSnapshotLifecycle);
   }
 }
