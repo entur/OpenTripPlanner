@@ -31,7 +31,7 @@ import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdater;
 import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdater;
-import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.siri.SiriRealTimeUpdateHandler;
 import org.opentripplanner.updater.trip.siri.updater.google.SiriETGooglePubsubUpdater;
 import org.opentripplanner.updater.vehicle_parking.AvailabilityDataSourceFactory;
 import org.opentripplanner.updater.vehicle_parking.VehicleParkingAvailabilityUpdater;
@@ -254,8 +254,8 @@ public class UpdaterConfigurator {
     return updaters;
   }
 
-  private SiriRealTimeTripUpdateAdapter provideSiriAdapter() {
-    return new SiriRealTimeTripUpdateAdapter(timetableRepository, deduplicator, snapshotManager);
+  private SiriRealTimeUpdateHandler provideSiriAdapter() {
+    return new SiriRealTimeUpdateHandler(timetableRepository, deduplicator, snapshotManager);
   }
 
   private GtfsRealTimeTripUpdateAdapter provideGtfsAdapter() {

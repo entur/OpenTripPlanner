@@ -14,11 +14,11 @@ import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 public class SiriTestHelper {
 
   private final TransitTestEnvironment transitTestEnvironment;
-  private final SiriRealTimeTripUpdateAdapter siriAdapter;
+  private final SiriRealTimeUpdateHandler siriAdapter;
 
   SiriTestHelper(TransitTestEnvironment transitTestEnvironment) {
     this.transitTestEnvironment = transitTestEnvironment;
-    this.siriAdapter = new SiriRealTimeTripUpdateAdapter(
+    this.siriAdapter = new SiriRealTimeUpdateHandler(
       transitTestEnvironment.timetableRepository(),
       DeduplicatorService.NOOP,
       transitTestEnvironment.timetableSnapshotManager()

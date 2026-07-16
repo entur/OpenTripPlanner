@@ -38,9 +38,9 @@ import uk.org.siri.siri21.EstimatedVehicleJourney;
 /**
  * Adapts from SIRI-ET EstimatedTimetables to OTP's internal real-time data model.
  */
-public class SiriRealTimeTripUpdateAdapter {
+public class SiriRealTimeUpdateHandler {
 
-  private static final Logger LOG = LoggerFactory.getLogger(SiriRealTimeTripUpdateAdapter.class);
+  private static final Logger LOG = LoggerFactory.getLogger(SiriRealTimeUpdateHandler.class);
 
   /**
    * Use an id generator to generate TripPattern ids for new TripPatterns created by RealTime
@@ -63,7 +63,7 @@ public class SiriRealTimeTripUpdateAdapter {
   private final DeduplicatorService deduplicator;
   private final TimetableSnapshotManager snapshotManager;
 
-  public SiriRealTimeTripUpdateAdapter(
+  public SiriRealTimeUpdateHandler(
     TimetableRepository timetableRepository,
     DeduplicatorService deduplicator,
     TimetableSnapshotManager snapshotManager

@@ -38,7 +38,7 @@ import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.alert.TransitAlertProvider;
 import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.spi.WriteToGraphCallback;
-import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.siri.SiriRealTimeUpdateHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.org.siri.siri21.ServiceDelivery;
@@ -125,7 +125,7 @@ public class SiriAzureUpdater implements GraphUpdater {
 
   public static SiriAzureUpdater createETUpdater(
     SiriAzureETUpdaterParameters config,
-    SiriRealTimeTripUpdateAdapter adapter
+    SiriRealTimeUpdateHandler adapter
   ) {
     var messageHandler = new SiriAzureETUpdater(config, adapter);
     return new SiriAzureUpdater(config, messageHandler);
