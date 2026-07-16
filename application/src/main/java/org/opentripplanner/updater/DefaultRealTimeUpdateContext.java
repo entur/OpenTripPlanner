@@ -28,7 +28,7 @@ public class DefaultRealTimeUpdateContext implements RealTimeUpdateContext {
    * long as {@link MutableTimetableSnapshot} and {@link org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot}
    * share a single implementation — which is enforced by {@link MutableTimetableSnapshot} extending
    * {@link org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot}. A cleaner separation
-   * would require merging scheduled and real-time data into a single unified store.
+   * would require merging scheduled and real-time data into a single unified store - this is the end goal!
    */
   public DefaultRealTimeUpdateContext(
     Graph graph,

@@ -1,10 +1,7 @@
 package org.opentripplanner.utils.lang;
 
-import java.util.function.Function;
-
 /**
- * Utility constants/methods for DIV functions like {@link Runnable}s, {@link Function}
- * .
+ * Utilities extending Java {@link Runnable} features.
  */
 public class RunnableUtils {
 

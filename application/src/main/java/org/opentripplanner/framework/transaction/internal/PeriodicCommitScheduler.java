@@ -53,6 +53,9 @@ class PeriodicCommitScheduler {
     long elapsedTime = System.currentTimeMillis() - startTime;
     if (elapsedTime > warningLimit_ms) {
       if (warningLimit_ms == interval_ms) {
+        // We increase the limit after the first log event to:
+        // - avoid spamming the logs if the update is exceeding the limit by a small amount.
+        // - distinguish between the first (initialization) and the followups.
         warningLimit_ms *= 2;
         LOG.warn(
           "Commit is taking a long time to complete (including queued wait), {} ms for {}. " +
