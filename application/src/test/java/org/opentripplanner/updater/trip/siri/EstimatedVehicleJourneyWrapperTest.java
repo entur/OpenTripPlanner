@@ -150,13 +150,6 @@ class EstimatedVehicleJourneyWrapperTest {
   }
 
   @Test
-  void internalPlanningCode() {
-    var journey = builder().withVehicleRef("VEHICLE:1").buildEstimatedVehicleJourney();
-
-    assertEquals("VEHICLE:1", EstimatedVehicleJourneyWrapper.of(journey).internalPlanningCode());
-  }
-
-  @Test
   void vehicleRef() {
     var journey = builder().withVehicleRef("VEHICLE:1").buildEstimatedVehicleJourney();
 
@@ -269,7 +262,7 @@ class EstimatedVehicleJourneyWrapperTest {
     assertNull(wrapper.datedVehicleJourneyRef());
     assertNull(wrapper.code());
     assertNull(wrapper.vehicleJourneyIdAndServiceDate());
-    assertNull(wrapper.internalPlanningCode());
+    assertNull(wrapper.vehicleRef());
     assertNull(wrapper.replacedDatedVehicleJourneyRef());
     assertNull(wrapper.externalLineRef());
     assertNull(wrapper.occupancy());

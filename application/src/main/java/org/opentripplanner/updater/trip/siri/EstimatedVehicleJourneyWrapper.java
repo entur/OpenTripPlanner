@@ -121,15 +121,8 @@ final class EstimatedVehicleJourneyWrapper {
   }
 
   /**
-   * An internal (private) id used for fuzzy matching.
-   */
-  @Nullable
-  String internalPlanningCode() {
-    return journey.getVehicleRef() != null ? journey.getVehicleRef().getValue() : null;
-  }
-
-  /**
    * The reference to the vehicle operating this journey.
+   * Also used for fuzzy matching
    */
   @Nullable
   String vehicleRef() {
