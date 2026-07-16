@@ -59,7 +59,7 @@ import org.opentripplanner.updater.GraphWriterService;
 import org.opentripplanner.updater.alert.gtfs.AlertsUpdateHandler;
 import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
-import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeUpdateHandler;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 
@@ -72,7 +72,7 @@ public abstract class GtfsTest {
   public TimetableRepository timetableRepository;
 
   AlertsUpdateHandler alertsUpdateHandler;
-  GtfsRealTimeTripUpdateAdapter tripUpdateAdapter;
+  GtfsRealTimeUpdateHandler tripUpdateAdapter;
   TransitAlertServiceImpl alertPatchServiceImpl;
   public OtpServerRequestContext serverContext;
 
@@ -242,7 +242,7 @@ public abstract class GtfsTest {
       timetableRepository.copyTripCalendarForRealTimeUpdates()
     );
 
-    tripUpdateAdapter = new GtfsRealTimeTripUpdateAdapter(
+    tripUpdateAdapter = new GtfsRealTimeUpdateHandler(
       timetableRepository,
       new Deduplicator(),
       snapshotManager,

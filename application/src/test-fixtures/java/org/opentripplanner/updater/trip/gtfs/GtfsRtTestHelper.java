@@ -15,11 +15,11 @@ import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagat
 public class GtfsRtTestHelper {
 
   private final TransitTestEnvironment transitTestEnvironment;
-  private final GtfsRealTimeTripUpdateAdapter gtfsAdapter;
+  private final GtfsRealTimeUpdateHandler gtfsAdapter;
 
   GtfsRtTestHelper(TransitTestEnvironment transitTestEnvironment) {
     this.transitTestEnvironment = transitTestEnvironment;
-    this.gtfsAdapter = new GtfsRealTimeTripUpdateAdapter(
+    this.gtfsAdapter = new GtfsRealTimeUpdateHandler(
       transitTestEnvironment.timetableRepository(),
       DeduplicatorService.NOOP,
       transitTestEnvironment.timetableSnapshotManager(),

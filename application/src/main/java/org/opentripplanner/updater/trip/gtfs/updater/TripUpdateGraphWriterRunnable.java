@@ -8,7 +8,7 @@ import org.opentripplanner.updater.GraphWriterRunnable;
 import org.opentripplanner.updater.RealTimeUpdateContext;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
-import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeUpdateHandler;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 
@@ -28,10 +28,10 @@ public class TripUpdateGraphWriterRunnable implements GraphWriterRunnable {
 
   private final String feedId;
   private final Consumer<UpdateResult> sendMetrics;
-  private final GtfsRealTimeTripUpdateAdapter adapter;
+  private final GtfsRealTimeUpdateHandler adapter;
 
   public TripUpdateGraphWriterRunnable(
-    GtfsRealTimeTripUpdateAdapter adapter,
+    GtfsRealTimeUpdateHandler adapter,
     boolean fuzzyTripMatching,
     ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType,

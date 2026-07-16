@@ -30,7 +30,7 @@ import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
 /**
  * Adapts from GTFS-RT TripUpdates to OTP's internal real-time data model.
  */
-public class GtfsRealTimeTripUpdateAdapter {
+public class GtfsRealTimeUpdateHandler {
 
   private final TimetableSnapshotManager snapshotManager;
   private final Supplier<LocalDate> localDateNow;
@@ -42,7 +42,7 @@ public class GtfsRealTimeTripUpdateAdapter {
   /**
    * Constructor to allow tests to provide their own clock, not using system time.
    */
-  public GtfsRealTimeTripUpdateAdapter(
+  public GtfsRealTimeUpdateHandler(
     TimetableRepository timetableRepository,
     DeduplicatorService deduplicator,
     TimetableSnapshotManager snapshotManager,
