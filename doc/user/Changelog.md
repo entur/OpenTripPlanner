@@ -95,6 +95,7 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Report invalid line ref as DataImportIssue in NeTEx TripMapper [#7790](https://github.com/opentripplanner/OpenTripPlanner/pull/7790)
 - Fix ArrayIndexOutOfBoundsException in pass-through via chaining [#7747](https://github.com/opentripplanner/OpenTripPlanner/pull/7747)
 - Snapshot framework [#7689](https://github.com/opentripplanner/OpenTripPlanner/pull/7689)
+- Add vehicle id via real-time updates [#7814](https://github.com/opentripplanner/OpenTripPlanner/pull/7814)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
