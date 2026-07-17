@@ -50,7 +50,6 @@ import org.opentripplanner.service.vehicleparking.VehicleParkingService;
 import org.opentripplanner.service.vehicleparking.configure.VehicleParkingServiceModule;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
 import org.opentripplanner.service.vehiclerental.VehicleRentalService;
-import org.opentripplanner.service.vehiclerental.configure.VehicleRentalRepositoryModule;
 import org.opentripplanner.service.vehiclerental.configure.VehicleRentalServiceModule;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeService;
@@ -104,7 +103,6 @@ import org.opentripplanner.warmup.configure.WarmupModule;
     TransitModule.class,
     TransferServiceModule.class,
     VehicleParkingServiceModule.class,
-    VehicleRentalRepositoryModule.class,
     VehicleRentalServiceModule.class,
     ViaModule.class,
     WarmupModule.class,
@@ -203,6 +201,9 @@ public interface ConstructApplicationFactory {
 
     @BindsInstance
     Builder vehicleParkingRepository(VehicleParkingRepository parkingRepository);
+
+    @BindsInstance
+    Builder vehicleRentalRepository(VehicleRentalRepository rentalRepository);
 
     @BindsInstance
     Builder dataImportIssueSummary(DataImportIssueSummary issueSummary);
