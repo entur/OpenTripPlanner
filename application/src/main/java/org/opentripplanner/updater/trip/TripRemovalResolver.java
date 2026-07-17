@@ -23,7 +23,8 @@ import org.slf4j.LoggerFactory;
  * and DELETE_TRIP ({@link org.opentripplanner.updater.trip.model.TripDeletion}).
  * <p>
  * This resolver looks up scheduled trips first, then checks for previously added (real-time)
- * trips via the snapshot manager.
+ * trips via the transit service, which sees all in-progress real-time updates in the
+ * timetable snapshot buffer of the current update task.
  */
 public class TripRemovalResolver {
 
@@ -33,14 +34,10 @@ public class TripRemovalResolver {
   private final TripResolver tripResolver;
   private final ServiceDateResolver serviceDateResolver;
 
-  @Nullable
-  private final TimetableSnapshotManager snapshotManager;
-
   public TripRemovalResolver(
     TransitEditorService transitService,
     TripResolver tripResolver,
-    ServiceDateResolver serviceDateResolver,
-    @Nullable TimetableSnapshotManager snapshotManager
+    ServiceDateResolver serviceDateResolver
   ) {
     this.transitService = Objects.requireNonNull(transitService, "transitService must not be null");
     this.tripResolver = Objects.requireNonNull(tripResolver, "tripResolver must not be null");
@@ -48,7 +45,6 @@ public class TripRemovalResolver {
       serviceDateResolver,
       "serviceDateResolver must not be null"
     );
-    this.snapshotManager = snapshotManager;
   }
 
   /**
@@ -85,18 +81,16 @@ public class TripRemovalResolver {
     // real-time, not in the static schedule), look up the RT timetable times and treat the trip
     // as a previously-added trip so that TripRemover preserves the "added" flag.
     if (pattern.isRealTimeTripPattern() && !pattern.isStopPatternModifiedInRealTime()) {
-      if (snapshotManager != null) {
-        var rtTimetable = snapshotManager.resolve(pattern, serviceDate);
-        var rtTripTimes = rtTimetable.getTripTimes(trip.getId());
-        if (rtTripTimes != null && rtTripTimes.isAdded()) {
-          return ResolvedTripRemoval.forPreviouslyAddedTrip(
-            serviceDate,
-            trip.getId(),
-            pattern,
-            rtTripTimes,
-            dataSource
-          );
-        }
+      var rtTimetable = transitService.findTimetable(pattern, serviceDate);
+      var rtTripTimes = rtTimetable.getTripTimes(trip.getId());
+      if (rtTripTimes != null && rtTripTimes.isAdded()) {
+        return ResolvedTripRemoval.forPreviouslyAddedTrip(
+          serviceDate,
+          trip.getId(),
+          pattern,
+          rtTripTimes,
+          dataSource
+        );
       }
     }
 
@@ -117,7 +111,7 @@ public class TripRemovalResolver {
   }
 
   /**
-   * Check for a previously added (real-time) trip in the snapshot manager.
+   * Check for a previously added (real-time) trip in the timetable snapshot.
    * Returns the resolved data if found, or throws UpdateException otherwise.
    */
   private ResolvedTripRemoval resolveAddedTripOrNotFound(
@@ -125,10 +119,10 @@ public class TripRemovalResolver {
     FeedScopedId tripId,
     @Nullable String dataSource
   ) {
-    if (snapshotManager != null && tripId != null) {
-      var pattern = snapshotManager.getNewTripPatternForModifiedTrip(tripId, serviceDate);
+    if (tripId != null) {
+      var pattern = transitService.findNewTripPatternForModifiedTrip(tripId, serviceDate);
       if (pattern != null) {
-        var timetable = snapshotManager.resolve(pattern, serviceDate);
+        var timetable = transitService.findTimetable(pattern, serviceDate);
         var tripTimes = timetable.getTripTimes(tripId);
         if (tripTimes != null && tripTimes.isAdded()) {
           return ResolvedTripRemoval.forPreviouslyAddedTrip(

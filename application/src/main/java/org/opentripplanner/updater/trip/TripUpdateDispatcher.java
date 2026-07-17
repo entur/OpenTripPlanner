@@ -2,7 +2,6 @@ package org.opentripplanner.updater.trip;
 
 import java.time.ZoneId;
 import java.util.Objects;
-import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateException;
@@ -73,7 +72,6 @@ public class TripUpdateDispatcher {
     ZoneId timeZone,
     TransitEditorService transitService,
     DeduplicatorService deduplicator,
-    @Nullable TimetableSnapshotManager snapshotManager,
     TripPatternCache tripPatternCache,
     FuzzyTripMatcher fuzzyTripMatcher,
     RouteCreationStrategy routeCreationStrategy
@@ -100,8 +98,7 @@ public class TripUpdateDispatcher {
     var tripRemovalResolver = new TripRemovalResolver(
       transitService,
       tripResolver,
-      serviceDateResolver,
-      snapshotManager
+      serviceDateResolver
     );
     var duplicateTripResolver = new DuplicateTripResolver(transitService);
 

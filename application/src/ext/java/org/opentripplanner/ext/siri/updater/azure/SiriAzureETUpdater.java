@@ -26,7 +26,10 @@ public class SiriAzureETUpdater implements SiriAzureMessageHandler {
 
   private WriteToGraphCallback writeToGraphCallback;
 
-  public SiriAzureETUpdater(SiriAzureETUpdaterParameters config, SiriTripUpdateAdapter adapter) {
+  public SiriAzureETUpdater(
+    SiriAzureETUpdaterParameters config,
+    SiriTripUpdateAdapter adapter
+  ) {
     this.adapter = adapter;
     this.recordMetrics = TripUpdateMetrics.streaming(config);
     this.feedId = Objects.requireNonNull(config.feedId(), "feedId must not be null");
