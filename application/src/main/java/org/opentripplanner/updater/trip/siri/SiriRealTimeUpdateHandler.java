@@ -29,6 +29,7 @@ import org.opentripplanner.updater.trip.TripUpdateApplier;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
+import org.opentripplanner.updater.trip.siri.support.TripReferenceHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
@@ -106,7 +107,7 @@ public class SiriRealTimeUpdateHandler {
           } catch (UpdateException e) {
             errors.add(
               e
-                .withTripReference(DebugString.tripReference(journey))
+                .withTripReference(TripReferenceHelper.tripReference(journey))
                 .toError(journey.getDataSource())
             );
           }
@@ -147,7 +148,7 @@ public class SiriRealTimeUpdateHandler {
     } catch (DataValidationException e) {
       throw DataValidationExceptionMapper.map(e);
     } catch (Exception e) {
-      LOG.warn("{} EstimatedJourney {} failed.", siriUpdateType, journeyWrapper.debugString(), e);
+      LOG.warn("{} EstimatedJourney {} failed.", siriUpdateType, journeyWrapper, e);
       throw UpdateException.noTripId(UNKNOWN);
     }
   }
