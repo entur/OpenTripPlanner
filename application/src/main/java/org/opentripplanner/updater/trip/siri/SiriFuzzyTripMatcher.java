@@ -71,8 +71,8 @@ public class SiriFuzzyTripMatcher {
     }
 
     Set<Trip> trips = null;
-    if (journeyWrapper.internalPlanningCode() != null && journeyWrapper.isRail()) {
-      trips = cachedTripsByInternalPlanningCode(journeyWrapper.internalPlanningCode());
+    if (journeyWrapper.vehicleRef() != null && journeyWrapper.isRail()) {
+      trips = cachedTripsByInternalPlanningCode(journeyWrapper.vehicleRef());
     }
 
     if (trips == null || trips.isEmpty()) {
