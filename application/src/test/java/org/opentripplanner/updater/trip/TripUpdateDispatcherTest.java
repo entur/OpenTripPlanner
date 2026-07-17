@@ -38,7 +38,6 @@ class TripUpdateDispatcherTest {
   private TransitTestEnvironment env;
   private TripUpdateDispatcher dispatcher;
   private TransitEditorService transitService;
-  private TimetableSnapshotManager snapshotManager;
 
   @BeforeEach
   void setUp() {
@@ -59,14 +58,12 @@ class TripUpdateDispatcherTest {
       .build();
 
     transitService = (TransitEditorService) env.transitService();
-    snapshotManager = env.timetableSnapshotManager();
     var tripPatternCache = new TripPatternCache(new TripPatternIdGenerator());
     dispatcher = TripUpdateDispatcher.create(
       env.feedId(),
       TIME_ZONE,
       transitService,
       new Deduplicator(),
-      snapshotManager,
       tripPatternCache,
       NoOpFuzzyTripMatcher.INSTANCE,
       new GtfsRtRouteCreationStrategy(env.feedId(), null)
@@ -142,9 +139,7 @@ class TripUpdateDispatcherTest {
     var result = dispatcher.apply(update);
 
     assertNotNull(result);
-    snapshotManager.updateBuffer(result.realTimeTripUpdate());
-
-    snapshotManager.purgeAndCommit();
+    SnapshotTestHelper.applyAndCommit(env, result.realTimeTripUpdate());
 
     var tripData = env.tripData(TRIP_ID);
     assertTrue(tripData.tripTimes().isDeleted());
@@ -192,9 +187,7 @@ class TripUpdateDispatcherTest {
     var result = dispatcher.apply(update);
 
     assertNotNull(result);
-    snapshotManager.updateBuffer(result.realTimeTripUpdate());
-
-    snapshotManager.purgeAndCommit();
+    SnapshotTestHelper.applyAndCommit(env, result.realTimeTripUpdate());
 
     var tripData = env.tripData(TRIP_ID);
     assertTrue(tripData.tripTimes().isCanceled());

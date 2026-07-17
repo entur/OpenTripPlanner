@@ -34,7 +34,6 @@ class TripCancellerTest {
 
   private TransitTestEnvironment env;
   private TransitEditorService transitService;
-  private TimetableSnapshotManager snapshotManager;
   private TripRemovalResolver resolver;
   private TripCanceller canceller;
 
@@ -57,15 +56,9 @@ class TripCancellerTest {
       .build();
 
     transitService = (TransitEditorService) env.transitService();
-    snapshotManager = env.timetableSnapshotManager();
     var tripResolver = new TripResolver(env.transitService());
     var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
-    resolver = new TripRemovalResolver(
-      transitService,
-      tripResolver,
-      serviceDateResolver,
-      snapshotManager
-    );
+    resolver = new TripRemovalResolver(transitService, tripResolver, serviceDateResolver);
     canceller = new TripCanceller(resolver);
   }
 
@@ -153,11 +146,8 @@ class TripCancellerTest {
 
     var result = canceller.cancel(parsedUpdate);
 
-    // Apply the update to the snapshot manager
-    snapshotManager.updateBuffer(result.realTimeTripUpdate());
-
-    // Commit the snapshot to make the update visible
-    snapshotManager.purgeAndCommit();
+    // Apply the update to the snapshot and commit it
+    SnapshotTestHelper.applyAndCommit(env, result.realTimeTripUpdate());
 
     // After applying to snapshot, verify the trip is cancelled in the timetable
     var tripData = env.tripData(TRIP_ID);
