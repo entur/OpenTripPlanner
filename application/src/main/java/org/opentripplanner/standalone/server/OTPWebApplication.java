@@ -16,15 +16,12 @@ import org.glassfish.jersey.CommonProperties;
 import org.glassfish.jersey.internal.inject.AbstractBinder;
 import org.glassfish.jersey.internal.inject.Binder;
 import org.glassfish.jersey.jackson.internal.jackson.jaxrs.json.JacksonJsonProvider;
-import org.glassfish.jersey.process.internal.RequestScoped;
 import org.opentripplanner.api.common.OTPExceptionMapper;
 import org.opentripplanner.apis.APIEndpoints;
 import org.opentripplanner.ext.httpresponsetimemetrics.HttpResponseTimeMetricsFilter;
 import org.opentripplanner.ext.httpresponsetimemetrics.HttpResponseTimeMetricsParameters;
 import org.opentripplanner.framework.application.OTPFeature;
-import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.standalone.configure.RequestScopedFactory;
-import org.opentripplanner.transit.service.TransitService;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 /**
@@ -37,7 +34,7 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
  */
 public class OTPWebApplication extends Application {
 
-  /* Builds one Dagger RequestScopedComponent per actual HTTP request, see issue #7441. */
+  /* Builds one Dagger RequestScopedFactory per actual HTTP request, see issue #7441. */
   private final Supplier<RequestScopedFactory> requestScopedFactoryProvider;
 
   private final List<Class<? extends ContainerResponseFilter>> customFilters;
@@ -106,10 +103,8 @@ public class OTPWebApplication extends Application {
         new OTPExceptionMapper(),
         // Enable Jackson JSON response serialization
         new JacksonJsonProvider(),
-        // Allow injecting the OTP server object, and individual request-scoped services (e.g.
-        // TransitService) directly, all backed by one Dagger RequestScopedComponent pinned to one
-        // transaction per HTTP request
-        makeRequestScopedBinder(requestScopedFactoryProvider),
+        // Inject the OTP request-scoped services (e.g. TransitService) per HTTP request
+        new DaggerToJerseyBridge(requestScopedFactoryProvider),
         // Add performance instrumentation of Jersey requests to micrometer
         getMetricsApplicationEventListener()
       )
@@ -145,37 +140,6 @@ public class OTPWebApplication extends Application {
     return Map.of(CommonProperties.FEATURE_AUTO_DISCOVERY_DISABLE, Boolean.TRUE);
   }
 
-  /**
-   * Bridges the Dagger-managed {@link RequestScopedFactory} into HK2/Jersey: the component
-   * itself, {@link OtpServerRequestContext} (grab-bag of everything not yet migrated), and
-   * individual request-scoped services (currently just {@link TransitService}) that resources can
-   * inject directly with {@code @Context}. All three bindings are scoped {@code
-   * .in(RequestScoped.class)} — Jersey's own per-actual-HTTP-request HK2 scope — and all resolve
-   * from the SAME cached {@link RequestScopedFactory} instance for a given request, so they see
-   * one pinned transaction. See issue #7441.
-   * <p>
-   * More on custom injection in Jersey 2:
-   * http://jersey.576304.n2.nabble.com/Custom-providers-in-Jersey-2-tp7580699p7580715.html
-   */
-  private Binder makeRequestScopedBinder(
-    Supplier<RequestScopedFactory> requestScopedFactoryProvider
-  ) {
-    return new AbstractBinder() {
-      @Override
-      protected void configure() {
-        bindFactory(requestScopedFactoryProvider)
-          .to(RequestScopedFactory.class)
-          .in(RequestScoped.class);
-        bindFactory(RequestScopedServerContextSupplier.class)
-          .to(OtpServerRequestContext.class)
-          .in(RequestScoped.class);
-        bindFactory(RequestScopedTransitServiceSupplier.class)
-          .to(TransitService.class)
-          .in(RequestScoped.class);
-      }
-    };
-  }
-
   private MetricsApplicationEventListener getMetricsApplicationEventListener() {
     return new MetricsApplicationEventListener(
       Metrics.globalRegistry,
@@ -188,7 +152,7 @@ public class OTPWebApplication extends Application {
   /**
    * Instantiate and add the prometheus micrometer registry to the global composite registry.
    *
-   * @return A AbstractBinder, which can be used to inject the registry into the Actuator API calls
+   * @return An AbstractBinder, which can be used to inject the registry into the Actuator API calls
    */
   private Binder getBoundPrometheusRegistry() {
     PrometheusMeterRegistry prometheusRegistry = new PrometheusMeterRegistry(
