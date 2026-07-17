@@ -50,7 +50,6 @@ class ScheduledTripUpdaterTest {
 
   private TransitTestEnvironment env;
   private TransitEditorService transitService;
-  private TimetableSnapshotManager snapshotManager;
   private ExistingTripResolver resolver;
   private ScheduledTripUpdater updater;
 
@@ -72,7 +71,6 @@ class ScheduledTripUpdaterTest {
       .build();
 
     transitService = (TransitEditorService) env.transitService();
-    snapshotManager = env.timetableSnapshotManager();
     var tripResolver = new TripResolver(env.transitService());
     var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
     var stopResolver = new StopResolver(env.transitService());

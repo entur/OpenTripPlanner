@@ -11,9 +11,9 @@ import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Timetable;
+import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
-import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot;
 

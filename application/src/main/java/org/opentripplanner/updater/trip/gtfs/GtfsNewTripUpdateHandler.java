@@ -21,6 +21,8 @@ import org.opentripplanner.updater.trip.TripUpdateApplier;
 import org.opentripplanner.updater.trip.TripUpdateDispatcher;
 import org.opentripplanner.updater.trip.TripUpdateResult;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
+import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.TripDuplication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

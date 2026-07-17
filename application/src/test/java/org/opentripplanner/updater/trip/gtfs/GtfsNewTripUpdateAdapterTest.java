@@ -3,7 +3,9 @@ package org.opentripplanner.updater.trip.gtfs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.google.transit.realtime.GtfsRealtime;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
 import org.opentripplanner.transit.model.TransitTestEnvironmentBuilder;
@@ -12,6 +14,7 @@ import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.site.RegularStop;
+import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
@@ -44,7 +47,6 @@ class GtfsNewTripUpdateAdapterTest implements RealtimeTestConstants {
     var newAdapter = new GtfsNewTripUpdateAdapter(
       env.timetableRepository(),
       new Deduplicator(),
-      env.timetableSnapshotManager(),
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA,
       false,
@@ -59,21 +61,13 @@ class GtfsNewTripUpdateAdapterTest implements RealtimeTestConstants {
     var newAdapter = new GtfsNewTripUpdateAdapter(
       env.timetableRepository(),
       new Deduplicator(),
-      env.timetableSnapshotManager(),
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA,
       false,
       env.feedId()
     );
 
-    var result = newAdapter.applyTripUpdates(
-      null,
-      ForwardsDelayPropagationType.DEFAULT,
-      BackwardsDelayPropagationType.REQUIRED_NO_DATA,
-      UpdateIncrementality.DIFFERENTIAL,
-      List.of(),
-      env.feedId()
-    );
+    var result = applyTripUpdates(env, newAdapter, List.of());
 
     assertNotNull(result);
     assertEquals(0, result.successful());
@@ -86,24 +80,47 @@ class GtfsNewTripUpdateAdapterTest implements RealtimeTestConstants {
     var newAdapter = new GtfsNewTripUpdateAdapter(
       env.timetableRepository(),
       new Deduplicator(),
-      env.timetableSnapshotManager(),
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.REQUIRED_NO_DATA,
       false,
       env.feedId()
     );
 
-    var result = newAdapter.applyTripUpdates(
-      null,
-      ForwardsDelayPropagationType.DEFAULT,
-      BackwardsDelayPropagationType.REQUIRED_NO_DATA,
-      UpdateIncrementality.DIFFERENTIAL,
-      null,
-      env.feedId()
-    );
+    var result = applyTripUpdates(env, newAdapter, null);
 
     assertNotNull(result);
     assertEquals(0, result.successful());
     assertEquals(0, result.failed());
+  }
+
+  private static UpdateResult applyTripUpdates(
+    TransitTestEnvironment env,
+    GtfsNewTripUpdateAdapter adapter,
+    List<GtfsRealtime.TripUpdate> updates
+  ) {
+    var resultRef = new AtomicReference<UpdateResult>();
+    try {
+      env
+        .updateManager()
+        .submit(ctx -> {
+          var buffer = ctx.repository(env.timetableHandle());
+          resultRef.set(
+            adapter
+              .forUpdate(buffer)
+              .applyTripUpdates(
+                null,
+                ForwardsDelayPropagationType.DEFAULT,
+                BackwardsDelayPropagationType.REQUIRED_NO_DATA,
+                UpdateIncrementality.DIFFERENTIAL,
+                updates,
+                env.feedId()
+              )
+          );
+        })
+        .get();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    return resultRef.get();
   }
 }

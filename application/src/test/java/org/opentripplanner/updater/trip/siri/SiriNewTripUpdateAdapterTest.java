@@ -7,9 +7,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.updater.trip.UpdateIncrementality.DIFFERENTIAL;
 
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
 import org.opentripplanner.transit.model.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model.TripInput;
@@ -17,9 +17,10 @@ import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.site.RegularStop;
-import org.opentripplanner.updater.DefaultRealTimeUpdateContext;
+import org.opentripplanner.transit.service.DefaultTransitService;
+import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
-import org.opentripplanner.updater.trip.siri.updater.EstimatedTimetableHandler;
+import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 
 /**
  * Integration tests for the new SIRI trip update adapter that uses the common trip update
@@ -52,11 +53,9 @@ class SiriNewTripUpdateAdapterTest implements RealtimeTestConstants {
   void cancelTripUsingNewAdapter() {
     var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
 
-    // Create the new adapter
     var newAdapter = new SiriNewTripUpdateAdapter(
       env.timetableRepository(),
       new Deduplicator(),
-      env.timetableSnapshotManager(),
       false,
       env.feedId()
     );
@@ -68,19 +67,7 @@ class SiriNewTripUpdateAdapterTest implements RealtimeTestConstants {
       .withCancellation(true)
       .buildEstimatedTimetableDeliveries();
 
-    // Use the new adapter via the handler
-    var handler = new EstimatedTimetableHandler(newAdapter, false, env.feedId());
-    var result = handler.applyUpdate(
-      updates,
-      DIFFERENTIAL,
-      new DefaultRealTimeUpdateContext(
-        new Graph(),
-        env.timetableRepository(),
-        env.timetableSnapshotManager().getTimetableSnapshotBuffer()
-      )
-    );
-
-    env.timetableSnapshotManager().purgeAndCommit();
+    var result = applyEstimatedTimetable(env, newAdapter, updates);
 
     assertNotNull(result);
     assertEquals(1, result.successful());
@@ -93,7 +80,6 @@ class SiriNewTripUpdateAdapterTest implements RealtimeTestConstants {
     var newAdapter = new SiriNewTripUpdateAdapter(
       env.timetableRepository(),
       new Deduplicator(),
-      env.timetableSnapshotManager(),
       false,
       env.feedId()
     );
@@ -106,24 +92,45 @@ class SiriNewTripUpdateAdapterTest implements RealtimeTestConstants {
     var newAdapter = new SiriNewTripUpdateAdapter(
       env.timetableRepository(),
       new Deduplicator(),
-      env.timetableSnapshotManager(),
       false,
       env.feedId()
     );
 
-    var handler = new EstimatedTimetableHandler(newAdapter, false, env.feedId());
-    var result = handler.applyUpdate(
-      List.of(),
-      DIFFERENTIAL,
-      new DefaultRealTimeUpdateContext(
-        new Graph(),
-        env.timetableRepository(),
-        env.timetableSnapshotManager().getTimetableSnapshotBuffer()
-      )
-    );
+    var result = applyEstimatedTimetable(env, newAdapter, List.of());
 
     assertNotNull(result);
     assertEquals(0, result.successful());
     assertEquals(0, result.failed());
+  }
+
+  private static UpdateResult applyEstimatedTimetable(
+    TransitTestEnvironment env,
+    SiriNewTripUpdateAdapter adapter,
+    List<EstimatedTimetableDeliveryStructure> updates
+  ) {
+    var resultRef = new AtomicReference<UpdateResult>();
+    try {
+      env
+        .updateManager()
+        .submit(ctx -> {
+          var buffer = ctx.repository(env.timetableHandle());
+          var feedId = env.feedId();
+          var transitService = new DefaultTransitService(env.timetableRepository(), buffer);
+          resultRef.set(
+            adapter
+              .forUpdate(buffer)
+              .applyEstimatedTimetable(
+                new EntityResolver(transitService, feedId),
+                feedId,
+                DIFFERENTIAL,
+                updates
+              )
+          );
+        })
+        .get();
+    } catch (Exception e) {
+      throw new RuntimeException(e);
+    }
+    return resultRef.get();
   }
 }

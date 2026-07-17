@@ -51,7 +51,6 @@ class TripModifierTest {
 
     private TransitTestEnvironment env;
     private TransitEditorService transitService;
-    private TimetableSnapshotManager snapshotManager;
     private ExistingTripResolver resolver;
     private TripModifier modifier;
 
@@ -74,7 +73,6 @@ class TripModifierTest {
         .build();
 
       transitService = (TransitEditorService) env.transitService();
-      snapshotManager = env.timetableSnapshotManager();
       var tripResolver = new TripResolver(env.transitService());
       var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
       var stopResolver = new StopResolver(env.transitService());
@@ -202,14 +200,13 @@ class TripModifierTest {
 
       var result = modifier.modify(resolver.resolve(parsedUpdate));
 
-      // Apply the update to the snapshot manager
-      snapshotManager.updateBuffer(result.realTimeTripUpdate());
-      snapshotManager.purgeAndCommit();
+      // Apply the update to the snapshot and commit it
+      SnapshotTestHelper.applyAndCommit(env, result.realTimeTripUpdate());
 
       // Get the original pattern and verify the trip is DELETED there
       var trip = transitService.getTrip(tripId);
       var originalPattern = transitService.findPattern(trip);
-      var snapshot = snapshotManager.getTimetableSnapshot();
+      var snapshot = env.timetableSnapshot();
       var originalTimetable = snapshot.resolve(originalPattern, env.defaultServiceDate());
       var originalTripTimes = originalTimetable.getTripTimes(tripId);
 
@@ -300,7 +297,6 @@ class TripModifierTest {
 
     private TransitTestEnvironment env;
     private TransitEditorService transitService;
-    private TimetableSnapshotManager snapshotManager;
     private ExistingTripResolver resolver;
     private TripModifier modifier;
 
@@ -326,7 +322,6 @@ class TripModifierTest {
         .build();
 
       transitService = (TransitEditorService) env.transitService();
-      snapshotManager = env.timetableSnapshotManager();
       var tripResolver = new TripResolver(env.transitService());
       var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
       var stopResolver = new StopResolver(env.transitService());
