@@ -1,52 +1,34 @@
 package org.opentripplanner.updater.trip.gtfs;
 
-import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED;
-import static org.opentripplanner.updater.trip.UpdateIncrementality.DIFFERENTIAL;
-import static org.opentripplanner.updater.trip.UpdateIncrementality.FULL_DATASET;
-
-import com.google.transit.realtime.GtfsRealtime;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.network.Route;
+import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
-import org.opentripplanner.transit.service.TransitEditorService;
-import org.opentripplanner.updater.spi.UpdateError;
-import org.opentripplanner.updater.spi.UpdateException;
-import org.opentripplanner.updater.spi.UpdateResult;
-import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.FuzzyTripMatcher;
 import org.opentripplanner.updater.trip.GtfsRtRouteCreationStrategy;
 import org.opentripplanner.updater.trip.GtfsTripMatcher;
 import org.opentripplanner.updater.trip.NoOpFuzzyTripMatcher;
-import org.opentripplanner.updater.trip.TimetableSnapshotManager;
 import org.opentripplanner.updater.trip.TripUpdateDispatcher;
-import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
-import org.opentripplanner.updater.trip.model.TripDuplication;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
- * New implementation of the GTFS-RT trip update adapter using the common trip update infrastructure.
- * This uses {@link GtfsRtTripUpdateParser} to parse GTFS-RT messages into {@link org.opentripplanner.updater.trip.model.ParsedTripUpdate}
- * and {@link TripUpdateDispatcher} to apply them.
+ * New implementation of the GTFS-RT trip update adapter using the common trip update
+ * infrastructure. It produces per-task handlers that use {@link GtfsRtTripUpdateParser} to parse
+ * GTFS-RT messages into {@link org.opentripplanner.updater.trip.model.ParsedTripUpdate} and
+ * {@link TripUpdateDispatcher} to apply them.
  * <p>
- * This is a drop-in replacement for {@link GtfsRealTimeTripUpdateAdapter} when the new implementation
- * is enabled via the {@code useNewUpdaterImplementation} configuration option.
+ * This is a drop-in replacement for {@link GtfsRealTimeTripUpdateAdapter} when the new
+ * implementation is enabled via the {@code useNewUpdaterImplementation} configuration option.
  */
 public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
-
-  private static final Logger LOG = LoggerFactory.getLogger(GtfsNewTripUpdateAdapter.class);
 
   /**
    * Use an id generator to generate TripPattern ids for new TripPatterns created by RealTime
@@ -67,133 +49,53 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
    */
   private final Map<FeedScopedId, Route> realtimeRouteCache = new HashMap<>();
 
-  private final GtfsRtTripUpdateParser parser;
+  private final TimetableRepository timetableRepository;
   private final DeduplicatorService deduplicator;
-  private final TransitEditorService transitEditorService;
-  private final TimetableSnapshotManager snapshotManager;
+  private final GtfsRtTripUpdateParser parser;
   private final boolean fuzzyMatchingEnabled;
+  private final String feedId;
 
   public GtfsNewTripUpdateAdapter(
     TimetableRepository timetableRepository,
     DeduplicatorService deduplicator,
-    TimetableSnapshotManager snapshotManager,
     ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType,
     boolean fuzzyMatchingEnabled,
     String feedId
   ) {
+    this.timetableRepository = timetableRepository;
     this.deduplicator = deduplicator;
-    this.snapshotManager = snapshotManager;
     this.fuzzyMatchingEnabled = fuzzyMatchingEnabled;
-    this.transitEditorService = new DefaultTransitService(
-      timetableRepository,
-      snapshotManager.getTimetableSnapshotBuffer()
-    );
+    this.feedId = feedId;
     this.tripPatternCache = new TripPatternCache(tripPatternIdGenerator);
+    var timeZone = timetableRepository.getTimeZone();
     this.parser = new GtfsRtTripUpdateParser(
       forwardsDelayPropagationType,
       backwardsDelayPropagationType,
       feedId,
-      transitEditorService.getTimeZone(),
-      () -> LocalDate.now(transitEditorService.getTimeZone())
+      timeZone,
+      () -> LocalDate.now(timeZone)
     );
   }
 
-  /**
-   * Apply GTFS-RT trip updates to the timetable snapshot.
-   *
-   * @param fuzzyTripMatcher Optional fuzzy trip matcher for matching trips
-   * @param forwardsDelayPropagationType How to propagate delays forward (passed to parser)
-   * @param backwardsDelayPropagationType How to propagate delays backward (passed to parser)
-   * @param updateIncrementality Whether this is a full dataset or differential update
-   * @param updates The GTFS-RT TripUpdate messages
-   * @param feedId The feed ID
-   * @return Result of applying the updates
-   */
   @Override
-  public UpdateResult applyTripUpdates(
-    @Nullable GtfsRealtimeFuzzyTripMatcher fuzzyTripMatcher,
-    ForwardsDelayPropagationType forwardsDelayPropagationType,
-    BackwardsDelayPropagationType backwardsDelayPropagationType,
-    UpdateIncrementality updateIncrementality,
-    List<GtfsRealtime.TripUpdate> updates,
-    String feedId
-  ) {
-    if (updates == null) {
-      LOG.warn("updates is null");
-      return UpdateResult.empty();
-    }
+  public GtfsNewTripUpdateHandler forUpdate(MutableTimetableSnapshot buffer) {
+    var transitService = new DefaultTransitService(timetableRepository, buffer);
 
-    List<UpdateSuccess> successes = new ArrayList<>();
-    List<UpdateError> errors = new ArrayList<>();
-
-    if (updateIncrementality == FULL_DATASET) {
-      // Remove all updates from the buffer
-      snapshotManager.clearBuffer(feedId);
-    }
-
-    // Create fuzzy matcher if fuzzy matching is enabled
-    FuzzyTripMatcher fuzzyMatcher = NoOpFuzzyTripMatcher.INSTANCE;
-    if (fuzzyMatchingEnabled) {
-      fuzzyMatcher = new GtfsTripMatcher(transitEditorService);
-    }
+    FuzzyTripMatcher fuzzyMatcher = fuzzyMatchingEnabled
+      ? new GtfsTripMatcher(transitService)
+      : NoOpFuzzyTripMatcher.INSTANCE;
 
     var dispatcher = TripUpdateDispatcher.create(
       feedId,
-      transitEditorService.getTimeZone(),
-      transitEditorService,
+      timetableRepository.getTimeZone(),
+      transitService,
       deduplicator,
-      snapshotManager,
       tripPatternCache,
       fuzzyMatcher,
       new GtfsRtRouteCreationStrategy(feedId, realtimeRouteCache::get)
     );
 
-    for (GtfsRealtime.TripUpdate update : updates) {
-      try {
-        successes.add(apply(update, dispatcher, updateIncrementality));
-      } catch (UpdateException e) {
-        errors.add(e.toError());
-      }
-    }
-
-    LOG.debug("message contains {} trip updates", updates.size());
-
-    return UpdateResult.of(successes, errors);
-  }
-
-  private UpdateSuccess apply(
-    GtfsRealtime.TripUpdate update,
-    TripUpdateDispatcher dispatcher,
-    UpdateIncrementality updateIncrementality
-  ) {
-    // Parse the GTFS-RT message
-    var parsedUpdate = parser.parse(update);
-
-    // out of precaution we don't allow the combination of differential and DUPLICATED
-    // it's not clear what the semantics of this would be and particular how cancellation of a
-    // duplicated trip would work.
-    // please get in touch with the dev team if you need this functionality.
-    if (parsedUpdate instanceof TripDuplication && updateIncrementality == DIFFERENTIAL) {
-      throw UpdateException.of(
-        parsedUpdate.tripReference().tripId(),
-        NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED
-      );
-    }
-
-    // Apply the parsed update
-    var tripUpdateResult = dispatcher.apply(parsedUpdate);
-    var realTimeTripUpdate = tripUpdateResult.realTimeTripUpdate();
-
-    // Cache the route if it's a new trip with route creation
-    if (realTimeTripUpdate.tripCreation() && realTimeTripUpdate.routeCreation()) {
-      Route route = realTimeTripUpdate.pattern().getRoute();
-      realtimeRouteCache.put(route.getId(), route);
-    }
-
-    // Commit the update to the snapshot and add any warnings
-    return snapshotManager
-      .updateBuffer(realTimeTripUpdate)
-      .addWarnings(tripUpdateResult.warnings());
+    return new GtfsNewTripUpdateHandler(parser, dispatcher, buffer, realtimeRouteCache);
   }
 }

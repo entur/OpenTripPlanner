@@ -2,13 +2,10 @@ package org.opentripplanner.updater.trip;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
@@ -47,21 +44,18 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
   private static final Logger LOG = LoggerFactory.getLogger(SiriTripMatcher.class);
   private static final int SECONDS_IN_DAY = 24 * 60 * 60;
 
+  private final SiriTripMatcherCache cache;
   private final TransitService transitService;
   private final StopResolver stopResolver;
   private final ZoneId timeZone;
 
-  // Cache: (stopId:arrivalTime) -> Set<Trip>
-  private final Map<String, Set<Trip>> lastStopArrivalCache = new HashMap<>();
-  // Cache: internalPlanningCode -> Set<Trip> (for RAIL trips)
-  private final Map<String, Set<Trip>> internalPlanningCodeCache = new HashMap<>();
-  private boolean cacheInitialized = false;
-
   public SiriTripMatcher(
+    SiriTripMatcherCache cache,
     TransitService transitService,
     StopResolver stopResolver,
     ZoneId timeZone
   ) {
+    this.cache = Objects.requireNonNull(cache);
     this.transitService = Objects.requireNonNull(transitService);
     this.stopResolver = Objects.requireNonNull(stopResolver);
     this.timeZone = Objects.requireNonNull(timeZone);
@@ -73,8 +67,6 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
     ExistingTripUpdate parsedUpdate,
     LocalDate serviceDate
   ) {
-    ensureCacheInitialized();
-
     List<ParsedStopTimeUpdate> stopTimeUpdates = parsedUpdate.stopTimeUpdates();
     if (stopTimeUpdates.isEmpty()) {
       LOG.debug("Cannot fuzzy match without stop time updates");
@@ -113,10 +105,10 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
 
     // Try matching by internal planning code first (for RAIL trips with VehicleRef)
     if (tripReference.hasInternalPlanningCode()) {
-      Set<Trip> codeCandidates = internalPlanningCodeCache.get(
+      Set<Trip> codeCandidates = cache.tripsByInternalPlanningCode(
         tripReference.internalPlanningCode()
       );
-      if (codeCandidates != null && !codeCandidates.isEmpty()) {
+      if (!codeCandidates.isEmpty()) {
         codeCandidates = new HashSet<>(codeCandidates);
         if (tripReference.hasRouteId()) {
           Route route = transitService.getRoute(tripReference.routeId());
@@ -176,56 +168,6 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
     );
   }
 
-  private void ensureCacheInitialized() {
-    if (cacheInitialized) {
-      return;
-    }
-    synchronized (this) {
-      if (cacheInitialized) {
-        return;
-      }
-      initCache();
-      cacheInitialized = true;
-    }
-  }
-
-  private void initCache() {
-    for (Trip trip : transitService.listTrips()) {
-      TripPattern tripPattern = transitService.findPattern(trip);
-      if (tripPattern == null) {
-        continue;
-      }
-
-      String lastStopId = tripPattern.lastStop().getId().getId();
-      TripTimes tripTimes = tripPattern.getScheduledTimetable().getTripTimes(trip);
-      if (tripTimes != null) {
-        int arrivalTime = tripTimes.getArrivalTime(tripTimes.getNumStops() - 1);
-        String key = createCacheKey(lastStopId, arrivalTime);
-        lastStopArrivalCache.computeIfAbsent(key, k -> new HashSet<>()).add(trip);
-      }
-
-      if (tripPattern.getRoute().getMode().equals(TransitMode.RAIL)) {
-        String planningCode = trip.getNetexInternalPlanningCode();
-        if (planningCode != null) {
-          internalPlanningCodeCache.computeIfAbsent(planningCode, k -> new HashSet<>()).add(trip);
-        }
-      }
-    }
-    LOG.info(
-      "Built last-stop-arrival cache with {} entries, planning code cache with {} entries",
-      lastStopArrivalCache.size(),
-      internalPlanningCodeCache.size()
-    );
-  }
-
-  private static String createCacheKey(String stopId, int arrivalTimeSeconds) {
-    return stopId + ":" + arrivalTimeSeconds;
-  }
-
-  private static String createCacheKey(StopLocation stop, int arrivalTimeSeconds) {
-    return createCacheKey(stop.getId().getId(), arrivalTimeSeconds);
-  }
-
   private Integer getAimedDepartureSeconds(ParsedStopTimeUpdate stopUpdate, LocalDate serviceDate) {
     return stopUpdate.resolveScheduledDepartureSeconds(serviceDate, timeZone);
   }
@@ -246,19 +188,10 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
     Set<Trip> trips = new HashSet<>();
 
     // Try exact match
-    String key = createCacheKey(lastStop, aimedArrivalSeconds);
-    Set<Trip> exactMatches = lastStopArrivalCache.get(key);
-    if (exactMatches != null) {
-      trips.addAll(exactMatches);
-    }
+    trips.addAll(cache.tripsByLastStopArrival(lastStop, aimedArrivalSeconds));
 
     // Try yesterday (for trips that span midnight)
-    int yesterdayArrival = aimedArrivalSeconds + SECONDS_IN_DAY;
-    String yesterdayKey = createCacheKey(lastStop, yesterdayArrival);
-    Set<Trip> yesterdayMatches = lastStopArrivalCache.get(yesterdayKey);
-    if (yesterdayMatches != null) {
-      trips.addAll(yesterdayMatches);
-    }
+    trips.addAll(cache.tripsByLastStopArrival(lastStop, aimedArrivalSeconds + SECONDS_IN_DAY));
 
     // Try sibling stops (same parent station)
     if (lastStop instanceof RegularStop regularStop && regularStop.isPartOfStation()) {
@@ -268,11 +201,7 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
         if (quay.equals(lastStop)) {
           continue;
         }
-        String siblingKey = createCacheKey(quay, aimedArrivalSeconds);
-        Set<Trip> siblingMatches = lastStopArrivalCache.get(siblingKey);
-        if (siblingMatches != null) {
-          trips.addAll(siblingMatches);
-        }
+        trips.addAll(cache.tripsByLastStopArrival(quay, aimedArrivalSeconds));
       }
     }
 

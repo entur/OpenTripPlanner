@@ -1,31 +1,21 @@
 package org.opentripplanner.updater.trip.siri;
 
-import java.util.List;
-import javax.annotation.Nullable;
-import org.opentripplanner.updater.spi.UpdateResult;
-import org.opentripplanner.updater.trip.UpdateIncrementality;
-import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
+import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 
 /**
- * Interface for applying SIRI EstimatedTimetable updates to the transit model.
- * This allows switching between the old and new implementations.
+ * Application-scoped factory for SIRI-ET estimated timetable processing. Holds stable,
+ * application-lifetime state and produces a per-task {@link SiriTripUpdateHandler} via
+ * {@link #forUpdate(MutableTimetableSnapshot)}.
+ * <p>
+ * This abstraction allows switching between the legacy implementation
+ * ({@link SiriRealTimeTripUpdateAdapter}), the new format-independent implementation
+ * ({@link SiriNewTripUpdateAdapter}) and the shadow-comparison mode
+ * ({@link ShadowSiriTripUpdateAdapter}).
  */
 public interface SiriTripUpdateAdapter {
   /**
-   * Apply estimated timetables to the timetable snapshot.
-   *
-   * @param fuzzyTripMatcher Optional fuzzy trip matcher for matching trips
-   * @param entityResolver Entity resolver for the feed
-   * @param feedId The feed ID
-   * @param incrementality The incrementality of the update
-   * @param updates The SIRI EstimatedTimetable deliveries
-   * @return Result of applying the updates
+   * Create an update-scoped task for applying SIRI-ET estimated timetables. All pattern and trip
+   * lookups within the task see in-progress real-time additions in the given buffer.
    */
-  UpdateResult applyEstimatedTimetable(
-    @Nullable SiriFuzzyTripMatcher fuzzyTripMatcher,
-    EntityResolver entityResolver,
-    String feedId,
-    UpdateIncrementality incrementality,
-    List<EstimatedTimetableDeliveryStructure> updates
-  );
+  SiriTripUpdateHandler forUpdate(MutableTimetableSnapshot buffer);
 }

@@ -39,7 +39,7 @@ import uk.org.siri.siri21.EstimatedVehicleJourney;
  * per-task {@link TransitEditorService} backed by the update's mutable timetable snapshot, so all
  * pattern and trip lookups within the task see in-progress real-time additions.
  */
-public class SiriRealTimeUpdateHandler {
+public class SiriRealTimeUpdateHandler implements SiriTripUpdateHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(SiriRealTimeUpdateHandler.class);
 
@@ -77,6 +77,7 @@ public class SiriRealTimeUpdateHandler {
    *                        disregarded
    * @param updates    SIRI EstimatedTimetable deliveries that should be applied atomically.
    */
+  @Override
   public UpdateResult applyEstimatedTimetable(
     EntityResolver entityResolver,
     String feedId,

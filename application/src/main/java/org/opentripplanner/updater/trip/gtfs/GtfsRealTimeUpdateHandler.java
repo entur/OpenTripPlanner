@@ -27,7 +27,7 @@ import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
  * per-task collaborators (sub-handlers constructed with an update-scoped {@code TransitEditorService})
  * and applies GTFS-RT trip updates against the mutable timetable snapshot.
  */
-public class GtfsRealTimeUpdateHandler {
+public class GtfsRealTimeUpdateHandler implements GtfsTripUpdateHandler {
 
   private final MutableTimetableSnapshot buffer;
   private final Supplier<LocalDate> localDateNow;
@@ -65,6 +65,7 @@ public class GtfsRealTimeUpdateHandler {
    *                                      of all previous updates for the given feed id.
    * @param updates                       GTFS-RT TripUpdate's that should be applied atomically
    */
+  @Override
   public UpdateResult applyTripUpdates(
     @Nullable GtfsRealtimeFuzzyTripMatcher fuzzyTripMatcher,
     ForwardsDelayPropagationType forwardsDelayPropagationType,
