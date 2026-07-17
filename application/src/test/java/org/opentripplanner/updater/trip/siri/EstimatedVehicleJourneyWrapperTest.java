@@ -146,7 +146,7 @@ class EstimatedVehicleJourneyWrapperTest {
     var result = EstimatedVehicleJourneyWrapper.of(journey).vehicleJourneyIdAndServiceDate();
 
     assertEquals("SJ:1", result.vehicleJourneyId());
-    assertEquals("2024-05-07", result.serviceDate());
+    assertEquals(LocalDate.of(2024, 5, 7), result.serviceDate());
   }
 
   @Test
@@ -193,7 +193,7 @@ class EstimatedVehicleJourneyWrapperTest {
 
     assertEquals(1, result.size());
     assertEquals("REPLACED:2", result.getFirst().vehicleJourneyId());
-    assertEquals("2024-05-07", result.getFirst().serviceDate());
+    assertEquals(LocalDate.of(2024, 5, 7), result.getFirst().serviceDate());
   }
 
   @Test
