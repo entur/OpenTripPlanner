@@ -8,6 +8,7 @@ import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.routing.CarpoolTripVertexResolver;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
+import org.opentripplanner.ext.flexbooking.FlexBookingRepository;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
 import org.opentripplanner.framework.application.LogMDCSupport;
 import org.opentripplanner.framework.application.OTPFeature;
@@ -216,6 +217,7 @@ public class ConstructApplication {
       timetableRepository(),
       carpoolingRepository(),
       carpoolTripVertexResolver(),
+      flexBookingRepository(),
       factory.updateManager(),
       factory.timetableRepositoryHandle(),
       routerConfig().updaterConfig()
@@ -286,6 +288,11 @@ public class ConstructApplication {
   @Nullable
   public CarpoolTripVertexResolver carpoolTripVertexResolver() {
     return factory.carpoolTripVertexResolver();
+  }
+
+  @Nullable
+  public FlexBookingRepository flexBookingRepository() {
+    return factory.flexBookingRepository();
   }
 
   public DataImportIssueSummary dataImportIssueSummary() {

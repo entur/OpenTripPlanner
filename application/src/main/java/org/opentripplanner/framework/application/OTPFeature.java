@@ -138,6 +138,12 @@ public enum OTPFeature {
   ),
   DebugRasterTiles(false, true, "Enable debug raster tile API."),
   FaresV2(false, true, "Enable import of GTFS-Fares v2 data."),
+  FlexBooking(
+    false,
+    true,
+    "Enable the flex booking sandbox module: real-time booked tours for flexible transport. " +
+      "Requires 'FlexRouting' to be enabled."
+  ),
   FlexRouting(false, true, "Enable FLEX routing."),
   GoogleCloudStorage(false, true, "Enable Google Cloud Storage integration."),
   MultiCriteriaGroupMaxFilter(

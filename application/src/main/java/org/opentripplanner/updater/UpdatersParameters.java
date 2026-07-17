@@ -51,5 +51,7 @@ public interface UpdatersParameters {
 
   List<DefaultSiriETUpdaterParameters> getSiriETCarpoolingUpdaterParameters();
 
+  List<DefaultSiriETUpdaterParameters> getSiriETFlexBookingUpdaterParameters();
+
   List<MqttSiriETUpdaterParameters> getMqttSiriETUpdaterParameters();
 }

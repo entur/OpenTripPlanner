@@ -18,6 +18,7 @@ import org.opentripplanner.ext.dataoverlay.configuration.DataOverlayParameterBin
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayService;
 import org.opentripplanner.ext.fares.model.FareRulesData;
 import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
+import org.opentripplanner.ext.flexbooking.FlexBookingService;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.ridehailing.RideHailingService;
 import org.opentripplanner.ext.sorlandsbanen.SorlandsbanenNorwayService;
@@ -125,6 +126,7 @@ class RequestScopedFactoryTest {
       )
       .carpoolingService(null)
       .dataOverlayParameterBindings(null)
+      .flexBookingService(null)
       .stopConsolidationService(null)
       .streetLimitationParametersService(
         TestServerContext.createStreetLimitationParametersService()
@@ -235,6 +237,9 @@ class RequestScopedFactoryTest {
       Builder dataOverlayParameterBindings(
         @Nullable DataOverlayParameterBindings dataOverlayParameterBindings
       );
+
+      @BindsInstance
+      Builder flexBookingService(@Nullable FlexBookingService flexBookingService);
 
       @BindsInstance
       Builder stopConsolidationService(@Nullable StopConsolidationService stopConsolidationService);

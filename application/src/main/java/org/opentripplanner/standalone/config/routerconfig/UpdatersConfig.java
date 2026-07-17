@@ -186,6 +186,11 @@ public class UpdatersConfig implements UpdatersParameters {
   }
 
   @Override
+  public List<DefaultSiriETUpdaterParameters> getSiriETFlexBookingUpdaterParameters() {
+    return getParameters(Type.SIRI_ET_FLEX_BOOKING_UPDATER);
+  }
+
+  @Override
   public List<SiriETGooglePubsubUpdaterParameters> getSiriETGooglePubsubUpdaterParameters() {
     return getParameters(SIRI_ET_GOOGLE_PUBSUB_UPDATER);
   }
@@ -247,6 +252,7 @@ public class UpdatersConfig implements UpdatersParameters {
     VEHICLE_POSITIONS(VehiclePositionsUpdaterConfig::create),
     SIRI_ET_UPDATER(SiriETUpdaterConfig::create),
     SIRI_ET_CARPOOLING_UPDATER(SiriETUpdaterConfig::create),
+    SIRI_ET_FLEX_BOOKING_UPDATER(SiriETUpdaterConfig::create),
     SIRI_ET_LITE(SiriETLiteUpdaterConfig::create),
     SIRI_ET_GOOGLE_PUBSUB_UPDATER(SiriETGooglePubsubUpdaterConfig::create),
     SIRI_SX_UPDATER(SiriSXUpdaterConfig::create),

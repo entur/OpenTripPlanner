@@ -40,6 +40,7 @@ public class CarpoolSiriMapper {
   private static final GeometryFactory GEOMETRY_FACTORY = new GeometryFactory();
 
   private final String feedId;
+  private final Duration maxTripDuration;
 
   /**
    * @param feedId the feed prefix used for every {@link FeedScopedId} this mapper produces.
@@ -48,7 +49,18 @@ public class CarpoolSiriMapper {
    *        side-by-side without trip-id collisions across feeds.
    */
   public CarpoolSiriMapper(String feedId) {
+    this(feedId, CarpoolTrip.MAX_TRIP_DURATION);
+  }
+
+  /**
+   * @param maxTripDuration upper bound on the mapped trip's span and straight-line drive time,
+   *        replacing the carpool default {@link CarpoolTrip#MAX_TRIP_DURATION}. Journeys that are
+   *        not shaped like carpool trips — e.g. a flex bus tour spanning a whole service day —
+   *        need a wider bound.
+   */
+  public CarpoolSiriMapper(String feedId, Duration maxTripDuration) {
     this.feedId = feedId;
+    this.maxTripDuration = maxTripDuration;
   }
 
   /**
@@ -70,8 +82,8 @@ public class CarpoolSiriMapper {
    * @throws IllegalArgumentException if the raw message is malformed (fewer than 2 calls
    *         before filtering, calls out of order, missing flexible areas, no departure time
    *         on the first call or no arrival time on the last call, end time not after start
-   *         time, etc.) or if the trip span or its straight-line drive time exceeds
-   *         {@link CarpoolTrip#MAX_TRIP_DURATION}
+   *         time, etc.) or if the trip span or its straight-line drive time exceeds the
+   *         mapper's maximum trip duration ({@link CarpoolTrip#MAX_TRIP_DURATION} by default)
    */
   @Nullable
   public CarpoolTrip mapSiriToCarpoolTrip(EstimatedVehicleJourney journey) {
@@ -148,13 +160,13 @@ public class CarpoolSiriMapper {
       ? lastStop.getLatestExpectedArrivalTime()
       : endTime.plus(CarpoolStop.DEFAULT_DEVIATION_BUDGET);
     var tripDuration = Duration.between(startTime, latestArrival);
-    if (tripDuration.compareTo(CarpoolTrip.MAX_TRIP_DURATION) > 0) {
+    if (tripDuration.compareTo(maxTripDuration) > 0) {
       throw new IllegalArgumentException(
         String.format(
           "Trip %s: duration (%s) exceeds the maximum of %s (start %s, latest arrival %s).",
           tripId,
           tripDuration,
-          CarpoolTrip.MAX_TRIP_DURATION,
+          maxTripDuration,
           startTime,
           latestArrival
         )
@@ -166,14 +178,14 @@ public class CarpoolSiriMapper {
     // waypoints cannot be reached in order within the same bound even at the maximum modelled car
     // speed: such a trip is malformed and would expand street trees far beyond a real carpool trip.
     var minimumDriveDuration = minimumDriveDuration(stops);
-    if (minimumDriveDuration.compareTo(CarpoolTrip.MAX_TRIP_DURATION) > 0) {
+    if (minimumDriveDuration.compareTo(maxTripDuration) > 0) {
       throw new IllegalArgumentException(
         String.format(
           "Trip %s: straight-line drive time (%s) exceeds the maximum of %s; its waypoints are too" +
             " far apart to be a real carpool trip whatever the schedule claims.",
           tripId,
           minimumDriveDuration,
-          CarpoolTrip.MAX_TRIP_DURATION
+          maxTripDuration
         )
       );
     }

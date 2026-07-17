@@ -11,6 +11,7 @@ import org.opentripplanner.apis.transmodel.configure.TransmodelSchema;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.dataoverlay.configuration.DataOverlayParameterBindings;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayService;
+import org.opentripplanner.ext.flexbooking.FlexBookingService;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.interactivelauncher.api.LauncherRequestDecorator;
 import org.opentripplanner.ext.ridehailing.RideHailingService;
@@ -91,6 +92,7 @@ public class RequestScopedModule {
     ViaCoordinateTransferFactory viaTransferResolver,
     @Nullable CarpoolingService carpoolingService,
     @Nullable DataOverlayParameterBindings dataOverlayParameterBindings,
+    @Nullable FlexBookingService flexBookingService,
     @Nullable StopConsolidationService stopConsolidationService,
     StreetLimitationParametersService streetLimitationParametersService,
     @Nullable @EmissionDecorator ItineraryDecorator emissionItineraryDecorator,
@@ -141,6 +143,7 @@ public class RequestScopedModule {
       // Optional Sandbox services
       carpoolingService,
       dataOverlayParameterBindings,
+      flexBookingService,
       emissionItineraryDecorator,
       streetDetailsService,
       empiricalDelayService,

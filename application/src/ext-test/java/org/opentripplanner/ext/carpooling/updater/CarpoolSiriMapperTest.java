@@ -66,6 +66,12 @@ public class CarpoolSiriMapperTest {
   }
 
   @Test
+  void mapSiriToCarpoolTrip_customMaxDuration_acceptsTripRejectedByDefault() {
+    var wideMapper = new CarpoolSiriMapper("EN", Duration.ofHours(20));
+    assertNotNull(wideMapper.mapSiriToCarpoolTrip(tripExceedingMaxDuration()));
+  }
+
+  @Test
   void mapSiriToCarpoolTrip_waypointsTooFarApart_throwsIllegalArgumentException() {
     // Short claimed times but waypoints ~450 km apart: the timetable check passes, the geometry
     // check rejects it.

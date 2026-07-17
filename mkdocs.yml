@@ -128,6 +128,7 @@ nav:
     - SIRI MQTT Updater: 'sandbox/siri/SiriMqttUpdater.md'
     - Vehicle Rental Service Directory API support: 'sandbox/VehicleRentalServiceDirectory.md'
     - Mapbox Vector Tiles API: 'sandbox/MapboxVectorTilesApi.md'
+    - Flex Booking: 'sandbox/FlexBooking.md'
     - Flex Routing: 'sandbox/Flex.md'
     - Report API: 'sandbox/ReportApi.md'
     - Interactive OTP Launcher: 'sandbox/InteractiveOtpMain.md'

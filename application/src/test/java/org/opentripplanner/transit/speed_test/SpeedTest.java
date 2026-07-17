@@ -156,6 +156,8 @@ public class SpeedTest {
       // repository nor a resolver.
       null,
       null,
+      // The speed test does not enable the FlexBooking feature either.
+      null,
       updateManager,
       timetableHandle,
       routerConfig.updaterConfig()
@@ -202,6 +204,7 @@ public class SpeedTest {
       vertexLinker,
       TestServerContext.createViaTransferResolver(graph, transitService),
       TestServerContext.createWorldEnvelopeService(),
+      null,
       null,
       null,
       null,

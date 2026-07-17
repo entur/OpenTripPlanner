@@ -8,6 +8,8 @@ import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.routing.CarpoolTripVertexResolver;
 import org.opentripplanner.ext.carpooling.updater.SiriETCarpoolingUpdater;
+import org.opentripplanner.ext.flexbooking.FlexBookingRepository;
+import org.opentripplanner.ext.flexbooking.updater.SiriETFlexBookingUpdater;
 import org.opentripplanner.ext.siri.updater.azure.SiriAzureUpdater;
 import org.opentripplanner.ext.siri.updater.mqtt.SiriETMqttUpdater;
 import org.opentripplanner.ext.vehiclerentalservicedirectory.VehicleRentalServiceDirectoryFetcher;
@@ -43,6 +45,8 @@ import org.opentripplanner.updater.vehicle_parking.VehicleParkingUpdater;
 import org.opentripplanner.updater.vehicle_position.PollingVehiclePositionUpdater;
 import org.opentripplanner.updater.vehicle_rental.VehicleRentalUpdater;
 import org.opentripplanner.updater.vehicle_rental.datasources.VehicleRentalDataSourceFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Sets up and starts all the graph updaters.
@@ -52,6 +56,8 @@ import org.opentripplanner.updater.vehicle_rental.datasources.VehicleRentalDataS
  * GraphUpdaterManager.
  */
 public class UpdaterConfigurator {
+
+  private static final Logger LOG = LoggerFactory.getLogger(UpdaterConfigurator.class);
 
   private final Graph graph;
   private final DeduplicatorService deduplicator;
@@ -68,6 +74,10 @@ public class UpdaterConfigurator {
   /** {@code null} when {@link OTPFeature#CarPooling} is off. */
   @Nullable
   private final CarpoolTripVertexResolver carpoolTripVertexResolver;
+
+  /** {@code null} when {@link OTPFeature#FlexBooking} is off. */
+  @Nullable
+  private final FlexBookingRepository flexBookingRepository;
 
   private final VehicleParkingRepository parkingRepository;
   private final UpdateManager updateManager;
@@ -89,6 +99,7 @@ public class UpdaterConfigurator {
     TimetableRepository timetableRepository,
     @Nullable CarpoolingRepository carpoolingRepository,
     @Nullable CarpoolTripVertexResolver carpoolTripVertexResolver,
+    @Nullable FlexBookingRepository flexBookingRepository,
     UpdateManager updateManager,
     RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableRepositoryHandle,
     UpdatersParameters updatersParameters
@@ -105,6 +116,7 @@ public class UpdaterConfigurator {
     this.timetableRepositoryHandle = timetableRepositoryHandle;
     this.carpoolingRepository = carpoolingRepository;
     this.carpoolTripVertexResolver = carpoolTripVertexResolver;
+    this.flexBookingRepository = flexBookingRepository;
   }
 
   public static void configure(
@@ -117,6 +129,7 @@ public class UpdaterConfigurator {
     TimetableRepository timetableRepository,
     @Nullable CarpoolingRepository carpoolingRepository,
     @Nullable CarpoolTripVertexResolver carpoolTripVertexResolver,
+    @Nullable FlexBookingRepository flexBookingRepository,
     UpdateManager updateManager,
     RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableRepositoryHandle,
     UpdatersParameters updatersParameters
@@ -131,6 +144,7 @@ public class UpdaterConfigurator {
       timetableRepository,
       carpoolingRepository,
       carpoolTripVertexResolver,
+      flexBookingRepository,
       updateManager,
       timetableRepositoryHandle,
       updatersParameters
@@ -241,6 +255,17 @@ public class UpdaterConfigurator {
           new SiriETCarpoolingUpdater(configItem, carpoolingRepository, carpoolTripVertexResolver)
         );
       }
+    }
+    if (OTPFeature.FlexBooking.isOn() && flexBookingRepository != null) {
+      for (var configItem : updatersParameters.getSiriETFlexBookingUpdaterParameters()) {
+        updaters.add(
+          new SiriETFlexBookingUpdater(configItem, flexBookingRepository, timetableRepository)
+        );
+      }
+    } else if (!updatersParameters.getSiriETFlexBookingUpdaterParameters().isEmpty()) {
+      LOG.warn(
+        "Ignoring configured 'siri-et-flex-booking-updater': the FlexBooking feature is off."
+      );
     }
     for (var configItem : updatersParameters.getSiriETLiteUpdaterParameters()) {
       updaters.add(

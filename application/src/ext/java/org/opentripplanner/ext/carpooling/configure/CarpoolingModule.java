@@ -27,11 +27,15 @@ public class CarpoolingModule {
     return new DefaultCarpoolingRepository();
   }
 
+  /**
+   * The snapper is also used by the FlexBooking sandbox, which reuses the carpool insertion
+   * machinery, so it is provided whenever either feature is on.
+   */
   @Provides
   @Singleton
   @Nullable
   public static CarReachableVertexSnapper provideCarReachableVertexSnapper() {
-    if (OTPFeature.CarPooling.isOff()) {
+    if (OTPFeature.CarPooling.isOff() && OTPFeature.FlexBooking.isOff()) {
       return null;
     }
     return CarReachableVertexSnapper.createDefault();
