@@ -226,7 +226,7 @@ public class CarpoolEstimatedVehicleJourneyData {
     return journey;
   }
 
-  static EstimatedCall forPoint(WgsCoordinate coordinate) {
+  public static EstimatedCall forPoint(WgsCoordinate coordinate) {
     var call = new EstimatedCall();
     call.setAimedDepartureTime(ZonedDateTime.now());
     var circularArea = new CircularAreaStructure();
@@ -431,7 +431,7 @@ public class CarpoolEstimatedVehicleJourneyData {
     call.getStopPointNames().add(nameStruct);
   }
 
-  private static void addOnboardCount(EstimatedCall call, int onboardCount) {
+  public static void addOnboardCount(EstimatedCall call, int onboardCount) {
     var occupancy = new VehicleOccupancyStructure();
     occupancy.setOnboardCount(BigInteger.valueOf(onboardCount));
     call.getExpectedDepartureOccupancies().add(occupancy);

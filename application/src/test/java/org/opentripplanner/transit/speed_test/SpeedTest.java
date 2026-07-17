@@ -153,6 +153,7 @@ public class SpeedTest {
       new DefaultVehicleParkingRepository(),
       timetableRepository,
       new DefaultCarpoolingRepository(),
+      null,
       updateManager,
       timetableHandle,
       routerConfig.updaterConfig()
@@ -199,6 +200,7 @@ public class SpeedTest {
       vertexLinker,
       TestServerContext.createViaTransferResolver(graph, transitService),
       TestServerContext.createWorldEnvelopeService(),
+      null,
       null,
       null,
       null,

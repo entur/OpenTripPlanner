@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import javax.annotation.Nullable;
-import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.astar.model.GraphPath;
 import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.core.model.i18n.I18NString;
@@ -19,6 +18,7 @@ import org.opentripplanner.ext.carpooling.model.CarpoolLeg;
 import org.opentripplanner.ext.carpooling.routing.CarpoolAccessEgress;
 import org.opentripplanner.ext.carpooling.routing.EndpointLabel;
 import org.opentripplanner.ext.carpooling.routing.InsertionCandidate;
+import org.opentripplanner.ext.carpooling.util.LegMappingUtils;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.model.plan.Leg;
@@ -30,7 +30,6 @@ import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.StreetVertex;
 import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
 import org.opentripplanner.street.model.vertex.Vertex;
-import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.transit.model.organization.ContactInfo;
 import org.opentripplanner.transit.model.site.StopLocation;
@@ -82,7 +81,7 @@ import org.slf4j.LoggerFactory;
  *       label when present, falling back to the localized {@code "origin"} /
  *       {@code "destination"} names that the standard request flow produces.
  *   <li>Else (intermediate boundaries between walk and carpool legs) fall back to vertex-based
- *       naming via {@link #makePlace(Vertex)}: {@link StreetVertex#getIntersectionName()} for
+ *       naming via {@link LegMappingUtils#makePlace(Vertex)}: {@link StreetVertex#getIntersectionName()} for
  *       street intersections (composed from OSM street names; mode-agnostic), the vertex's
  *       pre-set name for {@link TemporaryStreetLocation}s.</li>
  * </ol>
@@ -176,28 +175,6 @@ public class CarpoolItineraryMapper {
       .build();
   }
 
-  private static StreetLeg buildWalkLeg(
-    GraphPath<State, Edge, Vertex> walkPath,
-    ZonedDateTime startTime,
-    ZonedDateTime endTime,
-    Place fromPlace,
-    Place toPlace
-  ) {
-    LineString geometry = GeometryUtils.concatenateLineStrings(walkPath.edges, Edge::getGeometry);
-    double distance = walkPath.edges.stream().mapToDouble(Edge::getDistanceMeters).sum();
-
-    return StreetLeg.of()
-      .withMode(TraverseMode.WALK)
-      .withStartTime(startTime)
-      .withEndTime(endTime)
-      .withFrom(fromPlace)
-      .withTo(toPlace)
-      .withGeometry(geometry)
-      .withDistanceMeters(distance)
-      .withGeneralizedCost((int) walkPath.getWeight())
-      .build();
-  }
-
   /**
    * Converts a Raptor carpool access/egress leg back into an OTP itinerary for the response. Same
    * shape as {@link #toItinerary(InsertionCandidate, double, GenericLocation, GenericLocation)} —
@@ -239,7 +216,7 @@ public class CarpoolItineraryMapper {
    * <p>
    * Boundary-place precedence at the chain's outermost endpoints follows the {@link EndpointLabel}
    * contract: a stop wins over a user location, which wins over the vertex-derived fallback name
-   * via {@link #makePlace(Vertex)}.
+   * via {@link LegMappingUtils#makePlace(Vertex)}.
    */
   private static Itinerary buildItinerary(
     List<GraphPath<State, Edge, Vertex>> sharedSegments,
@@ -254,8 +231,8 @@ public class CarpoolItineraryMapper {
   ) {
     Vertex pickupVertex = sharedSegments.getFirst().states.getFirst().getVertex();
     Vertex dropoffVertex = sharedSegments.getLast().states.getLast().getVertex();
-    Place pickupPlace = makePlace(pickupVertex);
-    Place dropoffPlace = makePlace(dropoffVertex);
+    Place pickupPlace = LegMappingUtils.makePlace(pickupVertex);
+    Place dropoffPlace = LegMappingUtils.makePlace(dropoffVertex);
 
     Vertex startBoundaryVertex = walkToPickup != null
       ? walkToPickup.states.getFirst().getVertex()
@@ -273,7 +250,15 @@ public class CarpoolItineraryMapper {
     List<Leg> legs = new ArrayList<>(3);
     if (walkToPickup != null) {
       var walkStart = carpoolStart.minusSeconds(walkToPickup.getDuration());
-      legs.add(buildWalkLeg(walkToPickup, walkStart, carpoolStart, itineraryStart, pickupPlace));
+      legs.add(
+        LegMappingUtils.buildWalkLeg(
+          walkToPickup,
+          walkStart,
+          carpoolStart,
+          itineraryStart,
+          pickupPlace
+        )
+      );
     }
     legs.add(
       buildCarpoolLeg(
@@ -288,7 +273,15 @@ public class CarpoolItineraryMapper {
     );
     if (walkFromDropoff != null) {
       var walkEnd = carpoolEnd.plusSeconds(walkFromDropoff.getDuration());
-      legs.add(buildWalkLeg(walkFromDropoff, carpoolEnd, walkEnd, dropoffPlace, itineraryEnd));
+      legs.add(
+        LegMappingUtils.buildWalkLeg(
+          walkFromDropoff,
+          carpoolEnd,
+          walkEnd,
+          dropoffPlace,
+          itineraryEnd
+        )
+      );
     }
 
     int totalCost = legs.stream().mapToInt(Leg::generalizedCost).sum();
@@ -453,20 +446,6 @@ public class CarpoolItineraryMapper {
         ? Place.normal(loc.wgsCoordinate(), name)
         : Place.noCoords(name);
     }
-    return makePlace(fallbackVertex);
-  }
-
-  /**
-   * Builds a {@link Place} from a vertex using the same naming logic the core street-leg
-   * mapper applies for any mode. {@link StreetVertex} intersections get the localized
-   * "corner of X and Y" name composed from the outgoing OSM street names (mode-agnostic);
-   * {@link TemporaryStreetLocation}s (passenger origin/destination) keep the name they were
-   * created with; everything else falls back to {@link Vertex#getName()}.
-   */
-  private static Place makePlace(Vertex vertex) {
-    if (vertex instanceof StreetVertex sv && !(vertex instanceof TemporaryStreetLocation)) {
-      return Place.normal(vertex, sv.getIntersectionName());
-    }
-    return Place.normal(vertex, vertex.getName());
+    return LegMappingUtils.makePlace(fallbackVertex);
   }
 }

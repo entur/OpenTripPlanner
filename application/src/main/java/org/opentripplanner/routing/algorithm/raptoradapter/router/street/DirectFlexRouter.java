@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.List;
 import org.opentripplanner.ext.flex.FlexRouter;
 import org.opentripplanner.ext.flex.filter.FilterMapper;
+import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.framework.application.OTPRequestTimeoutException;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.place.api.NearbyStop;
@@ -62,6 +63,25 @@ public class DirectFlexRouter {
       egressStops
     );
 
-    return new ArrayList<>(flexRouter.createFlexOnlyItineraries(request.arriveBy(), request));
+    var itineraries = new ArrayList<>(
+      flexRouter.createFlexOnlyItineraries(request.arriveBy(), request)
+    );
+
+    // Flex trips governed by a real-time booked tour are served exclusively by the flex booking
+    // service: their static results assume the vehicle is freely available and must never be
+    // offered, not even when no feasible insertion exists.
+    var flexBookingService = serverContext.flexBookingService();
+    if (OTPFeature.FlexBooking.isOn() && flexBookingService != null) {
+      itineraries.removeIf(flexBookingService::containsRealTimeManagedLeg);
+      itineraries.addAll(
+        flexBookingService.routeDirect(
+          request,
+          serverContext.flexParameters(),
+          additionalSearchDays
+        )
+      );
+    }
+
+    return itineraries;
   }
 }

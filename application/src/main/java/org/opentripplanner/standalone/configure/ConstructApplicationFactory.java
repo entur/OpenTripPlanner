@@ -18,6 +18,8 @@ import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.emission.configure.EmissionServiceModule;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
 import org.opentripplanner.ext.empiricaldelay.configure.EmpiricalDelayServiceModule;
+import org.opentripplanner.ext.flexbooking.FlexBookingRepository;
+import org.opentripplanner.ext.flexbooking.configure.FlexBookingModule;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.geocoder.configure.GeocoderModule;
 import org.opentripplanner.ext.interactivelauncher.configuration.InteractiveLauncherModule;
@@ -85,6 +87,7 @@ import org.opentripplanner.warmup.configure.WarmupModule;
     CarpoolingModule.class,
     ConfigModule.class,
     ConstructApplicationModule.class,
+    FlexBookingModule.class,
     DataOverlayParameterBindingsModule.class,
     EmissionServiceModule.class,
     EmpiricalDelayServiceModule.class,
@@ -137,6 +140,9 @@ public interface ConstructApplicationFactory {
 
   @Nullable
   CarpoolingRepository carpoolingRepository();
+
+  @Nullable
+  FlexBookingRepository flexBookingRepository();
 
   @Nullable
   EmissionRepository emissionRepository();

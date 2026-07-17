@@ -12,6 +12,7 @@ import org.opentripplanner.ext.dataoverlay.configuration.DataOverlayParameterBin
 import org.opentripplanner.ext.dataoverlay.routing.DataOverlayContext;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayService;
 import org.opentripplanner.ext.flex.FlexParameters;
+import org.opentripplanner.ext.flexbooking.FlexBookingService;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.ojp.parameters.OjpApiParameters;
 import org.opentripplanner.ext.ojp.parameters.TriasApiParameters;
@@ -162,6 +163,9 @@ public interface OtpServerRequestContext {
 
   @Nullable
   CarpoolingService carpoolingService();
+
+  @Nullable
+  FlexBookingService flexBookingService();
 
   @Nullable
   DataOverlayParameterBindings dataOverlayParameterBindings();

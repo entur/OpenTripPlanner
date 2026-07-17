@@ -207,6 +207,44 @@ public class InsertionEvaluator {
     );
   }
 
+  /**
+   * Evaluates every viable position against a single baseline routing and returns each
+   * position's candidate; positions whose insertion cannot be routed or violates the delay
+   * constraints yield no candidate. Unlike
+   * {@link #findBestInsertion(CarpoolTripWithVertices, List, PassengerSnap)} the candidates are
+   * returned unranked, so a caller with its own acceptance criteria (e.g. time feasibility) can
+   * pick the best acceptable one without re-routing the baseline per position.
+   */
+  public List<InsertionCandidate> findInsertions(
+    CarpoolTripWithVertices tripWithVertices,
+    List<InsertionPosition> viablePositions,
+    PassengerSnap snap
+  ) {
+    GraphPath<State, Edge, Vertex>[] baselineSegments = routeSegments(tripWithVertices.vertices());
+    if (baselineSegments == null) {
+      LOG.warn("Could not route baseline for trip {}", tripWithVertices.trip().getId());
+      return List.of();
+    }
+
+    Duration[] cumulativeDurations = calculateCumulativeDurations(baselineSegments, stopDuration);
+
+    return viablePositions
+      .stream()
+      .map(position ->
+        evaluateInsertion(
+          tripWithVertices,
+          position.pickupPos(),
+          position.dropoffPos(),
+          snap,
+          baselineSegments,
+          cumulativeDurations,
+          null
+        )
+      )
+      .filter(Objects::nonNull)
+      .toList();
+  }
+
   @Nullable
   private InsertionCandidate findBestInsertion(
     CarpoolTripWithVertices tripWithVertices,

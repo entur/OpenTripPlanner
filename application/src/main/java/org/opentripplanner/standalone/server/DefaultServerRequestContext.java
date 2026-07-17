@@ -12,6 +12,7 @@ import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.dataoverlay.configuration.DataOverlayParameterBindings;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayService;
 import org.opentripplanner.ext.flex.FlexParameters;
+import org.opentripplanner.ext.flexbooking.FlexBookingService;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.ojp.parameters.OjpApiParameters;
 import org.opentripplanner.ext.ojp.parameters.TriasApiParameters;
@@ -82,6 +83,9 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
   private final DataOverlayParameterBindings dataOverlayParameterBindings;
 
   @Nullable
+  private final FlexBookingService flexBookingService;
+
+  @Nullable
   private final ItineraryDecorator emissionItineraryDecorator;
 
   private final StreetDetailsService streetDetailsService;
@@ -150,6 +154,7 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
     WorldEnvelopeService worldEnvelopeService,
     @Nullable CarpoolingService carpoolingService,
     @Nullable DataOverlayParameterBindings dataOverlayParameterBindings,
+    @Nullable FlexBookingService flexBookingService,
     @Nullable ItineraryDecorator emissionItineraryDecorator,
     StreetDetailsService streetDetailsService,
     @Nullable EmpiricalDelayService empiricalDelayService,
@@ -189,6 +194,7 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
     // Optional fields
     this.carpoolingService = carpoolingService;
     this.dataOverlayParameterBindings = dataOverlayParameterBindings;
+    this.flexBookingService = flexBookingService;
     this.emissionItineraryDecorator = emissionItineraryDecorator;
     this.streetDetailsService = streetDetailsService;
     this.empiricalDelayService = empiricalDelayService;
@@ -340,6 +346,12 @@ public class DefaultServerRequestContext implements OtpServerRequestContext {
   @Override
   public CarpoolingService carpoolingService() {
     return carpoolingService;
+  }
+
+  @Nullable
+  @Override
+  public FlexBookingService flexBookingService() {
+    return flexBookingService;
   }
 
   @Nullable
