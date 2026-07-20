@@ -181,7 +181,7 @@ public class SpeedTest {
       timer.getRegistry(),
       null,
       raptorConfig,
-      realtimeVehicleRepository,
+      realtimeVehicleRepository.createSnapshot(),
       List.of(),
       routerConfig.routingRequestDefaults(),
       TestServerContext.createStreetLimitationParametersService(),

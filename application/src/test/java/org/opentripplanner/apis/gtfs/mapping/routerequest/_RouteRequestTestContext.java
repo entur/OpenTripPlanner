@@ -81,7 +81,10 @@ class _RouteRequestTestContext {
       new DefaultFareService(),
       new DefaultVehicleRentalService(),
       new DefaultVehicleParkingService(new DefaultVehicleParkingRepository()),
-      new DefaultRealtimeVehicleService(new DefaultRealtimeVehicleRepository(), transitService),
+      new DefaultRealtimeVehicleService(
+        new DefaultRealtimeVehicleRepository().createSnapshot(),
+        transitService
+      ),
       SchemaFactory.createSchemaWithDefaultInjection(routeRequest),
       new StreetNearbyPlaceFinder(linkingContextFactory),
       StreetNearbyStopFinder.of(linkingContextFactory).build(),

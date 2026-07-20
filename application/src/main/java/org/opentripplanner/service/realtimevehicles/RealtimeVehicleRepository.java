@@ -1,14 +1,14 @@
 package org.opentripplanner.service.realtimevehicles;
 
 import com.google.common.collect.Multimap;
-import java.util.List;
 import org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle;
 import org.opentripplanner.transit.model.network.TripPattern;
 
 /**
- * Stores the realtime vehicles. There is one instance for the whole application: it is written
- * by the vehicle-position updater on the graph writer thread and read concurrently by request
- * threads, usually through the request-scoped {@link RealtimeVehicleService}.
+ * The mutable repository for the realtime vehicles. It is written by the vehicle-position updater
+ * on the graph writer thread. Request threads read the vehicles through an immutable
+ * {@link RealtimeVehicleRepositorySnapshot} produced by {@link #createSnapshot()}, usually via the
+ * request-scoped {@link RealtimeVehicleService}.
  */
 public interface RealtimeVehicleRepository {
   /**
@@ -21,10 +21,7 @@ public interface RealtimeVehicleRepository {
   void setRealtimeVehiclesForFeed(String feedId, Multimap<TripPattern, RealtimeVehicle> updates);
 
   /**
-   * Get the vehicles stored for the given pattern key. This is a raw lookup: the pattern must be
-   * the exact key used when storing. Use
-   * {@link RealtimeVehicleService#getRealtimeVehicles(TripPattern)} to also resolve patterns
-   * created by real-time updates.
+   * Produce an immutable snapshot of the current state of this repository.
    */
-  List<RealtimeVehicle> getRealtimeVehicles(TripPattern pattern);
+  RealtimeVehicleRepositorySnapshot createSnapshot();
 }

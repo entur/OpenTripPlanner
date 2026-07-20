@@ -1,7 +1,6 @@
 package org.opentripplanner.service.realtimevehicles.internal;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.opentripplanner.street.geometry.WgsCoordinate.GREENWICH;
 
 import com.google.common.collect.ImmutableListMultimap;
@@ -45,20 +44,20 @@ class DefaultRealtimeVehicleRepositoryTest implements RealtimeTestConstants {
 
   @Test
   void empty() {
-    assertThat(repository.getRealtimeVehicles(pattern)).isEmpty();
+    assertThat(vehicles(pattern)).isEmpty();
   }
 
   @Test
   void lookupByPattern() {
     repository.setRealtimeVehiclesForFeed(feedId, ImmutableListMultimap.of(pattern, VEHICLE));
-    assertEquals(List.of(VEHICLE), repository.getRealtimeVehicles(pattern));
+    assertThat(vehicles(pattern)).containsExactly(VEHICLE);
   }
 
   @Test
   void clearFeed() {
     repository.setRealtimeVehiclesForFeed(feedId, ImmutableListMultimap.of(pattern, VEHICLE));
     repository.setRealtimeVehiclesForFeed(feedId, ImmutableListMultimap.of());
-    assertThat(repository.getRealtimeVehicles(pattern)).isEmpty();
+    assertThat(vehicles(pattern)).isEmpty();
   }
 
   @Test
@@ -69,7 +68,7 @@ class DefaultRealtimeVehicleRepositoryTest implements RealtimeTestConstants {
       ImmutableListMultimap.of(patternInOtherFeed, VEHICLE)
     );
     repository.setRealtimeVehiclesForFeed(feedId, ImmutableListMultimap.of());
-    assertEquals(List.of(VEHICLE), repository.getRealtimeVehicles(patternInOtherFeed));
+    assertThat(vehicles(patternInOtherFeed)).containsExactly(VEHICLE);
   }
 
   @Test
@@ -84,6 +83,21 @@ class DefaultRealtimeVehicleRepositoryTest implements RealtimeTestConstants {
       feedId,
       ImmutableListMultimap.of(realtimePattern, VEHICLE)
     );
-    assertEquals(List.of(VEHICLE), repository.getRealtimeVehicles(pattern));
+    assertThat(vehicles(pattern)).containsExactly(VEHICLE);
+  }
+
+  @Test
+  void snapshotIsNotAffectedByLaterWrites() {
+    repository.setRealtimeVehiclesForFeed(feedId, ImmutableListMultimap.of(pattern, VEHICLE));
+    var snapshot = repository.createSnapshot();
+
+    repository.setRealtimeVehiclesForFeed(feedId, ImmutableListMultimap.of());
+
+    assertThat(vehicles(pattern)).isEmpty();
+    assertThat(snapshot.getRealtimeVehicles(pattern)).containsExactly(VEHICLE);
+  }
+
+  private List<RealtimeVehicle> vehicles(TripPattern pattern) {
+    return repository.createSnapshot().getRealtimeVehicles(pattern);
   }
 }

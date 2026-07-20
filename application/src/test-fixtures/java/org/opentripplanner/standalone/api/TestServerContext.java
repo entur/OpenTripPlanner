@@ -199,7 +199,7 @@ public class TestServerContext {
       Metrics.globalRegistry,
       routerConfig.ojpApiParameters(),
       raptorConfig,
-      new DefaultRealtimeVehicleRepository(),
+      new DefaultRealtimeVehicleRepository().createSnapshot(),
       List.of(),
       request,
       createStreetLimitationParametersService(),

@@ -7,6 +7,7 @@ import jakarta.inject.Inject;
 import jakarta.inject.Singleton;
 import java.util.List;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
+import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepositorySnapshot;
 import org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle;
 import org.opentripplanner.transit.model.network.TripPattern;
 
@@ -48,8 +49,23 @@ public class DefaultRealtimeVehicleRepository implements RealtimeVehicleReposito
   }
 
   @Override
-  public List<RealtimeVehicle> getRealtimeVehicles(TripPattern pattern) {
-    // the list is made immutable during insertion, so we can safely return them
-    return vehicles.get(pattern);
+  public RealtimeVehicleRepositorySnapshot createSnapshot() {
+    // the multimap is immutable, so the snapshot can simply wrap the current value
+    return new Snapshot(vehicles);
+  }
+
+  /** Immutable snapshot of the repository state. */
+  private static class Snapshot implements RealtimeVehicleRepositorySnapshot {
+
+    private final ImmutableListMultimap<TripPattern, RealtimeVehicle> vehicles;
+
+    private Snapshot(ImmutableListMultimap<TripPattern, RealtimeVehicle> vehicles) {
+      this.vehicles = vehicles;
+    }
+
+    @Override
+    public List<RealtimeVehicle> getRealtimeVehicles(TripPattern pattern) {
+      return vehicles.get(pattern);
+    }
   }
 }

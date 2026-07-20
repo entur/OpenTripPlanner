@@ -524,10 +524,6 @@ class GraphQLIntegrationTest {
     transitService.getTransitAlertService().setAlerts(alerts);
 
     var realtimeVehicleRepository = new DefaultRealtimeVehicleRepository();
-    var realtimeVehicleService = new DefaultRealtimeVehicleService(
-      realtimeVehicleRepository,
-      transitService
-    );
     var occypancyVehicle = RealtimeVehicle.builder()
       .withTrip(trip)
       .withTime(SERVICE_DATE.atStartOfDay(BERLIN).plusHours(16).toInstant())
@@ -550,6 +546,10 @@ class GraphQLIntegrationTest {
       new ImmutableListMultimap.Builder()
         .putAll(pattern, List.of(occypancyVehicle, positionVehicle))
         .build()
+    );
+    var realtimeVehicleService = new DefaultRealtimeVehicleService(
+      realtimeVehicleRepository.createSnapshot(),
+      transitService
     );
 
     DefaultVehicleRentalService defaultVehicleRentalService = new DefaultVehicleRentalService();

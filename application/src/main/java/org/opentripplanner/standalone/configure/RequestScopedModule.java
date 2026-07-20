@@ -122,7 +122,7 @@ public class RequestScopedModule {
       Metrics.globalRegistry,
       ojpApiParameters,
       raptorConfig,
-      realtimeVehicleRepository,
+      realtimeVehicleRepository.createSnapshot(),
       rideHailingServices,
       defaultRequest,
       streetLimitationParametersService,
