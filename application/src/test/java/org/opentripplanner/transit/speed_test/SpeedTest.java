@@ -17,7 +17,6 @@ import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
 import org.opentripplanner.framework.application.OtpAppException;
 import org.opentripplanner.framework.transaction.TimetableSnapshotParameters;
 import org.opentripplanner.framework.transaction.api.RepositoryHandle;
-import org.opentripplanner.framework.transaction.api.TransactionScope;
 import org.opentripplanner.framework.transaction.internal.TransactionFactory;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.raptor.configure.RaptorConfig;
@@ -172,6 +171,7 @@ public class SpeedTest {
     // Creating raptor transit data should be integrated into the TimetableRepository, but for now
     // we do it manually here
 
+    var transactionScope = registry.scope();
     this.serverContext = new DefaultServerRequestContext(
       DebugUiConfig.DEFAULT,
       new DefaultFareService(),
@@ -186,11 +186,11 @@ public class SpeedTest {
       routerConfig.routingRequestDefaults(),
       TestServerContext.createStreetLimitationParametersService(),
       TransferServiceTestFactory.transferService(transferRepository),
-      new TransactionScope() {},
+      transactionScope,
       routerConfig.transitTuningConfig(),
       new DefaultTransitService(
         timetableRepository,
-        timetableHandle.repositorySnapshot(registry.scope())
+        timetableHandle.repositorySnapshot(transactionScope)
       ),
       null,
       null,
