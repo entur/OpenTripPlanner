@@ -18,7 +18,7 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.TestOtpModel;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.core.model.time.LocalDateInterval;
+import org.opentripplanner.core.model.time.LocalDateRange;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.module.TestStreetLinkerModule;
@@ -87,7 +87,6 @@ public class FlexIntegrationTest {
       timetableRepository,
       transferRepository,
       model.fareServiceFactory().makeFareService(),
-      null,
       null,
       FLEX_PARAMETERS
     ).routingService();
@@ -210,7 +209,7 @@ public class FlexIntegrationTest {
       gtfsBundles,
       timetableRepository,
       graph,
-      LocalDateInterval.unbounded()
+      LocalDateRange.ofUnbounded()
     );
     gtfsModule.buildGraph();
 
@@ -255,9 +254,11 @@ public class FlexIntegrationTest {
       .withNumItineraries(10)
       .withSearchWindow(Duration.ofHours(2))
       .withPreferences(p ->
-        p.withStreet(s ->
-          s.withAccessEgress(ae -> ae.withPenalty(Map.of(FLEXIBLE, TimeAndCostPenalty.ZERO)))
-        )
+        p
+          .withStreet(s ->
+            s.withAccessEgress(ae -> ae.withPenalty(Map.of(FLEXIBLE, TimeAndCostPenalty.ZERO)))
+          )
+          .withWalk(walk -> walk.withSafetyFactor(0))
       )
       .withJourney(journeyBuilder -> {
         var modes = JourneyRequest.DEFAULT.modes().copyOf();

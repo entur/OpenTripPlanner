@@ -24,6 +24,10 @@ import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayInterpolator;
+import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayInterpolator;
+import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.model.StopTimeUpdate;
 import org.opentripplanner.updater.trip.gtfs.model.TripTimesPatch;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
@@ -82,7 +86,7 @@ class TripTimesUpdater {
     Map<Integer, String> replacedStopIndices = new HashMap<>();
 
     final long today = ServiceDateUtils.asStartOfService(
-      tripUpdate.serviceDate(),
+      tripUpdate.startDate(),
       timeZone
     ).toEpochSecond();
 
@@ -143,6 +147,7 @@ class TripTimesUpdater {
     BackwardsDelayInterpolator.getInstance(backwardsDelay).propagateBackwards(builder);
 
     tripUpdate.wheelchairAccessibility().ifPresent(builder::withWheelchairAccessibility);
+    tripUpdate.vehicleId().ifPresent(builder::withVehicleId);
 
     builder.withRealTimeUpdated();
     // Validate for non-increasing times. Log error if present.
@@ -175,7 +180,7 @@ class TripTimesUpdater {
   ) throws UpdateException {
     // Calculate seconds since epoch on GTFS midnight (noon minus 12h) of service date
     final long midnightSecondsSinceEpoch = ServiceDateUtils.asStartOfService(
-      tripUpdate.serviceDate(),
+      tripUpdate.startDate(),
       timeZone
     ).toEpochSecond();
 
@@ -251,6 +256,7 @@ class TripTimesUpdater {
 
     tripUpdate.tripHeadsign().ifPresent(builder::withTripHeadsign);
     tripUpdate.wheelchairAccessibility().ifPresent(builder::withWheelchairAccessibility);
+    tripUpdate.vehicleId().ifPresent(builder::withVehicleId);
 
     RealTimeTripTimes tripTimes = builder.build();
 
