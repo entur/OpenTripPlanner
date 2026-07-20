@@ -28,6 +28,7 @@ import org.opentripplanner.routing.api.response.RoutingResponse;
 import org.opentripplanner.routing.framework.DebugTimingAggregator;
 import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleRepository;
+import org.opentripplanner.service.realtimevehicles.internal.RealtimeVehicleRepositoryLifecycle;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.service.vehiclerental.internal.DefaultVehicleRentalService;
 import org.opentripplanner.standalone.OtpStartupInfo;
@@ -110,7 +111,6 @@ public class SpeedTest {
     this.expectedResultsByTcId = tcIO.readExpectedResults();
 
     var transitService = new DefaultTransitService(timetableRepository);
-    var realtimeVehicleRepository = new DefaultRealtimeVehicleRepository();
 
     TransitTuningParameters tuningParameters = routerConfig.transitTuningConfig();
     var scheduledRaptorData = RaptorTransitDataMapper.map(
@@ -136,6 +136,10 @@ public class SpeedTest {
           LocalDate::now
         )
       );
+    var realtimeVehicleHandle = registry.registerRepository(
+      new DefaultRealtimeVehicleRepository(),
+      new RealtimeVehicleRepositoryLifecycle()
+    );
     var threadFactory = java.util.concurrent.Executors.defaultThreadFactory();
     var updateManager = TransactionFactory.createUpdateManagerWithPeriodicCommits(
       "speedtest",
@@ -148,7 +152,7 @@ public class SpeedTest {
       graph,
       DeduplicatorService.NOOP,
       VertexLinkerTestFactory.of(graph),
-      realtimeVehicleRepository,
+      realtimeVehicleHandle,
       new DefaultVehicleRentalService(),
       new DefaultVehicleParkingRepository(),
       timetableRepository,
@@ -181,7 +185,7 @@ public class SpeedTest {
       timer.getRegistry(),
       null,
       raptorConfig,
-      realtimeVehicleRepository.createSnapshot(),
+      realtimeVehicleHandle.repositorySnapshot(transactionScope),
       List.of(),
       routerConfig.routingRequestDefaults(),
       TestServerContext.createStreetLimitationParametersService(),

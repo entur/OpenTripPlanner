@@ -1,6 +1,7 @@
 package org.opentripplanner.service.realtimevehicles.internal;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.opentripplanner.street.geometry.WgsCoordinate.GREENWICH;
 
 import com.google.common.collect.ImmutableListMultimap;
@@ -94,6 +95,32 @@ class DefaultRealtimeVehicleRepositoryTest implements RealtimeTestConstants {
     repository.setRealtimeVehiclesForFeed(feedId, ImmutableListMultimap.of());
 
     assertThat(vehicles(pattern)).isEmpty();
+    assertThat(snapshot.getRealtimeVehicles(pattern)).containsExactly(VEHICLE);
+  }
+
+  @Test
+  void lifecycle() {
+    var lifecycle = new RealtimeVehicleRepositoryLifecycle();
+    repository.setRealtimeVehiclesForFeed(feedId, ImmutableListMultimap.of(pattern, VEHICLE));
+
+    var snapshot = lifecycle.freeze(repository);
+    assertThat(snapshot.getRealtimeVehicles(pattern)).containsExactly(VEHICLE);
+
+    // copy-on-write creates a new repository initialized with the state of the snapshot
+    var copy = lifecycle.copyOnWrite(snapshot);
+    assertNotSame(repository, copy);
+    assertThat(lifecycle.freeze(copy).getRealtimeVehicles(pattern)).containsExactly(VEHICLE);
+  }
+
+  @Test
+  void editsToCopyDoNotAffectSnapshot() {
+    var lifecycle = new RealtimeVehicleRepositoryLifecycle();
+    repository.setRealtimeVehiclesForFeed(feedId, ImmutableListMultimap.of(pattern, VEHICLE));
+    var snapshot = lifecycle.freeze(repository);
+
+    var copy = lifecycle.copyOnWrite(snapshot);
+    copy.setRealtimeVehiclesForFeed(feedId, ImmutableListMultimap.of());
+
     assertThat(snapshot.getRealtimeVehicles(pattern)).containsExactly(VEHICLE);
   }
 

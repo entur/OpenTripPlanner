@@ -3,26 +3,36 @@ package org.opentripplanner.service.realtimevehicles.internal;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.Multimap;
-import jakarta.inject.Inject;
-import jakarta.inject.Singleton;
 import java.util.List;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepositorySnapshot;
 import org.opentripplanner.service.realtimevehicles.model.RealtimeVehicle;
 import org.opentripplanner.transit.model.network.TripPattern;
 
-@Singleton
+/**
+ * Mutable repository for the realtime vehicles. A new instance is created for each transaction
+ * that writes vehicles — initialized from the last committed snapshot — and is only accessed on
+ * the single writer thread. {@link #createSnapshot()} publishes an immutable snapshot of its
+ * state at commit time, safe for concurrent reads from request threads.
+ */
 public class DefaultRealtimeVehicleRepository implements RealtimeVehicleRepository {
 
   /**
    * This multimap is immutable and therefore thread-safe. It is updated using the copy-on-write
    * pattern so data races are avoided. This is re-enforced with the variable being volatile.
    */
-  private volatile ImmutableListMultimap<TripPattern, RealtimeVehicle> vehicles =
-    ImmutableListMultimap.of();
+  private volatile ImmutableListMultimap<TripPattern, RealtimeVehicle> vehicles;
 
-  @Inject
-  public DefaultRealtimeVehicleRepository() {}
+  /** Create an empty repository. */
+  public DefaultRealtimeVehicleRepository() {
+    this.vehicles = ImmutableListMultimap.of();
+  }
+
+  /** Create a repository initialized with the state of the given snapshot. */
+  public DefaultRealtimeVehicleRepository(RealtimeVehicleRepositorySnapshot snapshot) {
+    // the cast is safe: all snapshots are created by createSnapshot() below
+    this.vehicles = ((Snapshot) snapshot).vehicles;
+  }
 
   @Override
   public void setRealtimeVehiclesForFeed(
@@ -54,7 +64,7 @@ public class DefaultRealtimeVehicleRepository implements RealtimeVehicleReposito
     return new Snapshot(vehicles);
   }
 
-  /** Immutable snapshot of the repository state. */
+  /** Immutable snapshot of the repository state, published at commit time. */
   private static class Snapshot implements RealtimeVehicleRepositorySnapshot {
 
     private final ImmutableListMultimap<TripPattern, RealtimeVehicle> vehicles;

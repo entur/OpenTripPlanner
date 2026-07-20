@@ -1,5 +1,7 @@
 package org.opentripplanner.updater;
 
+import java.util.function.Supplier;
+import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.DefaultTransitService;
@@ -13,6 +15,12 @@ public class DefaultRealTimeUpdateContext implements RealTimeUpdateContext {
   private final Graph graph;
   private final MutableTimetableSnapshot timetableSnapshotBuffer;
   private final TransitService transitService;
+
+  /**
+   * Resolved lazily so that tasks that never touch the realtime vehicles do not mark the vehicle
+   * repository as modified in the current transaction.
+   */
+  private final Supplier<RealtimeVehicleRepository> realtimeVehicleRepository;
 
   /**
    * The context needs the mutable snapshot so that entity lookups (trips, routes, patterns) see
@@ -33,23 +41,34 @@ public class DefaultRealTimeUpdateContext implements RealTimeUpdateContext {
   public DefaultRealTimeUpdateContext(
     Graph graph,
     TimetableRepository timetableRepository,
-    MutableTimetableSnapshot timetableSnapshotBuffer
+    MutableTimetableSnapshot timetableSnapshotBuffer,
+    Supplier<RealtimeVehicleRepository> realtimeVehicleRepository
   ) {
     this.graph = graph;
     this.timetableSnapshotBuffer = timetableSnapshotBuffer;
     this.transitService = new DefaultTransitService(timetableRepository, timetableSnapshotBuffer);
+    this.realtimeVehicleRepository = realtimeVehicleRepository;
   }
 
   /**
    * Constructor for unit tests only.
    */
   public DefaultRealTimeUpdateContext(Graph graph, TimetableRepository timetableRepository) {
-    this(graph, timetableRepository, null);
+    this(graph, timetableRepository, null, () -> {
+      throw new UnsupportedOperationException(
+        "The realtime-vehicle repository is not available in this test context"
+      );
+    });
   }
 
   @Override
   public MutableTimetableSnapshot mutableSnapshot() {
     return timetableSnapshotBuffer;
+  }
+
+  @Override
+  public RealtimeVehicleRepository realtimeVehicleRepository() {
+    return realtimeVehicleRepository.get();
   }
 
   @Override

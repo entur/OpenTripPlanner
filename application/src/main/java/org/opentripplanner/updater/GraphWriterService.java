@@ -3,6 +3,8 @@ package org.opentripplanner.updater;
 import java.util.concurrent.Future;
 import org.opentripplanner.framework.transaction.UpdateManager;
 import org.opentripplanner.framework.transaction.api.RepositoryHandle;
+import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
+import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepositorySnapshot;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot;
@@ -27,17 +29,26 @@ public class GraphWriterService implements WriteToGraphCallback {
     ReadOnlyTimetableSnapshot,
     MutableTimetableSnapshot
   > timetableHandle;
+  private final RepositoryHandle<
+    RealtimeVehicleRepositorySnapshot,
+    RealtimeVehicleRepository
+  > realtimeVehicleHandle;
   private final Graph graph;
   private final TimetableRepository timetableRepository;
 
   public GraphWriterService(
     UpdateManager updateManager,
     RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableHandle,
+    RepositoryHandle<
+      RealtimeVehicleRepositorySnapshot,
+      RealtimeVehicleRepository
+    > realtimeVehicleHandle,
     Graph graph,
     TimetableRepository timetableRepository
   ) {
     this.updateManager = updateManager;
     this.timetableHandle = timetableHandle;
+    this.realtimeVehicleHandle = realtimeVehicleHandle;
     this.graph = graph;
     this.timetableRepository = timetableRepository;
   }
@@ -46,7 +57,14 @@ public class GraphWriterService implements WriteToGraphCallback {
   public Future<Void> execute(GraphWriterRunnable runnable) {
     return updateManager.submit(ctx -> {
       var mutableSnapshot = ctx.repository(timetableHandle);
-      var context = new DefaultRealTimeUpdateContext(graph, timetableRepository, mutableSnapshot);
+      // The vehicle repository is resolved lazily: only tasks that actually apply vehicle
+      // updates mark the vehicle repository as modified in the transaction.
+      var context = new DefaultRealTimeUpdateContext(
+        graph,
+        timetableRepository,
+        mutableSnapshot,
+        () -> ctx.repository(realtimeVehicleHandle)
+      );
       try {
         runnable.run(context);
       } catch (Exception e) {

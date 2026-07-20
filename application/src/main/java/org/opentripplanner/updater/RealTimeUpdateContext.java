@@ -1,5 +1,6 @@
 package org.opentripplanner.updater;
 
+import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.TransitService;
@@ -16,6 +17,13 @@ public interface RealTimeUpdateContext {
    * use this from the single writer thread.
    */
   MutableTimetableSnapshot mutableSnapshot();
+
+  /**
+   * Return the mutable realtime-vehicle repository for this update task. Callers must only use
+   * this from the single writer thread. Accessing it marks the repository as modified in the
+   * current transaction, so only call it when there are vehicle updates to apply.
+   */
+  RealtimeVehicleRepository realtimeVehicleRepository();
 
   /**
    * Return the street model (graph).

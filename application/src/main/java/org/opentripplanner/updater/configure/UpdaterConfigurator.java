@@ -15,6 +15,7 @@ import org.opentripplanner.framework.io.OtpHttpClientFactory;
 import org.opentripplanner.framework.transaction.UpdateManager;
 import org.opentripplanner.framework.transaction.api.RepositoryHandle;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
+import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepositorySnapshot;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.service.vehiclerental.VehicleRentalRepository;
 import org.opentripplanner.street.graph.Graph;
@@ -56,7 +57,10 @@ public class UpdaterConfigurator {
   private final VertexLinker linker;
   private final TimetableRepository timetableRepository;
   private final UpdatersParameters updatersParameters;
-  private final RealtimeVehicleRepository realtimeVehicleRepository;
+  private final RepositoryHandle<
+    RealtimeVehicleRepositorySnapshot,
+    RealtimeVehicleRepository
+  > realtimeVehicleRepositoryHandle;
   private final VehicleRentalRepository vehicleRentalRepository;
   private final CarpoolingRepository carpoolingRepository;
   private final VehicleParkingRepository parkingRepository;
@@ -73,7 +77,10 @@ public class UpdaterConfigurator {
     Graph graph,
     DeduplicatorService deduplicator,
     VertexLinker linker,
-    RealtimeVehicleRepository realtimeVehicleRepository,
+    RepositoryHandle<
+      RealtimeVehicleRepositorySnapshot,
+      RealtimeVehicleRepository
+    > realtimeVehicleRepositoryHandle,
     VehicleRentalRepository vehicleRentalRepository,
     VehicleParkingRepository parkingRepository,
     TimetableRepository timetableRepository,
@@ -85,7 +92,7 @@ public class UpdaterConfigurator {
     this.graph = graph;
     this.deduplicator = deduplicator;
     this.linker = linker;
-    this.realtimeVehicleRepository = realtimeVehicleRepository;
+    this.realtimeVehicleRepositoryHandle = realtimeVehicleRepositoryHandle;
     this.vehicleRentalRepository = vehicleRentalRepository;
     this.timetableRepository = timetableRepository;
     this.updatersParameters = updatersParameters;
@@ -99,7 +106,10 @@ public class UpdaterConfigurator {
     Graph graph,
     DeduplicatorService deduplicator,
     VertexLinker linker,
-    RealtimeVehicleRepository realtimeVehicleRepository,
+    RepositoryHandle<
+      RealtimeVehicleRepositorySnapshot,
+      RealtimeVehicleRepository
+    > realtimeVehicleRepositoryHandle,
     VehicleRentalRepository vehicleRentalRepository,
     VehicleParkingRepository parkingRepository,
     TimetableRepository timetableRepository,
@@ -112,7 +122,7 @@ public class UpdaterConfigurator {
       graph,
       deduplicator,
       linker,
-      realtimeVehicleRepository,
+      realtimeVehicleRepositoryHandle,
       vehicleRentalRepository,
       parkingRepository,
       timetableRepository,
@@ -138,6 +148,7 @@ public class UpdaterConfigurator {
     var graphWriterService = new GraphWriterService(
       updateManager,
       timetableRepositoryHandle,
+      realtimeVehicleRepositoryHandle,
       graph,
       timetableRepository
     );
@@ -211,7 +222,7 @@ public class UpdaterConfigurator {
       updaters.add(new PollingTripUpdater(configItem, provideGtfsAdapter()));
     }
     for (var configItem : updatersParameters.getVehiclePositionsUpdaterParameters()) {
-      updaters.add(new PollingVehiclePositionUpdater(configItem, realtimeVehicleRepository));
+      updaters.add(new PollingVehiclePositionUpdater(configItem));
     }
     for (var configItem : updatersParameters.getSiriETUpdaterParameters()) {
       updaters.add(
