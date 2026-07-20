@@ -2,6 +2,7 @@ package org.opentripplanner.service.realtimevehicles.internal;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimap;
 import java.util.List;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
@@ -17,21 +18,17 @@ import org.opentripplanner.transit.model.network.TripPattern;
  */
 public class DefaultRealtimeVehicleRepository implements RealtimeVehicleRepository {
 
-  /**
-   * This multimap is immutable and therefore thread-safe. It is updated using the copy-on-write
-   * pattern so data races are avoided. This is re-enforced with the variable being volatile.
-   */
-  private volatile ImmutableListMultimap<TripPattern, RealtimeVehicle> vehicles;
+  private final ListMultimap<TripPattern, RealtimeVehicle> vehicles;
 
   /** Create an empty repository. */
   public DefaultRealtimeVehicleRepository() {
-    this.vehicles = ImmutableListMultimap.of();
+    this.vehicles = ArrayListMultimap.create();
   }
 
   /** Create a repository initialized with the state of the given snapshot. */
   public DefaultRealtimeVehicleRepository(RealtimeVehicleRepositorySnapshot snapshot) {
     // the cast is safe: all snapshots are created by createSnapshot() below
-    this.vehicles = ((Snapshot) snapshot).vehicles;
+    this.vehicles = ArrayListMultimap.create(((Snapshot) snapshot).vehicles);
   }
 
   @Override
@@ -39,29 +36,23 @@ public class DefaultRealtimeVehicleRepository implements RealtimeVehicleReposito
     String feedId,
     Multimap<TripPattern, RealtimeVehicle> updates
   ) {
-    Multimap<TripPattern, RealtimeVehicle> temp = ArrayListMultimap.create();
-    temp.putAll(vehicles);
     // remove all previous updates for this specific feed id
-    vehicles
-      .keys()
+    List.copyOf(vehicles.keySet())
       .stream()
       .filter(p -> p.getFeedId().equals(feedId))
-      .forEach(temp::removeAll);
+      .forEach(vehicles::removeAll);
     // transform keys and put all fresh updates into map
     updates.forEach((pattern, vehicle) -> {
       if (pattern.getOriginalTripPattern() != null) {
         pattern = pattern.getOriginalTripPattern();
       }
-      temp.put(pattern, vehicle);
+      vehicles.put(pattern, vehicle);
     });
-
-    vehicles = ImmutableListMultimap.copyOf(temp);
   }
 
   @Override
   public RealtimeVehicleRepositorySnapshot createSnapshot() {
-    // the multimap is immutable, so the snapshot can simply wrap the current value
-    return new Snapshot(vehicles);
+    return new Snapshot(ImmutableListMultimap.copyOf(vehicles));
   }
 
   /** Immutable snapshot of the repository state, published at commit time. */
