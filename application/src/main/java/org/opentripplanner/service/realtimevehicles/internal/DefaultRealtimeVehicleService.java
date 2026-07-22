@@ -2,7 +2,6 @@ package org.opentripplanner.service.realtimevehicles.internal;
 
 import static org.opentripplanner.transit.model.timetable.OccupancyStatus.NO_DATA_AVAILABLE;
 
-import jakarta.inject.Inject;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
@@ -26,7 +25,6 @@ public class DefaultRealtimeVehicleService implements RealtimeVehicleService {
   private final RealtimeVehicleRepositorySnapshot snapshot;
   private final TransitService transitService;
 
-  @Inject
   public DefaultRealtimeVehicleService(
     RealtimeVehicleRepositorySnapshot snapshot,
     TransitService transitService
