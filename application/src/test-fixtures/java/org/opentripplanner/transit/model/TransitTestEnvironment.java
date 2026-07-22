@@ -77,7 +77,10 @@ public final class TransitTestEnvironment {
       new RaptorTransitData(timetableRepository.getRaptorTransitData()),
       timetableRepository.copyTripCalendarForRealTimeUpdates()
     );
-    this.timetableHandle = repositoryRegistry.registerRepositorySnapshot(
+    // Register via registerRepository (as TransitModule does in production) so the initial
+    // committed snapshot is a frozen, immutable copy — not the mutable buffer itself. Otherwise
+    // the committed view exposes uncommitted changes until the first commit.
+    this.timetableHandle = repositoryRegistry.registerRepository(
       timetableSnapshot,
       new TimetableSnapshotLifecycle(timetableSnapshot, false, () -> defaultServiceDate)
     );
