@@ -12,6 +12,7 @@ import org.opentripplanner.ext.siri.updater.mqtt.SiriETMqttUpdater;
 import org.opentripplanner.ext.vehiclerentalservicedirectory.VehicleRentalServiceDirectoryFetcher;
 import org.opentripplanner.ext.vehiclerentalservicedirectory.api.VehicleRentalServiceDirectoryFetcherParameters;
 import org.opentripplanner.framework.io.OtpHttpClientFactory;
+import org.opentripplanner.framework.transaction.RepositoryRegistry;
 import org.opentripplanner.framework.transaction.UpdateManager;
 import org.opentripplanner.framework.transaction.api.RepositoryHandle;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
@@ -65,6 +66,7 @@ public class UpdaterConfigurator {
   private final CarpoolingRepository carpoolingRepository;
   private final VehicleParkingRepository parkingRepository;
   private final UpdateManager updateManager;
+  private final RepositoryRegistry repositoryRegistry;
   private final RepositoryHandle<
     ReadOnlyTimetableSnapshot,
     MutableTimetableSnapshot
@@ -86,6 +88,7 @@ public class UpdaterConfigurator {
     TimetableRepository timetableRepository,
     CarpoolingRepository carpoolingRepository,
     UpdateManager updateManager,
+    RepositoryRegistry repositoryRegistry,
     RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableRepositoryHandle,
     UpdatersParameters updatersParameters
   ) {
@@ -98,6 +101,7 @@ public class UpdaterConfigurator {
     this.updatersParameters = updatersParameters;
     this.parkingRepository = parkingRepository;
     this.updateManager = updateManager;
+    this.repositoryRegistry = repositoryRegistry;
     this.timetableRepositoryHandle = timetableRepositoryHandle;
     this.carpoolingRepository = carpoolingRepository;
   }
@@ -115,6 +119,7 @@ public class UpdaterConfigurator {
     TimetableRepository timetableRepository,
     CarpoolingRepository carpoolingRepository,
     UpdateManager updateManager,
+    RepositoryRegistry repositoryRegistry,
     RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableRepositoryHandle,
     UpdatersParameters updatersParameters
   ) {
@@ -128,6 +133,7 @@ public class UpdaterConfigurator {
       timetableRepository,
       carpoolingRepository,
       updateManager,
+      repositoryRegistry,
       timetableRepositoryHandle,
       updatersParameters
     ).configure();
@@ -147,6 +153,7 @@ public class UpdaterConfigurator {
 
     var graphWriterService = new GraphWriterService(
       updateManager,
+      repositoryRegistry,
       timetableRepositoryHandle,
       realtimeVehicleRepositoryHandle,
       graph,

@@ -158,6 +158,7 @@ public class SpeedTest {
       timetableRepository,
       new DefaultCarpoolingRepository(),
       updateManager,
+      registry,
       timetableHandle,
       routerConfig.updaterConfig()
     );

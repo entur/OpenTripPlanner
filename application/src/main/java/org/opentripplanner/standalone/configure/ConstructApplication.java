@@ -217,6 +217,7 @@ public class ConstructApplication {
       timetableRepository(),
       carpoolingRepository(),
       factory.updateManager(),
+      factory.repositoryRegistry(),
       factory.timetableRepositoryHandle(),
       routerConfig().updaterConfig()
     );

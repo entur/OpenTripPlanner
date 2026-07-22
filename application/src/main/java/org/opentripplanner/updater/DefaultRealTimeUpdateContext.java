@@ -4,6 +4,7 @@ import java.util.function.Supplier;
 import org.opentripplanner.service.realtimevehicles.RealtimeVehicleRepository;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
+import org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.transit.service.TransitService;
@@ -13,14 +14,28 @@ import org.opentripplanner.updater.trip.siri.EntityResolver;
 public class DefaultRealTimeUpdateContext implements RealTimeUpdateContext {
 
   private final Graph graph;
-  private final MutableTimetableSnapshot timetableSnapshotBuffer;
-  private final TransitService transitService;
+  private final TimetableRepository timetableRepository;
+
+  /**
+   * Resolved lazily so that tasks that never write to the timetable, such as vehicle-position
+   * updates, do not mark the timetable repository as modified in the current transaction.
+   */
+  private final Supplier<MutableTimetableSnapshot> timetableSnapshotBuffer;
+
+  /**
+   * Resolved lazily because only tasks that must not see uncommitted timetable changes, such as
+   * vehicle-position updates, need the last committed snapshot.
+   */
+  private final Supplier<ReadOnlyTimetableSnapshot> committedTimetableSnapshot;
 
   /**
    * Resolved lazily so that tasks that never touch the realtime vehicles do not mark the vehicle
    * repository as modified in the current transaction.
    */
   private final Supplier<RealtimeVehicleRepository> realtimeVehicleRepository;
+
+  private TransitService transitService;
+  private TransitService committedTransitService;
 
   /**
    * The context needs the mutable snapshot so that entity lookups (trips, routes, patterns) see
@@ -31,22 +46,24 @@ public class DefaultRealTimeUpdateContext implements RealTimeUpdateContext {
    * is not found in the real-time snapshot. The {@link DefaultTransitService} combines both: it
    * checks the snapshot first, then falls back to the static index.
    * <p>
-   * {@link DefaultTransitService} accepts a {@link org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot},
+   * {@link DefaultTransitService} accepts a {@link ReadOnlyTimetableSnapshot},
    * because in request scope it must never receive a mutable snapshot. The cast here is safe as
-   * long as {@link MutableTimetableSnapshot} and {@link org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot}
+   * long as {@link MutableTimetableSnapshot} and {@link ReadOnlyTimetableSnapshot}
    * share a single implementation — which is enforced by {@link MutableTimetableSnapshot} extending
-   * {@link org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot}. A cleaner separation
+   * {@link ReadOnlyTimetableSnapshot}. A cleaner separation
    * would require merging scheduled and real-time data into a single unified store - this is the end goal!
    */
   public DefaultRealTimeUpdateContext(
     Graph graph,
     TimetableRepository timetableRepository,
-    MutableTimetableSnapshot timetableSnapshotBuffer,
+    Supplier<MutableTimetableSnapshot> timetableSnapshotBuffer,
+    Supplier<ReadOnlyTimetableSnapshot> committedTimetableSnapshot,
     Supplier<RealtimeVehicleRepository> realtimeVehicleRepository
   ) {
     this.graph = graph;
+    this.timetableRepository = timetableRepository;
     this.timetableSnapshotBuffer = timetableSnapshotBuffer;
-    this.transitService = new DefaultTransitService(timetableRepository, timetableSnapshotBuffer);
+    this.committedTimetableSnapshot = committedTimetableSnapshot;
     this.realtimeVehicleRepository = realtimeVehicleRepository;
   }
 
@@ -54,16 +71,22 @@ public class DefaultRealTimeUpdateContext implements RealTimeUpdateContext {
    * Constructor for unit tests only.
    */
   public DefaultRealTimeUpdateContext(Graph graph, TimetableRepository timetableRepository) {
-    this(graph, timetableRepository, null, () -> {
-      throw new UnsupportedOperationException(
-        "The realtime-vehicle repository is not available in this test context"
-      );
-    });
+    this(
+      graph,
+      timetableRepository,
+      () -> null,
+      () -> null,
+      () -> {
+        throw new UnsupportedOperationException(
+          "The realtime-vehicle repository is not available in this test context"
+        );
+      }
+    );
   }
 
   @Override
   public MutableTimetableSnapshot mutableSnapshot() {
-    return timetableSnapshotBuffer;
+    return timetableSnapshotBuffer.get();
   }
 
   @Override
@@ -78,16 +101,30 @@ public class DefaultRealTimeUpdateContext implements RealTimeUpdateContext {
 
   @Override
   public TransitService transitService() {
+    if (transitService == null) {
+      transitService = new DefaultTransitService(timetableRepository, mutableSnapshot());
+    }
     return transitService;
   }
 
   @Override
+  public TransitService committedTransitService() {
+    if (committedTransitService == null) {
+      committedTransitService = new DefaultTransitService(
+        timetableRepository,
+        committedTimetableSnapshot.get()
+      );
+    }
+    return committedTransitService;
+  }
+
+  @Override
   public GtfsRealtimeFuzzyTripMatcher gtfsRealtimeFuzzyTripMatcher() {
-    return new GtfsRealtimeFuzzyTripMatcher(transitService);
+    return new GtfsRealtimeFuzzyTripMatcher(transitService());
   }
 
   @Override
   public EntityResolver entityResolver(String feedId) {
-    return new EntityResolver(transitService, feedId);
+    return new EntityResolver(transitService(), feedId);
   }
 }
