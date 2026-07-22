@@ -33,7 +33,7 @@ public abstract class TransactionModule {
     @TransitDomain RepositoryRegistry repositoryRegistry,
     TimetableSnapshotParameters timetableSnapshotParameters
   ) {
-    var threadFactory = new ThreadFactoryBuilder().setNameFormat("autoCommit").build();
+    var threadFactory = new ThreadFactoryBuilder().setNameFormat("transitWriter").build();
     return TransactionFactory.createUpdateManagerWithPeriodicCommits(
       "",
       repositoryRegistry,
