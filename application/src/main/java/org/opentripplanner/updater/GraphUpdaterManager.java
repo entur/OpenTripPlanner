@@ -50,14 +50,14 @@ public class GraphUpdaterManager implements GraphUpdaterStatus {
   /**
    * Keep track of all updaters so we can cleanly free resources associated with them at shutdown.
    */
-  private final List<GraphUpdater> updaterList = new ArrayList<>();
+  private final List<GraphUpdater<?>> updaterList = new ArrayList<>();
 
   private final Runnable shutdownGraphWriter;
 
   public GraphUpdaterManager(
-    Map<WriteDomain, WriteToGraphCallback> writeToGraphCallbacks,
+    Map<WriteDomain, WriteToGraphCallback<?>> writeToGraphCallbacks,
     Runnable shutdownGraphWriter,
-    List<GraphUpdater> updaters
+    List<GraphUpdater<?>> updaters
   ) {
     var updaterThreadFactory = new ThreadFactoryBuilder().setNameFormat("updater-%d").build();
     this.pollingUpdaterPool = Executors.newScheduledThreadPool(
@@ -67,18 +67,9 @@ public class GraphUpdaterManager implements GraphUpdaterStatus {
     this.nonPollingUpdaterPool = Executors.newCachedThreadPool(updaterThreadFactory);
     this.shutdownGraphWriter = shutdownGraphWriter;
 
-    for (GraphUpdater updater : updaters) {
-      var callback = writeToGraphCallbacks.get(updater.writeDomain());
-      if (callback == null) {
-        throw new IllegalArgumentException(
-          "No WriteToGraphCallback configured for write domain %s (required by %s)".formatted(
-            updater.writeDomain(),
-            updater.getClass().getName()
-          )
-        );
-      }
+    for (GraphUpdater<?> updater : updaters) {
       updaterList.add(updater);
-      updater.setup(callback);
+      setup(updater, writeToGraphCallbacks);
     }
   }
 
@@ -87,17 +78,39 @@ public class GraphUpdaterManager implements GraphUpdaterStatus {
    * before the write-domain split, still useful in tests.
    */
   public GraphUpdaterManager(
-    WriteToGraphCallback writeToGraphCallback,
+    WriteToGraphCallback<?> writeToGraphCallback,
     Runnable shutdownGraphWriter,
-    List<GraphUpdater> updaters
+    List<GraphUpdater<?>> updaters
   ) {
     this(callbackForAllDomains(writeToGraphCallback), shutdownGraphWriter, updaters);
   }
 
-  private static Map<WriteDomain, WriteToGraphCallback> callbackForAllDomains(
-    WriteToGraphCallback callback
+  /**
+   * Pair an updater with the callback of its write domain. The cast is safe because the wiring
+   * guarantees that the callback registered for a domain produces that domain's update context,
+   * which is exactly what {@link GraphUpdater#writeDomain()} promises about {@code <C>}.
+   */
+  private static <C> void setup(
+    GraphUpdater<C> updater,
+    Map<WriteDomain, WriteToGraphCallback<?>> writeToGraphCallbacks
   ) {
-    var callbacks = new EnumMap<WriteDomain, WriteToGraphCallback>(WriteDomain.class);
+    @SuppressWarnings("unchecked")
+    var callback = (WriteToGraphCallback<C>) writeToGraphCallbacks.get(updater.writeDomain());
+    if (callback == null) {
+      throw new IllegalArgumentException(
+        "No WriteToGraphCallback configured for write domain %s (required by %s)".formatted(
+          updater.writeDomain(),
+          updater.getClass().getName()
+        )
+      );
+    }
+    updater.setup(callback);
+  }
+
+  private static Map<WriteDomain, WriteToGraphCallback<?>> callbackForAllDomains(
+    WriteToGraphCallback<?> callback
+  ) {
+    var callbacks = new EnumMap<WriteDomain, WriteToGraphCallback<?>>(WriteDomain.class);
     for (var domain : WriteDomain.values()) {
       callbacks.put(domain, callback);
     }
@@ -109,7 +122,7 @@ public class GraphUpdaterManager implements GraphUpdaterStatus {
    * only after all the updaters have had their setup methods called.
    */
   public void startUpdaters() {
-    for (GraphUpdater updater : updaterList) {
+    for (GraphUpdater<?> updater : updaterList) {
       Runnable runUpdater = () -> {
         try {
           updater.run();
@@ -174,7 +187,7 @@ public class GraphUpdaterManager implements GraphUpdaterStatus {
       LOG.warn("Interrupted while waiting for updaters to finish.");
     }
 
-    for (GraphUpdater updater : updaterList) {
+    for (GraphUpdater<?> updater : updaterList) {
       updater.teardown();
     }
     updaterList.clear();
@@ -204,13 +217,13 @@ public class GraphUpdaterManager implements GraphUpdaterStatus {
   public Map<Integer, String> getUpdaterDescriptions() {
     Map<Integer, String> ret = new TreeMap<>();
     int i = 0;
-    for (GraphUpdater updater : updaterList) {
+    for (GraphUpdater<?> updater : updaterList) {
       ret.put(i++, updater.toString());
     }
     return ret;
   }
 
-  public GraphUpdater getUpdater(int id) {
+  public GraphUpdater<?> getUpdater(int id) {
     if (id >= updaterList.size()) {
       return null;
     }
@@ -219,11 +232,11 @@ public class GraphUpdaterManager implements GraphUpdaterStatus {
 
   @Override
   public Class<?> getUpdaterClass(int id) {
-    GraphUpdater updater = getUpdater(id);
+    GraphUpdater<?> updater = getUpdater(id);
     return updater == null ? null : updater.getClass();
   }
 
-  public List<GraphUpdater> getUpdaterList() {
+  public List<GraphUpdater<?>> getUpdaterList() {
     return updaterList;
   }
 

@@ -11,6 +11,7 @@ import org.opentripplanner.framework.retry.OtpRetryBuilder;
 import org.opentripplanner.routing.impl.TransitAlertServiceImpl;
 import org.opentripplanner.routing.services.TransitAlertService;
 import org.opentripplanner.transit.service.TimetableRepository;
+import org.opentripplanner.updater.TransitRealTimeUpdateContext;
 import org.opentripplanner.updater.alert.TransitAlertProvider;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.PollingGraphUpdaterParameters;
@@ -23,7 +24,9 @@ import org.slf4j.LoggerFactory;
 import uk.org.siri.siri21.ServiceDelivery;
 import uk.org.siri.siri21.Siri;
 
-public class SiriSXUpdater extends PollingGraphUpdater implements TransitAlertProvider {
+public class SiriSXUpdater
+  extends PollingGraphUpdater<TransitRealTimeUpdateContext>
+  implements TransitAlertProvider {
 
   private static final Logger LOG = LoggerFactory.getLogger(SiriSXUpdater.class);
   private static final int RETRY_MAX_ATTEMPTS = 3;

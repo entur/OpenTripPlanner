@@ -11,7 +11,7 @@ package org.opentripplanner.updater.spi;
 public enum WriteDomain {
   /**
    * Timetable data, alerts and realtime vehicles. Tasks in this domain receive a
-   * {@link org.opentripplanner.updater.RealTimeUpdateContext} with access to the mutable
+   * {@link org.opentripplanner.updater.TransitRealTimeUpdateContext} with access to the mutable
    * timetable snapshot.
    */
   TRANSIT,

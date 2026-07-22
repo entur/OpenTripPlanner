@@ -1,6 +1,5 @@
 package org.opentripplanner.updater;
 
-import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
@@ -8,9 +7,8 @@ import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealtimeFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.siri.EntityResolver;
 
-public class DefaultRealTimeUpdateContext implements RealTimeUpdateContext {
+public class DefaultTransitRealTimeUpdateContext implements TransitRealTimeUpdateContext {
 
-  private final Graph graph;
   private final MutableTimetableSnapshot timetableSnapshotBuffer;
   private final TransitService transitService;
 
@@ -30,12 +28,10 @@ public class DefaultRealTimeUpdateContext implements RealTimeUpdateContext {
    * {@link org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot}. A cleaner separation
    * would require merging scheduled and real-time data into a single unified store - this is the end goal!
    */
-  public DefaultRealTimeUpdateContext(
-    Graph graph,
+  public DefaultTransitRealTimeUpdateContext(
     TimetableRepository timetableRepository,
     MutableTimetableSnapshot timetableSnapshotBuffer
   ) {
-    this.graph = graph;
     this.timetableSnapshotBuffer = timetableSnapshotBuffer;
     this.transitService = new DefaultTransitService(timetableRepository, timetableSnapshotBuffer);
   }
@@ -43,18 +39,13 @@ public class DefaultRealTimeUpdateContext implements RealTimeUpdateContext {
   /**
    * Constructor for unit tests only.
    */
-  public DefaultRealTimeUpdateContext(Graph graph, TimetableRepository timetableRepository) {
-    this(graph, timetableRepository, null);
+  public DefaultTransitRealTimeUpdateContext(TimetableRepository timetableRepository) {
+    this(timetableRepository, null);
   }
 
   @Override
   public MutableTimetableSnapshot mutableSnapshot() {
     return timetableSnapshotBuffer;
-  }
-
-  @Override
-  public Graph graph() {
-    return graph;
   }
 
   @Override

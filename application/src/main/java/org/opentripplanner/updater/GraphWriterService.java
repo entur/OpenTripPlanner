@@ -15,22 +15,24 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Serialises the graph write operations of one write domain by delegating to that domain's
- * {@link UpdateManager}, which owns the single-threaded executor. Each write task receives a
- * {@link RealTimeUpdateContext} appropriate for the domain: transit tasks get access to the
- * mutable timetable snapshot, street tasks get access to the street model only.
+ * {@link UpdateManager}, which owns the single-threaded executor. Each write task receives the
+ * update context of its domain: transit tasks get access to the mutable timetable snapshot,
+ * street tasks get access to the street model.
  * <p>
  * This class will eventually be removed once all updaters submit directly to {@link UpdateManager}.
+ *
+ * @param <C> the update context of this domain, see {@link GraphWriterRunnable}
  */
-public class GraphWriterService implements WriteToGraphCallback {
+public class GraphWriterService<C> implements WriteToGraphCallback<C> {
 
   private static final Logger LOG = LoggerFactory.getLogger(GraphWriterService.class);
 
   private final UpdateManager updateManager;
-  private final Function<WriteContext, RealTimeUpdateContext> contextFactory;
+  private final Function<WriteContext, C> contextFactory;
 
   private GraphWriterService(
     UpdateManager updateManager,
-    Function<WriteContext, RealTimeUpdateContext> contextFactory
+    Function<WriteContext, C> contextFactory
   ) {
     this.updateManager = updateManager;
     this.contextFactory = contextFactory;
@@ -40,29 +42,29 @@ public class GraphWriterService implements WriteToGraphCallback {
    * Create the bridge for the transit write domain. Each task checks out the mutable timetable
    * snapshot for the current transaction.
    */
-  public static GraphWriterService forTransitDomain(
+  public static GraphWriterService<TransitRealTimeUpdateContext> forTransitDomain(
     UpdateManager updateManager,
     RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableHandle,
-    Graph graph,
     TimetableRepository timetableRepository
   ) {
-    return new GraphWriterService(updateManager, ctx ->
-      new DefaultRealTimeUpdateContext(graph, timetableRepository, ctx.repository(timetableHandle))
+    return new GraphWriterService<>(updateManager, ctx ->
+      new DefaultTransitRealTimeUpdateContext(timetableRepository, ctx.repository(timetableHandle))
     );
   }
 
   /**
-   * Create the bridge for the street write domain. Tasks get access to the street model only —
-   * the mutable timetable snapshot belongs to the transit domain's writer thread and must not be
-   * touched from the street writer thread.
+   * Create the bridge for the street write domain.
    */
-  public static GraphWriterService forStreetDomain(UpdateManager updateManager, Graph graph) {
-    var context = new StreetRealTimeUpdateContext(graph);
-    return new GraphWriterService(updateManager, ctx -> context);
+  public static GraphWriterService<StreetRealTimeUpdateContext> forStreetDomain(
+    UpdateManager updateManager,
+    Graph graph
+  ) {
+    var context = new DefaultStreetRealTimeUpdateContext(graph);
+    return new GraphWriterService<>(updateManager, ctx -> context);
   }
 
   @Override
-  public Future<Void> execute(GraphWriterRunnable runnable) {
+  public Future<Void> execute(GraphWriterRunnable<C> runnable) {
     return updateManager.submit(ctx -> {
       var context = contextFactory.apply(ctx);
       try {

@@ -9,6 +9,7 @@ import org.opentripplanner.framework.io.OtpHttpClientFactory;
 import org.opentripplanner.routing.impl.TransitAlertServiceImpl;
 import org.opentripplanner.routing.services.TransitAlertService;
 import org.opentripplanner.transit.service.TimetableRepository;
+import org.opentripplanner.updater.TransitRealTimeUpdateContext;
 import org.opentripplanner.updater.alert.TransitAlertProvider;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
@@ -18,7 +19,9 @@ import org.slf4j.LoggerFactory;
 /**
  * GTFS-RT alerts updater
  */
-public class GtfsRealtimeAlertsUpdater extends PollingGraphUpdater implements TransitAlertProvider {
+public class GtfsRealtimeAlertsUpdater
+  extends PollingGraphUpdater<TransitRealTimeUpdateContext>
+  implements TransitAlertProvider {
 
   private static final Logger LOG = LoggerFactory.getLogger(GtfsRealtimeAlertsUpdater.class);
 

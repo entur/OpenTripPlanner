@@ -30,6 +30,7 @@ import org.opentripplanner.updater.UpdatersParameters;
 import org.opentripplanner.updater.alert.gtfs.GtfsRealtimeAlertsUpdater;
 import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.spi.WriteDomain;
+import org.opentripplanner.updater.spi.WriteToGraphCallback;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdater;
 import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdater;
@@ -131,7 +132,7 @@ public class UpdaterConfigurator {
   }
 
   private void configure() {
-    List<GraphUpdater> updaters = new ArrayList<>();
+    List<GraphUpdater<?>> updaters = new ArrayList<>();
 
     updaters.addAll(createUpdatersFromConfig());
 
@@ -145,12 +146,16 @@ public class UpdaterConfigurator {
     var transitWriterService = GraphWriterService.forTransitDomain(
       transitUpdateManager,
       timetableRepositoryHandle,
-      graph,
       timetableRepository
     );
     var streetWriterService = GraphWriterService.forStreetDomain(streetUpdateManager, graph);
     var updaterManager = new GraphUpdaterManager(
-      Map.of(WriteDomain.TRANSIT, transitWriterService, WriteDomain.STREET, streetWriterService),
+      Map.<WriteDomain, WriteToGraphCallback<?>>of(
+        WriteDomain.TRANSIT,
+        transitWriterService,
+        WriteDomain.STREET,
+        streetWriterService
+      ),
       () -> {
         transitWriterService.stop();
         streetWriterService.stop();
@@ -182,7 +187,7 @@ public class UpdaterConfigurator {
   /**
    * Use the online UpdaterDirectoryService to fetch VehicleRental updaters.
    */
-  private List<GraphUpdater> fetchVehicleRentalServicesFromOnlineDirectory(
+  private List<GraphUpdater<?>> fetchVehicleRentalServicesFromOnlineDirectory(
     VehicleRentalServiceDirectoryFetcherParameters parameters
   ) {
     if (parameters == null) {
@@ -198,11 +203,11 @@ public class UpdaterConfigurator {
   /**
    * @return a list of GraphUpdaters created from the configuration
    */
-  private List<GraphUpdater> createUpdatersFromConfig() {
+  private List<GraphUpdater<?>> createUpdatersFromConfig() {
     OpeningHoursCalendarService openingHoursCalendarService =
       graph.getOpeningHoursCalendarService();
 
-    List<GraphUpdater> updaters = new ArrayList<>();
+    List<GraphUpdater<?>> updaters = new ArrayList<>();
 
     if (!updatersParameters.getVehicleRentalParameters().isEmpty()) {
       int maxHttpConnections = updatersParameters.getVehicleRentalParameters().size();
