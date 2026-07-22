@@ -52,7 +52,6 @@ import org.opentripplanner.service.vehiclerental.configure.VehicleRentalServiceM
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeRepository;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeService;
 import org.opentripplanner.service.worldenvelope.configure.WorldEnvelopeServiceModule;
-import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.standalone.config.ConfigModel;
 import org.opentripplanner.standalone.config.configure.ConfigModule;
 import org.opentripplanner.standalone.config.configure.DeduplicatorServiceModule;
@@ -63,6 +62,7 @@ import org.opentripplanner.street.linking.VertexLinker;
 import org.opentripplanner.street.service.StreetLimitationParametersServiceModule;
 import org.opentripplanner.transfer.regular.TransferRepository;
 import org.opentripplanner.transfer.regular.configure.TransferServiceModule;
+import org.opentripplanner.transit.configure.StaticTransitService;
 import org.opentripplanner.transit.configure.TransitModule;
 import org.opentripplanner.transit.model.calendar.DefaultTripCalendars;
 import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
@@ -140,9 +140,10 @@ public interface ConstructApplicationFactory {
   @Nullable
   EmpiricalDelayRepository empiricalDelayRepository();
 
+  @StaticTransitService
   TransitService transitService();
 
-  OtpServerRequestContext createServerContext();
+  RequestScopedFactory.Builder requestScopedFactoryBuilder();
 
   MetricsLogging metricsLogging();
 
