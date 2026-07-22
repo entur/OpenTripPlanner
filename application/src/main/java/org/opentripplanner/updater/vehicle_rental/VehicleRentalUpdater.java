@@ -32,6 +32,7 @@ import org.opentripplanner.updater.GraphWriterRunnable;
 import org.opentripplanner.updater.RealTimeUpdateContext;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.UpdaterConstructionException;
+import org.opentripplanner.updater.spi.WriteDomain;
 import org.opentripplanner.updater.vehicle_rental.datasources.VehicleRentalDataSource;
 import org.opentripplanner.updater.vehicle_rental.datasources.params.GbfsVehicleRentalDataSourceParameters;
 import org.opentripplanner.utils.lang.ObjectUtils;
@@ -123,6 +124,11 @@ public class VehicleRentalUpdater extends PollingGraphUpdater {
         nameForLogging
       );
     }
+  }
+
+  @Override
+  public WriteDomain writeDomain() {
+    return WriteDomain.STREET;
   }
 
   @Override

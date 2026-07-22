@@ -2,6 +2,7 @@ package org.opentripplanner.updater;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -14,6 +15,7 @@ import java.util.stream.Collectors;
 import org.opentripplanner.model.projectinfo.OtpProjectInfo;
 import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
+import org.opentripplanner.updater.spi.WriteDomain;
 import org.opentripplanner.updater.spi.WriteToGraphCallback;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,9 +24,12 @@ import org.slf4j.LoggerFactory;
  * Manages the lifecycle of all {@link GraphUpdater} instances: starts each updater on its own
  * thread, shuts them down cleanly, and tracks readiness.
  * <p>
- * Write tasks submitted by updaters are serialised by the {@link WriteToGraphCallback} passed at
- * construction — currently a {@link GraphWriterService}, which will be replaced by the new
- * {@link org.opentripplanner.framework.transaction.UpdateManager} framework.
+ * Write tasks submitted by updaters are serialised per {@link WriteDomain} by the
+ * {@link WriteToGraphCallback}s passed at construction — currently {@link GraphWriterService}
+ * instances, which will be replaced by the new
+ * {@link org.opentripplanner.framework.transaction.UpdateManager} framework. Each updater is
+ * routed to the callback of its declared write domain, so updaters working on unrelated domains
+ * run in parallel.
  */
 public class GraphUpdaterManager implements GraphUpdaterStatus {
 
@@ -50,7 +55,7 @@ public class GraphUpdaterManager implements GraphUpdaterStatus {
   private final Runnable shutdownGraphWriter;
 
   public GraphUpdaterManager(
-    WriteToGraphCallback writeToGraphCallback,
+    Map<WriteDomain, WriteToGraphCallback> writeToGraphCallbacks,
     Runnable shutdownGraphWriter,
     List<GraphUpdater> updaters
   ) {
@@ -63,9 +68,40 @@ public class GraphUpdaterManager implements GraphUpdaterStatus {
     this.shutdownGraphWriter = shutdownGraphWriter;
 
     for (GraphUpdater updater : updaters) {
+      var callback = writeToGraphCallbacks.get(updater.writeDomain());
+      if (callback == null) {
+        throw new IllegalArgumentException(
+          "No WriteToGraphCallback configured for write domain %s (required by %s)".formatted(
+            updater.writeDomain(),
+            updater.getClass().getName()
+          )
+        );
+      }
       updaterList.add(updater);
-      updater.setup(writeToGraphCallback);
+      updater.setup(callback);
     }
+  }
+
+  /**
+   * Convenience constructor that routes every write domain to the same callback — the behavior
+   * before the write-domain split, still useful in tests.
+   */
+  public GraphUpdaterManager(
+    WriteToGraphCallback writeToGraphCallback,
+    Runnable shutdownGraphWriter,
+    List<GraphUpdater> updaters
+  ) {
+    this(callbackForAllDomains(writeToGraphCallback), shutdownGraphWriter, updaters);
+  }
+
+  private static Map<WriteDomain, WriteToGraphCallback> callbackForAllDomains(
+    WriteToGraphCallback callback
+  ) {
+    var callbacks = new EnumMap<WriteDomain, WriteToGraphCallback>(WriteDomain.class);
+    for (var domain : WriteDomain.values()) {
+      callbacks.put(domain, callback);
+    }
+    return callbacks;
   }
 
   /**

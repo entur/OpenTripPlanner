@@ -3,6 +3,7 @@ package org.opentripplanner.updater.configure;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
@@ -28,6 +29,7 @@ import org.opentripplanner.updater.GraphWriterService;
 import org.opentripplanner.updater.UpdatersParameters;
 import org.opentripplanner.updater.alert.gtfs.GtfsRealtimeAlertsUpdater;
 import org.opentripplanner.updater.spi.GraphUpdater;
+import org.opentripplanner.updater.spi.WriteDomain;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdater;
 import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdater;
@@ -60,7 +62,8 @@ public class UpdaterConfigurator {
   private final VehicleRentalRepository vehicleRentalRepository;
   private final CarpoolingRepository carpoolingRepository;
   private final VehicleParkingRepository parkingRepository;
-  private final UpdateManager updateManager;
+  private final UpdateManager transitUpdateManager;
+  private final UpdateManager streetUpdateManager;
   private final RepositoryHandle<
     ReadOnlyTimetableSnapshot,
     MutableTimetableSnapshot
@@ -78,7 +81,8 @@ public class UpdaterConfigurator {
     VehicleParkingRepository parkingRepository,
     TimetableRepository timetableRepository,
     CarpoolingRepository carpoolingRepository,
-    UpdateManager updateManager,
+    UpdateManager transitUpdateManager,
+    UpdateManager streetUpdateManager,
     RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableRepositoryHandle,
     UpdatersParameters updatersParameters
   ) {
@@ -90,7 +94,8 @@ public class UpdaterConfigurator {
     this.timetableRepository = timetableRepository;
     this.updatersParameters = updatersParameters;
     this.parkingRepository = parkingRepository;
-    this.updateManager = updateManager;
+    this.transitUpdateManager = transitUpdateManager;
+    this.streetUpdateManager = streetUpdateManager;
     this.timetableRepositoryHandle = timetableRepositoryHandle;
     this.carpoolingRepository = carpoolingRepository;
   }
@@ -104,7 +109,8 @@ public class UpdaterConfigurator {
     VehicleParkingRepository parkingRepository,
     TimetableRepository timetableRepository,
     CarpoolingRepository carpoolingRepository,
-    UpdateManager updateManager,
+    UpdateManager transitUpdateManager,
+    UpdateManager streetUpdateManager,
     RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableRepositoryHandle,
     UpdatersParameters updatersParameters
   ) {
@@ -117,7 +123,8 @@ public class UpdaterConfigurator {
       parkingRepository,
       timetableRepository,
       carpoolingRepository,
-      updateManager,
+      transitUpdateManager,
+      streetUpdateManager,
       timetableRepositoryHandle,
       updatersParameters
     ).configure();
@@ -135,15 +142,19 @@ public class UpdaterConfigurator {
       )
     );
 
-    var graphWriterService = new GraphWriterService(
-      updateManager,
+    var transitWriterService = GraphWriterService.forTransitDomain(
+      transitUpdateManager,
       timetableRepositoryHandle,
       graph,
       timetableRepository
     );
+    var streetWriterService = GraphWriterService.forStreetDomain(streetUpdateManager, graph);
     var updaterManager = new GraphUpdaterManager(
-      graphWriterService,
-      graphWriterService::stop,
+      Map.of(WriteDomain.TRANSIT, transitWriterService, WriteDomain.STREET, streetWriterService),
+      () -> {
+        transitWriterService.stop();
+        streetWriterService.stop();
+      },
       updaters
     );
 

@@ -29,6 +29,15 @@ public interface GraphUpdater {
   void setup(WriteToGraphCallback writeToGraphCallback);
 
   /**
+   * The write domain this updater's write tasks belong to. The GraphUpdaterManager uses this to
+   * supply the callback of the right writer thread in {@link #setup(WriteToGraphCallback)}.
+   * Tasks submitted by this updater may only modify data owned by the declared domain.
+   */
+  default WriteDomain writeDomain() {
+    return WriteDomain.TRANSIT;
+  }
+
+  /**
    * The GraphUpdaterManager will run this method in its own long-running thread. This method then
    * pulls or receives updates and applies them to the graph. It must perform any writes to the
    * graph by passing GraphWriterRunnables to the WriteToGraphCallback, which queues up the write

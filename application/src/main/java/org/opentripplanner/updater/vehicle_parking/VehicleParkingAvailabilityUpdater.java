@@ -13,6 +13,7 @@ import org.opentripplanner.updater.GraphWriterRunnable;
 import org.opentripplanner.updater.RealTimeUpdateContext;
 import org.opentripplanner.updater.spi.DataSource;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
+import org.opentripplanner.updater.spi.WriteDomain;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,11 @@ public class VehicleParkingAvailabilityUpdater extends PollingGraphUpdater {
     this.repository = parkingRepository;
 
     LOG.info("Creating vehicle-parking updater running every {}: {}", pollingPeriod(), source);
+  }
+
+  @Override
+  public WriteDomain writeDomain() {
+    return WriteDomain.STREET;
   }
 
   @Override
