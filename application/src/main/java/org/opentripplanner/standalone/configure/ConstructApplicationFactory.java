@@ -66,8 +66,8 @@ import org.opentripplanner.transfer.regular.configure.TransferServiceModule;
 import org.opentripplanner.transit.configure.StaticTransitService;
 import org.opentripplanner.transit.configure.TransitModule;
 import org.opentripplanner.transit.model.calendar.DefaultTripCalendars;
-import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
-import org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot;
+import org.opentripplanner.transit.repository.TimetableRepository;
+import org.opentripplanner.transit.repository.TimetableRepositorySnapshot;
 import org.opentripplanner.transit.service.TransitRepository;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.warmup.WarmupLauncher;
@@ -125,7 +125,7 @@ public interface ConstructApplicationFactory {
   VehicleParkingRepository vehicleParkingRepository();
   VehicleParkingService vehicleParkingService();
   UpdateManager updateManager();
-  RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableRepositoryHandle();
+  RepositoryHandle<TimetableRepositorySnapshot, TimetableRepository> timetableRepositoryHandle();
   DataImportIssueSummary dataImportIssueSummary();
 
   @Nullable
