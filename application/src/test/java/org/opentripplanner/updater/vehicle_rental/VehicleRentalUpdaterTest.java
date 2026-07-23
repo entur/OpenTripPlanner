@@ -65,7 +65,7 @@ class VehicleRentalUpdaterTest {
   static class MockManager extends GraphUpdaterManager {
 
     public MockManager(VehicleRentalUpdater updater) {
-      super(WriteToGraphCallback.NOOP, RunnableUtils.NOOP, List.of(updater));
+      super(WriteToGraphCallback.noop(), RunnableUtils.NOOP, List.of(updater));
     }
   }
 

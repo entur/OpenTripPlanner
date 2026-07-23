@@ -50,8 +50,8 @@ import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.service.SiteRepository;
 import org.opentripplanner.transit.service.TimetableRepository;
 import org.opentripplanner.updater.GraphUpdaterManager;
-import org.opentripplanner.updater.GraphWriterService;
 import org.opentripplanner.updater.alert.gtfs.AlertsUpdateHandler;
+import org.opentripplanner.updater.spi.WriteToGraphCallback;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
@@ -199,7 +199,7 @@ public abstract class GtfsTest {
     graph = new Graph();
     timetableRepository = new TimetableRepository(new SiteRepository());
     timetableRepository.initUpdaterManager(
-      new GraphUpdaterManager(GraphWriterService.NOOP, RunnableUtils.NOOP, List.of())
+      new GraphUpdaterManager(WriteToGraphCallback.noop(), RunnableUtils.NOOP, List.of())
     );
     TransferRepository transferRepository = TransferServiceTestFactory.defaultTransferRepository();
 

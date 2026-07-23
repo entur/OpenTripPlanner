@@ -138,11 +138,16 @@ public class SpeedTest {
         )
       );
     var threadFactory = java.util.concurrent.Executors.defaultThreadFactory();
-    var updateManager = TransactionFactory.createUpdateManagerWithPeriodicCommits(
+    var transitUpdateManager = TransactionFactory.createUpdateManagerWithPeriodicCommits(
       "speedtest",
       registry,
       threadFactory,
       parameters.maxSnapshotFrequency()
+    );
+    var streetUpdateManager = TransactionFactory.createUpdateManagerWithAtomicCommits(
+      "speedtest-street",
+      TransactionFactory.createRepositoryRegistry(),
+      threadFactory
     );
 
     UpdaterConfigurator.configure(
@@ -154,7 +159,8 @@ public class SpeedTest {
       new DefaultVehicleParkingRepository(),
       timetableRepository,
       new DefaultCarpoolingRepository(),
-      updateManager,
+      transitUpdateManager,
+      streetUpdateManager,
       timetableHandle,
       routerConfig.updaterConfig()
     );

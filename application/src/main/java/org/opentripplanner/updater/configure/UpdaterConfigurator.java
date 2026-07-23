@@ -28,6 +28,8 @@ import org.opentripplanner.updater.GraphWriterService;
 import org.opentripplanner.updater.UpdatersParameters;
 import org.opentripplanner.updater.alert.gtfs.GtfsRealtimeAlertsUpdater;
 import org.opentripplanner.updater.spi.GraphUpdater;
+import org.opentripplanner.updater.spi.WriteDomain;
+import org.opentripplanner.updater.spi.WriteToGraphCallbacks;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdater;
 import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdater;
@@ -60,7 +62,8 @@ public class UpdaterConfigurator {
   private final VehicleRentalRepository vehicleRentalRepository;
   private final CarpoolingRepository carpoolingRepository;
   private final VehicleParkingRepository parkingRepository;
-  private final UpdateManager updateManager;
+  private final UpdateManager transitUpdateManager;
+  private final UpdateManager streetUpdateManager;
   private final RepositoryHandle<
     ReadOnlyTimetableSnapshot,
     MutableTimetableSnapshot
@@ -78,7 +81,8 @@ public class UpdaterConfigurator {
     VehicleParkingRepository parkingRepository,
     TimetableRepository timetableRepository,
     CarpoolingRepository carpoolingRepository,
-    UpdateManager updateManager,
+    UpdateManager transitUpdateManager,
+    UpdateManager streetUpdateManager,
     RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableRepositoryHandle,
     UpdatersParameters updatersParameters
   ) {
@@ -90,7 +94,8 @@ public class UpdaterConfigurator {
     this.timetableRepository = timetableRepository;
     this.updatersParameters = updatersParameters;
     this.parkingRepository = parkingRepository;
-    this.updateManager = updateManager;
+    this.transitUpdateManager = transitUpdateManager;
+    this.streetUpdateManager = streetUpdateManager;
     this.timetableRepositoryHandle = timetableRepositoryHandle;
     this.carpoolingRepository = carpoolingRepository;
   }
@@ -104,7 +109,8 @@ public class UpdaterConfigurator {
     VehicleParkingRepository parkingRepository,
     TimetableRepository timetableRepository,
     CarpoolingRepository carpoolingRepository,
-    UpdateManager updateManager,
+    UpdateManager transitUpdateManager,
+    UpdateManager streetUpdateManager,
     RepositoryHandle<ReadOnlyTimetableSnapshot, MutableTimetableSnapshot> timetableRepositoryHandle,
     UpdatersParameters updatersParameters
   ) {
@@ -117,14 +123,15 @@ public class UpdaterConfigurator {
       parkingRepository,
       timetableRepository,
       carpoolingRepository,
-      updateManager,
+      transitUpdateManager,
+      streetUpdateManager,
       timetableRepositoryHandle,
       updatersParameters
     ).configure();
   }
 
   private void configure() {
-    List<GraphUpdater> updaters = new ArrayList<>();
+    List<GraphUpdater<?>> updaters = new ArrayList<>();
 
     updaters.addAll(createUpdatersFromConfig());
 
@@ -135,15 +142,23 @@ public class UpdaterConfigurator {
       )
     );
 
-    var graphWriterService = new GraphWriterService(
-      updateManager,
+    var transitWriterService = GraphWriterService.forTransitDomain(
+      transitUpdateManager,
       timetableRepositoryHandle,
-      graph,
       timetableRepository
     );
+    var streetWriterService = GraphWriterService.forStreetDomain(streetUpdateManager, graph);
     var updaterManager = new GraphUpdaterManager(
-      graphWriterService,
-      graphWriterService::stop,
+      new WriteToGraphCallbacks()
+        .with(WriteDomain.TRANSIT, transitWriterService)
+        .with(WriteDomain.STREET, streetWriterService),
+      () -> {
+        try {
+          transitWriterService.stop();
+        } finally {
+          streetWriterService.stop();
+        }
+      },
       updaters
     );
 
@@ -171,7 +186,7 @@ public class UpdaterConfigurator {
   /**
    * Use the online UpdaterDirectoryService to fetch VehicleRental updaters.
    */
-  private List<GraphUpdater> fetchVehicleRentalServicesFromOnlineDirectory(
+  private List<GraphUpdater<?>> fetchVehicleRentalServicesFromOnlineDirectory(
     VehicleRentalServiceDirectoryFetcherParameters parameters
   ) {
     if (parameters == null) {
@@ -187,11 +202,11 @@ public class UpdaterConfigurator {
   /**
    * @return a list of GraphUpdaters created from the configuration
    */
-  private List<GraphUpdater> createUpdatersFromConfig() {
+  private List<GraphUpdater<?>> createUpdatersFromConfig() {
     OpeningHoursCalendarService openingHoursCalendarService =
       graph.getOpeningHoursCalendarService();
 
-    List<GraphUpdater> updaters = new ArrayList<>();
+    List<GraphUpdater<?>> updaters = new ArrayList<>();
 
     if (!updatersParameters.getVehicleRentalParameters().isEmpty()) {
       int maxHttpConnections = updatersParameters.getVehicleRentalParameters().size();

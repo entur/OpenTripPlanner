@@ -5,7 +5,9 @@ import java.time.Instant;
 import java.util.List;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
+import org.opentripplanner.updater.TransitRealTimeUpdateContext;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
+import org.opentripplanner.updater.spi.WriteDomain;
 import org.opentripplanner.updater.support.siri.SiriFileLoader;
 import org.opentripplanner.updater.support.siri.SiriHttpLoader;
 import org.opentripplanner.updater.support.siri.SiriLoader;
@@ -22,7 +24,7 @@ import uk.org.siri.siri21.ServiceDelivery;
 /**
  * Update OTP stop timetables from some a Siri-ET HTTP sources.
  */
-public class SiriETCarpoolingUpdater extends PollingGraphUpdater {
+public class SiriETCarpoolingUpdater extends PollingGraphUpdater<TransitRealTimeUpdateContext> {
 
   private static final Logger LOG = LoggerFactory.getLogger(SiriETCarpoolingUpdater.class);
 
@@ -52,6 +54,11 @@ public class SiriETCarpoolingUpdater extends PollingGraphUpdater {
     LOG.info("Creating SIRI-ET updater running every {}: {}", pollingPeriod(), updateSource);
 
     this.mapper = new CarpoolSiriMapper(config.feedId());
+  }
+
+  @Override
+  public WriteDomain<TransitRealTimeUpdateContext> writeDomain() {
+    return WriteDomain.TRANSIT;
   }
 
   /**

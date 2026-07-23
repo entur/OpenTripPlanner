@@ -70,7 +70,7 @@ class ScheduledTransitLegReferenceTest {
       .build();
     TimetableRepository timetableRepository = new TimetableRepository(siteRepository);
     timetableRepository.initUpdaterManager(
-      new GraphUpdaterManager(WriteToGraphCallback.NOOP, RunnableUtils.NOOP, List.of())
+      new GraphUpdaterManager(WriteToGraphCallback.noop(), RunnableUtils.NOOP, List.of())
     );
     // build transit data
     CalendarServiceData calendarServiceData = new CalendarServiceData();

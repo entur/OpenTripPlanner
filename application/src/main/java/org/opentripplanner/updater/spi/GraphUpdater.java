@@ -19,14 +19,27 @@ package org.opentripplanner.updater.spi;
  * constructed. In this way, changes are queued up by many GraphUpdaters running in parallel on
  * different threads, but are applied sequentially in a single-threaded manner to simplify reasoning
  * about concurrent reads and writes to the Graph.
+ *
+ * @param <C> the update context of the updater's write domain, see
+ *            {@link org.opentripplanner.updater.GraphWriterRunnable}. Tied to
+ *            {@link #writeDomain()} at compile time.
  */
-public interface GraphUpdater {
+public interface GraphUpdater<C> {
   /**
    * After a GraphUpdater is instantiated, the GraphUpdaterManager that instantiated it will
    * immediately supply a callback via this method. The GraphUpdater will employ that callback
    * every time it wants to queue up a write modification to the Graph or related data structures.
    */
-  void setup(WriteToGraphCallback writeToGraphCallback);
+  void setup(WriteToGraphCallback<C> writeToGraphCallback);
+
+  /**
+   * The write domain this updater's write tasks belong to. The GraphUpdaterManager uses this to
+   * supply the callback of the right writer thread in {@link #setup(WriteToGraphCallback)}.
+   * Tasks submitted by this updater may only modify data owned by the declared domain. The
+   * return type ties the domain to the updater's context type {@code <C>}, so declaring the
+   * wrong domain is a compile error.
+   */
+  WriteDomain<C> writeDomain();
 
   /**
    * The GraphUpdaterManager will run this method in its own long-running thread. This method then
