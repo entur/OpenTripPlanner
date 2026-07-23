@@ -66,7 +66,7 @@ public class VehicleParkingUpdater extends PollingGraphUpdater<StreetRealTimeUpd
   }
 
   @Override
-  public WriteDomain writeDomain() {
+  public WriteDomain<StreetRealTimeUpdateContext> writeDomain() {
     return WriteDomain.STREET;
   }
 

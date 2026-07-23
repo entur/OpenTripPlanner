@@ -15,6 +15,7 @@ import org.opentripplanner.updater.TransitRealTimeUpdateContext;
 import org.opentripplanner.updater.alert.TransitAlertProvider;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.PollingGraphUpdaterParameters;
+import org.opentripplanner.updater.spi.WriteDomain;
 import org.opentripplanner.updater.support.siri.SiriLoader;
 import org.opentripplanner.updater.trip.UrlUpdaterParameters;
 import org.opentripplanner.updater.trip.siri.SiriFuzzyTripMatcherCache;
@@ -89,6 +90,11 @@ public class SiriSXUpdater
 
   public TransitAlertService getTransitAlertService() {
     return transitAlertService;
+  }
+
+  @Override
+  public WriteDomain<TransitRealTimeUpdateContext> writeDomain() {
+    return WriteDomain.TRANSIT;
   }
 
   @Override

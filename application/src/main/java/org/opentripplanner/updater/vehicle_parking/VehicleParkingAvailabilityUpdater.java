@@ -44,7 +44,7 @@ public class VehicleParkingAvailabilityUpdater
   }
 
   @Override
-  public WriteDomain writeDomain() {
+  public WriteDomain<StreetRealTimeUpdateContext> writeDomain() {
     return WriteDomain.STREET;
   }
 

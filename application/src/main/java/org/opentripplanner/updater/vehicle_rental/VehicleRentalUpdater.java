@@ -127,7 +127,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater<StreetRealTimeUpda
   }
 
   @Override
-  public WriteDomain writeDomain() {
+  public WriteDomain<StreetRealTimeUpdateContext> writeDomain() {
     return WriteDomain.STREET;
   }
 

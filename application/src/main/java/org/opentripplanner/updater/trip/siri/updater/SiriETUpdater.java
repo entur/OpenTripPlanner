@@ -6,6 +6,7 @@ import org.opentripplanner.updater.TransitRealTimeUpdateContext;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.ResultLogger;
 import org.opentripplanner.updater.spi.UpdateResult;
+import org.opentripplanner.updater.spi.WriteDomain;
 import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 import org.slf4j.Logger;
@@ -51,6 +52,11 @@ public class SiriETUpdater extends PollingGraphUpdater<TransitRealTimeUpdateCont
     estimatedTimetableHandler = new EstimatedTimetableHandler(adapter, feedId);
 
     this.metricsConsumer = metricsConsumer;
+  }
+
+  @Override
+  public WriteDomain<TransitRealTimeUpdateContext> writeDomain() {
+    return WriteDomain.TRANSIT;
   }
 
   /**

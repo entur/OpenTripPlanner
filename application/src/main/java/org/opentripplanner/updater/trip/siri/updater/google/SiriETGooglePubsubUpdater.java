@@ -4,6 +4,7 @@ import java.util.function.Consumer;
 import org.opentripplanner.updater.TransitRealTimeUpdateContext;
 import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.spi.UpdateResult;
+import org.opentripplanner.updater.spi.WriteDomain;
 import org.opentripplanner.updater.spi.WriteToGraphCallback;
 import org.opentripplanner.updater.trip.metrics.TripUpdateMetrics;
 import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
@@ -47,6 +48,11 @@ public class SiriETGooglePubsubUpdater implements GraphUpdater<TransitRealTimeUp
   @Override
   public void setup(WriteToGraphCallback<TransitRealTimeUpdateContext> writeToGraphCallback) {
     this.saveResultOnGraph = writeToGraphCallback;
+  }
+
+  @Override
+  public WriteDomain<TransitRealTimeUpdateContext> writeDomain() {
+    return WriteDomain.TRANSIT;
   }
 
   @Override

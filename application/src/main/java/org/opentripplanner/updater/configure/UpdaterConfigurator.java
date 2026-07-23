@@ -3,7 +3,6 @@ package org.opentripplanner.updater.configure;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
@@ -30,7 +29,7 @@ import org.opentripplanner.updater.UpdatersParameters;
 import org.opentripplanner.updater.alert.gtfs.GtfsRealtimeAlertsUpdater;
 import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.spi.WriteDomain;
-import org.opentripplanner.updater.spi.WriteToGraphCallback;
+import org.opentripplanner.updater.spi.WriteToGraphCallbacks;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdater;
 import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdater;
@@ -150,12 +149,9 @@ public class UpdaterConfigurator {
     );
     var streetWriterService = GraphWriterService.forStreetDomain(streetUpdateManager, graph);
     var updaterManager = new GraphUpdaterManager(
-      Map.<WriteDomain, WriteToGraphCallback<?>>of(
-        WriteDomain.TRANSIT,
-        transitWriterService,
-        WriteDomain.STREET,
-        streetWriterService
-      ),
+      new WriteToGraphCallbacks()
+        .with(WriteDomain.TRANSIT, transitWriterService)
+        .with(WriteDomain.STREET, streetWriterService),
       () -> {
         transitWriterService.stop();
         streetWriterService.stop();

@@ -7,6 +7,7 @@ import java.util.function.Consumer;
 import org.opentripplanner.updater.TransitRealTimeUpdateContext;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.UpdateResult;
+import org.opentripplanner.updater.spi.WriteDomain;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
@@ -63,6 +64,11 @@ public class PollingTripUpdater extends PollingGraphUpdater<TransitRealTimeUpdat
     this.recordMetrics = BatchTripUpdateMetrics.batch(parameters);
 
     LOG.info("Creating stop time updater running every {} : {}", pollingPeriod(), updateSource);
+  }
+
+  @Override
+  public WriteDomain<TransitRealTimeUpdateContext> writeDomain() {
+    return WriteDomain.TRANSIT;
   }
 
   /**

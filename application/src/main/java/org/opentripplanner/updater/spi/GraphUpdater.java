@@ -21,8 +21,8 @@ package org.opentripplanner.updater.spi;
  * about concurrent reads and writes to the Graph.
  *
  * @param <C> the update context of the updater's write domain, see
- *            {@link org.opentripplanner.updater.GraphWriterRunnable}. Must match
- *            {@link #writeDomain()}.
+ *            {@link org.opentripplanner.updater.GraphWriterRunnable}. Tied to
+ *            {@link #writeDomain()} at compile time.
  */
 public interface GraphUpdater<C> {
   /**
@@ -35,11 +35,11 @@ public interface GraphUpdater<C> {
   /**
    * The write domain this updater's write tasks belong to. The GraphUpdaterManager uses this to
    * supply the callback of the right writer thread in {@link #setup(WriteToGraphCallback)}.
-   * Tasks submitted by this updater may only modify data owned by the declared domain.
+   * Tasks submitted by this updater may only modify data owned by the declared domain. The
+   * return type ties the domain to the updater's context type {@code <C>}, so declaring the
+   * wrong domain is a compile error.
    */
-  default WriteDomain writeDomain() {
-    return WriteDomain.TRANSIT;
-  }
+  WriteDomain<C> writeDomain();
 
   /**
    * The GraphUpdaterManager will run this method in its own long-running thread. This method then

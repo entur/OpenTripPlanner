@@ -2,7 +2,6 @@ package org.opentripplanner.updater;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import java.util.ArrayList;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -17,6 +16,7 @@ import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.WriteDomain;
 import org.opentripplanner.updater.spi.WriteToGraphCallback;
+import org.opentripplanner.updater.spi.WriteToGraphCallbacks;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -55,7 +55,7 @@ public class GraphUpdaterManager implements GraphUpdaterStatus {
   private final Runnable shutdownGraphWriter;
 
   public GraphUpdaterManager(
-    Map<WriteDomain, WriteToGraphCallback<?>> writeToGraphCallbacks,
+    WriteToGraphCallbacks writeToGraphCallbacks,
     Runnable shutdownGraphWriter,
     List<GraphUpdater<?>> updaters
   ) {
@@ -82,20 +82,18 @@ public class GraphUpdaterManager implements GraphUpdaterStatus {
     Runnable shutdownGraphWriter,
     List<GraphUpdater<?>> updaters
   ) {
-    this(callbackForAllDomains(writeToGraphCallback), shutdownGraphWriter, updaters);
+    this(
+      WriteToGraphCallbacks.sameForAllDomains(writeToGraphCallback),
+      shutdownGraphWriter,
+      updaters
+    );
   }
 
   /**
-   * Pair an updater with the callback of its write domain. The cast is safe because the wiring
-   * guarantees that the callback registered for a domain produces that domain's update context,
-   * which is exactly what {@link GraphUpdater#writeDomain()} promises about {@code <C>}.
+   * Pair an updater with the callback of its write domain.
    */
-  private static <C> void setup(
-    GraphUpdater<C> updater,
-    Map<WriteDomain, WriteToGraphCallback<?>> writeToGraphCallbacks
-  ) {
-    @SuppressWarnings("unchecked")
-    var callback = (WriteToGraphCallback<C>) writeToGraphCallbacks.get(updater.writeDomain());
+  private static <C> void setup(GraphUpdater<C> updater, WriteToGraphCallbacks callbacks) {
+    var callback = callbacks.forDomain(updater.writeDomain());
     if (callback == null) {
       throw new IllegalArgumentException(
         "No WriteToGraphCallback configured for write domain %s (required by %s)".formatted(
@@ -105,16 +103,6 @@ public class GraphUpdaterManager implements GraphUpdaterStatus {
       );
     }
     updater.setup(callback);
-  }
-
-  private static Map<WriteDomain, WriteToGraphCallback<?>> callbackForAllDomains(
-    WriteToGraphCallback<?> callback
-  ) {
-    var callbacks = new EnumMap<WriteDomain, WriteToGraphCallback<?>>(WriteDomain.class);
-    for (var domain : WriteDomain.values()) {
-      callbacks.put(domain, callback);
-    }
-    return callbacks;
   }
 
   /**
