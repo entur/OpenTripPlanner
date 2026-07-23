@@ -112,10 +112,12 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     return switch (updateType) {
       case UPDATE_EXISTING -> ScheduledTripUpdate.builder(tripReference, serviceDate)
         .withFormatPolicy(gtfsPolicy)
+        .withVehicleId(tripUpdate.vehicleId().orElse(null))
         .withStopTimeUpdates(stopTimeUpdates)
         .build();
       case MODIFY_TRIP -> TripModification.builder(tripReference, serviceDate)
         .withFormatPolicy(gtfsPolicy)
+        .withVehicleId(tripUpdate.vehicleId().orElse(null))
         .withStopTimeUpdates(stopTimeUpdates)
         .withTripCreationInfo(buildTripCreationInfo(tripId, tripUpdate))
         .build();
@@ -125,6 +127,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
         buildTripCreationInfo(tripId, tripUpdate)
       )
         .withFormatPolicy(gtfsPolicy)
+        .withVehicleId(tripUpdate.vehicleId().orElse(null))
         .withStopTimeUpdates(stopTimeUpdates)
         .build();
       case CANCEL_TRIP, DELETE_TRIP, DUPLICATE_TRIP -> throw new IllegalStateException(
