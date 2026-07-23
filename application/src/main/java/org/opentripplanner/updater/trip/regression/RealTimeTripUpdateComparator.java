@@ -12,7 +12,9 @@ import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.network.TripPattern;
+import org.opentripplanner.transit.model.timetable.RealTimeTripTimes;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
+import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.utils.time.TimeUtils;
 import org.slf4j.Logger;
@@ -197,11 +199,50 @@ public class RealTimeTripUpdateComparator {
     sb.append(" tripCreation=").append(update.tripCreation());
     sb.append(" routeCreation=").append(update.routeCreation());
     sb.append(" producer=").append(update.producer());
+    sb.append(" wheelchair=").append(update.updatedTripTimes().getWheelchairAccessibility());
+    sb.append(" vehicleId=").append(vehicleId(update.updatedTripTimes()));
+    sb.append(" ").append(encodeAddedTrip(update.addedTripOnServiceDate()));
 
     sb.append(" ");
     sb.append(encodeTripTimes(update.updatedTripTimes(), update.pattern()));
 
     return sb.toString();
+  }
+
+  /**
+   * The vehicle id carried by the trip times, or {@code null} for scheduled times that cannot hold
+   * one. Only {@link RealTimeTripTimes} tracks a vehicle id.
+   */
+  @Nullable
+  private static String vehicleId(TripTimes tripTimes) {
+    if (tripTimes instanceof RealTimeTripTimes realTime) {
+      return realTime.getVehicleId().orElse(null);
+    }
+    return null;
+  }
+
+  /**
+   * Encode the added/replacement trip metadata (alteration and the list of trips it replaces) so
+   * that divergences in this data are caught, not only the {@code tripCreation} boolean.
+   */
+  private static String encodeAddedTrip(@Nullable TripOnServiceDate addedTrip) {
+    if (addedTrip == null) {
+      return "addedTrip=null";
+    }
+    var replacementFor = addedTrip
+      .getReplacementFor()
+      .stream()
+      .map(r -> r.getTrip().getId().toString())
+      .sorted()
+      .collect(Collectors.joining(",", "[", "]"));
+    return (
+      "addedTrip=" +
+      addedTrip.getTrip().getId() +
+      " alteration=" +
+      addedTrip.getTripAlteration() +
+      " replacementFor=" +
+      replacementFor
+    );
   }
 
   /**
@@ -252,6 +293,7 @@ public class RealTimeTripUpdateComparator {
     sb.append("  producer     : ").append(update.producer()).append('\n');
     sb.append("  realTimeState: ").append(summarizeTripTimesState(tripTimes)).append('\n');
     sb.append("  wheelchair   : ").append(tripTimes.getWheelchairAccessibility()).append('\n');
+    sb.append("  vehicleId    : ").append(vehicleId(tripTimes)).append('\n');
 
     var addedTrip = update.addedTripOnServiceDate();
     if (addedTrip != null) {
@@ -468,6 +510,15 @@ public class RealTimeTripUpdateComparator {
         .append(TimeUtils.timeToStrCompact(arrive))
         .append(" ")
         .append(TimeUtils.timeToStrCompact(depart));
+
+      var occupancy = tripTimes.getOccupancyStatus(i);
+      if (occupancy != null) {
+        s.append(" occ=").append(occupancy);
+      }
+      var headsign = tripTimes.getHeadsign(i);
+      if (headsign != null) {
+        s.append(" hs=").append(headsign);
+      }
     }
     return s.toString();
   }

@@ -5,9 +5,14 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
 
 import java.time.LocalDate;
+import java.util.function.UnaryOperator;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model.network.TripPattern;
+import org.opentripplanner.transit.model.timetable.OccupancyStatus;
+import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
 
@@ -86,5 +91,49 @@ class RealTimeTripUpdateComparatorTest {
       RealTimeTripUpdateComparator.encode(updateA),
       RealTimeTripUpdateComparator.encode(updateB)
     );
+  }
+
+  @Test
+  void encodeDistinguishesWheelchairAccessibility() {
+    assertNotEquals(
+      encodeRealTime(b -> b.withWheelchairAccessibility(Accessibility.POSSIBLE)),
+      encodeRealTime(b -> b.withWheelchairAccessibility(Accessibility.NOT_POSSIBLE))
+    );
+  }
+
+  @Test
+  void encodeDistinguishesVehicleId() {
+    assertNotEquals(
+      encodeRealTime(b -> b.withVehicleId("BUS-1")),
+      encodeRealTime(b -> b.withVehicleId("BUS-2"))
+    );
+  }
+
+  @Test
+  void encodeDistinguishesOccupancyStatus() {
+    assertNotEquals(
+      encodeRealTime(b -> b.withOccupancyStatus(0, OccupancyStatus.MANY_SEATS_AVAILABLE)),
+      encodeRealTime(b -> b.withOccupancyStatus(0, OccupancyStatus.FULL))
+    );
+  }
+
+  /**
+   * Build a real-time update over a fixed two-stop pattern, apply the given customization to the
+   * trip-times builder, and return its comparison encoding.
+   */
+  private static String encodeRealTime(UnaryOperator<RealTimeTripTimesBuilder> customizer) {
+    var route = TimetableRepositoryForTest.route("r1").build();
+    var stop1 = TEST_MODEL.stop("s1").build();
+    var stop2 = TEST_MODEL.stop("s2").build();
+    var stopPattern = TimetableRepositoryForTest.stopPattern(stop1, stop2);
+    var trip = TimetableRepositoryForTest.trip("trip1").build();
+    TripPattern pattern = TimetableRepositoryForTest.tripPattern("pattern1", route)
+      .withStopPattern(stopPattern)
+      .build();
+    var scheduled = ScheduledTripTimes.of().withArrivalTimes("00:00 00:01").withTrip(trip).build();
+    var builder = scheduled.createRealTimeFromScheduledTimes();
+    var tripTimes = customizer.apply(builder).build();
+    var update = RealTimeTripUpdate.of(pattern, tripTimes, SERVICE_DATE).build();
+    return RealTimeTripUpdateComparator.encode(update);
   }
 }
