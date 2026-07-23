@@ -35,7 +35,7 @@ public abstract class TransactionModule {
   ) {
     var threadFactory = new ThreadFactoryBuilder().setNameFormat("transitWriter").build();
     return TransactionFactory.createUpdateManagerWithPeriodicCommits(
-      "",
+      "transit",
       repositoryRegistry,
       threadFactory,
       timetableSnapshotParameters.maxSnapshotFrequency()
@@ -53,6 +53,12 @@ public abstract class TransactionModule {
    * The street domain has no transactional repositories yet, so commits are cheap no-ops and the
    * manager commits atomically after each task. Its value today is the dedicated writer thread:
    * the expensive vehicle-rental linking and geofencing work no longer delays timetable updates.
+   * <p>
+   * Note that a no-op commit performs no volatile write. Until street repositories join the
+   * transaction framework, cross-thread visibility of street-model mutations (edge lists,
+   * geofencing boundaries, rental and parking state) relies on the publication built into the
+   * street model itself, not on any commit fence — the same guarantees the street model gave
+   * before the write-domain split.
    */
   @Provides
   @Singleton

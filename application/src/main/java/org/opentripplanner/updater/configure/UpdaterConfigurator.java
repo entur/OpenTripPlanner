@@ -153,8 +153,11 @@ public class UpdaterConfigurator {
         .with(WriteDomain.TRANSIT, transitWriterService)
         .with(WriteDomain.STREET, streetWriterService),
       () -> {
-        transitWriterService.stop();
-        streetWriterService.stop();
+        try {
+          transitWriterService.stop();
+        } finally {
+          streetWriterService.stop();
+        }
       },
       updaters
     );

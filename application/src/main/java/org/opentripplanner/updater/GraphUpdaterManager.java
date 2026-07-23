@@ -118,7 +118,7 @@ public class GraphUpdaterManager implements GraphUpdaterStatus {
           LOG.error("Error while running updater {}:", updater.getClass().getName(), e);
         }
       };
-      if (updater instanceof PollingGraphUpdater pollingGraphUpdater) {
+      if (updater instanceof PollingGraphUpdater<?> pollingGraphUpdater) {
         LOG.info("Scheduling polling updater {}", updater);
         if (pollingGraphUpdater.runOnlyOnce()) {
           pollingUpdaterPool.schedule(runUpdater, 0, TimeUnit.SECONDS);
