@@ -143,6 +143,7 @@ public class TripCreator {
 
     // Create real-time trip times
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
+    builder.withVehicleId(resolvedUpdate.vehicleId());
     StopTimeUpdates.applyRealTimeUpdates(tripCreationInfo, builder, filteredUpdates.updates());
     // Extra journeys always retain the "added" flag, even when all stops are cancelled,
     // because they were never part of the static schedule.

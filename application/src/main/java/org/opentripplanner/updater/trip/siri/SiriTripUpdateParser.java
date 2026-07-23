@@ -111,6 +111,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         var builder = ScheduledTripUpdate.builder(tripReference, psd.serviceDate())
           .withFormatPolicy(FormatPolicy.siri())
           .withDataSource(journey.dataSource())
+          .withVehicleId(journey.vehicleRef())
           .withStopTimeUpdates(stopTimeUpdates);
         if (psd.aimedDepartureTime() != null) {
           builder.withAimedDepartureTime(psd.aimedDepartureTime());
@@ -121,6 +122,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         var builder = TripModification.builder(tripReference, psd.serviceDate())
           .withFormatPolicy(FormatPolicy.siri())
           .withDataSource(journey.dataSource())
+          .withVehicleId(journey.vehicleRef())
           .withStopTimeUpdates(stopTimeUpdates)
           .withCancellation(journey.isCancellation())
           .withExtraJourney(journey.isExtraJourney());
@@ -137,6 +139,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         var builder = TripAddition.builder(tripReference, psd.serviceDate(), creationInfo)
           .withFormatPolicy(FormatPolicy.siri())
           .withDataSource(journey.dataSource())
+          .withVehicleId(journey.vehicleRef())
           .withStopTimeUpdates(stopTimeUpdates)
           .withCancellation(journey.isCancellation());
         if (psd.aimedDepartureTime() != null) {
@@ -212,8 +215,8 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     // For RAIL trips, extract VehicleRef as internal planning code for fuzzy matching.
     // BNR producer sends numeric DatedVehicleJourneyRef values that don't match trip IDs,
     // but the VehicleRef corresponds to Trip.netexInternalPlanningCode.
-    if (journey.internalPlanningCode() != null && journey.isRail()) {
-      builder.withInternalPlanningCode(journey.internalPlanningCode());
+    if (journey.vehicleRef() != null && journey.isRail()) {
+      builder.withInternalPlanningCode(journey.vehicleRef());
     }
 
     if (journey.directionRef() != null) {

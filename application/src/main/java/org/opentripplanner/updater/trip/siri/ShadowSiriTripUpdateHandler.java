@@ -10,6 +10,7 @@ import java.io.StringWriter;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.updater.spi.UpdateError;
@@ -19,6 +20,7 @@ import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.regression.RealTimeTripUpdateComparator;
 import org.opentripplanner.updater.trip.regression.RecordingTimetableSnapshot;
+import org.opentripplanner.updater.trip.siri.support.TripReferenceHelper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
@@ -105,7 +107,7 @@ class ShadowSiriTripUpdateHandler implements SiriTripUpdateHandler {
     List<UpdateSuccess> successes,
     List<UpdateError> errors
   ) {
-    var tripId = DebugString.of(journey);
+    var tripId = Objects.toString(TripReferenceHelper.tripReference(journey), "<unknown trip>");
 
     // 1. SHADOW FIRST: parse + apply but do NOT write to buffer
     RealTimeTripUpdate shadowRecord = null;
@@ -173,7 +175,7 @@ class ShadowSiriTripUpdateHandler implements SiriTripUpdateHandler {
 
   /**
    * Serialize an {@link EstimatedVehicleJourney} to XML using JAXB. Falls back to
-   * {@link DebugString#of} if JAXB marshalling fails.
+   * {@link TripReferenceHelper#tripReference} if JAXB marshalling fails.
    */
   static String serializeSiriJourney(EstimatedVehicleJourney journey) {
     if (JAXB_CONTEXT != null) {
@@ -185,10 +187,10 @@ class ShadowSiriTripUpdateHandler implements SiriTripUpdateHandler {
         marshaller.marshal(journey, writer);
         return writer.toString();
       } catch (JAXBException e) {
-        LOG.debug("JAXB marshalling failed, falling back to DebugString", e);
+        LOG.debug("JAXB marshalling failed, falling back to the trip reference", e);
       }
     }
-    return DebugString.of(journey);
+    return Objects.toString(TripReferenceHelper.tripReference(journey), "<unknown trip>");
   }
 
   @Nullable

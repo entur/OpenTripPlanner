@@ -25,6 +25,9 @@ public final class ResolvedExistingTrip {
   @Nullable
   private final String dataSource;
 
+  @Nullable
+  private final String vehicleId;
+
   private final boolean hasStopSequences;
   private final boolean cancellation;
   private final boolean extraJourney;
@@ -48,6 +51,7 @@ public final class ResolvedExistingTrip {
     this.formatPolicy = parsedUpdate.formatPolicy();
     this.tripCreationInfo = parsedUpdate.tripCreationInfo();
     this.dataSource = parsedUpdate.dataSource();
+    this.vehicleId = parsedUpdate.vehicleId();
     this.hasStopSequences = parsedUpdate.hasStopSequences();
     this.cancellation = parsedUpdate instanceof TripModification pmt ? pmt.isCancellation() : false;
     this.extraJourney = parsedUpdate instanceof TripModification pmt2
@@ -130,6 +134,11 @@ public final class ResolvedExistingTrip {
   @Nullable
   public String dataSource() {
     return dataSource;
+  }
+
+  @Nullable
+  public String vehicleId() {
+    return vehicleId;
   }
 
   public boolean hasStopSequences() {

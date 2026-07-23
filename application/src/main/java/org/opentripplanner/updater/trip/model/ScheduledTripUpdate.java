@@ -30,13 +30,17 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
   @Nullable
   private final String dataSource;
 
+  @Nullable
+  private final String vehicleId;
+
   ScheduledTripUpdate(
     TripReference tripReference,
     @Nullable LocalDate serviceDate,
     @Nullable ZonedDateTime aimedDepartureTime,
     List<ParsedStopTimeUpdate> stopTimeUpdates,
     FormatPolicy formatPolicy,
-    @Nullable String dataSource
+    @Nullable String dataSource,
+    @Nullable String vehicleId
   ) {
     this.tripReference = Objects.requireNonNull(tripReference);
     ParsedTripUpdate.validateServiceDateAvailable(tripReference, serviceDate, aimedDepartureTime);
@@ -45,6 +49,7 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
     this.stopTimeUpdates = stopTimeUpdates != null ? List.copyOf(stopTimeUpdates) : List.of();
     this.formatPolicy = Objects.requireNonNull(formatPolicy);
     this.dataSource = dataSource;
+    this.vehicleId = vehicleId;
   }
 
   public static Builder builder(TripReference tripReference, @Nullable LocalDate serviceDate) {
@@ -85,6 +90,12 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
   }
 
   @Override
+  @Nullable
+  public String vehicleId() {
+    return vehicleId;
+  }
+
+  @Override
   public String toString() {
     return (
       "ScheduledTripUpdate{" +
@@ -111,6 +122,9 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
 
     @Nullable
     private String dataSource;
+
+    @Nullable
+    private String vehicleId;
 
     private Builder(TripReference tripReference, @Nullable LocalDate serviceDate) {
       this.tripReference = Objects.requireNonNull(tripReference);
@@ -142,6 +156,11 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
       return this;
     }
 
+    public Builder withVehicleId(@Nullable String vehicleId) {
+      this.vehicleId = vehicleId;
+      return this;
+    }
+
     public ScheduledTripUpdate build() {
       return new ScheduledTripUpdate(
         tripReference,
@@ -149,7 +168,8 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
         aimedDepartureTime,
         stopTimeUpdates,
         formatPolicy,
-        dataSource
+        dataSource,
+        vehicleId
       );
     }
   }

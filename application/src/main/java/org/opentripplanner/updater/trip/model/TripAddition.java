@@ -33,6 +33,9 @@ public final class TripAddition implements ParsedTripUpdate {
   @Nullable
   private final String dataSource;
 
+  @Nullable
+  private final String vehicleId;
+
   private final boolean cancellation;
 
   TripAddition(
@@ -43,6 +46,7 @@ public final class TripAddition implements ParsedTripUpdate {
     TripCreationInfo tripCreationInfo,
     FormatPolicy formatPolicy,
     @Nullable String dataSource,
+    @Nullable String vehicleId,
     boolean cancellation
   ) {
     this.tripReference = Objects.requireNonNull(tripReference);
@@ -56,6 +60,7 @@ public final class TripAddition implements ParsedTripUpdate {
     );
     this.formatPolicy = Objects.requireNonNull(formatPolicy);
     this.dataSource = dataSource;
+    this.vehicleId = vehicleId;
     this.cancellation = cancellation;
   }
 
@@ -102,6 +107,12 @@ public final class TripAddition implements ParsedTripUpdate {
     return dataSource;
   }
 
+  @Override
+  @Nullable
+  public String vehicleId() {
+    return vehicleId;
+  }
+
   /** Whether this added (extra) journey is cancelled, i.e. added in cancelled state. */
   public boolean cancellation() {
     return cancellation;
@@ -131,6 +142,9 @@ public final class TripAddition implements ParsedTripUpdate {
 
     @Nullable
     private String dataSource;
+
+    @Nullable
+    private String vehicleId;
 
     private boolean cancellation = false;
 
@@ -169,6 +183,11 @@ public final class TripAddition implements ParsedTripUpdate {
       return this;
     }
 
+    public Builder withVehicleId(@Nullable String vehicleId) {
+      this.vehicleId = vehicleId;
+      return this;
+    }
+
     public Builder withCancellation(boolean cancellation) {
       this.cancellation = cancellation;
       return this;
@@ -183,6 +202,7 @@ public final class TripAddition implements ParsedTripUpdate {
         tripCreationInfo,
         formatPolicy,
         dataSource,
+        vehicleId,
         cancellation
       );
     }

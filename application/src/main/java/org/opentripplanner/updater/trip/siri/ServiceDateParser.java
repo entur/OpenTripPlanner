@@ -40,13 +40,11 @@ public class ServiceDateParser {
     if (
       vehicleJourneyIdAndServiceDate != null && vehicleJourneyIdAndServiceDate.serviceDate() != null
     ) {
-      try {
-        return new ParsedServiceDate(
-          LocalDate.parse(vehicleJourneyIdAndServiceDate.serviceDate()),
-          tripOnServiceDateId,
-          null
-        );
-      } catch (Exception ignored) {}
+      return new ParsedServiceDate(
+        vehicleJourneyIdAndServiceDate.serviceDate(),
+        tripOnServiceDateId,
+        null
+      );
     }
 
     // Always extract aimedDepartureTime as a fallback for service date resolution.

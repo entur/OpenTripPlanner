@@ -35,6 +35,7 @@ public class AddedTripUpdater {
 
     // Create real-time trip times from the baseline times
     var builder = tripTimes.createRealTimeFromScheduledTimes();
+    builder.withVehicleId(resolvedUpdate.vehicleId());
     // A journey-level cancellation of an already-added trip is a clean cancellation: keep the
     // scheduled times and do not re-apply the real-time call data, so the previously applied
     // real-time flags are dropped (matching the legacy ModifiedTripBuilder.cancelTrip behaviour).

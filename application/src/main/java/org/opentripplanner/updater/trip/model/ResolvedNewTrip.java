@@ -26,6 +26,9 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
   @Nullable
   private final String dataSource;
 
+  @Nullable
+  private final String vehicleId;
+
   private final LocalDate serviceDate;
   private final List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates;
   private final boolean cancellation;
@@ -38,6 +41,7 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
     this.formatPolicy = parsedUpdate.formatPolicy();
     this.tripCreationInfo = parsedUpdate.tripCreationInfo();
     this.dataSource = parsedUpdate.dataSource();
+    this.vehicleId = parsedUpdate.vehicleId();
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
     this.resolvedStopTimeUpdates = Objects.requireNonNull(
       resolvedStopTimeUpdates,
@@ -82,5 +86,10 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
   @Nullable
   public String dataSource() {
     return dataSource;
+  }
+
+  @Nullable
+  public String vehicleId() {
+    return vehicleId;
   }
 }

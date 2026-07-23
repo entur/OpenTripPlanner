@@ -33,6 +33,9 @@ public final class TripModification implements ExistingTripUpdate {
   @Nullable
   private final String dataSource;
 
+  @Nullable
+  private final String vehicleId;
+
   private final boolean cancellation;
 
   private final boolean extraJourney;
@@ -45,6 +48,7 @@ public final class TripModification implements ExistingTripUpdate {
     @Nullable TripCreationInfo tripCreationInfo,
     FormatPolicy formatPolicy,
     @Nullable String dataSource,
+    @Nullable String vehicleId,
     boolean cancellation,
     boolean extraJourney
   ) {
@@ -56,6 +60,7 @@ public final class TripModification implements ExistingTripUpdate {
     this.tripCreationInfo = tripCreationInfo;
     this.formatPolicy = Objects.requireNonNull(formatPolicy);
     this.dataSource = dataSource;
+    this.vehicleId = vehicleId;
     this.cancellation = cancellation;
     this.extraJourney = extraJourney;
   }
@@ -117,6 +122,12 @@ public final class TripModification implements ExistingTripUpdate {
   }
 
   @Override
+  @Nullable
+  public String vehicleId() {
+    return vehicleId;
+  }
+
+  @Override
   public String toString() {
     return (
       "TripModification{" +
@@ -151,6 +162,9 @@ public final class TripModification implements ExistingTripUpdate {
 
     @Nullable
     private String dataSource;
+
+    @Nullable
+    private String vehicleId;
 
     private boolean cancellation = false;
 
@@ -191,6 +205,11 @@ public final class TripModification implements ExistingTripUpdate {
       return this;
     }
 
+    public Builder withVehicleId(@Nullable String vehicleId) {
+      this.vehicleId = vehicleId;
+      return this;
+    }
+
     public Builder withCancellation(boolean cancellation) {
       this.cancellation = cancellation;
       return this;
@@ -210,6 +229,7 @@ public final class TripModification implements ExistingTripUpdate {
         tripCreationInfo,
         formatPolicy,
         dataSource,
+        vehicleId,
         cancellation,
         extraJourney
       );
