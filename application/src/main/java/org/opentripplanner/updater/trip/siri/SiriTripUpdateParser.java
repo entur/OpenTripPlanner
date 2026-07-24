@@ -14,7 +14,6 @@ import javax.annotation.Nullable;
 import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.timetable.OccupancyStatus;
 import org.opentripplanner.updater.spi.UpdateException;
@@ -388,14 +387,12 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     }
   }
 
-  // Capture the pick/drop intent of each call end without the scheduled pattern's values, which
-  // the parser doesn't have. The wrapper's PickDropChange normalizes the SIRI boarding activity;
-  // resolving it against a non-routable placeholder yields the pure routability intent
-  // (SCHEDULED/NONE/CANCELLED). The apply side's PickDropPolicy then reconciles this intent against
-  // the actual scheduled pickup/dropoff from the pattern.
+  // Capture the pick/drop intent of each call end. The parser has no scheduled pattern, so it
+  // records the raw routability intent the SIRI message reports (SCHEDULED/NONE/CANCELLED); the
+  // apply side's PickDropPolicy reconciles it against the actual scheduled pickup/dropoff.
   private void parsePickDropTypes(CallWrapper call, ParsedStopTimeUpdate.Builder builder) {
-    call.dropOff().applyTo(PickDrop.NONE).ifPresent(builder::withDropoff);
-    call.pickUp().applyTo(PickDrop.NONE).ifPresent(builder::withPickup);
+    call.dropOff().intent().ifPresent(builder::withDropoff);
+    call.pickUp().intent().ifPresent(builder::withPickup);
   }
 
   @Nullable
