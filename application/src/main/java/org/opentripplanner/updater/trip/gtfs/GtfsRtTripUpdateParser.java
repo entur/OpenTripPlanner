@@ -14,7 +14,8 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.transit.model.timetable.Direction;
+import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
+import org.opentripplanner.gtfs.mapping.DirectionMapper;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.TripUpdateParser;
@@ -51,6 +52,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
   private final String feedId;
   private final ZoneId timeZone;
   private final Supplier<LocalDate> localDateNow;
+  private final DirectionMapper directionMapper = new DirectionMapper(DataImportIssueStore.NOOP);
 
   public GtfsRtTripUpdateParser(
     ForwardsDelayPropagationType forwardsDelayPropagationType,
@@ -169,7 +171,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     tripUpdate
       .descriptor()
       .directionId()
-      .ifPresent(dirId -> builder.withDirection(Direction.ofGtfsCode(dirId)));
+      .ifPresent(dirId -> builder.withDirection(directionMapper.map(dirId)));
 
     return builder.build();
   }

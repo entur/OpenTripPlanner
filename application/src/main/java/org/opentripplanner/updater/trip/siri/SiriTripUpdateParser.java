@@ -218,15 +218,6 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       builder.withInternalPlanningCode(journey.vehicleRef());
     }
 
-    if (journey.directionRef() != null) {
-      try {
-        int directionInt = Integer.parseInt(journey.directionRef());
-        builder.withDirection(
-          org.opentripplanner.transit.model.timetable.Direction.ofGtfsCode(directionInt)
-        );
-      } catch (NumberFormatException ignored) {}
-    }
-
     return builder.build();
   }
 
