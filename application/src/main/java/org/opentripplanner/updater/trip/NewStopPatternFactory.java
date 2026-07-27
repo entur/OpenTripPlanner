@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip;
 
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.network.StopPattern;
@@ -9,7 +10,9 @@ import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.updater.trip.model.AbsoluteTimeUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
+import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.policy.FirstLastStopTimePolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,15 +69,13 @@ public final class NewStopPatternFactory {
       boolean isLastStop = (i == stopTimeUpdates.size() - 1);
 
       // Get departure time first (needed for arrival fallback)
-      Integer departureTime = null;
-      if (stopUpdate.hasDepartureUpdate()) {
-        departureTime = stopUpdate.departureUpdate().resolveScheduledOrFallback();
-      }
+      Integer departureTime = aimedTime(stopUpdate.departureUpdate());
 
       // Get arrival time - use scheduled time if available, otherwise fallback to departure
       // This matches StopTimesMapper: aimedArrivalTime ?? aimedDepartureTime
-      if (stopUpdate.hasArrivalUpdate()) {
-        stopTime.setArrivalTime(stopUpdate.arrivalUpdate().resolveScheduledOrFallback());
+      Integer arrivalTime = aimedTime(stopUpdate.arrivalUpdate());
+      if (arrivalTime != null) {
+        stopTime.setArrivalTime(arrivalTime);
       } else if (departureTime != null) {
         // Fallback: use departure time as arrival (matches old StopTimesMapper logic)
         stopTime.setArrivalTime(departureTime);
@@ -125,5 +126,16 @@ public final class NewStopPatternFactory {
 
     var stopPattern = new StopPattern(stopTimes);
     return new StopTimesAndPattern(stopTimes, stopPattern);
+  }
+
+  /**
+   * The time to place a stop of a new pattern at, or {@code null} if the update does not carry
+   * one. A new pattern has no scheduled timetable, so a delay-based update - which is only
+   * meaningful relative to such a timetable - contributes nothing here and the caller falls back
+   * to the neighbouring times.
+   */
+  @Nullable
+  private static Integer aimedTime(@Nullable TimeUpdate update) {
+    return update instanceof AbsoluteTimeUpdate absolute ? absolute.aimedTimeOrActual() : null;
   }
 }

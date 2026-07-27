@@ -9,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.google.transit.realtime.GtfsRealtime;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.accessibility.Accessibility;
@@ -16,6 +17,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.model.AbsoluteTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTimeUpdate;
 import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
@@ -76,10 +78,8 @@ class GtfsRtTripUpdateParserTest {
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertEquals(new FeedScopedId(FEED_ID, "stop1"), stopUpdate.stopReference().stopId());
     assertEquals(0, stopUpdate.stopSequence());
-    assertNotNull(stopUpdate.arrivalUpdate());
-    assertEquals(60, asTimeUpdate(stopUpdate.arrivalUpdate()).delaySeconds());
-    assertNotNull(stopUpdate.departureUpdate());
-    assertEquals(120, asTimeUpdate(stopUpdate.departureUpdate()).delaySeconds());
+    assertEquals(TimeUpdate.ofDelay(60), stopUpdate.arrivalUpdate());
+    assertEquals(TimeUpdate.ofDelay(120), stopUpdate.departureUpdate());
   }
 
   @Test
@@ -144,15 +144,9 @@ class GtfsRtTripUpdateParserTest {
     assertEquals(1, parsed.stopTimeUpdates().size());
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.arrivalUpdate());
-    assertEquals(
-      30600,
-      asTimeUpdate(stopUpdate.arrivalUpdate()).absoluteTimeSecondsSinceMidnight()
-    );
+    assertEquals(30600, asAbsolute(stopUpdate.arrivalUpdate()).time());
     assertNotNull(stopUpdate.departureUpdate());
-    assertEquals(
-      30660,
-      asTimeUpdate(stopUpdate.departureUpdate()).absoluteTimeSecondsSinceMidnight()
-    );
+    assertEquals(30660, asAbsolute(stopUpdate.departureUpdate()).time());
   }
 
   @Test
@@ -390,24 +384,12 @@ class GtfsRtTripUpdateParserTest {
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.arrivalUpdate());
-    assertEquals(
-      30600,
-      asTimeUpdate(stopUpdate.arrivalUpdate()).absoluteTimeSecondsSinceMidnight()
-    );
-    assertEquals(
-      30000,
-      asTimeUpdate(stopUpdate.arrivalUpdate()).scheduledTimeSecondsSinceMidnight()
-    );
+    assertEquals(30600, asAbsolute(stopUpdate.arrivalUpdate()).time());
+    assertEquals(30000, asAbsolute(stopUpdate.arrivalUpdate()).aimedTime());
 
     assertNotNull(stopUpdate.departureUpdate());
-    assertEquals(
-      30660,
-      asTimeUpdate(stopUpdate.departureUpdate()).absoluteTimeSecondsSinceMidnight()
-    );
-    assertEquals(
-      30060,
-      asTimeUpdate(stopUpdate.departureUpdate()).scheduledTimeSecondsSinceMidnight()
-    );
+    assertEquals(30660, asAbsolute(stopUpdate.departureUpdate()).time());
+    assertEquals(30060, asAbsolute(stopUpdate.departureUpdate()).aimedTime());
   }
 
   @Test
@@ -450,7 +432,7 @@ class GtfsRtTripUpdateParserTest {
     );
   }
 
-  private static TimeUpdate asTimeUpdate(ParsedTimeUpdate parsedTimeUpdate) {
-    return (TimeUpdate) parsedTimeUpdate;
+  private static AbsoluteTimeUpdate asAbsolute(@Nullable ParsedTimeUpdate parsedTimeUpdate) {
+    return assertInstanceOf(AbsoluteTimeUpdate.class, parsedTimeUpdate);
   }
 }

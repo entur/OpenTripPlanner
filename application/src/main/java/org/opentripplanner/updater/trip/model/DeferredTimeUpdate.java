@@ -42,7 +42,7 @@ public final class DeferredTimeUpdate implements ParsedTimeUpdate {
   }
 
   @Override
-  public TimeUpdate resolve(LocalDate serviceDate, ZoneId timeZone) {
+  public AbsoluteTimeUpdate resolve(LocalDate serviceDate, ZoneId timeZone) {
     ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(serviceDate, timeZone);
     int absoluteSeconds = ServiceDateUtils.secondsSinceStartOfService(startOfService, actualTime);
     Integer scheduledSeconds = scheduledTime != null

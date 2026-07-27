@@ -212,11 +212,7 @@ public final class ParsedStopTimeUpdate {
    */
   @Nullable
   public Integer resolveScheduledArrivalSeconds(LocalDate serviceDate, ZoneId timeZone) {
-    if (!hasArrivalUpdate()) {
-      return null;
-    }
-    TimeUpdate resolved = arrivalUpdate.resolve(serviceDate, timeZone);
-    return resolved.scheduledTimeSecondsSinceMidnight();
+    return resolveAimedSeconds(arrivalUpdate, serviceDate, timeZone);
   }
 
   /**
@@ -224,11 +220,25 @@ public final class ParsedStopTimeUpdate {
    */
   @Nullable
   public Integer resolveScheduledDepartureSeconds(LocalDate serviceDate, ZoneId timeZone) {
-    if (!hasDepartureUpdate()) {
+    return resolveAimedSeconds(departureUpdate, serviceDate, timeZone);
+  }
+
+  /**
+   * The aimed time reported by the feed, or null if there is no update or the update is
+   * delay-based - a delay carries no aimed time of its own.
+   */
+  @Nullable
+  private static Integer resolveAimedSeconds(
+    @Nullable ParsedTimeUpdate update,
+    LocalDate serviceDate,
+    ZoneId timeZone
+  ) {
+    if (update == null) {
       return null;
     }
-    TimeUpdate resolved = departureUpdate.resolve(serviceDate, timeZone);
-    return resolved.scheduledTimeSecondsSinceMidnight();
+    return update.resolve(serviceDate, timeZone) instanceof AbsoluteTimeUpdate absolute
+      ? absolute.aimedTime()
+      : null;
   }
 
   @Override

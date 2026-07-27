@@ -10,17 +10,18 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.LocalTimeParser;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.model.AbsoluteTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ParsedTimeUpdate;
 import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.StopResolutionStrategy;
-import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripAddition;
 import org.opentripplanner.updater.trip.model.TripCancellation;
 import org.opentripplanner.updater.trip.model.TripModification;
@@ -314,15 +315,8 @@ class SiriTripUpdateParserTest {
 
     var stopUpdate = parsed.stopTimeUpdates().get(0);
 
-    assertNotNull(stopUpdate.arrivalUpdate());
-    assertNotNull(asTimeUpdate(stopUpdate.arrivalUpdate()).absoluteTimeSecondsSinceMidnight());
-    assertNotNull(asTimeUpdate(stopUpdate.arrivalUpdate()).scheduledTimeSecondsSinceMidnight());
-    assertNull(asTimeUpdate(stopUpdate.arrivalUpdate()).delaySeconds());
-
-    assertNotNull(stopUpdate.departureUpdate());
-    assertNotNull(asTimeUpdate(stopUpdate.departureUpdate()).absoluteTimeSecondsSinceMidnight());
-    assertNotNull(asTimeUpdate(stopUpdate.departureUpdate()).scheduledTimeSecondsSinceMidnight());
-    assertNull(asTimeUpdate(stopUpdate.departureUpdate()).delaySeconds());
+    assertNotNull(asAbsolute(stopUpdate.arrivalUpdate()).aimedTime());
+    assertNotNull(asAbsolute(stopUpdate.departureUpdate()).aimedTime());
   }
 
   @Test
@@ -440,8 +434,8 @@ class SiriTripUpdateParserTest {
     assertNotNull(firstStop.departureUpdate());
 
     assertEquals(
-      asTimeUpdate(firstStop.departureUpdate()).absoluteTimeSecondsSinceMidnight(),
-      asTimeUpdate(firstStop.arrivalUpdate()).absoluteTimeSecondsSinceMidnight(),
+      asAbsolute(firstStop.departureUpdate()).time(),
+      asAbsolute(firstStop.arrivalUpdate()).time(),
       "First stop arrival should fallback to departure time"
     );
   }
@@ -476,8 +470,8 @@ class SiriTripUpdateParserTest {
     );
 
     assertEquals(
-      asTimeUpdate(lastStop.arrivalUpdate()).absoluteTimeSecondsSinceMidnight(),
-      asTimeUpdate(lastStop.departureUpdate()).absoluteTimeSecondsSinceMidnight(),
+      asAbsolute(lastStop.arrivalUpdate()).time(),
+      asAbsolute(lastStop.departureUpdate()).time(),
       "Last stop departure should fallback to arrival time"
     );
   }
@@ -536,8 +530,8 @@ class SiriTripUpdateParserTest {
     assertNotNull(singleStop.departureUpdate());
 
     assertEquals(
-      asTimeUpdate(singleStop.departureUpdate()).absoluteTimeSecondsSinceMidnight(),
-      asTimeUpdate(singleStop.arrivalUpdate()).absoluteTimeSecondsSinceMidnight(),
+      asAbsolute(singleStop.departureUpdate()).time(),
+      asAbsolute(singleStop.arrivalUpdate()).time(),
       "Single stop arrival should fallback to departure time"
     );
   }
@@ -568,8 +562,8 @@ class SiriTripUpdateParserTest {
     assertNotNull(lastStop.arrivalUpdate());
   }
 
-  private static TimeUpdate asTimeUpdate(ParsedTimeUpdate parsedTimeUpdate) {
-    return (TimeUpdate) parsedTimeUpdate;
+  private static AbsoluteTimeUpdate asAbsolute(@Nullable ParsedTimeUpdate parsedTimeUpdate) {
+    return assertInstanceOf(AbsoluteTimeUpdate.class, parsedTimeUpdate);
   }
 
   @Test

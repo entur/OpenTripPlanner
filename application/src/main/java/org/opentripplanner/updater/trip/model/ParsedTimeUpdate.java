@@ -10,7 +10,8 @@ import java.time.ZoneId;
  * <p>
  * Implementations:
  * <ul>
- *   <li>{@link TimeUpdate} - Already resolved time (delay-based or absolute)</li>
+ *   <li>{@link TimeUpdate} - Already resolved time, either {@link DelayUpdate} or
+ *       {@link AbsoluteTimeUpdate}</li>
  *   <li>{@link DeferredTimeUpdate} - Raw ZonedDateTime requiring service date for resolution</li>
  * </ul>
  */
