@@ -22,7 +22,7 @@ public class AddNewTripValidator {
   private static final Logger LOG = LoggerFactory.getLogger(AddNewTripValidator.class);
 
   public void validate(ResolvedTripCreation resolvedUpdate) {
-    var tripId = resolvedUpdate.tripCreationInfo().tripId();
+    var tripId = resolvedUpdate.tripId();
     var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
 
     // FAIL mode: strict validation - fail on unknown stops

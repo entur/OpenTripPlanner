@@ -22,12 +22,7 @@ public final class ResolvedTripCreation extends ResolvedNewTrip {
   @Override
   public String toString() {
     return (
-      "ResolvedTripCreation{" +
-      "tripId=" +
-      tripCreationInfo().tripId() +
-      ", serviceDate=" +
-      serviceDate() +
-      '}'
+      "ResolvedTripCreation{" + "tripId=" + tripId() + ", serviceDate=" + serviceDate() + '}'
     );
   }
 }

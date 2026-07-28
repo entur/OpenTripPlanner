@@ -127,7 +127,7 @@ public class TripModifier {
 
     // If the SIRI message carries a trip-level cancellation flag (e.g. extra call + cancellation),
     // mark the trip as cancelled on the modified pattern.
-    if (resolvedUpdate.isCancellation()) {
+    if (resolvedUpdate.isCancelledAtJourneyLevel()) {
       builder.withCanceled();
     }
 

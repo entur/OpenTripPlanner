@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.updater.trip.StopTimeUpdates;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
@@ -54,20 +56,31 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
     return serviceDate;
   }
 
+  /** The id of the trip this update adds. */
+  public FeedScopedId tripId() {
+    return tripCreationInfo.tripId();
+  }
+
   /**
-   * Returns true if every stop in the update is cancelled/skipped.
-   * When true, the trip should be treated as implicitly cancelled at the trip level.
+   * Whether the message cancels the journey as a whole. A cancelled extra journey is still added,
+   * but in cancelled state.
    */
-  public boolean isAllStopsCancelled() {
+  public boolean isCancelledAtJourneyLevel() {
+    return cancellation;
+  }
+
+  /**
+   * Whether every stop of the journey is cancelled/skipped, which cancels the trip implicitly.
+   */
+  public boolean isCancelledAtEveryStop() {
     return ResolvedStopTimeUpdate.allSkipped(resolvedStopTimeUpdates);
   }
 
   /**
-   * Whether the journey is cancelled at the trip level. A cancelled extra journey is still added,
-   * but in cancelled state.
+   * Whether the added trip does not run, be it cancelled as a whole or at every one of its stops.
    */
-  public boolean isCancellation() {
-    return cancellation;
+  public boolean isCancelled() {
+    return isCancelledAtJourneyLevel() || isCancelledAtEveryStop();
   }
 
   /** The behavioural {@link FormatPolicy} for this update, chosen once at the parser boundary. */
@@ -75,8 +88,19 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
     return formatPolicy;
   }
 
+  /** The calls of the added trip as they arrived, including calls at unknown stops. */
   public List<ResolvedStopTimeUpdate> stopTimeUpdates() {
     return resolvedStopTimeUpdates;
+  }
+
+  /**
+   * The calls of the added trip that reference a stop known to the transit model, together with the
+   * warnings raised by dropping the others. Calls at unknown stops are only dropped in IGNORE mode -
+   * in FAIL mode the {@link org.opentripplanner.updater.trip.AddNewTripValidator} rejects the update
+   * before the trip is built.
+   */
+  public StopTimeUpdates.FilteredStopTimeUpdates stopTimeUpdatesWithKnownStops() {
+    return StopTimeUpdates.filterUnknownStops(resolvedStopTimeUpdates);
   }
 
   public TripCreationInfo tripCreationInfo() {

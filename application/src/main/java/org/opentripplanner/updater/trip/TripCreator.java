@@ -59,7 +59,7 @@ public class TripCreator {
     validator.validate(resolvedUpdate);
     var tripCreationInfo = resolvedUpdate.tripCreationInfo();
     LocalDate serviceDate = resolvedUpdate.serviceDate();
-    FeedScopedId tripId = tripCreationInfo.tripId();
+    FeedScopedId tripId = resolvedUpdate.tripId();
 
     // Get or create service ID for this date
     FeedScopedId serviceId = transitService.getOrCreateServiceIdForDate(serviceDate);
@@ -69,8 +69,7 @@ public class TripCreator {
     }
 
     // Filter stop time updates (GTFS-RT: filter unknown stops, SIRI: fail on unknown stops)
-    var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
-    var filteredUpdates = StopTimeUpdates.filterUnknownStops(stopTimeUpdates);
+    var filteredUpdates = resolvedUpdate.stopTimeUpdatesWithKnownStops();
 
     // Check minimum stops
     if (filteredUpdates.updates().size() < 2) {
@@ -148,7 +147,7 @@ public class TripCreator {
     // Extra journeys always retain the "added" flag, even when all stops are cancelled,
     // because they were never part of the static schedule.
     builder.withAdded();
-    if (resolvedUpdate.isCancellation() || resolvedUpdate.isAllStopsCancelled()) {
+    if (resolvedUpdate.isCancelled()) {
       builder.withCanceled();
     }
 

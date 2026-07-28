@@ -111,11 +111,10 @@ public final class ResolvedExistingTrip {
   }
 
   /**
-   * Returns true if every stop in the update is cancelled/skipped and the number of
-   * stop updates covers the full pattern. When true, the trip should be treated as
-   * implicitly cancelled at the trip level.
+   * Whether every stop of the trip is cancelled/skipped, which cancels the trip implicitly. The
+   * stop updates must cover the full pattern: a partial update only cancels the stops it mentions.
    */
-  public boolean isAllStopsCancelled() {
+  public boolean isCancelledAtEveryStop() {
     return (
       ResolvedStopTimeUpdate.allSkipped(resolvedStopTimeUpdates) &&
       resolvedStopTimeUpdates.size() == pattern.numberOfStops()
@@ -146,11 +145,11 @@ public final class ResolvedExistingTrip {
   }
 
   /**
-   * Returns true if this update carries a trip-level cancellation flag (SIRI {@code isCancellation=true}).
+   * Whether the message cancels the journey as a whole (SIRI {@code isCancellation=true}).
    * Used by {@link org.opentripplanner.updater.trip.TripModifier} to mark the trip
    * as cancelled on the modified pattern (e.g. extra call with cancellation).
    */
-  public boolean isCancellation() {
+  public boolean isCancelledAtJourneyLevel() {
     return cancellation;
   }
 

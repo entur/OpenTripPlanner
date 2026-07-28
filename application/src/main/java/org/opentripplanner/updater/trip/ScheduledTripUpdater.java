@@ -70,7 +70,7 @@ public class ScheduledTripUpdater {
     builder.withVehicleId(resolvedUpdate.vehicleId());
 
     // If all stops are cancelled, treat as implicit trip-level cancellation (avoid MODIFIED state)
-    if (resolvedUpdate.isAllStopsCancelled()) {
+    if (resolvedUpdate.isCancelledAtEveryStop()) {
       builder.withCanceled();
       var realTimeTripUpdate = RealTimeTripUpdate.of(scheduledPattern, builder.build(), serviceDate)
         .withProducer(resolvedUpdate.dataSource())
