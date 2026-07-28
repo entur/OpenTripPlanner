@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.TransitMode;
@@ -33,7 +32,6 @@ class TripCreationInfoTest {
     assertNull(info.mode());
     assertNull(info.submode());
     assertNull(info.operatorId());
-    assertNull(info.wheelchairAccessibility());
     assertTrue(info.replacedTrips().isEmpty());
     assertFalse(info.requiresRouteCreation());
   }
@@ -58,7 +56,6 @@ class TripCreationInfoTest {
       .withMode(TransitMode.BUS)
       .withSubmode("localBus")
       .withOperatorId(OPERATOR_ID)
-      .withWheelchairAccessibility(Accessibility.POSSIBLE)
       .withReplacedTrips(List.of(replacedTripId))
       .build();
 
@@ -71,7 +68,6 @@ class TripCreationInfoTest {
     assertEquals(TransitMode.BUS, info.mode());
     assertEquals("localBus", info.submode());
     assertEquals(OPERATOR_ID, info.operatorId());
-    assertEquals(Accessibility.POSSIBLE, info.wheelchairAccessibility());
     assertEquals(1, info.replacedTrips().size());
     assertEquals(replacedTripId, info.replacedTrips().get(0));
     assertTrue(info.requiresRouteCreation());

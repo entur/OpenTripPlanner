@@ -26,8 +26,7 @@ public final class ResolvedExistingTrip {
   @Nullable
   private final String dataSource;
 
-  @Nullable
-  private final String vehicleId;
+  private final VehicleDescription vehicleDescription;
 
   private final boolean hasStopSequences;
   private final boolean cancellation;
@@ -52,7 +51,7 @@ public final class ResolvedExistingTrip {
     this.formatPolicy = parsedUpdate.formatPolicy();
     this.tripCreationInfo = parsedUpdate.tripCreationInfo();
     this.dataSource = parsedUpdate.dataSource();
-    this.vehicleId = parsedUpdate.vehicleId();
+    this.vehicleDescription = parsedUpdate.vehicleDescription();
     this.hasStopSequences = parsedUpdate.hasStopSequences();
     this.cancellation = parsedUpdate instanceof TripModification pmt ? pmt.isCancellation() : false;
     this.extraJourney = parsedUpdate instanceof TripModification pmt2
@@ -108,20 +107,10 @@ public final class ResolvedExistingTrip {
   }
 
   /**
-   * Apply the description of the vehicle serving the trip - its id and its wheelchair accessibility
-   * - to the trip times being built.
-   * <p>
-   * Only a replacement carries a {@link TripCreationInfo} and hence a wheelchair accessibility; a
-   * plain update to a scheduled trip leaves the accessibility of the scheduled trip untouched.
+   * Apply what the message says about the vehicle to the trip times being built.
    */
   public void applyVehicleDescription(RealTimeTripTimesBuilder builder) {
-    builder.withVehicleId(vehicleId);
-    var wheelchairAccessibility = tripCreationInfo == null
-      ? null
-      : tripCreationInfo.wheelchairAccessibility();
-    if (wheelchairAccessibility != null) {
-      builder.withWheelchairAccessibility(wheelchairAccessibility);
-    }
+    vehicleDescription.applyTo(builder);
   }
 
   public List<ResolvedStopTimeUpdate> stopTimeUpdates() {
@@ -151,11 +140,6 @@ public final class ResolvedExistingTrip {
   @Nullable
   public String dataSource() {
     return dataSource;
-  }
-
-  @Nullable
-  public String vehicleId() {
-    return vehicleId;
   }
 
   public boolean hasStopSequences() {

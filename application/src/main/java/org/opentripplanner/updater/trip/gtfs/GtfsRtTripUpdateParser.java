@@ -38,6 +38,7 @@ import org.opentripplanner.updater.trip.model.TripDuplication;
 import org.opentripplanner.updater.trip.model.TripModification;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
+import org.opentripplanner.updater.trip.model.VehicleDescription;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 import org.opentripplanner.utils.time.TimeUtils;
 
@@ -110,15 +111,20 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       updateType == TripUpdateType.ADD_NEW_TRIP
     );
 
+    var vehicle = VehicleDescription.of(
+      tripUpdate.vehicleId().orElse(null),
+      tripUpdate.wheelchairAccessibility().orElse(null)
+    );
+
     return switch (updateType) {
       case UPDATE_EXISTING -> ScheduledTripUpdate.builder(tripReference, serviceDate)
         .withFormatPolicy(gtfsPolicy)
-        .withVehicleId(tripUpdate.vehicleId().orElse(null))
+        .withVehicleDescription(vehicle)
         .withStopTimeUpdates(stopTimeUpdates)
         .build();
       case MODIFY_TRIP -> TripModification.builder(tripReference, serviceDate)
         .withFormatPolicy(gtfsPolicy)
-        .withVehicleId(tripUpdate.vehicleId().orElse(null))
+        .withVehicleDescription(vehicle)
         .withStopTimeUpdates(stopTimeUpdates)
         .withTripCreationInfo(buildTripCreationInfo(tripId, tripUpdate))
         .build();
@@ -128,7 +134,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
         buildTripCreationInfo(tripId, tripUpdate)
       )
         .withFormatPolicy(gtfsPolicy)
-        .withVehicleId(tripUpdate.vehicleId().orElse(null))
+        .withVehicleDescription(vehicle)
         .withStopTimeUpdates(stopTimeUpdates)
         .build();
       case CANCEL_TRIP, DELETE_TRIP, DUPLICATE_TRIP -> throw new IllegalStateException(
@@ -315,8 +321,6 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
     tripUpdate.tripHeadsign().ifPresent(builder::withHeadsign);
     tripUpdate.tripShortName().ifPresent(builder::withShortName);
-
-    tripUpdate.wheelchairAccessibility().ifPresent(builder::withWheelchairAccessibility);
 
     // Extract route creation info from MFDZ extensions
     var addedRoute = AddedRoute.ofTripDescriptor(tripUpdate);

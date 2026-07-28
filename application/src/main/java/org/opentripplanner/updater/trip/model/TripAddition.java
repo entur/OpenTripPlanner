@@ -33,8 +33,7 @@ public final class TripAddition implements ParsedTripUpdate {
   @Nullable
   private final String dataSource;
 
-  @Nullable
-  private final String vehicleId;
+  private final VehicleDescription vehicleDescription;
 
   private final boolean cancellation;
 
@@ -46,7 +45,7 @@ public final class TripAddition implements ParsedTripUpdate {
     TripCreationInfo tripCreationInfo,
     FormatPolicy formatPolicy,
     @Nullable String dataSource,
-    @Nullable String vehicleId,
+    VehicleDescription vehicleDescription,
     boolean cancellation
   ) {
     this.tripReference = Objects.requireNonNull(tripReference);
@@ -60,7 +59,7 @@ public final class TripAddition implements ParsedTripUpdate {
     );
     this.formatPolicy = Objects.requireNonNull(formatPolicy);
     this.dataSource = dataSource;
-    this.vehicleId = vehicleId;
+    this.vehicleDescription = Objects.requireNonNull(vehicleDescription);
     this.cancellation = cancellation;
   }
 
@@ -108,9 +107,8 @@ public final class TripAddition implements ParsedTripUpdate {
   }
 
   @Override
-  @Nullable
-  public String vehicleId() {
-    return vehicleId;
+  public VehicleDescription vehicleDescription() {
+    return vehicleDescription;
   }
 
   /** Whether this added (extra) journey is cancelled, i.e. added in cancelled state. */
@@ -143,8 +141,7 @@ public final class TripAddition implements ParsedTripUpdate {
     @Nullable
     private String dataSource;
 
-    @Nullable
-    private String vehicleId;
+    private VehicleDescription vehicleDescription = VehicleDescription.unknown();
 
     private boolean cancellation = false;
 
@@ -183,8 +180,8 @@ public final class TripAddition implements ParsedTripUpdate {
       return this;
     }
 
-    public Builder withVehicleId(@Nullable String vehicleId) {
-      this.vehicleId = vehicleId;
+    public Builder withVehicleDescription(VehicleDescription vehicleDescription) {
+      this.vehicleDescription = Objects.requireNonNull(vehicleDescription);
       return this;
     }
 
@@ -202,7 +199,7 @@ public final class TripAddition implements ParsedTripUpdate {
         tripCreationInfo,
         formatPolicy,
         dataSource,
-        vehicleId,
+        vehicleDescription,
         cancellation
       );
     }

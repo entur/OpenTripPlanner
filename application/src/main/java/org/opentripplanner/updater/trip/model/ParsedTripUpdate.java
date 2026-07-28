@@ -30,12 +30,11 @@ public sealed interface ParsedTripUpdate
   String dataSource();
 
   /**
-   * The id of the vehicle operating the trip, if provided by the update (SIRI VehicleRef or
-   * GTFS-RT vehicle descriptor id). Propagated to the real-time trip times.
+   * What the update says about the vehicle operating the trip. Propagated to the real-time trip
+   * times.
    */
-  @Nullable
-  default String vehicleId() {
-    return null;
+  default VehicleDescription vehicleDescription() {
+    return VehicleDescription.unknown();
   }
 
   /**

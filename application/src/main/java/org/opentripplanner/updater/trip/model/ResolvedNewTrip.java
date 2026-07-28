@@ -29,8 +29,7 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
   @Nullable
   private final String dataSource;
 
-  @Nullable
-  private final String vehicleId;
+  private final VehicleDescription vehicleDescription;
 
   private final LocalDate serviceDate;
   private final List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates;
@@ -44,7 +43,7 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
     this.formatPolicy = parsedUpdate.formatPolicy();
     this.tripCreationInfo = parsedUpdate.tripCreationInfo();
     this.dataSource = parsedUpdate.dataSource();
-    this.vehicleId = parsedUpdate.vehicleId();
+    this.vehicleDescription = parsedUpdate.vehicleDescription();
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
     this.resolvedStopTimeUpdates = Objects.requireNonNull(
       resolvedStopTimeUpdates,
@@ -90,20 +89,11 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
   }
 
   /**
-   * Apply the description of the vehicle serving the journey - its id and its wheelchair
-   * accessibility - to the trip times being built.
-   * <p>
-   * Both are journey-level attributes (the GTFS-RT vehicle descriptor, the SIRI journey), so every
-   * message restates them and they are re-applied on every message, whether the journey is created
-   * or updated and also when it is cancelled. A message that leaves an attribute out means "no
-   * information", so nothing is carried over from the previous message.
+   * Apply what the message says about the vehicle to the trip times being built. Applied on every
+   * message, whether the journey is created or updated, and also when it is cancelled.
    */
   public void applyVehicleDescription(RealTimeTripTimesBuilder builder) {
-    builder.withVehicleId(vehicleId());
-    var wheelchairAccessibility = tripCreationInfo.wheelchairAccessibility();
-    if (wheelchairAccessibility != null) {
-      builder.withWheelchairAccessibility(wheelchairAccessibility);
-    }
+    vehicleDescription.applyTo(builder);
   }
 
   /** The calls of the added trip as they arrived, including calls at unknown stops. */
@@ -128,10 +118,5 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
   @Nullable
   public String dataSource() {
     return dataSource;
-  }
-
-  @Nullable
-  public String vehicleId() {
-    return vehicleId;
   }
 }

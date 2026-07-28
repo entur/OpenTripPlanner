@@ -30,8 +30,7 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
   @Nullable
   private final String dataSource;
 
-  @Nullable
-  private final String vehicleId;
+  private final VehicleDescription vehicleDescription;
 
   ScheduledTripUpdate(
     TripReference tripReference,
@@ -40,7 +39,7 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
     List<ParsedStopTimeUpdate> stopTimeUpdates,
     FormatPolicy formatPolicy,
     @Nullable String dataSource,
-    @Nullable String vehicleId
+    VehicleDescription vehicleDescription
   ) {
     this.tripReference = Objects.requireNonNull(tripReference);
     ParsedTripUpdate.validateServiceDateAvailable(tripReference, serviceDate, aimedDepartureTime);
@@ -49,7 +48,7 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
     this.stopTimeUpdates = stopTimeUpdates != null ? List.copyOf(stopTimeUpdates) : List.of();
     this.formatPolicy = Objects.requireNonNull(formatPolicy);
     this.dataSource = dataSource;
-    this.vehicleId = vehicleId;
+    this.vehicleDescription = Objects.requireNonNull(vehicleDescription);
   }
 
   public static Builder builder(TripReference tripReference, @Nullable LocalDate serviceDate) {
@@ -90,9 +89,8 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
   }
 
   @Override
-  @Nullable
-  public String vehicleId() {
-    return vehicleId;
+  public VehicleDescription vehicleDescription() {
+    return vehicleDescription;
   }
 
   @Override
@@ -123,8 +121,7 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
     @Nullable
     private String dataSource;
 
-    @Nullable
-    private String vehicleId;
+    private VehicleDescription vehicleDescription = VehicleDescription.unknown();
 
     private Builder(TripReference tripReference, @Nullable LocalDate serviceDate) {
       this.tripReference = Objects.requireNonNull(tripReference);
@@ -156,8 +153,8 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
       return this;
     }
 
-    public Builder withVehicleId(@Nullable String vehicleId) {
-      this.vehicleId = vehicleId;
+    public Builder withVehicleDescription(VehicleDescription vehicleDescription) {
+      this.vehicleDescription = Objects.requireNonNull(vehicleDescription);
       return this;
     }
 
@@ -169,7 +166,7 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
         stopTimeUpdates,
         formatPolicy,
         dataSource,
-        vehicleId
+        vehicleDescription
       );
     }
   }

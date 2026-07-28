@@ -29,9 +29,14 @@ class WheelchairAccessibilityTest implements RealtimeTestConstants {
   private final RegularStop STOP_A = envBuilder.stop(STOP_A_ID);
   private final RegularStop STOP_B = envBuilder.stop(STOP_B_ID);
 
+  /**
+   * The scheduled trip is accessible according to the static data, so that a real-time update that
+   * says nothing about the vehicle can be shown not to overwrite it.
+   */
   private final TransitTestEnvironment env = envBuilder
     .addTrip(
-      TripInput.of(TRIP_1_ID).addStop(STOP_A, "12:00", "12:00").addStop(STOP_B, "12:10", "12:10")
+      TripInput.of(TRIP_1_ID).addStop(STOP_A, "12:00", "12:00").addStop(STOP_B, "12:10", "12:10"),
+      trip -> trip.withWheelchairBoarding(Accessibility.POSSIBLE)
     )
     .addStops(STOP_C_ID)
     .build();
@@ -67,6 +72,43 @@ class WheelchairAccessibilityTest implements RealtimeTestConstants {
   }
 
   @Test
+  void wheelchairAccessibilityIsSetOnScheduledTripUpdate() {
+    var tripUpdate = gtfsRt
+      .tripUpdateScheduled(TRIP_1_ID)
+      .withWheelchairAccessible(WHEELCHAIR_INACCESSIBLE)
+      .addDelayedStopTime(0, 0)
+      .addDelayedStopTime(1, 60)
+      .build();
+
+    assertSuccess(gtfsRt.applyTripUpdate(tripUpdate));
+
+    assertEquals(
+      Accessibility.NOT_POSSIBLE,
+      env.tripData(TRIP_1_ID).tripTimes().getWheelchairAccessibility()
+    );
+  }
+
+  /**
+   * A delay message that says nothing about the vehicle must not overwrite the accessibility of the
+   * scheduled trip.
+   */
+  @Test
+  void wheelchairAccessibilityOfScheduledTripIsKeptWhenTheMessageOmitsIt() {
+    var tripUpdate = gtfsRt
+      .tripUpdateScheduled(TRIP_1_ID)
+      .addDelayedStopTime(0, 0)
+      .addDelayedStopTime(1, 60)
+      .build();
+
+    assertSuccess(gtfsRt.applyTripUpdate(tripUpdate));
+
+    assertEquals(
+      Accessibility.POSSIBLE,
+      env.tripData(TRIP_1_ID).tripTimes().getWheelchairAccessibility()
+    );
+  }
+
+  @Test
   void wheelchairAccessibilityIsSetOnReplacementTrip() {
     var tripUpdate = gtfsRt
       .tripUpdate(TRIP_1_ID, REPLACEMENT)
@@ -99,8 +141,10 @@ class WheelchairAccessibilityTest implements RealtimeTestConstants {
 
     assertSuccess(gtfsRt.applyTripUpdate(tripUpdate));
 
-    var scheduled = env.tripData(TRIP_1_ID).scheduledTripTimes().getWheelchairAccessibility();
-    assertEquals(scheduled, env.tripData(TRIP_1_ID).tripTimes().getWheelchairAccessibility());
+    assertEquals(
+      Accessibility.POSSIBLE,
+      env.tripData(TRIP_1_ID).tripTimes().getWheelchairAccessibility()
+    );
   }
 
   private GtfsRealtime.TripUpdate addedTrip(

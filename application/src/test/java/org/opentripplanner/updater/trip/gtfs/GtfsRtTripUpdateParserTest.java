@@ -140,7 +140,7 @@ class GtfsRtTripUpdateParserTest {
     assertNotNull(parsed.tripCreationInfo());
     assertEquals(new FeedScopedId(FEED_ID, "trip1"), parsed.tripCreationInfo().tripId());
     assertEquals(new FeedScopedId(FEED_ID, "route1"), parsed.tripCreationInfo().routeId());
-    assertEquals(Accessibility.POSSIBLE, parsed.tripCreationInfo().wheelchairAccessibility());
+    assertEquals(Accessibility.POSSIBLE, parsed.vehicleDescription().wheelchairAccessibility());
 
     assertEquals(1, parsed.stopTimeUpdates().size());
     var stopUpdate = parsed.stopTimeUpdates().get(0);
@@ -180,7 +180,7 @@ class GtfsRtTripUpdateParserTest {
 
     var parsed = assertInstanceOf(TripAddition.class, parser.parse(tripUpdate));
 
-    assertNull(parsed.tripCreationInfo().wheelchairAccessibility());
+    assertNull(parsed.vehicleDescription().wheelchairAccessibility());
   }
 
   @Test

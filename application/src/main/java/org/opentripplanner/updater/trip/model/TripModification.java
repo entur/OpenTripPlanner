@@ -33,8 +33,7 @@ public final class TripModification implements ExistingTripUpdate {
   @Nullable
   private final String dataSource;
 
-  @Nullable
-  private final String vehicleId;
+  private final VehicleDescription vehicleDescription;
 
   private final boolean cancellation;
 
@@ -48,7 +47,7 @@ public final class TripModification implements ExistingTripUpdate {
     @Nullable TripCreationInfo tripCreationInfo,
     FormatPolicy formatPolicy,
     @Nullable String dataSource,
-    @Nullable String vehicleId,
+    VehicleDescription vehicleDescription,
     boolean cancellation,
     boolean extraJourney
   ) {
@@ -60,7 +59,7 @@ public final class TripModification implements ExistingTripUpdate {
     this.tripCreationInfo = tripCreationInfo;
     this.formatPolicy = Objects.requireNonNull(formatPolicy);
     this.dataSource = dataSource;
-    this.vehicleId = vehicleId;
+    this.vehicleDescription = Objects.requireNonNull(vehicleDescription);
     this.cancellation = cancellation;
     this.extraJourney = extraJourney;
   }
@@ -122,9 +121,8 @@ public final class TripModification implements ExistingTripUpdate {
   }
 
   @Override
-  @Nullable
-  public String vehicleId() {
-    return vehicleId;
+  public VehicleDescription vehicleDescription() {
+    return vehicleDescription;
   }
 
   @Override
@@ -163,8 +161,7 @@ public final class TripModification implements ExistingTripUpdate {
     @Nullable
     private String dataSource;
 
-    @Nullable
-    private String vehicleId;
+    private VehicleDescription vehicleDescription = VehicleDescription.unknown();
 
     private boolean cancellation = false;
 
@@ -205,8 +202,8 @@ public final class TripModification implements ExistingTripUpdate {
       return this;
     }
 
-    public Builder withVehicleId(@Nullable String vehicleId) {
-      this.vehicleId = vehicleId;
+    public Builder withVehicleDescription(VehicleDescription vehicleDescription) {
+      this.vehicleDescription = Objects.requireNonNull(vehicleDescription);
       return this;
     }
 
@@ -229,7 +226,7 @@ public final class TripModification implements ExistingTripUpdate {
         tripCreationInfo,
         formatPolicy,
         dataSource,
-        vehicleId,
+        vehicleDescription,
         cancellation,
         extraJourney
       );

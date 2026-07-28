@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
-import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.TransitMode;
@@ -30,6 +29,7 @@ import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.opentripplanner.updater.trip.model.TripModification;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.model.TripUpdateType;
+import org.opentripplanner.updater.trip.model.VehicleDescription;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 import org.opentripplanner.utils.lang.StringUtils;
 import org.opentripplanner.utils.time.ServiceDateUtils;
@@ -97,6 +97,9 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       );
     }
 
+    // SIRI-ET says nothing about the accessibility of the vehicle.
+    var vehicle = VehicleDescription.of(journey.vehicleRef(), null);
+
     // Parse stop time updates
     var stopTimeUpdates = parseStopTimeUpdates(
       calls,
@@ -110,7 +113,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         var builder = ScheduledTripUpdate.builder(tripReference, psd.serviceDate())
           .withFormatPolicy(FormatPolicy.siri())
           .withDataSource(journey.dataSource())
-          .withVehicleId(journey.vehicleRef())
+          .withVehicleDescription(vehicle)
           .withStopTimeUpdates(stopTimeUpdates);
         if (psd.aimedDepartureTime() != null) {
           builder.withAimedDepartureTime(psd.aimedDepartureTime());
@@ -121,7 +124,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         var builder = TripModification.builder(tripReference, psd.serviceDate())
           .withFormatPolicy(FormatPolicy.siri())
           .withDataSource(journey.dataSource())
-          .withVehicleId(journey.vehicleRef())
+          .withVehicleDescription(vehicle)
           .withStopTimeUpdates(stopTimeUpdates)
           .withCancellation(journey.isCancellation())
           .withExtraJourney(journey.isExtraJourney());
@@ -138,7 +141,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         var builder = TripAddition.builder(tripReference, psd.serviceDate(), creationInfo)
           .withFormatPolicy(FormatPolicy.siri())
           .withDataSource(journey.dataSource())
-          .withVehicleId(journey.vehicleRef())
+          .withVehicleDescription(vehicle)
           .withStopTimeUpdates(stopTimeUpdates)
           .withCancellation(journey.isCancellation());
         if (psd.aimedDepartureTime() != null) {
@@ -447,7 +450,6 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       }
     }
 
-    builder.withWheelchairAccessibility(Accessibility.NO_INFORMATION);
     return builder.build();
   }
 

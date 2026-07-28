@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
-import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.TransitMode;
@@ -43,9 +42,6 @@ public final class TripCreationInfo {
   @Nullable
   private final FeedScopedId operatorId;
 
-  @Nullable
-  private final Accessibility wheelchairAccessibility;
-
   private final List<FeedScopedId> replacedTrips;
 
   @Nullable
@@ -61,7 +57,6 @@ public final class TripCreationInfo {
    * @param mode The transit mode
    * @param submode The submode (e.g., "localBus", "expressBus")
    * @param operatorId The operator ID
-   * @param wheelchairAccessibility Wheelchair accessibility of the vehicle
    * @param replacedTrips IDs of trips that this new trip replaces
    * @param replacedRouteId The route ID of the route being replaced (from SIRI ExternalLineRef)
    */
@@ -75,7 +70,6 @@ public final class TripCreationInfo {
     @Nullable TransitMode mode,
     @Nullable String submode,
     @Nullable FeedScopedId operatorId,
-    @Nullable Accessibility wheelchairAccessibility,
     List<FeedScopedId> replacedTrips,
     @Nullable FeedScopedId replacedRouteId
   ) {
@@ -88,7 +82,6 @@ public final class TripCreationInfo {
     this.mode = mode;
     this.submode = submode;
     this.operatorId = operatorId;
-    this.wheelchairAccessibility = wheelchairAccessibility;
     this.replacedTrips = replacedTrips != null ? List.copyOf(replacedTrips) : List.of();
     this.replacedRouteId = replacedRouteId;
   }
@@ -144,11 +137,6 @@ public final class TripCreationInfo {
     return operatorId;
   }
 
-  @Nullable
-  public Accessibility wheelchairAccessibility() {
-    return wheelchairAccessibility;
-  }
-
   public List<FeedScopedId> replacedTrips() {
     return replacedTrips;
   }
@@ -201,7 +189,6 @@ public final class TripCreationInfo {
       mode == that.mode &&
       Objects.equals(submode, that.submode) &&
       Objects.equals(operatorId, that.operatorId) &&
-      wheelchairAccessibility == that.wheelchairAccessibility &&
       Objects.equals(replacedTrips, that.replacedTrips) &&
       Objects.equals(replacedRouteId, that.replacedRouteId)
     );
@@ -219,7 +206,6 @@ public final class TripCreationInfo {
       mode,
       submode,
       operatorId,
-      wheelchairAccessibility,
       replacedTrips,
       replacedRouteId
     );
@@ -249,8 +235,6 @@ public final class TripCreationInfo {
       '\'' +
       ", operatorId=" +
       operatorId +
-      ", wheelchairAccessibility=" +
-      wheelchairAccessibility +
       ", replacedTrips=" +
       replacedTrips +
       ", replacedRouteId=" +
@@ -273,7 +257,6 @@ public final class TripCreationInfo {
     private TransitMode mode;
     private String submode;
     private FeedScopedId operatorId;
-    private Accessibility wheelchairAccessibility;
     private List<FeedScopedId> replacedTrips = new ArrayList<>();
     private FeedScopedId replacedRouteId;
 
@@ -321,11 +304,6 @@ public final class TripCreationInfo {
       return this;
     }
 
-    public Builder withWheelchairAccessibility(Accessibility wheelchairAccessibility) {
-      this.wheelchairAccessibility = wheelchairAccessibility;
-      return this;
-    }
-
     public Builder withReplacedTrips(List<FeedScopedId> replacedTrips) {
       this.replacedTrips = new ArrayList<>(replacedTrips);
       return this;
@@ -352,7 +330,6 @@ public final class TripCreationInfo {
         mode,
         submode,
         operatorId,
-        wheelchairAccessibility,
         replacedTrips,
         replacedRouteId
       );
