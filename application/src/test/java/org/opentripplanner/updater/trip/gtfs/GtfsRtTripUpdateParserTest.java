@@ -282,7 +282,8 @@ class GtfsRtTripUpdateParserTest {
     var parsed = assertInstanceOf(TripAddition.class, parser.parse(tripUpdate));
 
     assertNotNull(parsed.tripCreationInfo());
-    assertEquals("Downtown", parsed.tripCreationInfo().headsign().toString());
+    assertNotNull(parsed.tripHeadsign());
+    assertEquals("Downtown", parsed.tripHeadsign().toString());
     assertEquals("X1", parsed.tripCreationInfo().shortName());
   }
 

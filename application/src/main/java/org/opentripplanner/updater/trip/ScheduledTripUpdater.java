@@ -67,7 +67,7 @@ public class ScheduledTripUpdater {
     // Seed the builder. With delay propagation enabled, start with empty times so interpolators
     // can fill them in; otherwise pre-fill with scheduled times (SIRI-style).
     var builder = policy.delayPropagation().initialBuilder(tripTimes);
-    resolvedUpdate.applyVehicleDescription(builder);
+    resolvedUpdate.applyJourneyDescription(builder);
 
     // If all stops are cancelled, treat as implicit trip-level cancellation (avoid MODIFIED state)
     if (resolvedUpdate.isCancelledAtEveryStop()) {

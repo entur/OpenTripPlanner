@@ -1,7 +1,6 @@
 package org.opentripplanner.updater.trip.model;
 
 import java.util.List;
-import javax.annotation.Nullable;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
@@ -25,14 +24,5 @@ public sealed interface ExistingTripUpdate
     return stopTimeUpdates()
       .stream()
       .anyMatch(u -> u.stopSequence() != null);
-  }
-
-  /**
-   * Returns the trip creation info, if any.
-   * Only {@link TripModification} may carry trip creation info.
-   */
-  @Nullable
-  default TripCreationInfo tripCreationInfo() {
-    return null;
   }
 }

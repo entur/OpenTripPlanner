@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.Trip;
@@ -21,12 +22,12 @@ public final class ResolvedExistingTrip {
   private final FormatPolicy formatPolicy;
 
   @Nullable
-  private final TripCreationInfo tripCreationInfo;
-
-  @Nullable
   private final String dataSource;
 
   private final VehicleDescription vehicleDescription;
+
+  @Nullable
+  private final I18NString tripHeadsign;
 
   private final boolean hasStopSequences;
   private final boolean cancellation;
@@ -49,9 +50,9 @@ public final class ResolvedExistingTrip {
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates
   ) {
     this.formatPolicy = parsedUpdate.formatPolicy();
-    this.tripCreationInfo = parsedUpdate.tripCreationInfo();
     this.dataSource = parsedUpdate.dataSource();
     this.vehicleDescription = parsedUpdate.vehicleDescription();
+    this.tripHeadsign = parsedUpdate.tripHeadsign();
     this.hasStopSequences = parsedUpdate.hasStopSequences();
     this.cancellation = parsedUpdate instanceof TripModification pmt ? pmt.isCancellation() : false;
     this.extraJourney = parsedUpdate instanceof TripModification pmt2
@@ -107,9 +108,13 @@ public final class ResolvedExistingTrip {
   }
 
   /**
-   * Apply what the message says about the vehicle to the trip times being built.
+   * Apply what the message says about the journey as it runs today - the headsign it displays and
+   * the vehicle serving it - to the trip times being built.
    */
-  public void applyVehicleDescription(RealTimeTripTimesBuilder builder) {
+  public void applyJourneyDescription(RealTimeTripTimesBuilder builder) {
+    if (tripHeadsign != null) {
+      builder.withTripHeadsign(tripHeadsign);
+    }
     vehicleDescription.applyTo(builder);
   }
 
@@ -130,11 +135,6 @@ public final class ResolvedExistingTrip {
 
   public boolean hasSiriExtraCalls() {
     return resolvedStopTimeUpdates.stream().anyMatch(ResolvedStopTimeUpdate::isExtraCall);
-  }
-
-  @Nullable
-  public TripCreationInfo tripCreationInfo() {
-    return tripCreationInfo;
   }
 
   @Nullable

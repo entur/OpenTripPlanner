@@ -3,6 +3,7 @@ package org.opentripplanner.updater.trip.model;
 import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.i18n.I18NString;
 
 /**
  * Format-independent representation of a trip update parsed from either SIRI-ET or GTFS-RT.
@@ -35,6 +36,17 @@ public sealed interface ParsedTripUpdate
    */
   default VehicleDescription vehicleDescription() {
     return VehicleDescription.unknown();
+  }
+
+  /**
+   * The headsign the trip displays today, if the update states one (GTFS-RT
+   * {@code TripProperties.trip_headsign}). Propagated to the real-time trip times, whatever the
+   * update type - it is not creation data, and an update that leaves it out keeps the headsign of
+   * the trip it updates.
+   */
+  @Nullable
+  default I18NString tripHeadsign() {
+    return null;
   }
 
   /**

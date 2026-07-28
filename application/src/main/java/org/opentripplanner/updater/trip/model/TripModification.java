@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
@@ -25,15 +26,15 @@ public final class TripModification implements ExistingTripUpdate {
 
   private final List<ParsedStopTimeUpdate> stopTimeUpdates;
 
-  @Nullable
-  private final TripCreationInfo tripCreationInfo;
-
   private final FormatPolicy formatPolicy;
 
   @Nullable
   private final String dataSource;
 
   private final VehicleDescription vehicleDescription;
+
+  @Nullable
+  private final I18NString tripHeadsign;
 
   private final boolean cancellation;
 
@@ -44,10 +45,10 @@ public final class TripModification implements ExistingTripUpdate {
     @Nullable LocalDate serviceDate,
     @Nullable ZonedDateTime aimedDepartureTime,
     List<ParsedStopTimeUpdate> stopTimeUpdates,
-    @Nullable TripCreationInfo tripCreationInfo,
     FormatPolicy formatPolicy,
     @Nullable String dataSource,
     VehicleDescription vehicleDescription,
+    @Nullable I18NString tripHeadsign,
     boolean cancellation,
     boolean extraJourney
   ) {
@@ -56,10 +57,10 @@ public final class TripModification implements ExistingTripUpdate {
     this.serviceDate = serviceDate;
     this.aimedDepartureTime = aimedDepartureTime;
     this.stopTimeUpdates = stopTimeUpdates != null ? List.copyOf(stopTimeUpdates) : List.of();
-    this.tripCreationInfo = tripCreationInfo;
     this.formatPolicy = Objects.requireNonNull(formatPolicy);
     this.dataSource = dataSource;
     this.vehicleDescription = Objects.requireNonNull(vehicleDescription);
+    this.tripHeadsign = tripHeadsign;
     this.cancellation = cancellation;
     this.extraJourney = extraJourney;
   }
@@ -104,12 +105,6 @@ public final class TripModification implements ExistingTripUpdate {
   }
 
   @Override
-  @Nullable
-  public TripCreationInfo tripCreationInfo() {
-    return tripCreationInfo;
-  }
-
-  @Override
   public FormatPolicy formatPolicy() {
     return formatPolicy;
   }
@@ -123,6 +118,12 @@ public final class TripModification implements ExistingTripUpdate {
   @Override
   public VehicleDescription vehicleDescription() {
     return vehicleDescription;
+  }
+
+  @Override
+  @Nullable
+  public I18NString tripHeadsign() {
+    return tripHeadsign;
   }
 
   @Override
@@ -153,15 +154,15 @@ public final class TripModification implements ExistingTripUpdate {
 
     private List<ParsedStopTimeUpdate> stopTimeUpdates = new ArrayList<>();
 
-    @Nullable
-    private TripCreationInfo tripCreationInfo;
-
     private FormatPolicy formatPolicy = FormatPolicy.siri();
 
     @Nullable
     private String dataSource;
 
     private VehicleDescription vehicleDescription = VehicleDescription.unknown();
+
+    @Nullable
+    private I18NString tripHeadsign;
 
     private boolean cancellation = false;
 
@@ -187,11 +188,6 @@ public final class TripModification implements ExistingTripUpdate {
       return this;
     }
 
-    public Builder withTripCreationInfo(TripCreationInfo tripCreationInfo) {
-      this.tripCreationInfo = tripCreationInfo;
-      return this;
-    }
-
     public Builder withFormatPolicy(FormatPolicy formatPolicy) {
       this.formatPolicy = formatPolicy;
       return this;
@@ -204,6 +200,11 @@ public final class TripModification implements ExistingTripUpdate {
 
     public Builder withVehicleDescription(VehicleDescription vehicleDescription) {
       this.vehicleDescription = Objects.requireNonNull(vehicleDescription);
+      return this;
+    }
+
+    public Builder withTripHeadsign(@Nullable I18NString tripHeadsign) {
+      this.tripHeadsign = tripHeadsign;
       return this;
     }
 
@@ -223,10 +224,10 @@ public final class TripModification implements ExistingTripUpdate {
         serviceDate,
         aimedDepartureTime,
         stopTimeUpdates,
-        tripCreationInfo,
         formatPolicy,
         dataSource,
         vehicleDescription,
+        tripHeadsign,
         cancellation,
         extraJourney
       );

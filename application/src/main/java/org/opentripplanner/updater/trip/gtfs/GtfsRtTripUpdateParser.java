@@ -115,18 +115,20 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       tripUpdate.vehicleId().orElse(null),
       tripUpdate.wheelchairAccessibility().orElse(null)
     );
+    var tripHeadsign = tripUpdate.tripHeadsign().orElse(null);
 
     return switch (updateType) {
       case UPDATE_EXISTING -> ScheduledTripUpdate.builder(tripReference, serviceDate)
         .withFormatPolicy(gtfsPolicy)
         .withVehicleDescription(vehicle)
+        .withTripHeadsign(tripHeadsign)
         .withStopTimeUpdates(stopTimeUpdates)
         .build();
       case MODIFY_TRIP -> TripModification.builder(tripReference, serviceDate)
         .withFormatPolicy(gtfsPolicy)
         .withVehicleDescription(vehicle)
+        .withTripHeadsign(tripHeadsign)
         .withStopTimeUpdates(stopTimeUpdates)
-        .withTripCreationInfo(buildTripCreationInfo(tripId, tripUpdate))
         .build();
       case ADD_NEW_TRIP -> TripAddition.builder(
         tripReference,
@@ -135,6 +137,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       )
         .withFormatPolicy(gtfsPolicy)
         .withVehicleDescription(vehicle)
+        .withTripHeadsign(tripHeadsign)
         .withStopTimeUpdates(stopTimeUpdates)
         .build();
       case CANCEL_TRIP, DELETE_TRIP, DUPLICATE_TRIP -> throw new IllegalStateException(
@@ -319,7 +322,6 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       builder.withRouteId(routeId);
     }
 
-    tripUpdate.tripHeadsign().ifPresent(builder::withHeadsign);
     tripUpdate.tripShortName().ifPresent(builder::withShortName);
 
     // Extract route creation info from MFDZ extensions

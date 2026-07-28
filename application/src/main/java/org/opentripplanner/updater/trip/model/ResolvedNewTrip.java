@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.updater.trip.StopTimeUpdates;
@@ -31,6 +32,9 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
 
   private final VehicleDescription vehicleDescription;
 
+  @Nullable
+  private final I18NString tripHeadsign;
+
   private final LocalDate serviceDate;
   private final List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates;
   private final boolean cancellation;
@@ -44,6 +48,7 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
     this.tripCreationInfo = parsedUpdate.tripCreationInfo();
     this.dataSource = parsedUpdate.dataSource();
     this.vehicleDescription = parsedUpdate.vehicleDescription();
+    this.tripHeadsign = parsedUpdate.tripHeadsign();
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
     this.resolvedStopTimeUpdates = Objects.requireNonNull(
       resolvedStopTimeUpdates,
@@ -89,11 +94,21 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
   }
 
   /**
-   * Apply what the message says about the vehicle to the trip times being built. Applied on every
-   * message, whether the journey is created or updated, and also when it is cancelled.
+   * Apply what the message says about the journey as it runs today - the headsign it displays and
+   * the vehicle serving it - to the trip times being built. Applied on every message, whether the
+   * journey is created or updated, and also when it is cancelled.
    */
-  public void applyVehicleDescription(RealTimeTripTimesBuilder builder) {
+  public void applyJourneyDescription(RealTimeTripTimesBuilder builder) {
+    if (tripHeadsign != null) {
+      builder.withTripHeadsign(tripHeadsign);
+    }
     vehicleDescription.applyTo(builder);
+  }
+
+  /** The headsign the journey displays today, if the message states one. */
+  @Nullable
+  public I18NString tripHeadsign() {
+    return tripHeadsign;
   }
 
   /** The calls of the added trip as they arrived, including calls at unknown stops. */

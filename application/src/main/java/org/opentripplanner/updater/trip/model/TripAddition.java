@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
@@ -35,6 +36,9 @@ public final class TripAddition implements ParsedTripUpdate {
 
   private final VehicleDescription vehicleDescription;
 
+  @Nullable
+  private final I18NString tripHeadsign;
+
   private final boolean cancellation;
 
   TripAddition(
@@ -46,6 +50,7 @@ public final class TripAddition implements ParsedTripUpdate {
     FormatPolicy formatPolicy,
     @Nullable String dataSource,
     VehicleDescription vehicleDescription,
+    @Nullable I18NString tripHeadsign,
     boolean cancellation
   ) {
     this.tripReference = Objects.requireNonNull(tripReference);
@@ -60,6 +65,7 @@ public final class TripAddition implements ParsedTripUpdate {
     this.formatPolicy = Objects.requireNonNull(formatPolicy);
     this.dataSource = dataSource;
     this.vehicleDescription = Objects.requireNonNull(vehicleDescription);
+    this.tripHeadsign = tripHeadsign;
     this.cancellation = cancellation;
   }
 
@@ -111,6 +117,12 @@ public final class TripAddition implements ParsedTripUpdate {
     return vehicleDescription;
   }
 
+  @Override
+  @Nullable
+  public I18NString tripHeadsign() {
+    return tripHeadsign;
+  }
+
   /** Whether this added (extra) journey is cancelled, i.e. added in cancelled state. */
   public boolean cancellation() {
     return cancellation;
@@ -142,6 +154,9 @@ public final class TripAddition implements ParsedTripUpdate {
     private String dataSource;
 
     private VehicleDescription vehicleDescription = VehicleDescription.unknown();
+
+    @Nullable
+    private I18NString tripHeadsign;
 
     private boolean cancellation = false;
 
@@ -185,6 +200,11 @@ public final class TripAddition implements ParsedTripUpdate {
       return this;
     }
 
+    public Builder withTripHeadsign(@Nullable I18NString tripHeadsign) {
+      this.tripHeadsign = tripHeadsign;
+      return this;
+    }
+
     public Builder withCancellation(boolean cancellation) {
       this.cancellation = cancellation;
       return this;
@@ -200,6 +220,7 @@ public final class TripAddition implements ParsedTripUpdate {
         formatPolicy,
         dataSource,
         vehicleDescription,
+        tripHeadsign,
         cancellation
       );
     }

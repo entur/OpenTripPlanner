@@ -538,6 +538,13 @@ public class TripUpdateBuilder {
     return this;
   }
 
+  public TripUpdateBuilder withTripHeadsign(String tripHeadsign) {
+    tripUpdateBuilder.setTripProperties(
+      tripUpdateBuilder.getTripProperties().toBuilder().setTripHeadsign(tripHeadsign).build()
+    );
+    return this;
+  }
+
   public TripUpdateBuilder withVehicleId(String vehicleId) {
     tripUpdateBuilder.setVehicle(vehicleDescriptor().setId(vehicleId).build());
     return this;

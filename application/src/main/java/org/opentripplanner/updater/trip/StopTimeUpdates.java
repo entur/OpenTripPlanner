@@ -5,7 +5,6 @@ import java.util.List;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -54,22 +53,16 @@ public final class StopTimeUpdates {
   }
 
   /**
-   * Apply real-time updates to a trip times builder.
+   * Apply the call data to a trip times builder. Trip-level attributes are applied separately by the
+   * resolved update itself.
    *
-   * @param tripCreationInfo Optional trip creation info (for trip-level headsign)
    * @param builder The builder to apply updates to
    * @param stopTimeUpdates The resolved stop time updates to apply
    */
   public static void applyRealTimeUpdates(
-    TripCreationInfo tripCreationInfo,
     RealTimeTripTimesBuilder builder,
     List<ResolvedStopTimeUpdate> stopTimeUpdates
   ) {
-    // Apply trip-level headsign from trip creation info
-    if (tripCreationInfo != null && tripCreationInfo.headsign() != null) {
-      builder.withTripHeadsign(tripCreationInfo.headsign());
-    }
-
     for (int i = 0; i < stopTimeUpdates.size(); i++) {
       stopTimeUpdates.get(i).applyTo(builder, i);
     }

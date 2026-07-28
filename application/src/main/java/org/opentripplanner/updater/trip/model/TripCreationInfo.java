@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
-import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.Route;
@@ -28,9 +27,6 @@ public final class TripCreationInfo {
   private final FeedScopedId serviceId;
 
   @Nullable
-  private final I18NString headsign;
-
-  @Nullable
   private final String shortName;
 
   @Nullable
@@ -52,7 +48,6 @@ public final class TripCreationInfo {
    * @param routeId The route ID to associate the trip with
    * @param routeCreationInfo Information for creating a new route (if needed)
    * @param serviceId The service ID for the trip
-   * @param headsign The headsign to display for the trip
    * @param shortName A short name for the trip
    * @param mode The transit mode
    * @param submode The submode (e.g., "localBus", "expressBus")
@@ -65,7 +60,6 @@ public final class TripCreationInfo {
     @Nullable FeedScopedId routeId,
     @Nullable RouteCreationInfo routeCreationInfo,
     @Nullable FeedScopedId serviceId,
-    @Nullable I18NString headsign,
     @Nullable String shortName,
     @Nullable TransitMode mode,
     @Nullable String submode,
@@ -77,7 +71,6 @@ public final class TripCreationInfo {
     this.routeId = routeId;
     this.routeCreationInfo = routeCreationInfo;
     this.serviceId = serviceId;
-    this.headsign = headsign;
     this.shortName = shortName;
     this.mode = mode;
     this.submode = submode;
@@ -110,11 +103,6 @@ public final class TripCreationInfo {
   @Nullable
   public FeedScopedId serviceId() {
     return serviceId;
-  }
-
-  @Nullable
-  public I18NString headsign() {
-    return headsign;
   }
 
   @Nullable
@@ -154,16 +142,14 @@ public final class TripCreationInfo {
   }
 
   /**
-   * Apply mode, submode, headsign, and short name to a trip builder.
-   * Falls back to the route's mode when no explicit mode is set.
+   * Apply mode, submode and short name to a trip builder. Falls back to the route's mode when no
+   * explicit mode is set. The headsign is not creation data - see
+   * {@link ParsedTripUpdate#tripHeadsign()}.
    */
   public void applyTo(TripBuilder builder, Route route) {
     builder.withMode(mode != null ? mode : route.getMode());
     if (submode != null) {
       builder.withNetexSubmode(submode);
-    }
-    if (headsign != null) {
-      builder.withHeadsign(headsign);
     }
     if (shortName != null) {
       builder.withShortName(shortName);
@@ -184,7 +170,6 @@ public final class TripCreationInfo {
       Objects.equals(routeId, that.routeId) &&
       Objects.equals(routeCreationInfo, that.routeCreationInfo) &&
       Objects.equals(serviceId, that.serviceId) &&
-      Objects.equals(headsign, that.headsign) &&
       Objects.equals(shortName, that.shortName) &&
       mode == that.mode &&
       Objects.equals(submode, that.submode) &&
@@ -201,7 +186,6 @@ public final class TripCreationInfo {
       routeId,
       routeCreationInfo,
       serviceId,
-      headsign,
       shortName,
       mode,
       submode,
@@ -223,8 +207,6 @@ public final class TripCreationInfo {
       routeCreationInfo +
       ", serviceId=" +
       serviceId +
-      ", headsign=" +
-      headsign +
       ", shortName='" +
       shortName +
       '\'' +
@@ -252,7 +234,6 @@ public final class TripCreationInfo {
     private FeedScopedId routeId;
     private RouteCreationInfo routeCreationInfo;
     private FeedScopedId serviceId;
-    private I18NString headsign;
     private String shortName;
     private TransitMode mode;
     private String submode;
@@ -276,11 +257,6 @@ public final class TripCreationInfo {
 
     public Builder withServiceId(FeedScopedId serviceId) {
       this.serviceId = serviceId;
-      return this;
-    }
-
-    public Builder withHeadsign(I18NString headsign) {
-      this.headsign = headsign;
       return this;
     }
 
@@ -325,7 +301,6 @@ public final class TripCreationInfo {
         routeId,
         routeCreationInfo,
         serviceId,
-        headsign,
         shortName,
         mode,
         submode,

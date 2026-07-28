@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.TransitMode;
@@ -142,6 +143,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
           .withFormatPolicy(FormatPolicy.siri())
           .withDataSource(journey.dataSource())
           .withVehicleDescription(vehicle)
+          .withTripHeadsign(extraJourneyHeadsign(journey))
           .withStopTimeUpdates(stopTimeUpdates)
           .withCancellation(journey.isCancellation());
         if (psd.aimedDepartureTime() != null) {
@@ -415,11 +417,6 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       builder.withServiceId(createId(datedServiceJourneyId));
     }
 
-    String destinationName = journey.destinationName();
-    if (!destinationName.isEmpty()) {
-      builder.withHeadsign(new NonLocalizedString(destinationName));
-    }
-
     String shortName = journey.publishedLineName();
     if (!shortName.isEmpty()) {
       builder.withShortName(shortName);
@@ -451,6 +448,17 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     }
 
     return builder.build();
+  }
+
+  /**
+   * The destination name of an extra journey is the headsign it displays. SIRI only states it for
+   * extra journeys - for an update to an existing trip the headsign of that trip stands, and the
+   * per-call destination displays are carried by the stop time updates.
+   */
+  @Nullable
+  private I18NString extraJourneyHeadsign(EstimatedVehicleJourneyWrapper journey) {
+    String destinationName = journey.destinationName();
+    return destinationName.isEmpty() ? null : new NonLocalizedString(destinationName);
   }
 
   @Nullable

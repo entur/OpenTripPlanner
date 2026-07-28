@@ -49,12 +49,12 @@ public final class ResolvedAddedTripUpdate extends ResolvedNewTrip {
     StopTimeUpdates.FilteredStopTimeUpdates calls = stopTimeUpdatesWithKnownStops();
 
     var builder = tripTimes.createRealTimeFromScheduledTimes();
-    applyVehicleDescription(builder);
+    applyJourneyDescription(builder);
     // A journey-level cancellation of an already-added trip is a clean cancellation: keep the
     // scheduled times and do not re-apply the real-time call data, so the previously applied
     // real-time flags are dropped (matching the legacy ModifiedTripBuilder.cancelTrip behaviour).
     if (!isCancelledAtJourneyLevel()) {
-      StopTimeUpdates.applyRealTimeUpdates(tripCreationInfo(), builder, calls.updates());
+      StopTimeUpdates.applyRealTimeUpdates(builder, calls.updates());
     }
     // Extra journeys always keep the "added" flag, even when all stops are cancelled,
     // because they were never part of the static schedule.

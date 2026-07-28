@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
@@ -32,6 +33,9 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
 
   private final VehicleDescription vehicleDescription;
 
+  @Nullable
+  private final I18NString tripHeadsign;
+
   ScheduledTripUpdate(
     TripReference tripReference,
     @Nullable LocalDate serviceDate,
@@ -39,7 +43,8 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
     List<ParsedStopTimeUpdate> stopTimeUpdates,
     FormatPolicy formatPolicy,
     @Nullable String dataSource,
-    VehicleDescription vehicleDescription
+    VehicleDescription vehicleDescription,
+    @Nullable I18NString tripHeadsign
   ) {
     this.tripReference = Objects.requireNonNull(tripReference);
     ParsedTripUpdate.validateServiceDateAvailable(tripReference, serviceDate, aimedDepartureTime);
@@ -49,6 +54,7 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
     this.formatPolicy = Objects.requireNonNull(formatPolicy);
     this.dataSource = dataSource;
     this.vehicleDescription = Objects.requireNonNull(vehicleDescription);
+    this.tripHeadsign = tripHeadsign;
   }
 
   public static Builder builder(TripReference tripReference, @Nullable LocalDate serviceDate) {
@@ -94,6 +100,12 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
   }
 
   @Override
+  @Nullable
+  public I18NString tripHeadsign() {
+    return tripHeadsign;
+  }
+
+  @Override
   public String toString() {
     return (
       "ScheduledTripUpdate{" +
@@ -122,6 +134,9 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
     private String dataSource;
 
     private VehicleDescription vehicleDescription = VehicleDescription.unknown();
+
+    @Nullable
+    private I18NString tripHeadsign;
 
     private Builder(TripReference tripReference, @Nullable LocalDate serviceDate) {
       this.tripReference = Objects.requireNonNull(tripReference);
@@ -158,6 +173,11 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
       return this;
     }
 
+    public Builder withTripHeadsign(@Nullable I18NString tripHeadsign) {
+      this.tripHeadsign = tripHeadsign;
+      return this;
+    }
+
     public ScheduledTripUpdate build() {
       return new ScheduledTripUpdate(
         tripReference,
@@ -166,7 +186,8 @@ public final class ScheduledTripUpdate implements ExistingTripUpdate {
         stopTimeUpdates,
         formatPolicy,
         dataSource,
-        vehicleDescription
+        vehicleDescription,
+        tripHeadsign
       );
     }
   }

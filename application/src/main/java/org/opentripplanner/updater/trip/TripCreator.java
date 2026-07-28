@@ -86,7 +86,7 @@ public class TripCreator {
     boolean routeCreation = routeResolution.isNewRoute();
 
     // Create the trip
-    Trip trip = createTrip(tripId, tripCreationInfo, route, serviceId);
+    Trip trip = createTrip(resolvedUpdate, route, serviceId);
 
     // Build stop pattern from stop time updates
     var stopTimesAndPattern = NewStopPatternFactory.buildNewStopPattern(
@@ -142,8 +142,8 @@ public class TripCreator {
 
     // Create real-time trip times
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
-    resolvedUpdate.applyVehicleDescription(builder);
-    StopTimeUpdates.applyRealTimeUpdates(tripCreationInfo, builder, filteredUpdates.updates());
+    resolvedUpdate.applyJourneyDescription(builder);
+    StopTimeUpdates.applyRealTimeUpdates(builder, filteredUpdates.updates());
     // Extra journeys always retain the "added" flag, even when all stops are cancelled,
     // because they were never part of the static schedule.
     builder.withAdded();
@@ -186,18 +186,22 @@ public class TripCreator {
   }
 
   /**
-   * Create a new trip from trip creation info.
+   * Create a new trip from trip creation info. The headsign comes from the update itself rather than
+   * the creation info: it is the headsign the trip displays today, and the same value is applied to
+   * the real-time trip times.
    */
   private Trip createTrip(
-    FeedScopedId tripId,
-    TripCreationInfo tripCreationInfo,
+    ResolvedTripCreation resolvedUpdate,
     Route route,
     FeedScopedId serviceId
   ) {
-    var builder = Trip.of(tripId);
+    var builder = Trip.of(resolvedUpdate.tripId());
     builder.withRoute(route);
     builder.withServiceId(serviceId);
-    tripCreationInfo.applyTo(builder, route);
+    if (resolvedUpdate.tripHeadsign() != null) {
+      builder.withHeadsign(resolvedUpdate.tripHeadsign());
+    }
+    resolvedUpdate.tripCreationInfo().applyTo(builder, route);
     return builder.build();
   }
 }

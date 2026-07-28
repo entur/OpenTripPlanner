@@ -106,14 +106,10 @@ public class TripModifier {
 
     // Create real-time trip times builder from scheduled
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
-    resolvedUpdate.applyVehicleDescription(builder);
+    resolvedUpdate.applyJourneyDescription(builder);
 
     // Apply real-time updates
-    StopTimeUpdates.applyRealTimeUpdates(
-      resolvedUpdate.tripCreationInfo(),
-      builder,
-      stopTimeUpdates
-    );
+    StopTimeUpdates.applyRealTimeUpdates(builder, stopTimeUpdates);
 
     // Set state to MODIFIED (trip pattern was modified)
     builder.withModifiedTripPattern();

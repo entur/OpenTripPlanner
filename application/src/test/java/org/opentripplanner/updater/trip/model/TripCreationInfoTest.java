@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.basic.TransitMode;
 
@@ -27,7 +26,6 @@ class TripCreationInfoTest {
     assertNull(info.routeId());
     assertNull(info.routeCreationInfo());
     assertNull(info.serviceId());
-    assertNull(info.headsign());
     assertNull(info.shortName());
     assertNull(info.mode());
     assertNull(info.submode());
@@ -38,7 +36,6 @@ class TripCreationInfoTest {
 
   @Test
   void builderWithAllFields() {
-    var headsign = new NonLocalizedString("Downtown");
     var routeCreationInfo = new RouteCreationInfo(
       "Route 1",
       TransitMode.BUS,
@@ -51,7 +48,6 @@ class TripCreationInfoTest {
       .withRouteId(ROUTE_ID)
       .withRouteCreationInfo(routeCreationInfo)
       .withServiceId(SERVICE_ID)
-      .withHeadsign(headsign)
       .withShortName("T1")
       .withMode(TransitMode.BUS)
       .withSubmode("localBus")
@@ -63,7 +59,6 @@ class TripCreationInfoTest {
     assertEquals(ROUTE_ID, info.routeId());
     assertEquals(routeCreationInfo, info.routeCreationInfo());
     assertEquals(SERVICE_ID, info.serviceId());
-    assertEquals(headsign, info.headsign());
     assertEquals("T1", info.shortName());
     assertEquals(TransitMode.BUS, info.mode());
     assertEquals("localBus", info.submode());
