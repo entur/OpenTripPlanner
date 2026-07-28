@@ -38,6 +38,7 @@ public final class ResolvedExistingTrip {
   private final TripPattern pattern;
   private final TripPattern scheduledPattern;
   private final TripTimes scheduledTripTimes;
+  private final int serviceCode;
   private final List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates;
 
   public ResolvedExistingTrip(
@@ -47,6 +48,7 @@ public final class ResolvedExistingTrip {
     TripPattern pattern,
     TripPattern scheduledPattern,
     TripTimes scheduledTripTimes,
+    int serviceCode,
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates
   ) {
     this.formatPolicy = parsedUpdate.formatPolicy();
@@ -69,6 +71,7 @@ public final class ResolvedExistingTrip {
       scheduledTripTimes,
       "scheduledTripTimes must not be null"
     );
+    this.serviceCode = serviceCode;
     this.resolvedStopTimeUpdates = Objects.requireNonNull(
       resolvedStopTimeUpdates,
       "resolvedStopTimeUpdates must not be null"
@@ -100,6 +103,15 @@ public final class ResolvedExistingTrip {
 
   public TripTimes scheduledTripTimes() {
     return scheduledTripTimes;
+  }
+
+  /**
+   * The service code of the calendar the trip runs on, resolved from the trip's service id. Needed
+   * when a modified pattern rebuilds the trip times from scratch, since the new times must run on
+   * the same calendar as the trip they replace.
+   */
+  public int serviceCode() {
+    return serviceCode;
   }
 
   /** The behavioural {@link FormatPolicy} for this update, chosen once at the parser boundary. */

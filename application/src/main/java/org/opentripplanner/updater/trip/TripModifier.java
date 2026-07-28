@@ -8,7 +8,6 @@ import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
-import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
@@ -35,18 +34,15 @@ public class TripModifier {
 
   private final ExistingTripResolver resolver;
   private final ModifyTripValidator validator = new ModifyTripValidator();
-  private final TransitEditorService transitService;
   private final DeduplicatorService deduplicator;
   private final TripPatternCache tripPatternCache;
 
   public TripModifier(
     ExistingTripResolver resolver,
-    TransitEditorService transitService,
     DeduplicatorService deduplicator,
     TripPatternCache tripPatternCache
   ) {
     this.resolver = Objects.requireNonNull(resolver);
-    this.transitService = Objects.requireNonNull(transitService);
     this.deduplicator = Objects.requireNonNull(deduplicator);
     this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
   }
@@ -84,7 +80,7 @@ public class TripModifier {
       trip,
       stopTimesAndPattern.stopTimes(),
       deduplicator
-    ).withServiceCode(transitService.getTripCalendars().getServiceCode(trip.getServiceId()));
+    ).withServiceCode(resolvedUpdate.serviceCode());
 
     // Validate scheduled times
     try {

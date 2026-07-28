@@ -130,6 +130,10 @@ public class ExistingTripResolver {
       pattern,
       scheduledPattern,
       tripTimes,
+      // The scheduled times of the trip already run on the calendar of the trip's service id, so
+      // this is the same code as a lookup by service id - without the nullable Integer that
+      // TripCalendars returns for an unregistered service.
+      tripTimes.getServiceCode(),
       resolvedStopTimeUpdates
     );
   }

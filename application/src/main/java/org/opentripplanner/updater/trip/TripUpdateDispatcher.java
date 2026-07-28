@@ -113,7 +113,7 @@ public class TripUpdateDispatcher {
 
     return new TripUpdateDispatcher(
       new ScheduledTripUpdater(existingTripResolver, tripPatternCache),
-      new TripModifier(existingTripResolver, transitService, deduplicator, tripPatternCache),
+      new TripModifier(existingTripResolver, deduplicator, tripPatternCache),
       new TripAdder(newTripResolver, tripCreator, new AddedTripUpdater()),
       new TripCanceller(tripRemovalResolver),
       new TripDeleter(tripRemovalResolver),

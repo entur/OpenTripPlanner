@@ -89,7 +89,6 @@ class TripModifierTest {
       );
       modifier = new TripModifier(
         resolver,
-        transitService,
         new org.opentripplanner.transit.model.framework.Deduplicator(),
         tripPatternCache
       );
@@ -338,7 +337,6 @@ class TripModifierTest {
       );
       modifier = new TripModifier(
         resolver,
-        transitService,
         new org.opentripplanner.transit.model.framework.Deduplicator(),
         tripPatternCache
       );
