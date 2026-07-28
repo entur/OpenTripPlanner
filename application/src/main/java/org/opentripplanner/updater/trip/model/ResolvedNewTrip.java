@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.updater.trip.StopTimeUpdates;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
@@ -86,6 +87,23 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
   /** The behavioural {@link FormatPolicy} for this update, chosen once at the parser boundary. */
   public FormatPolicy formatPolicy() {
     return formatPolicy;
+  }
+
+  /**
+   * Apply the description of the vehicle serving the journey - its id and its wheelchair
+   * accessibility - to the trip times being built.
+   * <p>
+   * Both are journey-level attributes (the GTFS-RT vehicle descriptor, the SIRI journey), so every
+   * message restates them and they are re-applied on every message, whether the journey is created
+   * or updated and also when it is cancelled. A message that leaves an attribute out means "no
+   * information", so nothing is carried over from the previous message.
+   */
+  public void applyVehicleDescription(RealTimeTripTimesBuilder builder) {
+    builder.withVehicleId(vehicleId());
+    var wheelchairAccessibility = tripCreationInfo.wheelchairAccessibility();
+    if (wheelchairAccessibility != null) {
+      builder.withWheelchairAccessibility(wheelchairAccessibility);
+    }
   }
 
   /** The calls of the added trip as they arrived, including calls at unknown stops. */

@@ -142,18 +142,13 @@ public class TripCreator {
 
     // Create real-time trip times
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
-    builder.withVehicleId(resolvedUpdate.vehicleId());
+    resolvedUpdate.applyVehicleDescription(builder);
     StopTimeUpdates.applyRealTimeUpdates(tripCreationInfo, builder, filteredUpdates.updates());
     // Extra journeys always retain the "added" flag, even when all stops are cancelled,
     // because they were never part of the static schedule.
     builder.withAdded();
     if (resolvedUpdate.isCancelled()) {
       builder.withCanceled();
-    }
-
-    // Apply wheelchair accessibility
-    if (tripCreationInfo.wheelchairAccessibility() != null) {
-      builder.withWheelchairAccessibility(tripCreationInfo.wheelchairAccessibility());
     }
 
     // Create TripOnServiceDate for lookup by dated vehicle journey

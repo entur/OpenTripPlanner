@@ -106,7 +106,7 @@ public class TripModifier {
 
     // Create real-time trip times builder from scheduled
     var builder = scheduledTripTimes.createRealTimeFromScheduledTimes();
-    builder.withVehicleId(resolvedUpdate.vehicleId());
+    resolvedUpdate.applyVehicleDescription(builder);
 
     // Apply real-time updates
     StopTimeUpdates.applyRealTimeUpdates(

@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip.gtfs;
 
 import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
+import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor.WheelchairAccessible;
 import de.mfdz.MfdzRealtimeExtensions;
 import de.mfdz.MfdzRealtimeExtensions.StopTimePropertiesExtension.DropOffPickupType;
 import java.time.LocalDate;
@@ -538,9 +539,22 @@ public class TripUpdateBuilder {
   }
 
   public TripUpdateBuilder withVehicleId(String vehicleId) {
+    tripUpdateBuilder.setVehicle(vehicleDescriptor().setId(vehicleId).build());
+    return this;
+  }
+
+  public TripUpdateBuilder withWheelchairAccessible(WheelchairAccessible wheelchairAccessible) {
     tripUpdateBuilder.setVehicle(
-      GtfsRealtime.VehicleDescriptor.newBuilder().setId(vehicleId).build()
+      vehicleDescriptor().setWheelchairAccessible(wheelchairAccessible).build()
     );
     return this;
+  }
+
+  /**
+   * The vehicle descriptor built so far, so that the vehicle attributes can be set independently
+   * of each other and in any order.
+   */
+  private GtfsRealtime.VehicleDescriptor.Builder vehicleDescriptor() {
+    return tripUpdateBuilder.getVehicle().toBuilder();
   }
 }

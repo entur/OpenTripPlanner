@@ -3,6 +3,7 @@ package org.opentripplanner.updater.trip.gtfs;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -147,6 +148,39 @@ class GtfsRtTripUpdateParserTest {
     assertEquals(30600, asAbsolute(stopUpdate.arrivalUpdate()).time());
     assertNotNull(stopUpdate.departureUpdate());
     assertEquals(30660, asAbsolute(stopUpdate.departureUpdate()).time());
+  }
+
+  /**
+   * A vehicle descriptor that carries no wheelchair information leaves the accessibility unset, so
+   * that a replacement does not overwrite the accessibility of the trip it replaces.
+   */
+  @Test
+  void parseNewTripWithoutWheelchairInformation() {
+    var tripUpdate = GtfsRealtime.TripUpdate.newBuilder()
+      .setTrip(
+        GtfsRealtime.TripDescriptor.newBuilder()
+          .setTripId("trip1")
+          .setRouteId("route1")
+          .setStartTime("08:30:00")
+          .setScheduleRelationship(GtfsRealtime.TripDescriptor.ScheduleRelationship.ADDED)
+      )
+      .setVehicle(
+        GtfsRealtime.VehicleDescriptor.newBuilder().setWheelchairAccessible(
+          GtfsRealtime.VehicleDescriptor.WheelchairAccessible.NO_VALUE
+        )
+      )
+      .addStopTimeUpdate(
+        GtfsRealtime.TripUpdate.StopTimeUpdate.newBuilder()
+          .setStopId("stop1")
+          .setStopSequence(0)
+          .setArrival(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setTime(TIME_0830))
+          .setDeparture(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setTime(TIME_0831))
+      )
+      .build();
+
+    var parsed = assertInstanceOf(TripAddition.class, parser.parse(tripUpdate));
+
+    assertNull(parsed.tripCreationInfo().wheelchairAccessibility());
   }
 
   @Test

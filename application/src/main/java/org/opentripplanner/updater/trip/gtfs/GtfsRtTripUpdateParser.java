@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
-import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.gtfs.mapping.DirectionMapper;
@@ -317,16 +316,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     tripUpdate.tripHeadsign().ifPresent(builder::withHeadsign);
     tripUpdate.tripShortName().ifPresent(builder::withShortName);
 
-    tripUpdate
-      .vehicle()
-      .ifPresent(vehicle -> {
-        if (vehicle.hasWheelchairAccessible()) {
-          var accessibility = mapWheelchairAccessibility(
-            vehicle.getWheelchairAccessible().getNumber()
-          );
-          builder.withWheelchairAccessibility(accessibility);
-        }
-      });
+    tripUpdate.wheelchairAccessibility().ifPresent(builder::withWheelchairAccessibility);
 
     // Extract route creation info from MFDZ extensions
     var addedRoute = AddedRoute.ofTripDescriptor(tripUpdate);
@@ -348,13 +338,5 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     }
 
     return builder.build();
-  }
-
-  private Accessibility mapWheelchairAccessibility(int value) {
-    return switch (value) {
-      case 2 -> Accessibility.POSSIBLE;
-      case 3 -> Accessibility.NOT_POSSIBLE;
-      default -> Accessibility.NO_INFORMATION;
-    };
   }
 }

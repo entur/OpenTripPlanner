@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.network.TripPattern;
+import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
@@ -104,6 +105,23 @@ public final class ResolvedExistingTrip {
   /** The behavioural {@link FormatPolicy} for this update, chosen once at the parser boundary. */
   public FormatPolicy formatPolicy() {
     return formatPolicy;
+  }
+
+  /**
+   * Apply the description of the vehicle serving the trip - its id and its wheelchair accessibility
+   * - to the trip times being built.
+   * <p>
+   * Only a replacement carries a {@link TripCreationInfo} and hence a wheelchair accessibility; a
+   * plain update to a scheduled trip leaves the accessibility of the scheduled trip untouched.
+   */
+  public void applyVehicleDescription(RealTimeTripTimesBuilder builder) {
+    builder.withVehicleId(vehicleId);
+    var wheelchairAccessibility = tripCreationInfo == null
+      ? null
+      : tripCreationInfo.wheelchairAccessibility();
+    if (wheelchairAccessibility != null) {
+      builder.withWheelchairAccessibility(wheelchairAccessibility);
+    }
   }
 
   public List<ResolvedStopTimeUpdate> stopTimeUpdates() {
