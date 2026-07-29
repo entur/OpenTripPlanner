@@ -24,10 +24,10 @@ import org.opentripplanner.updater.trip.policy.FormatPolicy;
 import org.opentripplanner.updater.trip.policy.UnknownStopPolicy;
 
 /**
- * Tests for the rules of {@link AddNewTripValidator}, exercised through the
- * {@link NewTripResolver} that runs it.
+ * Tests for {@link NewTripResolver}, and through it the invariants a {@link ResolvedTripCreation}
+ * enforces on construction.
  */
-class AddNewTripValidatorTest {
+class NewTripResolverTest {
 
   private static final ZoneId TIME_ZONE = ZoneId.of("America/New_York");
   private static final String FEED_ID = FeedScopedIdForTestFactory.FEED_ID;

@@ -119,8 +119,7 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
   /**
    * The calls of the added trip that reference a stop known to the transit model, together with the
    * warnings raised by dropping the others. Calls at unknown stops are only dropped in IGNORE mode -
-   * in FAIL mode the {@link org.opentripplanner.updater.trip.AddNewTripValidator} rejects the update
-   * before the trip is built.
+   * in FAIL mode {@link ResolvedTripCreation} rejects the update before the trip is built.
    */
   public StopTimeUpdates.FilteredStopTimeUpdates stopTimeUpdatesWithKnownStops() {
     return StopTimeUpdates.filterUnknownStops(resolvedStopTimeUpdates);

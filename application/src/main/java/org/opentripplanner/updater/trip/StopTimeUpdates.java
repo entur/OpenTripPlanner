@@ -29,7 +29,7 @@ public final class StopTimeUpdates {
 
   /**
    * Filter stop time updates to remove unknown stops.
-   * Unknown stops in FAIL mode are caught by the {@link AddNewTripValidator} beforehand,
+   * Unknown stops in FAIL mode are caught by {@link ResolvedTripCreation} beforehand,
    * so this method only needs to handle IGNORE mode filtering.
    */
   public static FilteredStopTimeUpdates filterUnknownStops(List<ResolvedStopTimeUpdate> updates) {
