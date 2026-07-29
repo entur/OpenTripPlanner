@@ -25,7 +25,7 @@ import org.opentripplanner.updater.trip.policy.FormatPolicy;
 public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, ResolvedAddedTripUpdate {
 
   private final FormatPolicy formatPolicy;
-  private final TripCreationInfo tripCreationInfo;
+  private final FeedScopedId tripId;
 
   @Nullable
   private final String dataSource;
@@ -45,7 +45,7 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates
   ) {
     this.formatPolicy = parsedUpdate.formatPolicy();
-    this.tripCreationInfo = parsedUpdate.tripCreationInfo();
+    this.tripId = parsedUpdate.tripCreationInfo().tripId();
     this.dataSource = parsedUpdate.dataSource();
     this.vehicleDescription = parsedUpdate.vehicleDescription();
     this.tripHeadsign = parsedUpdate.tripHeadsign();
@@ -63,7 +63,7 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
 
   /** The id of the trip this update adds. */
   public FeedScopedId tripId() {
-    return tripCreationInfo.tripId();
+    return tripId;
   }
 
   /**
@@ -123,10 +123,6 @@ public abstract sealed class ResolvedNewTrip permits ResolvedTripCreation, Resol
    */
   public StopTimeUpdates.FilteredStopTimeUpdates stopTimeUpdatesWithKnownStops() {
     return StopTimeUpdates.filterUnknownStops(resolvedStopTimeUpdates);
-  }
-
-  public TripCreationInfo tripCreationInfo() {
-    return tripCreationInfo;
   }
 
   @Nullable

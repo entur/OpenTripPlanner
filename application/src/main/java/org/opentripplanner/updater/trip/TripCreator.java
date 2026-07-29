@@ -40,7 +40,6 @@ public class TripCreator {
   }
 
   public TripUpdateResult create(ResolvedTripCreation resolvedUpdate) {
-    var tripCreationInfo = resolvedUpdate.tripCreationInfo();
     LocalDate serviceDate = resolvedUpdate.serviceDate();
     FeedScopedId tripId = resolvedUpdate.tripId();
 
@@ -122,16 +121,7 @@ public class TripCreator {
     }
 
     // Create TripOnServiceDate for lookup by dated vehicle journey
-    // SIRI names the dated instance of a journey separately - the DatedServiceJourney - and that id
-    // identifies the added trip on service date. GTFS-RT names no such entity, so the added trip on
-    // service date takes the trip id instead: an added trip is held once per id
-    // (realTimeAddedTrips), and a repeat of that id revises the same trip rather than adding a
-    // second service date, so the two can never collide.
-    var tripOnServiceDateId = tripCreationInfo.tripOnServiceDateId() != null
-      ? tripCreationInfo.tripOnServiceDateId()
-      : tripId;
-
-    TripOnServiceDate tripOnServiceDate = TripOnServiceDate.of(tripOnServiceDateId)
+    TripOnServiceDate tripOnServiceDate = TripOnServiceDate.of(resolvedUpdate.tripOnServiceDateId())
       .withTrip(trip)
       .withServiceDate(serviceDate)
       .withRealtimeExtraJourney(true)
@@ -157,9 +147,9 @@ public class TripCreator {
   }
 
   /**
-   * Create a new trip from trip creation info. The headsign comes from the update itself rather than
-   * the creation info: it is the headsign the trip displays today, and the same value is applied to
-   * the real-time trip times.
+   * Create the new trip. The headsign comes from the update itself rather than the creation data:
+   * it is the headsign the trip displays today, and the same value is applied to the real-time
+   * trip times.
    */
   private Trip createTrip(ResolvedTripCreation resolvedUpdate, Route route) {
     var builder = Trip.of(resolvedUpdate.tripId());
@@ -168,7 +158,7 @@ public class TripCreator {
     if (resolvedUpdate.tripHeadsign() != null) {
       builder.withHeadsign(resolvedUpdate.tripHeadsign());
     }
-    resolvedUpdate.tripCreationInfo().applyTo(builder, route);
+    resolvedUpdate.applyTripDescription(builder);
     return builder.build();
   }
 }

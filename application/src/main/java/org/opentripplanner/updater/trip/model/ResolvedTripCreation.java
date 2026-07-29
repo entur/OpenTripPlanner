@@ -3,8 +3,11 @@ package org.opentripplanner.updater.trip.model;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
+import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.Route;
+import org.opentripplanner.transit.model.timetable.TripBuilder;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
@@ -22,6 +25,16 @@ public final class ResolvedTripCreation extends ResolvedNewTrip {
   private final Route route;
   private final boolean isNewRoute;
   private final List<TripOnServiceDate> replacedTrips;
+  private final FeedScopedId tripOnServiceDateId;
+
+  @Nullable
+  private final TransitMode mode;
+
+  @Nullable
+  private final String submode;
+
+  @Nullable
+  private final String shortName;
 
   public ResolvedTripCreation(
     TripAddition parsedUpdate,
@@ -39,6 +52,13 @@ public final class ResolvedTripCreation extends ResolvedNewTrip {
     this.route = Objects.requireNonNull(route, "route must not be null");
     this.isNewRoute = isNewRoute;
     this.replacedTrips = List.copyOf(replacedTrips);
+    var creationInfo = parsedUpdate.tripCreationInfo();
+    this.tripOnServiceDateId = creationInfo.tripOnServiceDateId() != null
+      ? creationInfo.tripOnServiceDateId()
+      : creationInfo.tripId();
+    this.mode = creationInfo.mode();
+    this.submode = creationInfo.submode();
+    this.shortName = creationInfo.shortName();
     validate();
   }
 
@@ -69,6 +89,32 @@ public final class ResolvedTripCreation extends ResolvedNewTrip {
   /** The dated trips the created trip replaces. References to unknown trips are dropped. */
   public List<TripOnServiceDate> replacedTrips() {
     return replacedTrips;
+  }
+
+  /**
+   * The id identifying the added trip on its service date. SIRI names the dated instance of a
+   * journey separately - the DatedServiceJourney - and that id identifies the added trip on
+   * service date. GTFS-RT names no such entity, so the added trip on service date takes the trip
+   * id instead: an added trip is held once per id (realTimeAddedTrips), and a repeat of that id
+   * revises the same trip rather than adding a second service date, so the two can never collide.
+   */
+  public FeedScopedId tripOnServiceDateId() {
+    return tripOnServiceDateId;
+  }
+
+  /**
+   * Apply the mode, submode and short name the message describes the created trip with. Falls back
+   * to the mode of {@link #route()} when the message states none. The headsign is not creation
+   * data - see {@link #tripHeadsign()}.
+   */
+  public void applyTripDescription(TripBuilder builder) {
+    builder.withMode(mode != null ? mode : route.getMode());
+    if (submode != null) {
+      builder.withNetexSubmode(submode);
+    }
+    if (shortName != null) {
+      builder.withShortName(shortName);
+    }
   }
 
   /**
