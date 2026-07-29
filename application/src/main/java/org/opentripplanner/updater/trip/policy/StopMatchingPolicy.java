@@ -30,7 +30,7 @@ public sealed interface StopMatchingPolicy
 
   /**
    * Whether the update must cover every scheduled stop exactly once by position (the FULL_UPDATE
-   * precondition enforced by {@code UpdateExistingTripValidator}).
+   * precondition enforced by {@code ExistingTripResolver}).
    */
   boolean requiresExactStopCount();
 

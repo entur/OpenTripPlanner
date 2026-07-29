@@ -6,8 +6,8 @@ import org.opentripplanner.transit.model.site.StopLocation;
 /**
  * The single specification deciding whether a real-time message may replace a scheduled stop with
  * a different stop. Consulted by both the apply path ({@code ScheduledTripUpdater}) and the
- * {@code ModifyTripValidator}, replacing the format-divergent {@code StopReplacementConstraint}
- * enum and the former {@code StopReplacementValidator}.
+ * extra-call validation in {@code ExistingTripResolver}, replacing the format-divergent
+ * {@code StopReplacementConstraint} enum and the former {@code StopReplacementValidator}.
  */
 public sealed interface StopReplacementPolicy
   permits

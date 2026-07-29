@@ -25,10 +25,10 @@ import org.opentripplanner.updater.trip.policy.FormatPolicy;
 import org.opentripplanner.updater.trip.policy.StopMatchingPolicy;
 
 /**
- * Tests for the rules of {@link UpdateExistingTripValidator}, exercised through the
- * {@link ExistingTripResolver} that runs it.
+ * Tests for the preconditions {@link ExistingTripResolver} enforces when it resolves an update to
+ * the times of an existing scheduled trip.
  */
-class UpdateExistingTripValidatorTest {
+class ScheduledTripUpdateValidationTest {
 
   private static final ZoneId TIME_ZONE = ZoneId.of("America/New_York");
   private static final String FEED_ID = FeedScopedIdForTestFactory.FEED_ID;

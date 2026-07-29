@@ -26,10 +26,10 @@ import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
- * Tests for the rules of {@link ModifyTripValidator}, exercised through the
- * {@link ExistingTripResolver} that runs it.
+ * Tests for the preconditions {@link ExistingTripResolver} enforces when it resolves a modification
+ * of the stop pattern of an existing trip.
  */
-class ModifyTripValidatorTest {
+class TripModificationValidationTest {
 
   private static final ZoneId TIME_ZONE = ZoneId.of("America/New_York");
   private static final String FEED_ID = FeedScopedIdForTestFactory.FEED_ID;

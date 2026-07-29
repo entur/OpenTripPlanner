@@ -271,7 +271,7 @@ class TripModifierTest {
       assertEquals(UpdateErrorType.UNKNOWN_STOP, ex.errorType());
     }
 
-    // replacementTrip_tooFewStops is now in ModifyTripValidatorTest since
+    // replacementTrip_tooFewStops is now in TripModificationValidationTest since
     // minimum stops validation was extracted to the validator.
 
     private ParsedStopTimeUpdate createStopUpdate(String stopId, int sequence, int timeSeconds) {
@@ -398,7 +398,7 @@ class TripModifierTest {
     }
 
     // extraCall_wrongNumberOfNonExtraStops and extraCall_nonExtraStopDoesNotMatch are now
-    // in ModifyTripValidatorTest since SIRI extra call validation was extracted to the validator.
+    // in TripModificationValidationTest since SIRI extra call validation moved to the resolver.
 
     private ParsedStopTimeUpdate createSiriStopUpdate(
       String stopId,

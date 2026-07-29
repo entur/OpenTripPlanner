@@ -661,7 +661,7 @@ class ScheduledTripUpdaterTest {
     }
 
     // FULL_UPDATE constraint tests (rejectsStopSequence, rejectsTooFewStops, rejectsTooManyStops)
-    // are now in UpdateExistingTripValidatorTest since validation was extracted to the validator.
+    // are now in ScheduledTripUpdateValidationTest since validation moved to the resolver.
   }
 
   /**
