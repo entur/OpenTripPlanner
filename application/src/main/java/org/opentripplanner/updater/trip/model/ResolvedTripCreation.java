@@ -2,6 +2,8 @@ package org.opentripplanner.updater.trip.model;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 
@@ -13,13 +15,30 @@ import org.opentripplanner.updater.spi.UpdateException;
  */
 public final class ResolvedTripCreation extends ResolvedNewTrip {
 
+  private final FeedScopedId serviceId;
+  private final int serviceCode;
+
   public ResolvedTripCreation(
     TripAddition parsedUpdate,
     LocalDate serviceDate,
-    List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates
+    List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates,
+    FeedScopedId serviceId,
+    int serviceCode
   ) {
     super(parsedUpdate, serviceDate, resolvedStopTimeUpdates);
+    this.serviceId = Objects.requireNonNull(serviceId, "serviceId must not be null");
+    this.serviceCode = serviceCode;
     validate();
+  }
+
+  /** The service id valid for the created trip's service date. */
+  public FeedScopedId serviceId() {
+    return serviceId;
+  }
+
+  /** The service code corresponding to {@link #serviceId()}. */
+  public int serviceCode() {
+    return serviceCode;
   }
 
   /**

@@ -10,6 +10,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
+import org.opentripplanner.transit.model.TripInput;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
@@ -37,8 +38,14 @@ class NewTripResolverTest {
 
   @BeforeEach
   void setUp() {
-    var builder = TransitTestEnvironment.of().addStops("A", "B", "C");
-    env = builder.build();
+    var builder = TransitTestEnvironment.of();
+    var stopA = builder.stop("A");
+    var stopB = builder.stop("B");
+    builder.stop("C");
+    // A scheduled trip is needed to give the feed a service period covering the default date
+    env = builder
+      .addTrip(TripInput.of("scheduled-trip").addStop(stopA, "08:00").addStop(stopB, "08:10"))
+      .build();
 
     var transitService = (TransitEditorService) env.transitService();
     var tripResolver = new TripResolver(env.transitService());
@@ -106,6 +113,25 @@ class NewTripResolverTest {
       .build();
 
     assertDoesNotThrow(() -> resolve(parsedUpdate));
+  }
+
+  @Test
+  void outsideServicePeriod_fails() {
+    var tripId = new FeedScopedId(FEED_ID, "new-trip");
+    var tripRef = TripReference.ofTripId(tripId);
+
+    var parsedUpdate = TripAddition.builder(
+      tripRef,
+      env.defaultServiceDate().plusYears(1),
+      TripCreationInfo.builder(tripId).build()
+    )
+      .withFormatPolicy(FormatPolicy.builder().withUnknownStop(UnknownStopPolicy.FAIL).build())
+      .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
+      .addStopTimeUpdate(createStopUpdate("B", 1, 10 * 3600 + 30 * 60))
+      .build();
+
+    var ex = assertThrows(UpdateException.class, () -> resolve(parsedUpdate));
+    assertEquals(UpdateErrorType.OUTSIDE_SERVICE_PERIOD, ex.errorType());
   }
 
   @Test

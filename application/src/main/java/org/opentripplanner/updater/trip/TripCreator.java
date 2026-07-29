@@ -55,13 +55,6 @@ public class TripCreator {
     LocalDate serviceDate = resolvedUpdate.serviceDate();
     FeedScopedId tripId = resolvedUpdate.tripId();
 
-    // Get or create service ID for this date
-    FeedScopedId serviceId = transitService.getOrCreateServiceIdForDate(serviceDate);
-    if (serviceId == null) {
-      LOG.debug("ADD_TRIP: Cannot get service ID for date {}", serviceDate);
-      throw UpdateException.of(tripId, UpdateErrorType.OUTSIDE_SERVICE_PERIOD);
-    }
-
     // Filter stop time updates (GTFS-RT: filter unknown stops, SIRI: fail on unknown stops)
     var filteredUpdates = resolvedUpdate.stopTimeUpdatesWithKnownStops();
 
@@ -80,7 +73,7 @@ public class TripCreator {
     boolean routeCreation = routeResolution.isNewRoute();
 
     // Create the trip
-    Trip trip = createTrip(resolvedUpdate, route, serviceId);
+    Trip trip = createTrip(resolvedUpdate, route);
 
     // Build stop pattern from stop time updates
     var stopTimesAndPattern = NewStopPatternFactory.buildNewStopPattern(
@@ -94,7 +87,7 @@ public class TripCreator {
       trip,
       stopTimesAndPattern.stopTimes(),
       deduplicator
-    ).withServiceCode(transitService.getTripCalendars().getServiceCode(serviceId));
+    ).withServiceCode(resolvedUpdate.serviceCode());
 
     // Validate times
     try {
@@ -193,14 +186,10 @@ public class TripCreator {
    * the creation info: it is the headsign the trip displays today, and the same value is applied to
    * the real-time trip times.
    */
-  private Trip createTrip(
-    ResolvedTripCreation resolvedUpdate,
-    Route route,
-    FeedScopedId serviceId
-  ) {
+  private Trip createTrip(ResolvedTripCreation resolvedUpdate, Route route) {
     var builder = Trip.of(resolvedUpdate.tripId());
     builder.withRoute(route);
-    builder.withServiceId(serviceId);
+    builder.withServiceId(resolvedUpdate.serviceId());
     if (resolvedUpdate.tripHeadsign() != null) {
       builder.withHeadsign(resolvedUpdate.tripHeadsign());
     }

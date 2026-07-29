@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
@@ -26,7 +27,8 @@ import org.slf4j.LoggerFactory;
  * The parsers are state-free, so whether an ADD_NEW_TRIP update creates a trip or updates a
  * previously added one can only be decided here, against the current transit model:
  * <ul>
- *   <li>Trip not yet in the transit model - returns {@link ResolvedTripCreation}</li>
+ *   <li>Trip not yet in the transit model - returns {@link ResolvedTripCreation}, carrying the
+ *       service id/code for the trip's service date</li>
  *   <li>Trip already added in real-time - returns {@link ResolvedAddedTripUpdate}</li>
  * </ul>
  * A {@link ResolvedTripCreation} validates itself on construction, so resolution also rejects a
@@ -98,8 +100,21 @@ public class NewTripResolver {
       );
     }
 
-    // New trip - no existing trip to resolve
-    return new ResolvedTripCreation(parsedUpdate, serviceDate, resolvedStopTimeUpdates);
+    // New trip - resolve the service id and code the created trip will run under
+    FeedScopedId serviceId = transitService.getOrCreateServiceIdForDate(serviceDate);
+    if (serviceId == null) {
+      LOG.debug("ADD_NEW_TRIP: Cannot get service ID for date {}", serviceDate);
+      throw UpdateException.of(tripId, UpdateErrorType.OUTSIDE_SERVICE_PERIOD);
+    }
+    int serviceCode = transitService.getTripCalendars().getServiceCode(serviceId);
+
+    return new ResolvedTripCreation(
+      parsedUpdate,
+      serviceDate,
+      resolvedStopTimeUpdates,
+      serviceId,
+      serviceCode
+    );
   }
 
   /**

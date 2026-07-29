@@ -270,6 +270,30 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     );
   }
 
+  /**
+   * The DataFrameRef of the FramedVehicleJourneyRef dates the extra journey. A journey dated
+   * outside the feed's service period cannot run and must be rejected.
+   */
+  @Test
+  void testRejectExtraJourneyOutsideServicePeriod() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = createValidAddedJourney(siri)
+      .withFramedVehicleJourneyRef(builder ->
+        builder.withServiceDate(env.defaultServiceDate().plusYears(1))
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    var result = siri.applyEstimatedTimetable(updates);
+
+    assertFailure(UpdateErrorType.OUTSIDE_SERVICE_PERIOD, result);
+    assertNull(
+      env.transitService().getTrip(id(ADDED_TRIP_ID)),
+      "An extra journey dated outside the service period must not be added"
+    );
+  }
+
   @Test
   void testReplaceJourney() {
     var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
