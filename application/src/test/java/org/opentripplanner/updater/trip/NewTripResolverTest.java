@@ -51,7 +51,15 @@ class NewTripResolverTest {
     var tripResolver = new TripResolver(env.transitService());
     var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
     var stopResolver = new StopResolver(env.transitService());
-    resolver = new NewTripResolver(transitService, serviceDateResolver, stopResolver, TIME_ZONE);
+    // The GTFS-RT strategy resolves a route for any trip by falling back to a generated route
+    var routeCreationStrategy = new GtfsRtRouteCreationStrategy(FEED_ID, null);
+    resolver = new NewTripResolver(
+      transitService,
+      serviceDateResolver,
+      stopResolver,
+      routeCreationStrategy,
+      TIME_ZONE
+    );
   }
 
   private ResolvedTripCreation resolve(TripAddition parsedUpdate) {

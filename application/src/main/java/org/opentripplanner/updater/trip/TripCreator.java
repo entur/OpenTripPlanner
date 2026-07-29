@@ -11,7 +11,6 @@ import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
-import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
@@ -32,21 +31,12 @@ public class TripCreator {
 
   private static final Logger LOG = LoggerFactory.getLogger(TripCreator.class);
 
-  private final TransitEditorService transitService;
   private final DeduplicatorService deduplicator;
   private final TripPatternCache tripPatternCache;
-  private final RouteCreationStrategy routeCreationStrategy;
 
-  public TripCreator(
-    TransitEditorService transitService,
-    DeduplicatorService deduplicator,
-    TripPatternCache tripPatternCache,
-    RouteCreationStrategy routeCreationStrategy
-  ) {
-    this.transitService = Objects.requireNonNull(transitService);
+  public TripCreator(DeduplicatorService deduplicator, TripPatternCache tripPatternCache) {
     this.deduplicator = Objects.requireNonNull(deduplicator);
     this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
-    this.routeCreationStrategy = Objects.requireNonNull(routeCreationStrategy);
   }
 
   public TripUpdateResult create(ResolvedTripCreation resolvedUpdate) {
@@ -63,13 +53,7 @@ public class TripCreator {
       throw UpdateException.of(tripId, UpdateErrorType.TOO_FEW_STOPS);
     }
 
-    // Resolve or create route
-    var routeResolution = routeCreationStrategy.resolveOrCreateRoute(
-      tripCreationInfo,
-      transitService
-    );
-    Route route = routeResolution.route();
-    boolean routeCreation = routeResolution.isNewRoute();
+    Route route = resolvedUpdate.route();
 
     // Create the trip
     Trip trip = createTrip(resolvedUpdate, route);
@@ -160,7 +144,7 @@ public class TripCreator {
       var realTimeTripUpdate = RealTimeTripUpdate.of(pattern, builder.build(), serviceDate)
         .withAddedTripOnServiceDate(tripOnServiceDate)
         .withTripCreation(true)
-        .withRouteCreation(routeCreation)
+        .withRouteCreation(resolvedUpdate.isNewRoute())
         .withProducer(resolvedUpdate.dataSource())
         .build();
 

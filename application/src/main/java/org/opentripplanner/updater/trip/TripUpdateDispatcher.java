@@ -116,6 +116,7 @@ public class TripUpdateDispatcher {
       transitService,
       serviceDateResolver,
       stopResolver,
+      routeCreationStrategy,
       timeZone
     );
     var tripRemovalResolver = new TripRemovalResolver(
@@ -125,14 +126,6 @@ public class TripUpdateDispatcher {
     );
     var duplicateTripResolver = new DuplicateTripResolver(transitService);
 
-    // Per-type domain operations
-    var tripCreator = new TripCreator(
-      transitService,
-      deduplicator,
-      tripPatternCache,
-      routeCreationStrategy
-    );
-
     return new TripUpdateDispatcher(
       existingTripResolver,
       newTripResolver,
@@ -140,7 +133,7 @@ public class TripUpdateDispatcher {
       duplicateTripResolver,
       new ScheduledTripUpdater(tripPatternCache),
       new TripModifier(deduplicator, tripPatternCache),
-      tripCreator,
+      new TripCreator(deduplicator, tripPatternCache),
       new TripDuplicator(deduplicator)
     );
   }

@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
@@ -18,6 +19,8 @@ public final class ResolvedTripCreation extends ResolvedNewTrip {
 
   private final FeedScopedId serviceId;
   private final int serviceCode;
+  private final Route route;
+  private final boolean isNewRoute;
   private final List<TripOnServiceDate> replacedTrips;
 
   public ResolvedTripCreation(
@@ -26,11 +29,15 @@ public final class ResolvedTripCreation extends ResolvedNewTrip {
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates,
     FeedScopedId serviceId,
     int serviceCode,
+    Route route,
+    boolean isNewRoute,
     List<TripOnServiceDate> replacedTrips
   ) {
     super(parsedUpdate, serviceDate, resolvedStopTimeUpdates);
     this.serviceId = Objects.requireNonNull(serviceId, "serviceId must not be null");
     this.serviceCode = serviceCode;
+    this.route = Objects.requireNonNull(route, "route must not be null");
+    this.isNewRoute = isNewRoute;
     this.replacedTrips = List.copyOf(replacedTrips);
     validate();
   }
@@ -43,6 +50,20 @@ public final class ResolvedTripCreation extends ResolvedNewTrip {
   /** The service code corresponding to {@link #serviceId()}. */
   public int serviceCode() {
     return serviceCode;
+  }
+
+  /** The route the created trip runs on - found in the transit model or created for this trip. */
+  public Route route() {
+    return route;
+  }
+
+  /**
+   * Whether {@link #route()} must be registered with the transit model as part of this update -
+   * because it was created for this trip, or (GTFS-RT) because a full-dataset batch re-registers
+   * every route it references.
+   */
+  public boolean isNewRoute() {
+    return isNewRoute;
   }
 
   /** The dated trips the created trip replaces. References to unknown trips are dropped. */

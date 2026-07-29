@@ -30,7 +30,8 @@ import org.slf4j.LoggerFactory;
  * previously added one can only be decided here, against the current transit model:
  * <ul>
  *   <li>Trip not yet in the transit model - returns {@link ResolvedTripCreation}, carrying the
- *       service id/code for the trip's service date and the dated trips it replaces</li>
+ *       route the trip runs on, the service id/code for its service date and the dated trips it
+ *       replaces</li>
  *   <li>Trip already added in real-time - returns {@link ResolvedAddedTripUpdate}</li>
  * </ul>
  * A {@link ResolvedTripCreation} validates itself on construction, so resolution also rejects a
@@ -43,12 +44,14 @@ public class NewTripResolver {
   private final TransitEditorService transitService;
   private final ServiceDateResolver serviceDateResolver;
   private final StopResolver stopResolver;
+  private final RouteCreationStrategy routeCreationStrategy;
   private final ZoneId timeZone;
 
   public NewTripResolver(
     TransitEditorService transitService,
     ServiceDateResolver serviceDateResolver,
     StopResolver stopResolver,
+    RouteCreationStrategy routeCreationStrategy,
     ZoneId timeZone
   ) {
     this.transitService = Objects.requireNonNull(transitService, "transitService must not be null");
@@ -57,6 +60,10 @@ public class NewTripResolver {
       "serviceDateResolver must not be null"
     );
     this.stopResolver = Objects.requireNonNull(stopResolver, "stopResolver must not be null");
+    this.routeCreationStrategy = Objects.requireNonNull(
+      routeCreationStrategy,
+      "routeCreationStrategy must not be null"
+    );
     this.timeZone = Objects.requireNonNull(timeZone, "timeZone must not be null");
   }
 
@@ -110,12 +117,20 @@ public class NewTripResolver {
     }
     int serviceCode = transitService.getTripCalendars().getServiceCode(serviceId);
 
+    // Resolve the route the trip runs on, creating one if the transit model has none for it
+    var routeResolution = routeCreationStrategy.resolveOrCreateRoute(
+      parsedUpdate.tripCreationInfo(),
+      transitService
+    );
+
     return new ResolvedTripCreation(
       parsedUpdate,
       serviceDate,
       resolvedStopTimeUpdates,
       serviceId,
       serviceCode,
+      routeResolution.route(),
+      routeResolution.isNewRoute(),
       resolveReplacedTrips(parsedUpdate.tripCreationInfo())
     );
   }
