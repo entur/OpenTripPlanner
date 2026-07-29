@@ -158,8 +158,11 @@ public class TripCreator {
       .filter(Objects::nonNull)
       .toList();
 
-    // SIRI identifies the added trip on service date by its DatedServiceJourney id, which is not
-    // the id of the trip. GTFS-RT has no such concept and uses the trip id.
+    // SIRI names the dated instance of a journey separately - the DatedServiceJourney - and that id
+    // identifies the added trip on service date. GTFS-RT names no such entity, so the added trip on
+    // service date takes the trip id instead: an added trip is held once per id
+    // (realTimeAddedTrips), and a repeat of that id revises the same trip rather than adding a
+    // second service date, so the two can never collide.
     var tripOnServiceDateId = tripCreationInfo.tripOnServiceDateId() != null
       ? tripCreationInfo.tripOnServiceDateId()
       : tripId;
