@@ -32,11 +32,32 @@ import org.opentripplanner.updater.trip.TripUpdateResult;
  */
 public final class ResolvedTripCreation extends ResolvedNewTrip {
 
+  /** The service id valid for the created trip's service date. */
   private final FeedScopedId serviceId;
+
+  /** The service code corresponding to {@link #serviceId}. */
   private final int serviceCode;
+
+  /** The route the created trip runs on - found in the transit model or created for this trip. */
   private final Route route;
+
+  /**
+   * Whether {@link #route} must be registered with the transit model as part of this update -
+   * because it was created for this trip, or (GTFS-RT) because a full-dataset batch re-registers
+   * every route it references.
+   */
   private final boolean isNewRoute;
+
+  /** The dated trips the created trip replaces. References to unknown trips are dropped. */
   private final List<TripOnServiceDate> replacedTrips;
+
+  /**
+   * The id identifying the added trip on its service date. SIRI names the dated instance of a
+   * journey separately - the DatedServiceJourney - and that id identifies the added trip on
+   * service date. GTFS-RT names no such entity, so the added trip on service date takes the trip
+   * id instead: an added trip is held once per id (realTimeAddedTrips), and a repeat of that id
+   * revises the same trip rather than adding a second service date, so the two can never collide.
+   */
   private final FeedScopedId tripOnServiceDateId;
 
   @Nullable
@@ -188,49 +209,9 @@ public final class ResolvedTripCreation extends ResolvedNewTrip {
     return builder.build();
   }
 
-  /** The service id valid for the created trip's service date. */
-  public FeedScopedId serviceId() {
-    return serviceId;
-  }
-
-  /** The service code corresponding to {@link #serviceId()}. */
-  public int serviceCode() {
-    return serviceCode;
-  }
-
-  /** The route the created trip runs on - found in the transit model or created for this trip. */
-  public Route route() {
-    return route;
-  }
-
-  /**
-   * Whether {@link #route()} must be registered with the transit model as part of this update -
-   * because it was created for this trip, or (GTFS-RT) because a full-dataset batch re-registers
-   * every route it references.
-   */
-  public boolean isNewRoute() {
-    return isNewRoute;
-  }
-
-  /** The dated trips the created trip replaces. References to unknown trips are dropped. */
-  public List<TripOnServiceDate> replacedTrips() {
-    return replacedTrips;
-  }
-
-  /**
-   * The id identifying the added trip on its service date. SIRI names the dated instance of a
-   * journey separately - the DatedServiceJourney - and that id identifies the added trip on
-   * service date. GTFS-RT names no such entity, so the added trip on service date takes the trip
-   * id instead: an added trip is held once per id (realTimeAddedTrips), and a repeat of that id
-   * revises the same trip rather than adding a second service date, so the two can never collide.
-   */
-  public FeedScopedId tripOnServiceDateId() {
-    return tripOnServiceDateId;
-  }
-
   /**
    * Apply the mode, submode and short name the message describes the created trip with. Falls back
-   * to the mode of {@link #route()} when the message states none. The headsign is not creation
+   * to the mode of {@link #route} when the message states none. The headsign is not creation
    * data - see {@link #tripHeadsign()}.
    */
   private void applyTripDescription(TripBuilder builder) {

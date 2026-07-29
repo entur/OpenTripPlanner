@@ -21,8 +21,13 @@ import org.opentripplanner.updater.trip.TripUpdateResult;
  */
 public final class ResolvedAddedTripUpdate extends ResolvedNewTrip {
 
+  /** The previously added trip. */
   private final Trip trip;
+
+  /** The pattern the previously added trip runs on. */
   private final TripPattern pattern;
+
+  /** The baseline times the real-time times are rebuilt from. */
   private final TripTimes tripTimes;
 
   public ResolvedAddedTripUpdate(
@@ -70,16 +75,6 @@ public final class ResolvedAddedTripUpdate extends ResolvedNewTrip {
       .build();
 
     return new TripUpdateResult(realTimeTripUpdate, calls.warnings());
-  }
-
-  /** The previously added trip. */
-  public Trip trip() {
-    return trip;
-  }
-
-  /** The pattern the previously added trip runs on. */
-  public TripPattern pattern() {
-    return pattern;
   }
 
   @Override
