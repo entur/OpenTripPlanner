@@ -88,7 +88,6 @@ class TripModifierTest {
         TIME_ZONE
       );
       modifier = new TripModifier(
-        resolver,
         new org.opentripplanner.transit.model.framework.Deduplicator(),
         tripPatternCache
       );
@@ -336,7 +335,6 @@ class TripModifierTest {
         TIME_ZONE
       );
       modifier = new TripModifier(
-        resolver,
         new org.opentripplanner.transit.model.framework.Deduplicator(),
         tripPatternCache
       );

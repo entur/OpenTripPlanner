@@ -28,7 +28,7 @@ import org.slf4j.LoggerFactory;
  * <p>
  * This class only creates trips. Subsequent updates to a trip added earlier are resolved to
  * a {@link org.opentripplanner.updater.trip.model.ResolvedAddedTripUpdate} and updated by
- * {@link AddedTripUpdater}; {@link TripAdder} routes between the two.
+ * {@link AddedTripUpdater}; the {@link NewTripResolver} decides which of the two applies.
  */
 public class TripCreator {
 

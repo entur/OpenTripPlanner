@@ -1,11 +1,8 @@
 package org.opentripplanner.updater.trip;
 
-import java.util.Objects;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
-import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
-import org.opentripplanner.updater.trip.model.TripRemoval;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,7 +11,7 @@ import org.slf4j.LoggerFactory;
  * {@link TripCanceller} (GTFS-RT CANCELED, SIRI-ET cancellation) and {@link TripDeleter}
  * (GTFS-RT DELETED); they differ only in the real-time state the trip ends up in.
  * <p>
- * The parsed update is anchored to a trip in the transit model by the
+ * The update arrives already anchored to a trip in the transit model by the
  * {@link TripRemovalResolver}:
  * <ul>
  *   <li>If the resolver found a previously real-time added trip (extra journey), it is available
@@ -29,16 +26,6 @@ import org.slf4j.LoggerFactory;
 public abstract sealed class TripRemover permits TripCanceller, TripDeleter {
 
   private static final Logger LOG = LoggerFactory.getLogger(TripRemover.class);
-
-  private final TripRemovalResolver resolver;
-
-  protected TripRemover(TripRemovalResolver resolver) {
-    this.resolver = Objects.requireNonNull(resolver);
-  }
-
-  final TripUpdateResult remove(TripRemoval parsedUpdate) throws UpdateException {
-    return remove(resolver.resolve(parsedUpdate));
-  }
 
   final TripUpdateResult remove(ResolvedTripRemoval resolvedUpdate) {
     var serviceDate = resolvedUpdate.serviceDate();

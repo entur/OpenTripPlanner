@@ -11,7 +11,6 @@ import org.opentripplanner.transit.model.timetable.TripTimesFactory;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
-import org.opentripplanner.updater.trip.model.TripModification;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,36 +24,25 @@ import org.slf4j.LoggerFactory;
  *   <li><b>SIRI-ET EXTRA_CALL</b>: Insert extra stops, non-extra stops must match original</li>
  * </ul>
  * <p>
- * The parsed update is anchored to a trip in the transit model by the
- * {@link ExistingTripResolver} and validated before the modified pattern is built.
+ * The update arrives already anchored to a trip in the transit model by the
+ * {@link ExistingTripResolver}. It is validated before the modified pattern is built.
  */
 public class TripModifier {
 
   private static final Logger LOG = LoggerFactory.getLogger(TripModifier.class);
 
-  private final ExistingTripResolver resolver;
   private final ModifyTripValidator validator = new ModifyTripValidator();
   private final DeduplicatorService deduplicator;
   private final TripPatternCache tripPatternCache;
 
-  public TripModifier(
-    ExistingTripResolver resolver,
-    DeduplicatorService deduplicator,
-    TripPatternCache tripPatternCache
-  ) {
-    this.resolver = Objects.requireNonNull(resolver);
+  public TripModifier(DeduplicatorService deduplicator, TripPatternCache tripPatternCache) {
     this.deduplicator = Objects.requireNonNull(deduplicator);
     this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
   }
 
-  public TripUpdateResult modify(TripModification parsedUpdate) throws UpdateException {
-    var resolvedUpdate = resolver.resolve(parsedUpdate);
+  public TripUpdateResult modify(ResolvedExistingTrip resolvedUpdate) throws UpdateException {
     validator.validate(resolvedUpdate);
-    return modify(resolvedUpdate);
-  }
 
-  public TripUpdateResult modify(ResolvedExistingTrip resolvedUpdate) {
-    // All resolution already done by ExistingTripResolver
     Trip trip = resolvedUpdate.trip();
     TripPattern scheduledPattern = resolvedUpdate.scheduledPattern();
     LocalDate serviceDate = resolvedUpdate.serviceDate();

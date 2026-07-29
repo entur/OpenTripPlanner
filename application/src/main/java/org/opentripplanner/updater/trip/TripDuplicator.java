@@ -6,9 +6,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
-import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedDuplicateTrip;
-import org.opentripplanner.updater.trip.model.TripDuplication;
 
 /**
  * Duplicates an existing scheduled trip at a new start time. Creates a copy of the
@@ -16,19 +14,16 @@ import org.opentripplanner.updater.trip.model.TripDuplication;
  * pattern on the requested service date.
  * <p>
  * Maps to GTFS-RT DUPLICATED. SIRI-ET has no equivalent concept.
+ * <p>
+ * The original trip, its pattern and scheduled times are looked up by the
+ * {@link DuplicateTripResolver} before the update reaches this class.
  */
 public class TripDuplicator {
 
-  private final DuplicateTripResolver resolver;
   private final DeduplicatorService deduplicator;
 
-  public TripDuplicator(DuplicateTripResolver resolver, DeduplicatorService deduplicator) {
-    this.resolver = Objects.requireNonNull(resolver);
+  public TripDuplicator(DeduplicatorService deduplicator) {
     this.deduplicator = Objects.requireNonNull(deduplicator);
-  }
-
-  public TripUpdateResult duplicate(TripDuplication parsedUpdate) throws UpdateException {
-    return duplicate(resolver.resolve(parsedUpdate));
   }
 
   public TripUpdateResult duplicate(ResolvedDuplicateTrip resolvedUpdate) {

@@ -85,7 +85,7 @@ class ScheduledTripUpdaterTest {
       NoOpFuzzyTripMatcher.INSTANCE,
       TIME_ZONE
     );
-    updater = new ScheduledTripUpdater(resolver, tripPatternCache);
+    updater = new ScheduledTripUpdater(tripPatternCache);
   }
 
   private ResolvedExistingTrip resolve(ScheduledTripUpdate parsedUpdate) {

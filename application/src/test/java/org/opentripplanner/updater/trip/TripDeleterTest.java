@@ -59,7 +59,7 @@ class TripDeleterTest {
     var tripResolver = new TripResolver(env.transitService());
     var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
     resolver = new TripRemovalResolver(transitService, tripResolver, serviceDateResolver);
-    deleter = new TripDeleter(resolver);
+    deleter = new TripDeleter();
   }
 
   @Test
@@ -71,7 +71,7 @@ class TripDeleterTest {
     // Verify trip is scheduled before deletion
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
-    var result = deleter.delete(parsedUpdate);
+    var result = deleter.delete(resolver.resolve(parsedUpdate));
 
     assertNotNull(result);
     assertEquals(tripId, result.updatedTripTimes().getTrip().getId());
@@ -87,7 +87,7 @@ class TripDeleterTest {
     // Verify trip is scheduled before deletion
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
-    var result = deleter.delete(parsedUpdate);
+    var result = deleter.delete(resolver.resolve(parsedUpdate));
 
     assertNotNull(result);
     // The underlying trip should be deleted
@@ -144,7 +144,7 @@ class TripDeleterTest {
     // Before deletion, the trip should be scheduled
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
-    var result = deleter.delete(parsedUpdate);
+    var result = deleter.delete(resolver.resolve(parsedUpdate));
 
     // Apply the update to the snapshot and commit it
     SnapshotTestHelper.applyAndCommit(env, result.realTimeTripUpdate());

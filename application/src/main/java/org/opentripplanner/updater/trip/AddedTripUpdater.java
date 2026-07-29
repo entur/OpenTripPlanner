@@ -9,7 +9,7 @@ import org.slf4j.LoggerFactory;
 /**
  * Updates a previously added real-time trip: the same trip is sent again as
  * ADD_NEW_TRIP after it has already been integrated in the transit model (subsequent updates
- * to an extra journey). {@link TripAdder} routes these updates here.
+ * to an extra journey). The {@link NewTripResolver} recognises them as such.
  * <p>
  * The update itself is applied by {@link ResolvedAddedTripUpdate#apply()} - it needs nothing but
  * its own resolved state. This class only translates invalid real-time data into an update error.

@@ -59,7 +59,7 @@ class TripCancellerTest {
     var tripResolver = new TripResolver(env.transitService());
     var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
     resolver = new TripRemovalResolver(transitService, tripResolver, serviceDateResolver);
-    canceller = new TripCanceller(resolver);
+    canceller = new TripCanceller();
   }
 
   @Test
@@ -71,7 +71,7 @@ class TripCancellerTest {
     // Verify trip is scheduled before cancellation
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
-    var result = canceller.cancel(parsedUpdate);
+    var result = canceller.cancel(resolver.resolve(parsedUpdate));
 
     assertNotNull(result);
     assertEquals(tripId, result.updatedTripTimes().getTrip().getId());
@@ -87,7 +87,7 @@ class TripCancellerTest {
     // Verify trip is scheduled before cancellation
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
-    var result = canceller.cancel(parsedUpdate);
+    var result = canceller.cancel(resolver.resolve(parsedUpdate));
 
     assertNotNull(result);
     // The underlying trip should be cancelled
@@ -144,7 +144,7 @@ class TripCancellerTest {
     // Before cancellation, the trip should be scheduled
     assertFalse(env.tripData(TRIP_ID).tripTimes().hasAnyUpdates());
 
-    var result = canceller.cancel(parsedUpdate);
+    var result = canceller.cancel(resolver.resolve(parsedUpdate));
 
     // Apply the update to the snapshot and commit it
     SnapshotTestHelper.applyAndCommit(env, result.realTimeTripUpdate());
