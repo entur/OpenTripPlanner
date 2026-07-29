@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 
@@ -17,17 +18,20 @@ public final class ResolvedTripCreation extends ResolvedNewTrip {
 
   private final FeedScopedId serviceId;
   private final int serviceCode;
+  private final List<TripOnServiceDate> replacedTrips;
 
   public ResolvedTripCreation(
     TripAddition parsedUpdate,
     LocalDate serviceDate,
     List<ResolvedStopTimeUpdate> resolvedStopTimeUpdates,
     FeedScopedId serviceId,
-    int serviceCode
+    int serviceCode,
+    List<TripOnServiceDate> replacedTrips
   ) {
     super(parsedUpdate, serviceDate, resolvedStopTimeUpdates);
     this.serviceId = Objects.requireNonNull(serviceId, "serviceId must not be null");
     this.serviceCode = serviceCode;
+    this.replacedTrips = List.copyOf(replacedTrips);
     validate();
   }
 
@@ -39,6 +43,11 @@ public final class ResolvedTripCreation extends ResolvedNewTrip {
   /** The service code corresponding to {@link #serviceId()}. */
   public int serviceCode() {
     return serviceCode;
+  }
+
+  /** The dated trips the created trip replaces. References to unknown trips are dropped. */
+  public List<TripOnServiceDate> replacedTrips() {
+    return replacedTrips;
   }
 
   /**

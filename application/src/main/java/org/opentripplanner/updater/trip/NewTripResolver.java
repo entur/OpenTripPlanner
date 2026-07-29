@@ -7,6 +7,7 @@ import java.util.Objects;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.Trip;
+import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
@@ -16,6 +17,7 @@ import org.opentripplanner.updater.trip.model.ResolvedNewTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedTripCreation;
 import org.opentripplanner.updater.trip.model.TripAddition;
+import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,7 +30,7 @@ import org.slf4j.LoggerFactory;
  * previously added one can only be decided here, against the current transit model:
  * <ul>
  *   <li>Trip not yet in the transit model - returns {@link ResolvedTripCreation}, carrying the
- *       service id/code for the trip's service date</li>
+ *       service id/code for the trip's service date and the dated trips it replaces</li>
  *   <li>Trip already added in real-time - returns {@link ResolvedAddedTripUpdate}</li>
  * </ul>
  * A {@link ResolvedTripCreation} validates itself on construction, so resolution also rejects a
@@ -113,8 +115,22 @@ public class NewTripResolver {
       serviceDate,
       resolvedStopTimeUpdates,
       serviceId,
-      serviceCode
+      serviceCode,
+      resolveReplacedTrips(parsedUpdate.tripCreationInfo())
     );
+  }
+
+  /**
+   * Resolve the dated trips the created trip replaces. References to trips the transit model does
+   * not know are dropped.
+   */
+  private List<TripOnServiceDate> resolveReplacedTrips(TripCreationInfo tripCreationInfo) {
+    return tripCreationInfo
+      .replacedTrips()
+      .stream()
+      .map(transitService::getTripOnServiceDate)
+      .filter(Objects::nonNull)
+      .toList();
   }
 
   /**

@@ -1,7 +1,6 @@
 package org.opentripplanner.updater.trip;
 
 import java.time.LocalDate;
-import java.util.List;
 import java.util.Objects;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -139,14 +138,6 @@ public class TripCreator {
     }
 
     // Create TripOnServiceDate for lookup by dated vehicle journey
-    // Resolve replacement trips from TripCreationInfo
-    List<TripOnServiceDate> replacedTrips = tripCreationInfo
-      .replacedTrips()
-      .stream()
-      .map(transitService::getTripOnServiceDate)
-      .filter(Objects::nonNull)
-      .toList();
-
     // SIRI names the dated instance of a journey separately - the DatedServiceJourney - and that id
     // identifies the added trip on service date. GTFS-RT names no such entity, so the added trip on
     // service date takes the trip id instead: an added trip is held once per id
@@ -160,7 +151,7 @@ public class TripCreator {
       .withTrip(trip)
       .withServiceDate(serviceDate)
       .withRealtimeExtraJourney(true)
-      .withReplacementFor(replacedTrips)
+      .withReplacementFor(resolvedUpdate.replacedTrips())
       .build();
 
     // Build and return result
