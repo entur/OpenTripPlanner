@@ -114,19 +114,4 @@ public class TripResolver {
     // No TripOnServiceDate ID provided
     throw UpdateException.noTripId(UpdateErrorType.TRIP_NOT_FOUND);
   }
-
-  /**
-   * Resolve a {@link TripOnServiceDate} from a {@link TripReference}, returning null if not found.
-   *
-   * @param reference the trip reference containing tripOnServiceDateId
-   * @return the resolved TripOnServiceDate, or null if not found
-   */
-  @Nullable
-  public TripOnServiceDate resolveTripOnServiceDateOrNull(TripReference reference) {
-    try {
-      return resolveTripOnServiceDate(reference);
-    } catch (UpdateException e) {
-      return null;
-    }
-  }
 }

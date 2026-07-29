@@ -91,7 +91,6 @@ public class TripUpdateDispatcher {
    * plain manual DI (the {@code updater.trip} package uses no Dagger).
    */
   public static TripUpdateDispatcher create(
-    String feedId,
     ZoneId timeZone,
     TransitEditorService transitService,
     DeduplicatorService deduplicator,
@@ -128,7 +127,6 @@ public class TripUpdateDispatcher {
 
     // Per-type domain operations
     var tripCreator = new TripCreator(
-      feedId,
       transitService,
       deduplicator,
       tripPatternCache,

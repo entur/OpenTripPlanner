@@ -87,7 +87,6 @@ public class GtfsNewTripUpdateAdapter implements GtfsTripUpdateAdapter {
       : NoOpFuzzyTripMatcher.INSTANCE;
 
     var dispatcher = TripUpdateDispatcher.create(
-      feedId,
       timetableRepository.getTimeZone(),
       transitService,
       deduplicator,

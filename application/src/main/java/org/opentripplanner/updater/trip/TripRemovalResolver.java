@@ -12,8 +12,6 @@ import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
 import org.opentripplanner.updater.trip.model.TripRemoval;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * Resolves a {@link TripRemoval} into a {@link ResolvedTripRemoval} for cancelling
@@ -27,8 +25,6 @@ import org.slf4j.LoggerFactory;
  * timetable snapshot buffer of the current update task.
  */
 public class TripRemovalResolver {
-
-  private static final Logger LOG = LoggerFactory.getLogger(TripRemovalResolver.class);
 
   private final TransitEditorService transitService;
   private final TripResolver tripResolver;

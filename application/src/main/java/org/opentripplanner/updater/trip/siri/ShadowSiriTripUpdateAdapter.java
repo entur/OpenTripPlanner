@@ -30,16 +30,6 @@ public class ShadowSiriTripUpdateAdapter implements SiriTripUpdateAdapter {
     TimetableRepository timetableRepository,
     DeduplicatorService deduplicator,
     boolean fuzzyTripMatching,
-    String feedId
-  ) {
-    this(primaryAdapter, timetableRepository, deduplicator, fuzzyTripMatching, feedId, null);
-  }
-
-  public ShadowSiriTripUpdateAdapter(
-    SiriTripUpdateAdapter primaryAdapter,
-    TimetableRepository timetableRepository,
-    DeduplicatorService deduplicator,
-    boolean fuzzyTripMatching,
     String feedId,
     @Nullable Path outputDirectory
   ) {

@@ -77,13 +77,12 @@ public class SiriNewTripUpdateAdapter implements SiriTripUpdateAdapter {
       : NoOpFuzzyTripMatcher.INSTANCE;
 
     var dispatcher = TripUpdateDispatcher.create(
-      feedId,
       timeZone,
       transitService,
       deduplicator,
       tripPatternCache,
       fuzzyMatcher,
-      new SiriRouteCreationStrategy(feedId)
+      new SiriRouteCreationStrategy()
     );
 
     return new SiriNewTripUpdateHandler(parser, dispatcher, buffer);

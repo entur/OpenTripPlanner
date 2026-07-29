@@ -46,10 +46,6 @@ public class RealTimeTripUpdateComparator {
   private int shadowErrors = 0;
   private int primaryErrors = 0;
 
-  public RealTimeTripUpdateComparator() {
-    this(null);
-  }
-
   public RealTimeTripUpdateComparator(@Nullable Path outputDirectory) {
     this.outputDirectory = outputDirectory;
   }

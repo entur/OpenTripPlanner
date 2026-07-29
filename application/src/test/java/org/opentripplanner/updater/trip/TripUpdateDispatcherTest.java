@@ -60,7 +60,6 @@ class TripUpdateDispatcherTest {
     transitService = (TransitEditorService) env.transitService();
     var tripPatternCache = new TripPatternCache(new TripPatternIdGenerator());
     dispatcher = TripUpdateDispatcher.create(
-      env.feedId(),
       TIME_ZONE,
       transitService,
       new Deduplicator(),

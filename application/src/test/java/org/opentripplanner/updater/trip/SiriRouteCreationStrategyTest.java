@@ -62,7 +62,7 @@ class SiriRouteCreationStrategyTest {
       .build();
 
     transitService = (TransitEditorService) env.transitService();
-    strategy = new SiriRouteCreationStrategy(FEED_ID);
+    strategy = new SiriRouteCreationStrategy();
   }
 
   @Test

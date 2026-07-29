@@ -34,27 +34,6 @@ public class ShadowGtfsTripUpdateAdapter implements GtfsTripUpdateAdapter {
     ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType,
     boolean fuzzyMatchingEnabled,
-    String feedId
-  ) {
-    this(
-      primaryAdapter,
-      timetableRepository,
-      deduplicator,
-      forwardsDelayPropagationType,
-      backwardsDelayPropagationType,
-      fuzzyMatchingEnabled,
-      feedId,
-      null
-    );
-  }
-
-  public ShadowGtfsTripUpdateAdapter(
-    GtfsTripUpdateAdapter primaryAdapter,
-    TimetableRepository timetableRepository,
-    DeduplicatorService deduplicator,
-    ForwardsDelayPropagationType forwardsDelayPropagationType,
-    BackwardsDelayPropagationType backwardsDelayPropagationType,
-    boolean fuzzyMatchingEnabled,
     String feedId,
     @Nullable Path outputDirectory
   ) {

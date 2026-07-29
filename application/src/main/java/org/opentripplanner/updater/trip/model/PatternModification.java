@@ -15,7 +15,6 @@ public final class PatternModification {
 
   private final boolean hasTimeUpdates;
   private final boolean hasCancellations;
-  private final boolean hasNoDataUpdates;
   private final Map<Integer, StopLocation> stopReplacements;
   private final Map<Integer, PickDrop> pickupChanges;
   private final Map<Integer, PickDrop> dropoffChanges;
@@ -23,7 +22,6 @@ public final class PatternModification {
   private PatternModification(Builder builder) {
     this.hasTimeUpdates = builder.hasTimeUpdates;
     this.hasCancellations = builder.hasCancellations;
-    this.hasNoDataUpdates = builder.hasNoDataUpdates;
     this.stopReplacements = Map.copyOf(builder.stopReplacements);
     this.pickupChanges = Map.copyOf(builder.pickupChanges);
     this.dropoffChanges = Map.copyOf(builder.dropoffChanges);
@@ -40,10 +38,6 @@ public final class PatternModification {
       !dropoffChanges.isEmpty() ||
       hasCancellations
     );
-  }
-
-  public boolean hasAnyUpdates() {
-    return hasTimeUpdates || hasCancellations || hasNoDataUpdates || hasPatternChanges();
   }
 
   /**
@@ -72,7 +66,6 @@ public final class PatternModification {
 
     private boolean hasTimeUpdates = false;
     private boolean hasCancellations = false;
-    private boolean hasNoDataUpdates = false;
     private final Map<Integer, StopLocation> stopReplacements = new HashMap<>();
     private final Map<Integer, PickDrop> pickupChanges = new HashMap<>();
     private final Map<Integer, PickDrop> dropoffChanges = new HashMap<>();
@@ -83,10 +76,6 @@ public final class PatternModification {
 
     public void markCancellation() {
       this.hasCancellations = true;
-    }
-
-    public void markNoData() {
-      this.hasNoDataUpdates = true;
     }
 
     public void putStopReplacement(int stopIndex, StopLocation stop) {

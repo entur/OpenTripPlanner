@@ -100,7 +100,6 @@ final class StopTimeUpdateApplication {
       boolean noData = stopUpdate.status() == ParsedStopTimeUpdate.StopUpdateStatus.NO_DATA;
       if (noData) {
         builder.withNoData(stopIndex);
-        mod.markNoData();
       }
 
       // Track pickup/dropoff changes

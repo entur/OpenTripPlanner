@@ -53,18 +53,14 @@ public record FormatPolicy(
     );
   }
 
-  /** Whether this format propagates delays (forward or backward). */
-  public boolean propagatesDelays() {
-    return delayPropagation.propagatesDelays();
-  }
-
   public static Builder builder() {
     return new Builder();
   }
 
   /**
-   * Builder for custom policy combinations. The defaults match the previous GTFS-RT-flavoured
-   * {@code TripUpdateOptions.Builder} defaults; override individual axes as needed (mainly in tests).
+   * Builder for custom policy combinations, used by tests that need one axis to differ from the
+   * GTFS-RT-flavoured defaults. Only the axes with a {@code with*} method can be overridden - add
+   * one for the others if a test needs to vary them.
    */
   public static final class Builder {
 
@@ -80,16 +76,6 @@ public record FormatPolicy(
     private ScheduledDataPolicy scheduledData = ScheduledDataPolicy.EXCLUDE;
     private UnknownStopPolicy unknownStop = UnknownStopPolicy.IGNORE;
 
-    public Builder withPickDrop(PickDropPolicy pickDrop) {
-      this.pickDrop = pickDrop;
-      return this;
-    }
-
-    public Builder withRealTimeState(RealTimeStatePolicy realTimeState) {
-      this.realTimeState = realTimeState;
-      return this;
-    }
-
     public Builder withStopMatching(StopMatchingPolicy stopMatching) {
       this.stopMatching = stopMatching;
       return this;
@@ -97,21 +83,6 @@ public record FormatPolicy(
 
     public Builder withStopReplacement(StopReplacementPolicy stopReplacement) {
       this.stopReplacement = stopReplacement;
-      return this;
-    }
-
-    public Builder withDelayPropagation(DelayPropagationPolicy delayPropagation) {
-      this.delayPropagation = delayPropagation;
-      return this;
-    }
-
-    public Builder withFirstLastStopTime(FirstLastStopTimePolicy firstLastStopTime) {
-      this.firstLastStopTime = firstLastStopTime;
-      return this;
-    }
-
-    public Builder withScheduledData(ScheduledDataPolicy scheduledData) {
-      this.scheduledData = scheduledData;
       return this;
     }
 

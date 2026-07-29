@@ -17,7 +17,6 @@ import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedTripCreation;
-import org.opentripplanner.updater.trip.model.TripCreationInfo;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,20 +33,17 @@ public class TripCreator {
 
   private static final Logger LOG = LoggerFactory.getLogger(TripCreator.class);
 
-  private final String feedId;
   private final TransitEditorService transitService;
   private final DeduplicatorService deduplicator;
   private final TripPatternCache tripPatternCache;
   private final RouteCreationStrategy routeCreationStrategy;
 
   public TripCreator(
-    String feedId,
     TransitEditorService transitService,
     DeduplicatorService deduplicator,
     TripPatternCache tripPatternCache,
     RouteCreationStrategy routeCreationStrategy
   ) {
-    this.feedId = Objects.requireNonNull(feedId);
     this.transitService = Objects.requireNonNull(transitService);
     this.deduplicator = Objects.requireNonNull(deduplicator);
     this.tripPatternCache = Objects.requireNonNull(tripPatternCache);

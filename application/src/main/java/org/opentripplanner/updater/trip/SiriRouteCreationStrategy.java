@@ -25,12 +25,6 @@ public class SiriRouteCreationStrategy implements RouteCreationStrategy {
 
   private static final Logger LOG = LoggerFactory.getLogger(SiriRouteCreationStrategy.class);
 
-  private final String feedId;
-
-  public SiriRouteCreationStrategy(String feedId) {
-    this.feedId = feedId;
-  }
-
   @Override
   public RouteResolution resolveOrCreateRoute(
     TripCreationInfo tripCreationInfo,

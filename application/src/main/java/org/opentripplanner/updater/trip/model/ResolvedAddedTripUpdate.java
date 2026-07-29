@@ -82,15 +82,6 @@ public final class ResolvedAddedTripUpdate extends ResolvedNewTrip {
     return pattern;
   }
 
-  /**
-   * The baseline trip times for the added trip: the scheduled timetable entry when present
-   * (SIRI-style added trips), otherwise the current real-time times (GTFS-RT added trips have
-   * no scheduled timetable entry).
-   */
-  public TripTimes tripTimes() {
-    return tripTimes;
-  }
-
   @Override
   public String toString() {
     return (

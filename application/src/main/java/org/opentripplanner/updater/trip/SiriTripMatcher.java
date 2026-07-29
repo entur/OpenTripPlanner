@@ -134,7 +134,7 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
     }
 
     // Look up candidate trips by last stop arrival time
-    Set<Trip> candidateTrips = findCandidateTrips(lastStop, aimedArrivalSeconds, serviceDate);
+    Set<Trip> candidateTrips = findCandidateTrips(lastStop, aimedArrivalSeconds);
     if (candidateTrips.isEmpty()) {
       LOG.debug(
         "No candidate trips found for last stop {} at time {}",
@@ -180,11 +180,7 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
     return stopResolver.resolve(stopReference);
   }
 
-  private Set<Trip> findCandidateTrips(
-    StopLocation lastStop,
-    int aimedArrivalSeconds,
-    LocalDate serviceDate
-  ) {
+  private Set<Trip> findCandidateTrips(StopLocation lastStop, int aimedArrivalSeconds) {
     Set<Trip> trips = new HashSet<>();
 
     // Try exact match
