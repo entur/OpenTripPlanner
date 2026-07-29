@@ -139,13 +139,6 @@ public final class TripCreationInfo {
     return replacedRouteId;
   }
 
-  /**
-   * Returns true if this trip creation requires creating a new route.
-   */
-  public boolean requiresRouteCreation() {
-    return routeCreationInfo != null;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {

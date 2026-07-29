@@ -1,7 +1,6 @@
 package org.opentripplanner.updater.trip.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -34,7 +33,6 @@ class TripCreationInfoTest {
     assertNull(info.submode());
     assertNull(info.operatorId());
     assertTrue(info.replacedTrips().isEmpty());
-    assertFalse(info.requiresRouteCreation());
   }
 
   @Test
@@ -68,22 +66,5 @@ class TripCreationInfoTest {
     assertEquals(OPERATOR_ID, info.operatorId());
     assertEquals(1, info.replacedTrips().size());
     assertEquals(replacedTripId, info.replacedTrips().get(0));
-    assertTrue(info.requiresRouteCreation());
-  }
-
-  @Test
-  void requiresRouteCreationWhenRouteCreationInfoPresent() {
-    var routeCreationInfo = new RouteCreationInfo("Route 1", TransitMode.BUS, null, null);
-
-    var info = TripCreationInfo.builder(TRIP_ID).withRouteCreationInfo(routeCreationInfo).build();
-
-    assertTrue(info.requiresRouteCreation());
-  }
-
-  @Test
-  void doesNotRequireRouteCreationWhenOnlyRouteId() {
-    var info = TripCreationInfo.builder(TRIP_ID).withRouteId(ROUTE_ID).build();
-
-    assertFalse(info.requiresRouteCreation());
   }
 }
