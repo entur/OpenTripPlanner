@@ -25,14 +25,14 @@ import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
  * <p>
  * Applying an update happens in two steps. First the dispatcher pattern-matches on the sealed
  * {@link ParsedTripUpdate} hierarchy and hands the update to the resolver that anchors it to the
- * transit model:
+ * transit model and validates it:
  * <ul>
  *   <li>{@link ScheduledTripUpdate}, {@link TripModification} → {@link ExistingTripResolver}</li>
  *   <li>{@link TripAddition} → {@link NewTripResolver}</li>
  *   <li>{@link TripCancellation}, {@link TripDeletion} → {@link TripRemovalResolver}</li>
  *   <li>{@link TripDuplication} → {@link DuplicateTripResolver}</li>
  * </ul>
- * The resolved update is then applied by the matching domain operation:
+ * A resolved update is valid for the operation it was resolved for, which then applies it:
  * <ul>
  *   <li>{@link ScheduledTripUpdate} → {@link ScheduledTripUpdater}</li>
  *   <li>{@link TripModification} → {@link TripModifier}</li>
@@ -41,8 +41,8 @@ import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
  *   <li>{@link TripDeletion} → {@link TripDeleter}</li>
  *   <li>{@link TripDuplication} → {@link TripDuplicator}</li>
  * </ul>
- * Each domain operation validates the resolved update and produces the {@link TripUpdateResult} to
- * be written to the timetable snapshot buffer by the calling adapter.
+ * Each domain operation produces the {@link TripUpdateResult} to be written to the timetable
+ * snapshot buffer by the calling adapter.
  */
 public class TripUpdateDispatcher {
 

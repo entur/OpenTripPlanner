@@ -12,6 +12,8 @@ import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ExistingTripUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
+import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
+import org.opentripplanner.updater.trip.model.TripModification;
 import org.opentripplanner.updater.trip.model.TripReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,8 +22,8 @@ import org.slf4j.LoggerFactory;
  * Resolves a {@link ExistingTripUpdate} into a {@link ResolvedExistingTrip} for updates
  * to existing scheduled trips.
  * <p>
- * Used for UPDATE_EXISTING ({@link org.opentripplanner.updater.trip.model.ScheduledTripUpdate})
- * and MODIFY_TRIP ({@link org.opentripplanner.updater.trip.model.TripModification}).
+ * Used for UPDATE_EXISTING ({@link ScheduledTripUpdate}) and MODIFY_TRIP
+ * ({@link TripModification}).
  * <p>
  * Resolution includes:
  * <ul>
@@ -31,6 +33,10 @@ import org.slf4j.LoggerFactory;
  *   <li>Scheduled pattern (original if pattern is modified)</li>
  *   <li>Trip times (from scheduled timetable)</li>
  * </ul>
+ * The two update types share all of that, but not their preconditions: each is validated against
+ * the invariants of its own use case before it is returned, so a {@link ResolvedExistingTrip} is
+ * always valid for the operation it was resolved for. The entry point the caller picks - not a
+ * runtime check - decides which invariants apply.
  */
 public class ExistingTripResolver {
 
@@ -44,6 +50,9 @@ public class ExistingTripResolver {
   private final FuzzyTripMatcher fuzzyTripMatcher;
 
   private final ZoneId timeZone;
+
+  private final UpdateExistingTripValidator updateValidator = new UpdateExistingTripValidator();
+  private final ModifyTripValidator modifyValidator = new ModifyTripValidator();
 
   public ExistingTripResolver(
     TransitEditorService transitService,
@@ -68,13 +77,37 @@ public class ExistingTripResolver {
   }
 
   /**
-   * Resolve a ParsedTripUpdate for an existing trip.
+   * Resolve an update to the real-time times of an existing scheduled trip, for the
+   * {@link ScheduledTripUpdater}.
    *
-   * @param parsedUpdate The parsed update to resolve
-   * @return the resolved data
+   * @throws UpdateException if resolution fails or the update violates the preconditions of an
+   *                         update to an existing trip
+   */
+  public ResolvedExistingTrip resolve(ScheduledTripUpdate parsedUpdate) {
+    var resolvedUpdate = anchor(parsedUpdate);
+    updateValidator.validate(resolvedUpdate);
+    return resolvedUpdate;
+  }
+
+  /**
+   * Resolve a modification of the stop pattern of an existing trip, for the {@link TripModifier}.
+   *
+   * @throws UpdateException if resolution fails or the update violates the preconditions of a
+   *                         trip modification
+   */
+  public ResolvedExistingTrip resolve(TripModification parsedUpdate) {
+    var resolvedUpdate = anchor(parsedUpdate);
+    modifyValidator.validate(resolvedUpdate);
+    return resolvedUpdate;
+  }
+
+  /**
+   * Anchor the parsed update to the transit model: everything the two update types resolve the same
+   * way.
+   *
    * @throws UpdateException if resolution fails
    */
-  public ResolvedExistingTrip resolve(ExistingTripUpdate parsedUpdate) {
+  private ResolvedExistingTrip anchor(ExistingTripUpdate parsedUpdate) {
     // Resolve service date
     LocalDate serviceDate = serviceDateResolver.resolveServiceDate(parsedUpdate);
 

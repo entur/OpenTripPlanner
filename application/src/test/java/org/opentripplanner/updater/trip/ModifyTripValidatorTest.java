@@ -26,15 +26,14 @@ import org.opentripplanner.updater.trip.model.TripReference;
 import org.opentripplanner.updater.trip.policy.FormatPolicy;
 
 /**
- * Tests for {@link ModifyTripValidator}.
+ * Tests for the rules of {@link ModifyTripValidator}, exercised through the
+ * {@link ExistingTripResolver} that runs it.
  */
 class ModifyTripValidatorTest {
 
   private static final ZoneId TIME_ZONE = ZoneId.of("America/New_York");
   private static final String FEED_ID = FeedScopedIdForTestFactory.FEED_ID;
   private static final String TRIP_ID = "trip1";
-
-  private final ModifyTripValidator validator = new ModifyTripValidator();
 
   @Nested
   class MinimumStopsTests {
@@ -89,7 +88,7 @@ class ModifyTripValidatorTest {
         .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
         .build();
 
-      var ex = assertThrows(UpdateException.class, () -> validator.validate(resolve(parsedUpdate)));
+      var ex = assertThrows(UpdateException.class, () -> resolve(parsedUpdate));
       assertEquals(UpdateErrorType.TOO_FEW_STOPS, ex.errorType());
     }
 
@@ -105,7 +104,7 @@ class ModifyTripValidatorTest {
         .addStopTimeUpdate(createStopUpdate("C", 1, 11 * 3600))
         .build();
 
-      assertDoesNotThrow(() -> validator.validate(resolve(parsedUpdate)));
+      assertDoesNotThrow(() -> resolve(parsedUpdate));
     }
 
     private ParsedStopTimeUpdate createStopUpdate(String stopId, int sequence, int timeSeconds) {
@@ -170,7 +169,7 @@ class ModifyTripValidatorTest {
         .addStopTimeUpdate(createSiriStopUpdate("B", 10 * 3600 + 30 * 60, false))
         .build();
 
-      assertDoesNotThrow(() -> validator.validate(resolve(parsedUpdate)));
+      assertDoesNotThrow(() -> resolve(parsedUpdate));
     }
 
     @Test
@@ -184,7 +183,7 @@ class ModifyTripValidatorTest {
         .addStopTimeUpdate(createSiriStopUpdate("D", 10 * 3600 + 15 * 60, true))
         .build();
 
-      var ex = assertThrows(UpdateException.class, () -> validator.validate(resolve(parsedUpdate)));
+      var ex = assertThrows(UpdateException.class, () -> resolve(parsedUpdate));
       assertEquals(UpdateErrorType.INVALID_STOP_SEQUENCE, ex.errorType());
     }
 
@@ -200,7 +199,7 @@ class ModifyTripValidatorTest {
         .addStopTimeUpdate(createSiriStopUpdate("D", 10 * 3600 + 30 * 60, false))
         .build();
 
-      var ex = assertThrows(UpdateException.class, () -> validator.validate(resolve(parsedUpdate)));
+      var ex = assertThrows(UpdateException.class, () -> resolve(parsedUpdate));
       assertEquals(UpdateErrorType.STOP_MISMATCH, ex.errorType());
     }
 
@@ -216,7 +215,7 @@ class ModifyTripValidatorTest {
         .addStopTimeUpdate(createSiriStopUpdate("B", 10 * 3600 + 30 * 60, false))
         .build();
 
-      assertDoesNotThrow(() -> validator.validate(resolve(parsedUpdate)));
+      assertDoesNotThrow(() -> resolve(parsedUpdate));
     }
 
     @Test
@@ -230,7 +229,7 @@ class ModifyTripValidatorTest {
         .addStopTimeUpdate(createSiriStopUpdate("B", 10 * 3600 + 30 * 60, false))
         .build();
 
-      assertDoesNotThrow(() -> validator.validate(resolve(parsedUpdate)));
+      assertDoesNotThrow(() -> resolve(parsedUpdate));
     }
 
     private ParsedStopTimeUpdate createSiriStopUpdate(

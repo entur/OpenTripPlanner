@@ -35,7 +35,6 @@ public class TripCreator {
   private static final Logger LOG = LoggerFactory.getLogger(TripCreator.class);
 
   private final String feedId;
-  private final AddNewTripValidator validator = new AddNewTripValidator();
   private final TransitEditorService transitService;
   private final DeduplicatorService deduplicator;
   private final TripPatternCache tripPatternCache;
@@ -56,7 +55,6 @@ public class TripCreator {
   }
 
   public TripUpdateResult create(ResolvedTripCreation resolvedUpdate) {
-    validator.validate(resolvedUpdate);
     var tripCreationInfo = resolvedUpdate.tripCreationInfo();
     LocalDate serviceDate = resolvedUpdate.serviceDate();
     FeedScopedId tripId = resolvedUpdate.tripId();

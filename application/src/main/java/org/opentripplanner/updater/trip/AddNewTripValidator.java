@@ -7,7 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Validates preconditions for the {@link TripCreator}, before the new trip is built.
+ * Validates the preconditions of the {@link TripCreator}. Run by the {@link NewTripResolver} as the
+ * last step of resolving a trip that is to be created.
  * <p>
  * Checks:
  * <ul>

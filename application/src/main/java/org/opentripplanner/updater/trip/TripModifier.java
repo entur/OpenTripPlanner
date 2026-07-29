@@ -24,14 +24,13 @@ import org.slf4j.LoggerFactory;
  *   <li><b>SIRI-ET EXTRA_CALL</b>: Insert extra stops, non-extra stops must match original</li>
  * </ul>
  * <p>
- * The update arrives already anchored to a trip in the transit model by the
- * {@link ExistingTripResolver}. It is validated before the modified pattern is built.
+ * The update arrives already anchored to a trip in the transit model and validated by the
+ * {@link ExistingTripResolver}.
  */
 public class TripModifier {
 
   private static final Logger LOG = LoggerFactory.getLogger(TripModifier.class);
 
-  private final ModifyTripValidator validator = new ModifyTripValidator();
   private final DeduplicatorService deduplicator;
   private final TripPatternCache tripPatternCache;
 
@@ -41,8 +40,6 @@ public class TripModifier {
   }
 
   public TripUpdateResult modify(ResolvedExistingTrip resolvedUpdate) throws UpdateException {
-    validator.validate(resolvedUpdate);
-
     Trip trip = resolvedUpdate.trip();
     TripPattern scheduledPattern = resolvedUpdate.scheduledPattern();
     LocalDate serviceDate = resolvedUpdate.serviceDate();

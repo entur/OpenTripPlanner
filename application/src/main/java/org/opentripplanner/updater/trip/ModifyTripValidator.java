@@ -13,8 +13,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Validates preconditions for the {@link TripModifier}, between resolution and the construction
- * of the modified pattern.
+ * Validates the preconditions of the {@link TripModifier}. Run by the
+ * {@link ExistingTripResolver} as the last step of resolution.
  * <p>
  * Checks:
  * <ul>

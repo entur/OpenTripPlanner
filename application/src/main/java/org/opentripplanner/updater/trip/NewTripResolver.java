@@ -29,6 +29,8 @@ import org.slf4j.LoggerFactory;
  *   <li>Trip not yet in the transit model - returns {@link ResolvedTripCreation}</li>
  *   <li>Trip already added in real-time - returns {@link ResolvedAddedTripUpdate}</li>
  * </ul>
+ * A trip that is about to be created is also validated here, so a {@link ResolvedTripCreation} can
+ * never describe a trip the transit model would reject.
  */
 public class NewTripResolver {
 
@@ -38,6 +40,8 @@ public class NewTripResolver {
   private final ServiceDateResolver serviceDateResolver;
   private final StopResolver stopResolver;
   private final ZoneId timeZone;
+
+  private final AddNewTripValidator creationValidator = new AddNewTripValidator();
 
   public NewTripResolver(
     TransitEditorService transitService,
@@ -97,7 +101,9 @@ public class NewTripResolver {
     }
 
     // New trip - no existing trip to resolve
-    return new ResolvedTripCreation(parsedUpdate, serviceDate, resolvedStopTimeUpdates);
+    var creation = new ResolvedTripCreation(parsedUpdate, serviceDate, resolvedStopTimeUpdates);
+    creationValidator.validate(creation);
+    return creation;
   }
 
   /**

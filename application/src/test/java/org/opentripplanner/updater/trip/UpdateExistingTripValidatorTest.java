@@ -25,7 +25,8 @@ import org.opentripplanner.updater.trip.policy.FormatPolicy;
 import org.opentripplanner.updater.trip.policy.StopMatchingPolicy;
 
 /**
- * Tests for {@link UpdateExistingTripValidator}.
+ * Tests for the rules of {@link UpdateExistingTripValidator}, exercised through the
+ * {@link ExistingTripResolver} that runs it.
  */
 class UpdateExistingTripValidatorTest {
 
@@ -35,7 +36,6 @@ class UpdateExistingTripValidatorTest {
 
   private TransitTestEnvironment env;
   private ExistingTripResolver resolver;
-  private UpdateExistingTripValidator validator;
 
   @BeforeEach
   void setUp() {
@@ -66,7 +66,6 @@ class UpdateExistingTripValidatorTest {
       NoOpFuzzyTripMatcher.INSTANCE,
       TIME_ZONE
     );
-    validator = new UpdateExistingTripValidator();
   }
 
   private ResolvedExistingTrip resolve(ScheduledTripUpdate parsedUpdate) {
@@ -92,7 +91,7 @@ class UpdateExistingTripValidatorTest {
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    assertDoesNotThrow(() -> validator.validate(resolve(parsedUpdate)));
+    assertDoesNotThrow(() -> resolve(parsedUpdate));
   }
 
   @Test
@@ -113,7 +112,7 @@ class UpdateExistingTripValidatorTest {
       .addStopTimeUpdate(stopUpdate)
       .build();
 
-    var ex = assertThrows(UpdateException.class, () -> validator.validate(resolve(parsedUpdate)));
+    var ex = assertThrows(UpdateException.class, () -> resolve(parsedUpdate));
     assertEquals(UpdateErrorType.INVALID_STOP_SEQUENCE, ex.errorType());
   }
 
@@ -141,7 +140,7 @@ class UpdateExistingTripValidatorTest {
       .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate))
       .build();
 
-    var ex = assertThrows(UpdateException.class, () -> validator.validate(resolve(parsedUpdate)));
+    var ex = assertThrows(UpdateException.class, () -> resolve(parsedUpdate));
     assertEquals(UpdateErrorType.TOO_FEW_STOPS, ex.errorType());
   }
 
@@ -181,7 +180,7 @@ class UpdateExistingTripValidatorTest {
       .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate, stopDUpdate))
       .build();
 
-    var ex = assertThrows(UpdateException.class, () -> validator.validate(resolve(parsedUpdate)));
+    var ex = assertThrows(UpdateException.class, () -> resolve(parsedUpdate));
     assertEquals(UpdateErrorType.TOO_MANY_STOPS, ex.errorType());
   }
 
@@ -218,6 +217,6 @@ class UpdateExistingTripValidatorTest {
       .withStopTimeUpdates(List.of(stopAUpdate, stopBUpdate, stopCUpdate))
       .build();
 
-    assertDoesNotThrow(() -> validator.validate(resolve(parsedUpdate)));
+    assertDoesNotThrow(() -> resolve(parsedUpdate));
   }
 }

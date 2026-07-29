@@ -24,7 +24,8 @@ import org.opentripplanner.updater.trip.policy.FormatPolicy;
 import org.opentripplanner.updater.trip.policy.UnknownStopPolicy;
 
 /**
- * Tests for {@link AddNewTripValidator}.
+ * Tests for the rules of {@link AddNewTripValidator}, exercised through the
+ * {@link NewTripResolver} that runs it.
  */
 class AddNewTripValidatorTest {
 
@@ -33,7 +34,6 @@ class AddNewTripValidatorTest {
 
   private TransitTestEnvironment env;
   private NewTripResolver resolver;
-  private AddNewTripValidator validator;
 
   @BeforeEach
   void setUp() {
@@ -45,7 +45,6 @@ class AddNewTripValidatorTest {
     var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
     var stopResolver = new StopResolver(env.transitService());
     resolver = new NewTripResolver(transitService, serviceDateResolver, stopResolver, TIME_ZONE);
-    validator = new AddNewTripValidator();
   }
 
   private ResolvedTripCreation resolve(TripAddition parsedUpdate) {
@@ -67,7 +66,7 @@ class AddNewTripValidatorTest {
       .addStopTimeUpdate(createStopUpdate("B", 1, 10 * 3600 + 30 * 60))
       .build();
 
-    assertDoesNotThrow(() -> validator.validate(resolve(parsedUpdate)));
+    assertDoesNotThrow(() -> resolve(parsedUpdate));
   }
 
   @Test
@@ -85,7 +84,7 @@ class AddNewTripValidatorTest {
       .addStopTimeUpdate(createStopUpdate("UNKNOWN", 1, 10 * 3600 + 30 * 60))
       .build();
 
-    var ex = assertThrows(UpdateException.class, () -> validator.validate(resolve(parsedUpdate)));
+    var ex = assertThrows(UpdateException.class, () -> resolve(parsedUpdate));
     assertEquals(UpdateErrorType.UNKNOWN_STOP, ex.errorType());
     assertEquals(1, ex.stopPosition());
   }
@@ -106,7 +105,7 @@ class AddNewTripValidatorTest {
       .addStopTimeUpdate(createStopUpdate("B", 2, 11 * 3600))
       .build();
 
-    assertDoesNotThrow(() -> validator.validate(resolve(parsedUpdate)));
+    assertDoesNotThrow(() -> resolve(parsedUpdate));
   }
 
   @Test
@@ -124,7 +123,7 @@ class AddNewTripValidatorTest {
       .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
       .build();
 
-    var ex = assertThrows(UpdateException.class, () -> validator.validate(resolve(parsedUpdate)));
+    var ex = assertThrows(UpdateException.class, () -> resolve(parsedUpdate));
     assertEquals(UpdateErrorType.TOO_FEW_STOPS, ex.errorType());
   }
 
