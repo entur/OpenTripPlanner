@@ -412,10 +412,9 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       }
     }
 
-    String datedServiceJourneyId = code.asDatedServiceJourneyId();
-    if (datedServiceJourneyId != null) {
-      builder.withServiceId(createId(datedServiceJourneyId));
-    }
+    // The added trip on service date is identified by the DatedServiceJourney form of the code,
+    // while the trip itself takes the ServiceJourney form.
+    builder.withTripOnServiceDateId(createId(code.asDatedServiceJourneyId()));
 
     String shortName = journey.publishedLineName();
     if (!shortName.isEmpty()) {

@@ -24,7 +24,7 @@ public final class TripCreationInfo {
   private final RouteCreationInfo routeCreationInfo;
 
   @Nullable
-  private final FeedScopedId serviceId;
+  private final FeedScopedId tripOnServiceDateId;
 
   @Nullable
   private final String shortName;
@@ -47,7 +47,9 @@ public final class TripCreationInfo {
    * @param tripId The ID to use for the new trip
    * @param routeId The route ID to associate the trip with
    * @param routeCreationInfo Information for creating a new route (if needed)
-   * @param serviceId The service ID for the trip
+   * @param tripOnServiceDateId The id identifying the added trip on its service date (SIRI: the
+   *                            DatedServiceJourney id). Null for GTFS-RT, which has no such
+   *                            concept and identifies it by the trip id instead.
    * @param shortName A short name for the trip
    * @param mode The transit mode
    * @param submode The submode (e.g., "localBus", "expressBus")
@@ -59,7 +61,7 @@ public final class TripCreationInfo {
     FeedScopedId tripId,
     @Nullable FeedScopedId routeId,
     @Nullable RouteCreationInfo routeCreationInfo,
-    @Nullable FeedScopedId serviceId,
+    @Nullable FeedScopedId tripOnServiceDateId,
     @Nullable String shortName,
     @Nullable TransitMode mode,
     @Nullable String submode,
@@ -70,7 +72,7 @@ public final class TripCreationInfo {
     this.tripId = Objects.requireNonNull(tripId, "tripId must not be null");
     this.routeId = routeId;
     this.routeCreationInfo = routeCreationInfo;
-    this.serviceId = serviceId;
+    this.tripOnServiceDateId = tripOnServiceDateId;
     this.shortName = shortName;
     this.mode = mode;
     this.submode = submode;
@@ -100,9 +102,14 @@ public final class TripCreationInfo {
     return routeCreationInfo;
   }
 
+  /**
+   * The id the added trip on service date is known by, when the message names one: SIRI derives it
+   * from the EstimatedVehicleJourneyCode as a DatedServiceJourney id. Null for GTFS-RT, where the
+   * added trip on service date takes the id of the trip itself.
+   */
   @Nullable
-  public FeedScopedId serviceId() {
-    return serviceId;
+  public FeedScopedId tripOnServiceDateId() {
+    return tripOnServiceDateId;
   }
 
   @Nullable
@@ -169,7 +176,7 @@ public final class TripCreationInfo {
       Objects.equals(tripId, that.tripId) &&
       Objects.equals(routeId, that.routeId) &&
       Objects.equals(routeCreationInfo, that.routeCreationInfo) &&
-      Objects.equals(serviceId, that.serviceId) &&
+      Objects.equals(tripOnServiceDateId, that.tripOnServiceDateId) &&
       Objects.equals(shortName, that.shortName) &&
       mode == that.mode &&
       Objects.equals(submode, that.submode) &&
@@ -185,7 +192,7 @@ public final class TripCreationInfo {
       tripId,
       routeId,
       routeCreationInfo,
-      serviceId,
+      tripOnServiceDateId,
       shortName,
       mode,
       submode,
@@ -205,8 +212,8 @@ public final class TripCreationInfo {
       routeId +
       ", routeCreationInfo=" +
       routeCreationInfo +
-      ", serviceId=" +
-      serviceId +
+      ", tripOnServiceDateId=" +
+      tripOnServiceDateId +
       ", shortName='" +
       shortName +
       '\'' +
@@ -233,7 +240,7 @@ public final class TripCreationInfo {
     private final FeedScopedId tripId;
     private FeedScopedId routeId;
     private RouteCreationInfo routeCreationInfo;
-    private FeedScopedId serviceId;
+    private FeedScopedId tripOnServiceDateId;
     private String shortName;
     private TransitMode mode;
     private String submode;
@@ -255,8 +262,8 @@ public final class TripCreationInfo {
       return this;
     }
 
-    public Builder withServiceId(FeedScopedId serviceId) {
-      this.serviceId = serviceId;
+    public Builder withTripOnServiceDateId(FeedScopedId tripOnServiceDateId) {
+      this.tripOnServiceDateId = tripOnServiceDateId;
       return this;
     }
 
@@ -300,7 +307,7 @@ public final class TripCreationInfo {
         tripId,
         routeId,
         routeCreationInfo,
-        serviceId,
+        tripOnServiceDateId,
         shortName,
         mode,
         submode,

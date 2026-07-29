@@ -238,6 +238,10 @@ public class RealTimeTripUpdateComparator {
     return (
       "addedTrip=" +
       addedTrip.getTrip().getId() +
+      // The id of the trip on service date is not the id of the trip: SIRI identifies it by the
+      // DatedServiceJourney of the message, and it is the key the trip is indexed under.
+      " id=" +
+      addedTrip.getId() +
       " alteration=" +
       addedTrip.getTripAlteration() +
       " replacementFor=" +
@@ -300,6 +304,8 @@ public class RealTimeTripUpdateComparator {
       sb
         .append("  addedTripOnServiceDate: ")
         .append(addedTrip.getTrip().getId())
+        .append(" id=")
+        .append(addedTrip.getId())
         .append(" alteration=")
         .append(addedTrip.getTripAlteration())
         .append(" replacementFor=")

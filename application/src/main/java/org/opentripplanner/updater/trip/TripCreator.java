@@ -158,7 +158,13 @@ public class TripCreator {
       .filter(Objects::nonNull)
       .toList();
 
-    TripOnServiceDate tripOnServiceDate = TripOnServiceDate.of(tripId)
+    // SIRI identifies the added trip on service date by its DatedServiceJourney id, which is not
+    // the id of the trip. GTFS-RT has no such concept and uses the trip id.
+    var tripOnServiceDateId = tripCreationInfo.tripOnServiceDateId() != null
+      ? tripCreationInfo.tripOnServiceDateId()
+      : tripId;
+
+    TripOnServiceDate tripOnServiceDate = TripOnServiceDate.of(tripOnServiceDateId)
       .withTrip(trip)
       .withServiceDate(serviceDate)
       .withRealtimeExtraJourney(true)

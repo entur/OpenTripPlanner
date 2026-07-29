@@ -15,7 +15,10 @@ class TripCreationInfoTest {
   private static final String FEED_ID = "F";
   private static final FeedScopedId TRIP_ID = new FeedScopedId(FEED_ID, "trip1");
   private static final FeedScopedId ROUTE_ID = new FeedScopedId(FEED_ID, "route1");
-  private static final FeedScopedId SERVICE_ID = new FeedScopedId(FEED_ID, "service1");
+  private static final FeedScopedId TRIP_ON_SERVICE_DATE_ID = new FeedScopedId(
+    FEED_ID,
+    "RUT:DatedServiceJourney:1234"
+  );
   private static final FeedScopedId OPERATOR_ID = new FeedScopedId(FEED_ID, "operator1");
 
   @Test
@@ -25,7 +28,7 @@ class TripCreationInfoTest {
     assertEquals(TRIP_ID, info.tripId());
     assertNull(info.routeId());
     assertNull(info.routeCreationInfo());
-    assertNull(info.serviceId());
+    assertNull(info.tripOnServiceDateId());
     assertNull(info.shortName());
     assertNull(info.mode());
     assertNull(info.submode());
@@ -47,7 +50,7 @@ class TripCreationInfoTest {
     var info = TripCreationInfo.builder(TRIP_ID)
       .withRouteId(ROUTE_ID)
       .withRouteCreationInfo(routeCreationInfo)
-      .withServiceId(SERVICE_ID)
+      .withTripOnServiceDateId(TRIP_ON_SERVICE_DATE_ID)
       .withShortName("T1")
       .withMode(TransitMode.BUS)
       .withSubmode("localBus")
@@ -58,7 +61,7 @@ class TripCreationInfoTest {
     assertEquals(TRIP_ID, info.tripId());
     assertEquals(ROUTE_ID, info.routeId());
     assertEquals(routeCreationInfo, info.routeCreationInfo());
-    assertEquals(SERVICE_ID, info.serviceId());
+    assertEquals(TRIP_ON_SERVICE_DATE_ID, info.tripOnServiceDateId());
     assertEquals("T1", info.shortName());
     assertEquals(TransitMode.BUS, info.mode());
     assertEquals("localBus", info.submode());
