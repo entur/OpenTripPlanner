@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  *   <li><b>SIRI-ET EXTRA_CALL</b>: Insert extra stops, non-extra stops must match original</li>
  * </ul>
  * <p>
- * The update arrives already anchored to a trip in the transit model and validated by the
+ * The update arrives already resolved to a trip in the transit model and validated by the
  * {@link ExistingTripResolver}.
  */
 public class TripModifier {

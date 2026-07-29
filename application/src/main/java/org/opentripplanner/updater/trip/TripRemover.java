@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
  * {@link TripCanceller} (GTFS-RT CANCELED, SIRI-ET cancellation) and {@link TripDeleter}
  * (GTFS-RT DELETED); they differ only in the real-time state the trip ends up in.
  * <p>
- * The update arrives already anchored to a trip in the transit model by the
+ * The update arrives already resolved to a trip in the transit model by the
  * {@link TripRemovalResolver}:
  * <ul>
  *   <li>If the resolver found a previously real-time added trip (extra journey), it is available

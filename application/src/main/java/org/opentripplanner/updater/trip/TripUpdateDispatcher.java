@@ -18,14 +18,15 @@ import org.opentripplanner.updater.trip.model.TripModification;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 
 /**
- * Anchors parsed trip updates to the transit model and dispatches them to the domain operation that
- * applies them. This is the unified component shared by both SIRI-ET and GTFS-RT updaters.
+ * Resolves parsed trip updates against the transit model and dispatches them to the domain
+ * operation that applies them. This is the unified component shared by both SIRI-ET and GTFS-RT
+ * updaters.
  * <p>
  * Build a fully wired instance with {@link #create}.
  * <p>
  * Applying an update happens in two steps. First the dispatcher pattern-matches on the sealed
- * {@link ParsedTripUpdate} hierarchy and hands the update to the resolver that anchors it to the
- * transit model and validates it:
+ * {@link ParsedTripUpdate} hierarchy and hands the update to the resolver for its type, which
+ * resolves it against the transit model and validates it:
  * <ul>
  *   <li>{@link ScheduledTripUpdate}, {@link TripModification} → {@link ExistingTripResolver}</li>
  *   <li>{@link TripAddition} → {@link NewTripResolver}</li>

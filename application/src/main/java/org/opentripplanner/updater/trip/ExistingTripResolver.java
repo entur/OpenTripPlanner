@@ -84,7 +84,7 @@ public class ExistingTripResolver {
    *                         update to an existing trip
    */
   public ResolvedExistingTrip resolve(ScheduledTripUpdate parsedUpdate) {
-    var resolvedUpdate = anchor(parsedUpdate);
+    var resolvedUpdate = doResolve(parsedUpdate);
     updateValidator.validate(resolvedUpdate);
     return resolvedUpdate;
   }
@@ -96,18 +96,18 @@ public class ExistingTripResolver {
    *                         trip modification
    */
   public ResolvedExistingTrip resolve(TripModification parsedUpdate) {
-    var resolvedUpdate = anchor(parsedUpdate);
+    var resolvedUpdate = doResolve(parsedUpdate);
     modifyValidator.validate(resolvedUpdate);
     return resolvedUpdate;
   }
 
   /**
-   * Anchor the parsed update to the transit model: everything the two update types resolve the same
-   * way.
+   * Resolve everything the two update types resolve the same way, before each is validated against
+   * the invariants of its own use case.
    *
    * @throws UpdateException if resolution fails
    */
-  private ResolvedExistingTrip anchor(ExistingTripUpdate parsedUpdate) {
+  private ResolvedExistingTrip doResolve(ExistingTripUpdate parsedUpdate) {
     // Resolve service date
     LocalDate serviceDate = serviceDateResolver.resolveServiceDate(parsedUpdate);
 

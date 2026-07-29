@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
  * pattern adjustments such as replaced stops or pick/drop changes.
  * Maps to GTFS-RT SCHEDULED and SIRI-ET regular updates.
  * <p>
- * The update arrives already anchored to a trip in the transit model and validated by the
+ * The update arrives already resolved to a trip in the transit model and validated by the
  * {@link ExistingTripResolver}. Applying it means: seed the builder, run the
  * {@link StopTimeUpdateApplication} command, and turn the resulting {@link PatternModification}
  * into the final pattern and real-time state.
