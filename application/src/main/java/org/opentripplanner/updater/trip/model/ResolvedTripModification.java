@@ -7,12 +7,16 @@ import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.network.TripPattern;
+import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.NewStopPatternFactory;
 import org.opentripplanner.updater.trip.StopTimeUpdates;
 import org.opentripplanner.updater.trip.TripUpdateResult;
+import org.opentripplanner.updater.trip.policy.StopReplacementPolicy;
 
 /**
  * Resolved data for a modification of the stop pattern of an existing trip: the trip is rerouted on
@@ -57,6 +61,82 @@ public final class ResolvedTripModification extends ResolvedExistingTrip {
     this.cancellation = parsedUpdate.isCancellation();
     this.extraJourney = parsedUpdate.isExtraJourney();
     this.serviceCode = serviceCode;
+    validate();
+  }
+
+  /**
+   * The preconditions of a modification of the stop pattern of an existing trip: at least two
+   * calls, and - when the message carries SIRI extra calls - a non-extra call sequence that still
+   * matches the original pattern.
+   *
+   * @throws UpdateException if the message cannot reroute the trip
+   */
+  private void validate() {
+    if (stopTimeUpdates().size() < 2) {
+      throw UpdateException.of(trip().getId(), UpdateErrorType.TOO_FEW_STOPS);
+    }
+
+    if (hasSiriExtraCalls()) {
+      validateSiriExtraCalls();
+    }
+  }
+
+  /**
+   * The non-extra calls of a SIRI message with extra calls must still describe the original
+   * pattern: same number of calls, each one matching the original stop according to the format's
+   * {@link StopReplacementPolicy}.
+   */
+  private void validateSiriExtraCalls() {
+    var tripId = trip().getId();
+    var originalPattern = scheduledPattern();
+    var stopTimeUpdates = stopTimeUpdates();
+
+    long nonExtraCount = stopTimeUpdates
+      .stream()
+      .filter(u -> !u.isExtraCall())
+      .count();
+    if (nonExtraCount != originalPattern.numberOfStops()) {
+      throw UpdateException.of(
+        tripId,
+        UpdateErrorType.INVALID_STOP_SEQUENCE,
+        "%d non-extra calls but the original pattern has %d stops".formatted(
+          nonExtraCount,
+          originalPattern.numberOfStops()
+        )
+      );
+    }
+
+    var stopReplacement = formatPolicy().stopReplacement();
+    int originalIndex = 0;
+    for (int i = 0; i < stopTimeUpdates.size(); i++) {
+      var stopUpdate = stopTimeUpdates.get(i);
+      if (stopUpdate.isExtraCall()) {
+        continue;
+      }
+
+      StopLocation updateStop = stopUpdate.stop();
+      if (updateStop == null) {
+        throw UpdateException.of(tripId, UpdateErrorType.UNKNOWN_STOP, i);
+      }
+
+      StopLocation originalStop = originalPattern.getStop(originalIndex);
+
+      var validationResult = stopReplacement.check(originalStop, updateStop);
+      if (validationResult != StopReplacementPolicy.Result.VALID) {
+        throw UpdateException.of(
+          tripId,
+          UpdateErrorType.STOP_MISMATCH,
+          i,
+          "call at stop %s does not match the original stop %s (%s)".formatted(
+            updateStop.getId(),
+            originalStop.getId(),
+            validationResult
+          )
+        );
+      }
+
+      originalIndex++;
+    }
   }
 
   /**
@@ -135,7 +215,7 @@ public final class ResolvedTripModification extends ResolvedExistingTrip {
     return new TripUpdateResult(realTimeTripUpdate);
   }
 
-  public boolean hasSiriExtraCalls() {
+  private boolean hasSiriExtraCalls() {
     return stopTimeUpdates().stream().anyMatch(ResolvedStopTimeUpdate::isExtraCall);
   }
 

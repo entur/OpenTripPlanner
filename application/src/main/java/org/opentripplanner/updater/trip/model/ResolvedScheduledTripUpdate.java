@@ -9,6 +9,8 @@ import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.TripUpdateResult;
 
 /**
@@ -49,6 +51,38 @@ public final class ResolvedScheduledTripUpdate extends ResolvedExistingTrip {
       "scheduledTripTimes must not be null"
     );
     this.hasStopSequences = parsedUpdate.hasStopSequences();
+    validate();
+  }
+
+  /**
+   * The preconditions of an update to the times of an existing trip: a format that matches calls by
+   * position (FULL_UPDATE) must send every call of the trip, and must not number them. Matching by
+   * stop sequence or id (PARTIAL_UPDATE) puts no constraint on the calls.
+   *
+   * @throws UpdateException if the message cannot update the trip
+   */
+  private void validate() {
+    // The exact-stop-count precondition only applies to position-based (FULL_UPDATE) matching.
+    if (!formatPolicy().stopMatching().requiresExactStopCount()) {
+      return;
+    }
+
+    var tripId = trip().getId();
+
+    if (hasStopSequences) {
+      throw UpdateException.of(tripId, UpdateErrorType.INVALID_STOP_SEQUENCE);
+    }
+
+    // The count is compared against the scheduled pattern, not the current real-time pattern,
+    // because a revert update may send fewer stops than a previously modified pattern (e.g. after
+    // removing an extra call).
+    int scheduledStops = scheduledPattern().numberOfStops();
+    if (stopTimeUpdates().size() < scheduledStops) {
+      throw UpdateException.of(tripId, UpdateErrorType.TOO_FEW_STOPS);
+    }
+    if (stopTimeUpdates().size() > scheduledStops) {
+      throw UpdateException.of(tripId, UpdateErrorType.TOO_MANY_STOPS);
+    }
   }
 
   /**
@@ -123,10 +157,6 @@ public final class ResolvedScheduledTripUpdate extends ResolvedExistingTrip {
 
   public TripPattern pattern() {
     return pattern;
-  }
-
-  public boolean hasStopSequences() {
-    return hasStopSequences;
   }
 
   /**

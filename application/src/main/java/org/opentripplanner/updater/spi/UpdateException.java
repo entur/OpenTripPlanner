@@ -19,12 +19,17 @@ public class UpdateException extends RuntimeException {
   @Nullable
   private final String tripReference;
 
+  /// The detail becomes the exception message, so the explanation travels with the throwable
+  /// wherever it is logged. It is deliberately kept out of [UpdateError], which reports which trip
+  /// failed and why rather than a human-readable explanation.
   private UpdateException(
     @Nullable FeedScopedId tripId,
     UpdateErrorType errorType,
     @Nullable Integer stopPosition,
-    @Nullable String tripReference
+    @Nullable String tripReference,
+    @Nullable String detail
   ) {
+    super(detail);
     this.tripId = tripId;
     this.errorType = errorType;
     this.stopPosition = stopPosition;
@@ -32,19 +37,29 @@ public class UpdateException extends RuntimeException {
   }
 
   public static UpdateException of(@Nullable FeedScopedId tripId, UpdateErrorType errorType) {
-    return new UpdateException(tripId, errorType, null, null);
+    return new UpdateException(tripId, errorType, null, null, null);
+  }
+
+  /// An exception explaining why the update was rejected, for the cases where the
+  /// [UpdateErrorType] alone does not say what was wrong with the data.
+  public static UpdateException of(
+    @Nullable FeedScopedId tripId,
+    UpdateErrorType errorType,
+    String detail
+  ) {
+    return new UpdateException(tripId, errorType, null, null, detail);
   }
 
   public static UpdateException ofStopPosition(UpdateErrorType updateErrorType, int stopPosition) {
-    return new UpdateException(null, updateErrorType, stopPosition, null);
+    return new UpdateException(null, updateErrorType, stopPosition, null, null);
   }
 
   public static UpdateException noTripId(UpdateErrorType errorType) {
-    return new UpdateException(null, errorType, null, null);
+    return new UpdateException(null, errorType, null, null, null);
   }
 
   public static UpdateException of(UpdateErrorType updateErrorType) {
-    return new UpdateException(null, updateErrorType, null, null);
+    return new UpdateException(null, updateErrorType, null, null, null);
   }
 
   public static UpdateException of(
@@ -52,18 +67,40 @@ public class UpdateException extends RuntimeException {
     UpdateErrorType updateErrorType,
     int stopPosition
   ) {
-    return new UpdateException(tripId, updateErrorType, stopPosition, null);
+    return new UpdateException(tripId, updateErrorType, stopPosition, null, null);
+  }
+
+  /// An exception at a known call position, explaining why the update was rejected.
+  public static UpdateException of(
+    FeedScopedId tripId,
+    UpdateErrorType updateErrorType,
+    int stopPosition,
+    String detail
+  ) {
+    return new UpdateException(tripId, updateErrorType, stopPosition, null, detail);
   }
 
   /// Gives an updated exception with the specified tripId
   public UpdateException withTripId(FeedScopedId tripId) {
-    return new UpdateException(tripId, this.errorType, this.stopPosition, this.tripReference);
+    return new UpdateException(
+      tripId,
+      this.errorType,
+      this.stopPosition,
+      this.tripReference,
+      getMessage()
+    );
   }
 
   /// Gives an updated exception with a best-effort trip identifier for logging, used when the trip
   /// could not be resolved to a [FeedScopedId].
   public UpdateException withTripReference(@Nullable String tripReference) {
-    return new UpdateException(this.tripId, this.errorType, this.stopPosition, tripReference);
+    return new UpdateException(
+      this.tripId,
+      this.errorType,
+      this.stopPosition,
+      tripReference,
+      getMessage()
+    );
   }
 
   /// The position of the GTFS-RT stop time update or SIRI call in the list of updates, which

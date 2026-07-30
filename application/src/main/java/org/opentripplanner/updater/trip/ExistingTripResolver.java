@@ -5,7 +5,6 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import org.opentripplanner.transit.model.network.TripPattern;
-import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
@@ -18,7 +17,6 @@ import org.opentripplanner.updater.trip.model.ResolvedTripModification;
 import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.TripModification;
 import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.policy.StopReplacementPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,10 +33,10 @@ import org.slf4j.LoggerFactory;
  *   <li>Scheduled pattern (original if pattern is modified)</li>
  *   <li>Trip times (from scheduled timetable)</li>
  * </ul>
- * The two update types share all of that, but not their preconditions: each is validated against
- * the invariants of its own use case before it is returned, so a resolved update is always valid
- * for the operation it was resolved for. The entry point the caller picks - not a runtime check -
- * decides which invariants apply.
+ * The two update types share all of that, but not their preconditions. Each resolved update
+ * validates itself on construction, so resolution also rejects a message that cannot describe the
+ * operation it was resolved for. The entry point the caller picks - not a runtime check - decides
+ * which invariants apply.
  */
 public class ExistingTripResolver {
 
@@ -84,7 +82,7 @@ public class ExistingTripResolver {
    */
   public ResolvedScheduledTripUpdate resolve(ScheduledTripUpdate parsedUpdate) {
     var resolution = doResolve(parsedUpdate);
-    var resolvedUpdate = new ResolvedScheduledTripUpdate(
+    return new ResolvedScheduledTripUpdate(
       parsedUpdate,
       resolution.serviceDate(),
       resolution.trip(),
@@ -93,8 +91,6 @@ public class ExistingTripResolver {
       resolution.scheduledTripTimes(),
       resolution.stopTimeUpdates()
     );
-    validateScheduledTripUpdate(resolvedUpdate);
-    return resolvedUpdate;
   }
 
   /**
@@ -105,7 +101,7 @@ public class ExistingTripResolver {
    */
   public ResolvedTripModification resolve(TripModification parsedUpdate) {
     var resolution = doResolve(parsedUpdate);
-    var resolvedUpdate = new ResolvedTripModification(
+    return new ResolvedTripModification(
       parsedUpdate,
       resolution.serviceDate(),
       resolution.trip(),
@@ -116,116 +112,6 @@ public class ExistingTripResolver {
       resolution.scheduledTripTimes().getServiceCode(),
       resolution.stopTimeUpdates()
     );
-    validateTripModification(resolvedUpdate);
-    return resolvedUpdate;
-  }
-
-  /**
-   * The preconditions of an update to the times of an existing trip: a format that matches calls by
-   * position (FULL_UPDATE) must send every call of the trip, and must not number them. Matching by
-   * stop sequence or id (PARTIAL_UPDATE) puts no constraint on the calls.
-   */
-  private void validateScheduledTripUpdate(ResolvedScheduledTripUpdate resolvedUpdate) {
-    // The exact-stop-count precondition only applies to position-based (FULL_UPDATE) matching.
-    if (!resolvedUpdate.formatPolicy().stopMatching().requiresExactStopCount()) {
-      return;
-    }
-
-    var tripId = resolvedUpdate.trip().getId();
-    var scheduledPattern = resolvedUpdate.scheduledPattern();
-    var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
-
-    if (resolvedUpdate.hasStopSequences()) {
-      throw UpdateException.of(tripId, UpdateErrorType.INVALID_STOP_SEQUENCE);
-    }
-
-    // The count is compared against the scheduled pattern, not the current real-time pattern,
-    // because a revert update may send fewer stops than a previously modified pattern (e.g. after
-    // removing an extra call).
-    if (stopTimeUpdates.size() < scheduledPattern.numberOfStops()) {
-      throw UpdateException.of(tripId, UpdateErrorType.TOO_FEW_STOPS);
-    }
-    if (stopTimeUpdates.size() > scheduledPattern.numberOfStops()) {
-      throw UpdateException.of(tripId, UpdateErrorType.TOO_MANY_STOPS);
-    }
-  }
-
-  /**
-   * The preconditions of a modification of the stop pattern of an existing trip: at least two
-   * calls, and - when the message carries SIRI extra calls - a non-extra call sequence that still
-   * matches the original pattern.
-   */
-  private void validateTripModification(ResolvedTripModification resolvedUpdate) {
-    var trip = resolvedUpdate.trip();
-    var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
-
-    if (stopTimeUpdates.size() < 2) {
-      LOG.debug("MODIFY_TRIP: trip {} has fewer than 2 stops, skipping.", trip.getId());
-      throw UpdateException.of(trip.getId(), UpdateErrorType.TOO_FEW_STOPS);
-    }
-
-    if (resolvedUpdate.hasSiriExtraCalls()) {
-      validateSiriExtraCalls(
-        stopTimeUpdates,
-        resolvedUpdate.scheduledPattern(),
-        trip,
-        resolvedUpdate.formatPolicy().stopReplacement()
-      );
-    }
-  }
-
-  /**
-   * The non-extra calls of a SIRI message with extra calls must still describe the original
-   * pattern: same number of calls, each one matching the original stop according to the format's
-   * {@link StopReplacementPolicy}.
-   */
-  private void validateSiriExtraCalls(
-    List<ResolvedStopTimeUpdate> stopTimeUpdates,
-    TripPattern originalPattern,
-    Trip trip,
-    StopReplacementPolicy stopReplacement
-  ) {
-    long nonExtraCount = stopTimeUpdates
-      .stream()
-      .filter(u -> !u.isExtraCall())
-      .count();
-    if (nonExtraCount != originalPattern.numberOfStops()) {
-      LOG.debug(
-        "SIRI extra call validation failed: {} non-extra stops but original pattern has {} stops",
-        nonExtraCount,
-        originalPattern.numberOfStops()
-      );
-      throw UpdateException.of(trip.getId(), UpdateErrorType.INVALID_STOP_SEQUENCE);
-    }
-
-    int originalIndex = 0;
-    for (int i = 0; i < stopTimeUpdates.size(); i++) {
-      var stopUpdate = stopTimeUpdates.get(i);
-      if (stopUpdate.isExtraCall()) {
-        continue;
-      }
-
-      StopLocation updateStop = stopUpdate.stop();
-      if (updateStop == null) {
-        throw UpdateException.of(trip.getId(), UpdateErrorType.UNKNOWN_STOP, i);
-      }
-
-      StopLocation originalStop = originalPattern.getStop(originalIndex);
-
-      var validationResult = stopReplacement.check(originalStop, updateStop);
-      if (validationResult != StopReplacementPolicy.Result.VALID) {
-        LOG.debug(
-          "SIRI extra call validation failed: stop {} at index {} doesn't match original stop {} ({})",
-          updateStop.getId(),
-          i,
-          originalStop.getId(),
-          validationResult
-        );
-        throw UpdateException.of(trip.getId(), UpdateErrorType.STOP_MISMATCH, i);
-      }
-
-      originalIndex++;
-    }
   }
 
   /**
