@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip;
 
 import static org.opentripplanner.updater.spi.UpdateErrorType.OUTSIDE_SERVICE_PERIOD;
 import static org.opentripplanner.updater.spi.UpdateErrorType.TRIP_NOT_FOUND;
+import static org.opentripplanner.updater.spi.UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN;
 
 import java.util.Objects;
 import org.opentripplanner.transit.model.timetable.ScheduledTripTimes;
@@ -26,8 +27,8 @@ public class DuplicateTripResolver {
   /**
    * Resolve a TripDuplication against the transit model.
    *
-   * @throws UpdateException if the original trip cannot be found or the service date is outside
-   *                         the service period
+   * @throws UpdateException if the original trip or its scheduled times cannot be found, or the
+   *                         service date is outside the service period
    */
   public ResolvedDuplicateTrip resolve(TripDuplication parsedUpdate) {
     var tripId = parsedUpdate.tripReference().tripId();
@@ -44,9 +45,16 @@ public class DuplicateTripResolver {
     int serviceCode = transitService.getTripCalendars().getServiceCode(serviceId);
 
     var originalPattern = transitService.findPattern(originalTrip);
+    if (originalPattern == null) {
+      throw UpdateException.of(tripId, TRIP_NOT_FOUND_IN_PATTERN);
+    }
+
     var originalScheduledTimes = (ScheduledTripTimes) originalPattern
       .getScheduledTimetable()
       .getTripTimes(tripId);
+    if (originalScheduledTimes == null) {
+      throw UpdateException.of(tripId, TRIP_NOT_FOUND_IN_PATTERN);
+    }
 
     return new ResolvedDuplicateTrip(
       originalTrip,

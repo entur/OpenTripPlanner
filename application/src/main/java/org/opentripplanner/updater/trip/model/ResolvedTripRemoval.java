@@ -11,6 +11,11 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
 /**
  * Resolved data for cancelling or deleting trips.
  * <p>
+ * A removal targets either a trip of the static schedule or a trip that a previous real-time
+ * message added, never both and never neither. The two shapes are built through
+ * {@link #forScheduledTrip} and {@link #forPreviouslyAddedTrip}, and the invariant is enforced on
+ * construction, so the removal always describes exactly one trip to remove.
+ * <p>
  * Used by {@link org.opentripplanner.updater.trip.TripCanceller}
  * and {@link org.opentripplanner.updater.trip.TripDeleter}.
  */
@@ -57,6 +62,23 @@ public final class ResolvedTripRemoval {
     this.addedTripPattern = addedTripPattern;
     this.addedTripTimes = addedTripTimes;
     this.dataSource = dataSource;
+    validate();
+  }
+
+  /**
+   * A removal describes exactly one trip to remove: either a scheduled trip with its pattern and
+   * times, or a previously added trip with its real-time pattern and times.
+   */
+  private void validate() {
+    boolean scheduled =
+      scheduledTrip != null && scheduledPattern != null && scheduledTripTimes != null;
+    boolean previouslyAdded = addedTripPattern != null && addedTripTimes != null;
+
+    if (scheduled == previouslyAdded) {
+      throw new IllegalArgumentException(
+        "A trip removal targets either a scheduled trip or a previously added one: " + this
+      );
+    }
   }
 
   /**
