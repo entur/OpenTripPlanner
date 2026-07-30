@@ -16,7 +16,7 @@ import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
+import org.opentripplanner.updater.trip.model.ResolvedScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
@@ -68,7 +68,7 @@ class ScheduledTripUpdateValidationTest {
     );
   }
 
-  private ResolvedExistingTrip resolve(ScheduledTripUpdate parsedUpdate) {
+  private ResolvedScheduledTripUpdate resolve(ScheduledTripUpdate parsedUpdate) {
     return resolver.resolve(parsedUpdate);
   }
 

@@ -12,8 +12,9 @@ import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ExistingTripUpdate;
-import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
+import org.opentripplanner.updater.trip.model.ResolvedScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
+import org.opentripplanner.updater.trip.model.ResolvedTripModification;
 import org.opentripplanner.updater.trip.model.ScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.TripModification;
 import org.opentripplanner.updater.trip.model.TripReference;
@@ -22,11 +23,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Resolves a {@link ExistingTripUpdate} into a {@link ResolvedExistingTrip} for updates
- * to existing scheduled trips.
- * <p>
- * Used for UPDATE_EXISTING ({@link ScheduledTripUpdate}) and MODIFY_TRIP
- * ({@link TripModification}).
+ * Resolves a {@link ExistingTripUpdate} into the resolved update of its use case: UPDATE_EXISTING
+ * ({@link ScheduledTripUpdate}) into a {@link ResolvedScheduledTripUpdate}, MODIFY_TRIP
+ * ({@link TripModification}) into a {@link ResolvedTripModification}.
  * <p>
  * Resolution includes:
  * <ul>
@@ -37,9 +36,9 @@ import org.slf4j.LoggerFactory;
  *   <li>Trip times (from scheduled timetable)</li>
  * </ul>
  * The two update types share all of that, but not their preconditions: each is validated against
- * the invariants of its own use case before it is returned, so a {@link ResolvedExistingTrip} is
- * always valid for the operation it was resolved for. The entry point the caller picks - not a
- * runtime check - decides which invariants apply.
+ * the invariants of its own use case before it is returned, so a resolved update is always valid
+ * for the operation it was resolved for. The entry point the caller picks - not a runtime check -
+ * decides which invariants apply.
  */
 public class ExistingTripResolver {
 
@@ -83,8 +82,17 @@ public class ExistingTripResolver {
    * @throws UpdateException if resolution fails or the update violates the preconditions of an
    *                         update to an existing trip
    */
-  public ResolvedExistingTrip resolve(ScheduledTripUpdate parsedUpdate) {
-    var resolvedUpdate = doResolve(parsedUpdate);
+  public ResolvedScheduledTripUpdate resolve(ScheduledTripUpdate parsedUpdate) {
+    var resolution = doResolve(parsedUpdate);
+    var resolvedUpdate = new ResolvedScheduledTripUpdate(
+      parsedUpdate,
+      resolution.serviceDate(),
+      resolution.trip(),
+      resolution.pattern(),
+      resolution.scheduledPattern(),
+      resolution.scheduledTripTimes(),
+      resolution.stopTimeUpdates()
+    );
     validateScheduledTripUpdate(resolvedUpdate);
     return resolvedUpdate;
   }
@@ -95,8 +103,19 @@ public class ExistingTripResolver {
    * @throws UpdateException if resolution fails or the update violates the preconditions of a
    *                         trip modification
    */
-  public ResolvedExistingTrip resolve(TripModification parsedUpdate) {
-    var resolvedUpdate = doResolve(parsedUpdate);
+  public ResolvedTripModification resolve(TripModification parsedUpdate) {
+    var resolution = doResolve(parsedUpdate);
+    var resolvedUpdate = new ResolvedTripModification(
+      parsedUpdate,
+      resolution.serviceDate(),
+      resolution.trip(),
+      resolution.scheduledPattern(),
+      // The scheduled times of the trip already run on the calendar of the trip's service id, so
+      // this is the same code as a lookup by service id - without the nullable Integer that
+      // TripCalendars returns for an unregistered service.
+      resolution.scheduledTripTimes().getServiceCode(),
+      resolution.stopTimeUpdates()
+    );
     validateTripModification(resolvedUpdate);
     return resolvedUpdate;
   }
@@ -106,7 +125,7 @@ public class ExistingTripResolver {
    * position (FULL_UPDATE) must send every call of the trip, and must not number them. Matching by
    * stop sequence or id (PARTIAL_UPDATE) puts no constraint on the calls.
    */
-  private void validateScheduledTripUpdate(ResolvedExistingTrip resolvedUpdate) {
+  private void validateScheduledTripUpdate(ResolvedScheduledTripUpdate resolvedUpdate) {
     // The exact-stop-count precondition only applies to position-based (FULL_UPDATE) matching.
     if (!resolvedUpdate.formatPolicy().stopMatching().requiresExactStopCount()) {
       return;
@@ -136,7 +155,7 @@ public class ExistingTripResolver {
    * calls, and - when the message carries SIRI extra calls - a non-extra call sequence that still
    * matches the original pattern.
    */
-  private void validateTripModification(ResolvedExistingTrip resolvedUpdate) {
+  private void validateTripModification(ResolvedTripModification resolvedUpdate) {
     var trip = resolvedUpdate.trip();
     var stopTimeUpdates = resolvedUpdate.stopTimeUpdates();
 
@@ -210,12 +229,12 @@ public class ExistingTripResolver {
   }
 
   /**
-   * Resolve everything the two update types resolve the same way, before each is validated against
-   * the invariants of its own use case.
+   * Resolve everything the two update types resolve the same way, before each is turned into the
+   * resolved update of its own use case and validated against its invariants.
    *
    * @throws UpdateException if resolution fails
    */
-  private ResolvedExistingTrip doResolve(ExistingTripUpdate parsedUpdate) {
+  private ExistingTripResolution doResolve(ExistingTripUpdate parsedUpdate) {
     // Resolve service date
     LocalDate serviceDate = serviceDateResolver.resolveServiceDate(parsedUpdate);
 
@@ -264,20 +283,25 @@ public class ExistingTripResolver {
       stopResolver
     );
 
-    return new ResolvedExistingTrip(
-      parsedUpdate,
+    return new ExistingTripResolution(
       serviceDate,
       trip,
       pattern,
       scheduledPattern,
       tripTimes,
-      // The scheduled times of the trip already run on the calendar of the trip's service id, so
-      // this is the same code as a lookup by service id - without the nullable Integer that
-      // TripCalendars returns for an unregistered service.
-      tripTimes.getServiceCode(),
       resolvedStopTimeUpdates
     );
   }
+
+  /** Everything the two existing-trip update types resolve the same way. */
+  private record ExistingTripResolution(
+    LocalDate serviceDate,
+    Trip trip,
+    TripPattern pattern,
+    TripPattern scheduledPattern,
+    TripTimes scheduledTripTimes,
+    List<ResolvedStopTimeUpdate> stopTimeUpdates
+  ) {}
 
   /**
    * Resolve a Trip and its TripPattern from a ParsedTripUpdate.

@@ -18,7 +18,7 @@ import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
+import org.opentripplanner.updater.trip.model.ResolvedTripModification;
 import org.opentripplanner.updater.trip.model.StopReference;
 import org.opentripplanner.updater.trip.model.TimeUpdate;
 import org.opentripplanner.updater.trip.model.TripModification;
@@ -72,7 +72,7 @@ class TripModificationValidationTest {
       );
     }
 
-    private ResolvedExistingTrip resolve(TripModification parsedUpdate) {
+    private ResolvedTripModification resolve(TripModification parsedUpdate) {
       return resolver.resolve(parsedUpdate);
     }
 
@@ -153,7 +153,7 @@ class TripModificationValidationTest {
       );
     }
 
-    private ResolvedExistingTrip resolve(TripModification parsedUpdate) {
+    private ResolvedTripModification resolve(TripModification parsedUpdate) {
       return resolver.resolve(parsedUpdate);
     }
 

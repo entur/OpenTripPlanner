@@ -14,7 +14,7 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.PatternModification;
-import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
+import org.opentripplanner.updater.trip.model.ResolvedScheduledTripUpdate;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +39,8 @@ public class ScheduledTripUpdater {
     this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
   }
 
-  public TripUpdateResult update(ResolvedExistingTrip resolvedUpdate) throws UpdateException {
+  public TripUpdateResult update(ResolvedScheduledTripUpdate resolvedUpdate)
+    throws UpdateException {
     Trip trip = resolvedUpdate.trip();
     TripPattern scheduledPattern = resolvedUpdate.scheduledPattern();
     TripTimes tripTimes = resolvedUpdate.scheduledTripTimes();

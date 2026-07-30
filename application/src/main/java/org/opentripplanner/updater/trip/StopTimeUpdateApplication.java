@@ -9,12 +9,12 @@ import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.PatternModification;
-import org.opentripplanner.updater.trip.model.ResolvedExistingTrip;
+import org.opentripplanner.updater.trip.model.ResolvedScheduledTripUpdate;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.policy.StopReplacementPolicy;
 
 /**
- * Applies the stop time updates of one resolved existing-trip update to a {@link
+ * Applies the stop time updates of one resolved scheduled-trip update to a {@link
  * RealTimeTripTimesBuilder}, accumulating the resulting changes into an immutable {@link
  * PatternModification}. This is the cohesive command run by the {@link ScheduledTripUpdater}.
  * <p>
@@ -24,12 +24,12 @@ import org.opentripplanner.updater.trip.policy.StopReplacementPolicy;
  */
 final class StopTimeUpdateApplication {
 
-  private final ResolvedExistingTrip resolved;
+  private final ResolvedScheduledTripUpdate resolved;
   private final RealTimeTripTimesBuilder builder;
   private final TripPattern scheduledPattern;
 
   StopTimeUpdateApplication(
-    ResolvedExistingTrip resolved,
+    ResolvedScheduledTripUpdate resolved,
     RealTimeTripTimesBuilder builder,
     TripPattern scheduledPattern
   ) {
