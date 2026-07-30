@@ -4,6 +4,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
+import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
@@ -26,7 +27,12 @@ public sealed interface StopMatchingPolicy
     Match resolveIndex(ResolvedStopTimeUpdate update);
   }
 
-  Cursor newCursor(TripPattern scheduledPattern, FeedScopedId tripId);
+  /**
+   * @param scheduledTripTimes the scheduled times of the trip, which know the {@code stop_sequence}
+   *                           each of its calls is numbered with. Only a format that numbers its
+   *                           calls needs them.
+   */
+  Cursor newCursor(TripPattern scheduledPattern, TripTimes scheduledTripTimes, FeedScopedId tripId);
 
   /**
    * Whether the update must cover every scheduled stop exactly once by position (the FULL_UPDATE
@@ -36,7 +42,7 @@ public sealed interface StopMatchingPolicy
 
   /** SIRI-ET: the position in the update list IS the position in the pattern. */
   StopMatchingPolicy POSITIONAL = new Positional();
-  /** GTFS-RT: match by explicit stop sequence, or by stop-id lookup in the pattern. */
+  /** GTFS-RT: match by the stop sequence the static feed numbered the call with, or by stop id. */
   StopMatchingPolicy BY_SEQUENCE_OR_ID = new BySequenceOrId();
 
   final class Positional implements StopMatchingPolicy {
@@ -47,7 +53,11 @@ public sealed interface StopMatchingPolicy
     }
 
     @Override
-    public Cursor newCursor(TripPattern scheduledPattern, FeedScopedId tripId) {
+    public Cursor newCursor(
+      TripPattern scheduledPattern,
+      TripTimes scheduledTripTimes,
+      FeedScopedId tripId
+    ) {
       return new Cursor() {
         private int next = 0;
 
@@ -73,18 +83,21 @@ public sealed interface StopMatchingPolicy
     }
 
     @Override
-    public Cursor newCursor(TripPattern scheduledPattern, FeedScopedId tripId) {
+    public Cursor newCursor(
+      TripPattern scheduledPattern,
+      TripTimes scheduledTripTimes,
+      FeedScopedId tripId
+    ) {
       return new Cursor() {
         private int nextStopSearchIndex = 0;
+        private int nextUpdateIndex = 0;
 
         @Override
         public Match resolveIndex(ResolvedStopTimeUpdate update) {
+          int updateIndex = nextUpdateIndex++;
           Integer stopSequence = update.stopSequence();
           if (stopSequence != null) {
-            int stopIndex = stopSequence;
-            if (stopIndex < 0 || stopIndex >= scheduledPattern.numberOfStops()) {
-              throw UpdateException.of(tripId, UpdateErrorType.INVALID_STOP_SEQUENCE, stopIndex);
-            }
+            int stopIndex = stopPositionOf(stopSequence, updateIndex);
             // Use the pre-resolved stop only if an assignedStopId was provided (stop replacement).
             StopLocation resolvedStop = update.stopReference().hasAssignedStopId()
               ? update.stop()
@@ -95,7 +108,12 @@ public sealed interface StopMatchingPolicy
           // No stopSequence: look the stop up by id in the pattern.
           StopLocation resolvedStop = update.stop();
           if (resolvedStop == null) {
-            throw UpdateException.of(tripId, UpdateErrorType.INVALID_STOP_REFERENCE);
+            throw UpdateException.of(
+              tripId,
+              UpdateErrorType.INVALID_STOP_REFERENCE,
+              updateIndex,
+              "the update identifies its stop neither by stop sequence nor by a known stop id"
+            );
           }
           int matchIndex = matchStopInPattern(resolvedStop, scheduledPattern, nextStopSearchIndex);
           // If not found from the current position, retry from the beginning (out-of-order updates).
@@ -103,10 +121,39 @@ public sealed interface StopMatchingPolicy
             matchIndex = matchStopInPattern(resolvedStop, scheduledPattern, 0);
           }
           if (matchIndex < 0) {
-            throw UpdateException.of(tripId, UpdateErrorType.INVALID_STOP_REFERENCE);
+            throw UpdateException.of(
+              tripId,
+              UpdateErrorType.INVALID_STOP_REFERENCE,
+              updateIndex,
+              "stop %s is not served by the trip".formatted(resolvedStop.getId())
+            );
           }
           nextStopSearchIndex = matchIndex + 1;
           return new Match(matchIndex, resolvedStop);
+        }
+
+        /**
+         * The position in the pattern of the call the static feed numbered {@code stopSequence}.
+         * <p>
+         * A GTFS {@code stop_sequence} is the number the call carries in {@code stop_times.txt}. It
+         * only has to increase along the trip, so it is not a position in the pattern and has to be
+         * looked up in the numbering of the trip itself.
+         *
+         * @param updateIndex the position of the update in the message, for diagnostics
+         */
+        private int stopPositionOf(int stopSequence, int updateIndex) {
+          var stopPosition = scheduledTripTimes.stopPositionForGtfsSequence(stopSequence);
+          if (stopPosition.isEmpty()) {
+            throw UpdateException.of(
+              tripId,
+              UpdateErrorType.INVALID_STOP_SEQUENCE,
+              updateIndex,
+              "stop_sequence %d is not one of the stop sequences of the trip".formatted(
+                stopSequence
+              )
+            );
+          }
+          return stopPosition.getAsInt();
         }
       };
     }

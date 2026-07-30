@@ -157,6 +157,12 @@ public final class ResolvedStopTimeUpdate {
     return stopReference;
   }
 
+  /**
+   * The number the call carries in the static feed (GTFS {@code stop_sequence}), or null if the
+   * message does not number its calls. It is only required to increase along the trip, so it is
+   * <em>not</em> a position in the pattern: resolve it through
+   * {@link org.opentripplanner.transit.model.timetable.TripTimes#stopPositionForGtfsSequence(int)}.
+   */
   @Nullable
   public Integer stopSequence() {
     return stopSequence;

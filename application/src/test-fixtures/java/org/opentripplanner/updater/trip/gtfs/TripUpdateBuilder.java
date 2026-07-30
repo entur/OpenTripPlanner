@@ -96,6 +96,25 @@ public class TripUpdateBuilder {
     );
   }
 
+  /** A call identified both by its stop and by the stop sequence the static feed gave it. */
+  public TripUpdateBuilder addStopTime(String stopId, int stopSequence, String time) {
+    return addStopTime(
+      stopId,
+      time,
+      time,
+      stopSequence,
+      NO_DELAY,
+      NO_DELAY,
+      DEFAULT_SCHEDULE_RELATIONSHIP,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    );
+  }
+
   public TripUpdateBuilder addStopTime(String stopId, String time, String headsign) {
     return addStopTime(
       stopId,

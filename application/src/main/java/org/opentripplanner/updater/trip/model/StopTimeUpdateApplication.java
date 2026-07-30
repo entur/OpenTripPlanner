@@ -38,7 +38,9 @@ final class StopTimeUpdateApplication {
   PatternModification run() {
     Trip trip = resolved.trip();
     var policy = resolved.formatPolicy();
-    var cursor = policy.stopMatching().newCursor(scheduledPattern, trip.getId());
+    var cursor = policy
+      .stopMatching()
+      .newCursor(scheduledPattern, resolved.scheduledTripTimes(), trip.getId());
     var stopReplacement = policy.stopReplacement();
     var pickDrop = policy.pickDrop();
     var mod = PatternModification.builder();

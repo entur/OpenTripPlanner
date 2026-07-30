@@ -160,6 +160,14 @@ public final class ResolvedScheduledTripUpdate extends ResolvedExistingTrip {
   }
 
   /**
+   * The scheduled times of the trip. They are the baseline the real-time times are built from, and
+   * they know which {@code stop_sequence} the static feed numbered each call with.
+   */
+  TripTimes scheduledTripTimes() {
+    return scheduledTripTimes;
+  }
+
+  /**
    * Whether every stop of the trip is cancelled/skipped, which cancels the trip implicitly. The
    * stop updates must cover the full pattern: a partial update only cancels the stops it mentions.
    */

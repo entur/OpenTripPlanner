@@ -47,7 +47,9 @@ public final class ParsedStopTimeUpdate {
 
   /**
    * @param stopReference Reference to the stop (by ID or stop point ref)
-   * @param stopSequence The stop sequence number (0-indexed position in the trip)
+   * @param stopSequence The number the call carries in the static feed (GTFS {@code stop_sequence}),
+   *                     or null if the message does not number its calls. Only required to increase
+   *                     along the trip, so it is not a position in the pattern.
    * @param status The status of this stop (scheduled, skipped, cancelled, etc.)
    * @param arrivalUpdate The arrival time update
    * @param departureUpdate The departure time update

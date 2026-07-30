@@ -58,11 +58,13 @@ public final class NewStopPatternFactory {
         throw UpdateException.of(trip.getId(), UpdateErrorType.UNKNOWN_STOP, i);
       }
 
-      // Create stop time
+      // Create stop time. A message that numbers its calls (GTFS-RT stop_sequence) keeps its own
+      // numbering, so a later update can find the call again by the sequence it was created with.
+      // A format that matches calls by position (SIRI-ET) numbers them by position.
       var stopTime = new StopTime();
       stopTime.setTrip(trip);
       stopTime.setStop(stop);
-      stopTime.setStopSequence(i);
+      stopTime.setStopSequence(stopUpdate.stopSequence() != null ? stopUpdate.stopSequence() : i);
 
       // Resolve times
       boolean isFirstStop = (i == 0);
