@@ -19,6 +19,7 @@ import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.TripUpdateApplier;
 import org.opentripplanner.updater.trip.TripUpdateDispatcher;
+import org.opentripplanner.updater.trip.TripUpdateResult;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
@@ -115,6 +116,15 @@ class GtfsNewTripUpdateHandler implements GtfsTripUpdateHandler {
     return TripUpdateApplier.apply(buffer, realTimeTripUpdate).addWarnings(
       tripUpdateResult.warnings()
     );
+  }
+
+  /**
+   * Parse the GTFS-RT message and execute the resulting command, without writing
+   * the result to the snapshot buffer. Used by the shadow-comparison mode to dry-run the unified
+   * path.
+   */
+  TripUpdateResult parseAndExecute(GtfsRealtime.TripUpdate update) {
+    return dispatcher.execute(parser.parse(update));
   }
 
   /**

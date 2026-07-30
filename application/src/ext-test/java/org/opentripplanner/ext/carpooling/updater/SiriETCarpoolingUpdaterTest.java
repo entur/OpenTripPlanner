@@ -40,7 +40,9 @@ class SiriETCarpoolingUpdaterTest {
       false,
       HttpHeaders.empty(),
       false,
-      false
+      false,
+      false,
+      null
     );
     updater = new SiriETCarpoolingUpdater(params, repository);
   }

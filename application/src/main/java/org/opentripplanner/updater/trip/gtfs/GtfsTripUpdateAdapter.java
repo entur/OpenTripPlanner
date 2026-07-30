@@ -8,8 +8,9 @@ import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
  * {@link #forUpdate(MutableTimetableSnapshot)}.
  * <p>
  * This abstraction allows switching between the legacy implementation
- * ({@link GtfsRealTimeTripUpdateAdapter}) and the new format-independent implementation
- * ({@link GtfsNewTripUpdateAdapter}).
+ * ({@link GtfsRealTimeTripUpdateAdapter}), the new format-independent implementation
+ * ({@link GtfsNewTripUpdateAdapter}) and the shadow-comparison mode
+ * ({@link ShadowGtfsTripUpdateAdapter}).
  */
 public interface GtfsTripUpdateAdapter {
   /**

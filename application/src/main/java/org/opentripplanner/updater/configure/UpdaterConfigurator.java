@@ -1,5 +1,6 @@
 package org.opentripplanner.updater.configure;
 
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,12 +34,14 @@ import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.trip.gtfs.GtfsNewTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.GtfsTripUpdateAdapter;
+import org.opentripplanner.updater.trip.gtfs.ShadowGtfsTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdater;
 import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdaterParameters;
 import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdater;
 import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdaterParameters;
+import org.opentripplanner.updater.trip.siri.ShadowSiriTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.SiriFuzzyTripMatcherCache;
 import org.opentripplanner.updater.trip.siri.SiriNewTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
@@ -318,46 +321,66 @@ public class UpdaterConfigurator {
 
   private SiriTripUpdateAdapter createSiriAdapter(SiriETUpdaterParameters config) {
     return createSiriAdapter(
+      config.shadowComparison(),
       config.useNewUpdaterImplementation(),
       config.fuzzyTripMatching(),
-      config.feedId()
+      config.feedId(),
+      config.shadowComparisonReportDirectory()
     );
   }
 
   private SiriTripUpdateAdapter createSiriAdapter(SiriETGooglePubsubUpdaterParameters config) {
     return createSiriAdapter(
+      config.shadowComparison(),
       config.useNewUpdaterImplementation(),
       config.fuzzyTripMatching(),
-      config.feedId()
+      config.feedId(),
+      config.shadowComparisonReportDirectory()
     );
   }
 
   private SiriTripUpdateAdapter createSiriAdapter(SiriAzureETUpdaterParameters config) {
     return createSiriAdapter(
+      config.isShadowComparison(),
       config.isUseNewUpdaterImplementation(),
       config.isFuzzyTripMatching(),
-      config.feedId()
+      config.feedId(),
+      config.getShadowComparisonReportDirectory()
     );
   }
 
   private SiriTripUpdateAdapter createSiriAdapter(MqttSiriETUpdaterParameters config) {
     return createSiriAdapter(
+      config.shadowComparison(),
       config.useNewUpdaterImplementation(),
       config.fuzzyTripMatching(),
-      config.feedId()
+      config.feedId(),
+      config.shadowComparisonReportDirectory()
     );
   }
 
   /**
-   * Create the SIRI-ET trip update adapter selected by the configuration: the new unified adapter
-   * or the legacy adapter.
+   * Create the SIRI-ET trip update adapter selected by the configuration: the shadow-comparison
+   * adapter (running legacy and unified side by side), the new unified adapter, or the legacy
+   * adapter.
    */
   private SiriTripUpdateAdapter createSiriAdapter(
+    boolean shadowComparison,
     boolean useNewUpdaterImplementation,
     boolean fuzzyTripMatching,
-    String feedId
+    String feedId,
+    @Nullable Path shadowComparisonReportDirectory
   ) {
-    if (useNewUpdaterImplementation) {
+    if (shadowComparison) {
+      return new ShadowSiriTripUpdateAdapter(
+        provideSiriAdapter(fuzzyTripMatching),
+        timetableRepository,
+        deduplicator,
+        fuzzyTripMatching,
+        feedId,
+        shadowComparisonReportDirectory
+      );
+    } else if (useNewUpdaterImplementation) {
       return new SiriNewTripUpdateAdapter(
         timetableRepository,
         deduplicator,
@@ -371,36 +394,54 @@ public class UpdaterConfigurator {
 
   private GtfsTripUpdateAdapter createGtfsAdapter(PollingTripUpdaterParameters config) {
     return createGtfsAdapter(
+      config.shadowComparison(),
       config.useNewUpdaterImplementation(),
       config.forwardsDelayPropagationType(),
       config.backwardsDelayPropagationType(),
       config.fuzzyTripMatching(),
-      config.feedId()
+      config.feedId(),
+      config.shadowComparisonReportDirectory()
     );
   }
 
   private GtfsTripUpdateAdapter createGtfsAdapter(MqttGtfsRealtimeUpdaterParameters config) {
     return createGtfsAdapter(
+      config.shadowComparison(),
       config.useNewUpdaterImplementation(),
       config.forwardsDelayPropagationType(),
       config.backwardsDelayPropagationType(),
       config.fuzzyTripMatching(),
-      config.feedId()
+      config.feedId(),
+      config.shadowComparisonReportDirectory()
     );
   }
 
   /**
-   * Create the GTFS-RT trip update adapter selected by the configuration: the new unified adapter
-   * or the legacy adapter.
+   * Create the GTFS-RT trip update adapter selected by the configuration: the shadow-comparison
+   * adapter (running legacy and unified side by side), the new unified adapter, or the legacy
+   * adapter.
    */
   private GtfsTripUpdateAdapter createGtfsAdapter(
+    boolean shadowComparison,
     boolean useNewUpdaterImplementation,
     ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType,
     boolean fuzzyTripMatching,
-    String feedId
+    String feedId,
+    @Nullable Path shadowComparisonReportDirectory
   ) {
-    if (useNewUpdaterImplementation) {
+    if (shadowComparison) {
+      return new ShadowGtfsTripUpdateAdapter(
+        provideGtfsAdapter(),
+        timetableRepository,
+        deduplicator,
+        forwardsDelayPropagationType,
+        backwardsDelayPropagationType,
+        fuzzyTripMatching,
+        feedId,
+        shadowComparisonReportDirectory
+      );
+    } else if (useNewUpdaterImplementation) {
       return new GtfsNewTripUpdateAdapter(
         timetableRepository,
         deduplicator,

@@ -94,7 +94,7 @@ class SiriNewTripUpdateHandler implements SiriTripUpdateHandler {
 
   /**
    * Parse the SIRI message and execute the resulting command, without writing the
-   * result to the snapshot buffer.
+   * result to the snapshot buffer. Used by the shadow-comparison mode to dry-run the unified path.
    */
   TripUpdateResult parseAndExecute(EstimatedVehicleJourney journey) {
     return dispatcher.execute(parser.parse(journey));

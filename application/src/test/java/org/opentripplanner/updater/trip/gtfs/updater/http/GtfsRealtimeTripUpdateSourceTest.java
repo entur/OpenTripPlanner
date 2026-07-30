@@ -24,7 +24,9 @@ public class GtfsRealtimeTripUpdateSourceTest {
         "rt",
         ResourceLoader.of(this).url("septa.pbf").toString(),
         HttpHeaders.empty(),
-        false
+        false,
+        false,
+        null
       )
     );
     var updates = source.getUpdates();
