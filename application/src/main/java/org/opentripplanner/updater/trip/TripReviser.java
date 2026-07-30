@@ -33,7 +33,7 @@ public class TripReviser {
     var serviceDate = revision.serviceDate();
 
     LOG.debug(
-      "Updating trip {} on pattern {} for date {}",
+      "Revising trip {} on pattern {} for date {}",
       tripId,
       revision.pattern().getId(),
       serviceDate
@@ -41,7 +41,7 @@ public class TripReviser {
     try {
       var result = revision.apply(tripPatternCache::getOrCreateTripPattern);
       LOG.debug(
-        "Updated trip {} on {} (pattern {})",
+        "Revised trip {} on {} (pattern {})",
         tripId,
         serviceDate,
         result.pattern().getId()

@@ -20,7 +20,7 @@ public interface TripUpdateParser<T> {
    * Parse a single format-specific update into a command of the common model.
    *
    * @param update  The format-specific update message
-   * @return the parsed command
+   * @return the command
    * @throws UpdateException if the update cannot be parsed
    */
   TripUpdateCommand parse(T update) throws UpdateException;

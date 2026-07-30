@@ -54,17 +54,17 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
 
-    assertNull(parsed.tripReference().tripId());
+    assertNull(command.tripReference().tripId());
     assertEquals(
       new FeedScopedId(FEED_ID, "dated-trip1"),
-      parsed.tripReference().tripOnServiceDateId()
+      command.tripReference().tripOnServiceDateId()
     );
-    assertNull(parsed.serviceDate());
-    assertEquals(1, parsed.stopTimeUpdates().size());
+    assertNull(command.serviceDate());
+    assertEquals(1, command.stopTimeUpdates().size());
 
-    var stopUpdate = parsed.stopTimeUpdates().get(0);
+    var stopUpdate = command.stopTimeUpdates().get(0);
     assertEquals(new FeedScopedId(FEED_ID, "stop1"), stopUpdate.stopReference().stopId());
     assertEquals(
       StopResolutionStrategy.SCHEDULED_STOP_POINT_FIRST,
@@ -109,16 +109,16 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(AddTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(AddTrip.class, parser.parse(journey));
 
-    assertNotNull(parsed.tripCreationInfo());
+    assertNotNull(command.tripCreationInfo());
     assertEquals(
       new FeedScopedId(FEED_ID, "NSB:ServiceJourney:newtrip1-2024-01-15"),
-      parsed.tripCreationInfo().tripId()
+      command.tripCreationInfo().tripId()
     );
-    assertEquals(new FeedScopedId(FEED_ID, "route1"), parsed.tripCreationInfo().routeId());
-    assertEquals(new FeedScopedId(FEED_ID, "operator1"), parsed.tripCreationInfo().operatorId());
-    assertEquals(2, parsed.stopTimeUpdates().size());
+    assertEquals(new FeedScopedId(FEED_ID, "route1"), command.tripCreationInfo().routeId());
+    assertEquals(new FeedScopedId(FEED_ID, "operator1"), command.tripCreationInfo().operatorId());
+    assertEquals(2, command.stopTimeUpdates().size());
   }
 
   @Test
@@ -142,11 +142,11 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(ModifyTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(ModifyTrip.class, parser.parse(journey));
 
-    assertEquals(3, parsed.stopTimeUpdates().size());
+    assertEquals(3, command.stopTimeUpdates().size());
 
-    var extraCallUpdate = parsed.stopTimeUpdates().get(1);
+    var extraCallUpdate = command.stopTimeUpdates().get(1);
     assertEquals(new FeedScopedId(FEED_ID, "stop_extra"), extraCallUpdate.stopReference().stopId());
     assertTrue(extraCallUpdate.isExtraCall());
     assertEquals(ParsedStopTimeUpdate.StopUpdateStatus.ADDED, extraCallUpdate.status());
@@ -172,10 +172,10 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
 
-    assertEquals(3, parsed.stopTimeUpdates().size());
-    var cancelledStop = parsed.stopTimeUpdates().get(1);
+    assertEquals(3, command.stopTimeUpdates().size());
+    var cancelledStop = command.stopTimeUpdates().get(1);
     assertEquals(ParsedStopTimeUpdate.StopUpdateStatus.CANCELLED, cancelledStop.status());
   }
 
@@ -187,16 +187,16 @@ class SiriTripUpdateParserTest {
       .withEstimatedCalls(calls -> calls.call("stop2").arriveAimedExpected("08:30", "08:32"))
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
 
-    assertEquals(2, parsed.stopTimeUpdates().size());
+    assertEquals(2, command.stopTimeUpdates().size());
 
-    var recordedStop = parsed.stopTimeUpdates().get(0);
+    var recordedStop = command.stopTimeUpdates().get(0);
     assertTrue(recordedStop.hasArrived());
     assertTrue(recordedStop.hasDeparted());
     assertNotNull(recordedStop.departureUpdate());
 
-    var estimatedStop = parsed.stopTimeUpdates().get(1);
+    var estimatedStop = command.stopTimeUpdates().get(1);
     assertFalse(estimatedStop.hasArrived());
     assertFalse(estimatedStop.hasDeparted());
   }
@@ -214,9 +214,9 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
 
-    var stopUpdate = parsed.stopTimeUpdates().get(0);
+    var stopUpdate = command.stopTimeUpdates().get(0);
     assertTrue(stopUpdate.predictionInaccurate());
   }
 
@@ -233,9 +233,9 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
 
-    var stopUpdate = parsed.stopTimeUpdates().get(0);
+    var stopUpdate = command.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.stopHeadsign());
     assertEquals("Downtown", stopUpdate.stopHeadsign().toString());
   }
@@ -289,9 +289,9 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
 
-    var stopUpdate = parsed.stopTimeUpdates().get(0);
+    var stopUpdate = command.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.occupancy());
   }
 
@@ -311,9 +311,9 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
 
-    var stopUpdate = parsed.stopTimeUpdates().get(0);
+    var stopUpdate = command.stopTimeUpdates().get(0);
 
     assertNotNull(asAbsolute(stopUpdate.arrivalUpdate()).aimedTime());
     assertNotNull(asAbsolute(stopUpdate.departureUpdate()).aimedTime());
@@ -328,11 +328,11 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
 
     assertEquals(
       ForwardsDelayPropagationType.NONE,
-      parsed.formatPolicy().delayPropagation().forwards()
+      command.formatPolicy().delayPropagation().forwards()
     );
   }
 
@@ -347,11 +347,11 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = parser.parse(journey);
+    var command = parser.parse(journey);
 
-    assertEquals(new FeedScopedId(FEED_ID, "trip1"), parsed.tripReference().tripId());
-    assertNull(parsed.tripReference().tripOnServiceDateId());
-    assertEquals(TEST_DATE, parsed.serviceDate());
+    assertEquals(new FeedScopedId(FEED_ID, "trip1"), command.tripReference().tripId());
+    assertNull(command.tripReference().tripOnServiceDateId());
+    assertEquals(TEST_DATE, command.serviceDate());
   }
 
   @Test
@@ -376,20 +376,20 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
 
-    assertEquals(3, parsed.stopTimeUpdates().size());
+    assertEquals(3, command.stopTimeUpdates().size());
     assertEquals(
       new FeedScopedId(FEED_ID, "stop1"),
-      parsed.stopTimeUpdates().get(0).stopReference().stopId()
+      command.stopTimeUpdates().get(0).stopReference().stopId()
     );
     assertEquals(
       new FeedScopedId(FEED_ID, "stop2"),
-      parsed.stopTimeUpdates().get(1).stopReference().stopId()
+      command.stopTimeUpdates().get(1).stopReference().stopId()
     );
     assertEquals(
       new FeedScopedId(FEED_ID, "stop3"),
-      parsed.stopTimeUpdates().get(2).stopReference().stopId()
+      command.stopTimeUpdates().get(2).stopReference().stopId()
     );
   }
 
@@ -402,9 +402,9 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = parser.parse(journey);
+    var command = parser.parse(journey);
 
-    assertEquals("DATASOURCE", parsed.dataSource());
+    assertEquals("DATASOURCE", command.dataSource());
   }
 
   @Test
@@ -425,11 +425,11 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
 
-    assertEquals(2, parsed.stopTimeUpdates().size());
+    assertEquals(2, command.stopTimeUpdates().size());
 
-    var firstStop = parsed.stopTimeUpdates().get(0);
+    var firstStop = command.stopTimeUpdates().get(0);
     assertNotNull(firstStop.arrivalUpdate(), "First stop should have arrival update via fallback");
     assertNotNull(firstStop.departureUpdate());
 
@@ -458,11 +458,11 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
 
-    assertEquals(2, parsed.stopTimeUpdates().size());
+    assertEquals(2, command.stopTimeUpdates().size());
 
-    var lastStop = parsed.stopTimeUpdates().get(1);
+    var lastStop = command.stopTimeUpdates().get(1);
     assertNotNull(lastStop.arrivalUpdate());
     assertNotNull(
       lastStop.departureUpdate(),
@@ -498,11 +498,11 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
 
-    assertEquals(3, parsed.stopTimeUpdates().size());
+    assertEquals(3, command.stopTimeUpdates().size());
 
-    var middleStop = parsed.stopTimeUpdates().get(1);
+    var middleStop = command.stopTimeUpdates().get(1);
     assertNotNull(middleStop.arrivalUpdate());
     assertNull(
       middleStop.departureUpdate(),
@@ -521,11 +521,11 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
 
-    assertEquals(1, parsed.stopTimeUpdates().size());
+    assertEquals(1, command.stopTimeUpdates().size());
 
-    var singleStop = parsed.stopTimeUpdates().get(0);
+    var singleStop = command.stopTimeUpdates().get(0);
     assertNotNull(singleStop.arrivalUpdate(), "Single stop should have arrival via fallback");
     assertNotNull(singleStop.departureUpdate());
 
@@ -544,12 +544,12 @@ class SiriTripUpdateParserTest {
       .withEstimatedCalls(calls -> calls.call("stop2").arriveAimedExpected("08:30", "08:35"))
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
 
-    assertEquals(2, parsed.stopTimeUpdates().size());
+    assertEquals(2, command.stopTimeUpdates().size());
 
-    var firstStop = parsed.stopTimeUpdates().get(0);
-    var lastStop = parsed.stopTimeUpdates().get(1);
+    var firstStop = command.stopTimeUpdates().get(0);
+    var lastStop = command.stopTimeUpdates().get(1);
 
     assertTrue(firstStop.hasArrived(), "First stop should be marked as arrived (recorded call)");
     assertTrue(firstStop.hasDeparted(), "First stop should be marked as departed (recorded call)");
@@ -586,11 +586,11 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var parsed = assertInstanceOf(AddTrip.class, parser.parse(journey));
+    var command = assertInstanceOf(AddTrip.class, parser.parse(journey));
 
-    assertNotNull(parsed.tripCreationInfo());
+    assertNotNull(command.tripCreationInfo());
 
-    var replacedTrips = parsed.tripCreationInfo().replacedTrips();
+    var replacedTrips = command.tripCreationInfo().replacedTrips();
     assertEquals(1, replacedTrips.size(), "Should have one replaced trip from VehicleJourneyRef");
     assertEquals(new FeedScopedId(FEED_ID, "replaced-trip-id"), replacedTrips.get(0));
   }

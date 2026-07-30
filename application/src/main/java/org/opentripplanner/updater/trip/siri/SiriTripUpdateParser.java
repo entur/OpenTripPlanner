@@ -42,7 +42,8 @@ import uk.org.siri.siri21.EstimatedVehicleJourney;
 
 /**
  * Parser for SIRI EstimatedVehicleJourney messages into the common TripUpdateCommand model.
- * This parser only parses SIRI messages - entity resolution and validation is done in the apply stage.
+ * This parser only parses SIRI messages - entity resolution and validation happen in the change
+ * factories.
  */
 public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJourney> {
 
@@ -80,7 +81,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     var tripReference = buildTripReference(journey, updateType, psd);
 
     // Handle plain cancellation (no stop times needed).
-    // Exceptions where the cancellation flag is instead carried on the parsed command:
+    // Exceptions where the cancellation flag is instead carried on the command:
     // - MODIFY_TRIP (extra call): carried into ModifyTrip so TripModifier can mark the
     //   trip cancelled on the extra-call pattern, preserving the extra stop information.
     // - ADD_NEW_TRIP (extra journey): carried into AddTrip so the extra journey is added
@@ -364,7 +365,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         builder.withDepartureUpdate(TimeUpdate.ofAbsolute(seconds, scheduled));
       }
     } else {
-      // Service date is unknown - create DeferredTimeUpdate for resolution in the apply stage
+      // Service date is unknown - create DeferredTimeUpdate for resolution in the change factory
       if (resolvedTimes.arrivalTime() != null) {
         builder.withArrivalUpdate(
           DeferredTimeUpdate.of(resolvedTimes.arrivalTime(), resolvedAimedTimes.arrivalTime())
@@ -381,7 +382,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
   // Capture the pick/drop intent of each call end. The parser has no scheduled pattern, so it
   // records the raw routability intent the SIRI message reports (SCHEDULED/NONE/CANCELLED); the
-  // apply side's PickDropPolicy reconciles it against the actual scheduled pickup/dropoff.
+  // change side's PickDropPolicy reconciles it against the actual scheduled pickup/dropoff.
   private void parsePickDropTypes(CallWrapper call, ParsedStopTimeUpdate.Builder builder) {
     call.dropOff().intent().ifPresent(builder::withDropoff);
     call.pickUp().intent().ifPresent(builder::withPickup);

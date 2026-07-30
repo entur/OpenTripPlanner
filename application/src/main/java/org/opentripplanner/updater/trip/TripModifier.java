@@ -19,8 +19,8 @@ import org.slf4j.LoggerFactory;
  *   <li><b>SIRI-ET EXTRA_CALL</b>: Insert extra stops, non-extra stops must match original</li>
  * </ul>
  * <p>
- * The update arrives already resolved to a trip in the transit model and validated by the
- * {@link ExistingTripChangeFactory}. The update itself is applied by
+ * The modification arrives fully specified and validated by the
+ * {@link ExistingTripChangeFactory} and applies itself through
  * {@link TripModification#apply} - this class supplies the collaborators it needs and
  * translates invalid real-time data into an update error.
  */

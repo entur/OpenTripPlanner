@@ -11,10 +11,9 @@ import org.opentripplanner.updater.trip.model.TripDuplication;
  * <p>
  * Maps to GTFS-RT DUPLICATED. SIRI-ET has no equivalent concept.
  * <p>
- * The original trip, its pattern and scheduled times are looked up by the
- * {@link TripDuplicationFactory} before the update reaches this class. The update itself is
- * applied by {@link TripDuplication#apply} - this class only supplies the deduplicator
- * it needs.
+ * The duplication arrives fully specified by the {@link TripDuplicationFactory}, which looks up
+ * the original trip, its pattern and its scheduled times. It applies itself through
+ * {@link TripDuplication#apply} - this class only supplies the deduplicator it needs.
  */
 public class TripDuplicator {
 

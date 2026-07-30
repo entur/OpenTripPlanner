@@ -2,7 +2,7 @@ package org.opentripplanner.updater.trip.model;
 
 /**
  * Internal classification of trip update types used by parsers to determine which concrete
- * {@link TripUpdateCommand} subtype to construct. This enum is not exposed in the parsed model -
+ * {@link TripUpdateCommand} subtype to construct. This enum is not exposed in the command model -
  * the type hierarchy itself encodes update semantics.
  */
 public enum TripUpdateType {

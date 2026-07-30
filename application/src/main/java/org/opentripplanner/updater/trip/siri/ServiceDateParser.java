@@ -67,8 +67,8 @@ public class ServiceDateParser {
    * The service date can be determined in three ways:
    * <ol>
    *   <li>Explicitly from FramedVehicleJourneyRef.DataFrameRef</li>
-   *   <li>By looking up TripOnServiceDate using tripOnServiceDateId (done in the apply stage)</li>
-   *   <li>By calculating from aimedDepartureTime using Trip's scheduled departure offset (done in the apply stage)</li>
+   *   <li>By looking up TripOnServiceDate using tripOnServiceDateId (done in the change factory)</li>
+   *   <li>By calculating from aimedDepartureTime using Trip's scheduled departure offset (done in the change factory)</li>
    * </ol>
    *
    * @param serviceDate The resolved service date, or null if deferred resolution is needed

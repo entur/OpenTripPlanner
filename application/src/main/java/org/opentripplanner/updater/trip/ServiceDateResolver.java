@@ -13,7 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Resolves service dates from parsed trip updates.
+ * Resolves service dates from trip update commands.
  * <p>
  * When a TripUpdateCommand has a null service date but contains a tripOnServiceDateId,
  * this resolver can look up the TripOnServiceDate entity and extract the service date.
@@ -48,7 +48,7 @@ public class ServiceDateResolver {
    *   <li>If none of the above, throw UpdateException with NO_START_DATE error</li>
    * </ol>
    *
-   * @param command the parsed trip update
+   * @param command the trip update command
    * @return the resolved service date
    * @throws UpdateException if the service date cannot be resolved
    */

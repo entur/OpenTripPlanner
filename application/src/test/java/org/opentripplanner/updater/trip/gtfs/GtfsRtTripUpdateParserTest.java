@@ -70,13 +70,13 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(tripUpdate));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(tripUpdate));
 
-    assertEquals(new FeedScopedId(FEED_ID, "trip1"), parsed.tripReference().tripId());
-    assertEquals(TEST_DATE, parsed.serviceDate());
-    assertEquals(1, parsed.stopTimeUpdates().size());
+    assertEquals(new FeedScopedId(FEED_ID, "trip1"), command.tripReference().tripId());
+    assertEquals(TEST_DATE, command.serviceDate());
+    assertEquals(1, command.stopTimeUpdates().size());
 
-    var stopUpdate = parsed.stopTimeUpdates().get(0);
+    var stopUpdate = command.stopTimeUpdates().get(0);
     assertEquals(new FeedScopedId(FEED_ID, "stop1"), stopUpdate.stopReference().stopId());
     assertEquals(0, stopUpdate.stopSequence());
     assertEquals(TimeUpdate.ofDelay(60), stopUpdate.arrivalUpdate());
@@ -106,9 +106,9 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = parser.parse(tripUpdate);
-    assertInstanceOf(DeleteTrip.class, parsed);
-    assertInstanceOf(RemoveTripCommand.class, parsed);
+    var command = parser.parse(tripUpdate);
+    assertInstanceOf(DeleteTrip.class, command);
+    assertInstanceOf(RemoveTripCommand.class, command);
   }
 
   @Test
@@ -135,15 +135,15 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = assertInstanceOf(AddTrip.class, parser.parse(tripUpdate));
+    var command = assertInstanceOf(AddTrip.class, parser.parse(tripUpdate));
 
-    assertNotNull(parsed.tripCreationInfo());
-    assertEquals(new FeedScopedId(FEED_ID, "trip1"), parsed.tripCreationInfo().tripId());
-    assertEquals(new FeedScopedId(FEED_ID, "route1"), parsed.tripCreationInfo().routeId());
-    assertEquals(Accessibility.POSSIBLE, parsed.vehicleDescription().wheelchairAccessibility());
+    assertNotNull(command.tripCreationInfo());
+    assertEquals(new FeedScopedId(FEED_ID, "trip1"), command.tripCreationInfo().tripId());
+    assertEquals(new FeedScopedId(FEED_ID, "route1"), command.tripCreationInfo().routeId());
+    assertEquals(Accessibility.POSSIBLE, command.vehicleDescription().wheelchairAccessibility());
 
-    assertEquals(1, parsed.stopTimeUpdates().size());
-    var stopUpdate = parsed.stopTimeUpdates().get(0);
+    assertEquals(1, command.stopTimeUpdates().size());
+    var stopUpdate = command.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.arrivalUpdate());
     assertEquals(30600, asAbsolute(stopUpdate.arrivalUpdate()).time());
     assertNotNull(stopUpdate.departureUpdate());
@@ -178,9 +178,9 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = assertInstanceOf(AddTrip.class, parser.parse(tripUpdate));
+    var command = assertInstanceOf(AddTrip.class, parser.parse(tripUpdate));
 
-    assertNull(parsed.vehicleDescription().wheelchairAccessibility());
+    assertNull(command.vehicleDescription().wheelchairAccessibility());
   }
 
   @Test
@@ -220,10 +220,10 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(tripUpdate));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(tripUpdate));
 
-    assertEquals(1, parsed.stopTimeUpdates().size());
-    var stopUpdate = parsed.stopTimeUpdates().get(0);
+    assertEquals(1, command.stopTimeUpdates().size());
+    var stopUpdate = command.stopTimeUpdates().get(0);
     assertEquals(ParsedStopTimeUpdate.StopUpdateStatus.SKIPPED, stopUpdate.status());
     assertTrue(stopUpdate.isSkipped());
   }
@@ -249,9 +249,9 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(tripUpdate));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(tripUpdate));
 
-    var stopUpdate = parsed.stopTimeUpdates().get(0);
+    var stopUpdate = command.stopTimeUpdates().get(0);
     assertEquals(new FeedScopedId(FEED_ID, "stop1"), stopUpdate.stopReference().stopId());
     assertEquals(
       new FeedScopedId(FEED_ID, "stop1_platform_2"),
@@ -279,12 +279,12 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = assertInstanceOf(AddTrip.class, parser.parse(tripUpdate));
+    var command = assertInstanceOf(AddTrip.class, parser.parse(tripUpdate));
 
-    assertNotNull(parsed.tripCreationInfo());
-    assertNotNull(parsed.tripHeadsign());
-    assertEquals("Downtown", parsed.tripHeadsign().toString());
-    assertEquals("X1", parsed.tripCreationInfo().shortName());
+    assertNotNull(command.tripCreationInfo());
+    assertNotNull(command.tripHeadsign());
+    assertEquals("Downtown", command.tripHeadsign().toString());
+    assertEquals("X1", command.tripCreationInfo().shortName());
   }
 
   @Test
@@ -308,9 +308,9 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(tripUpdate));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(tripUpdate));
 
-    var stopUpdate = parsed.stopTimeUpdates().get(0);
+    var stopUpdate = command.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.stopHeadsign());
     assertEquals("Downtown Express", stopUpdate.stopHeadsign().toString());
   }
@@ -383,9 +383,9 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(tripUpdate));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(tripUpdate));
 
-    var stopUpdate = parsed.stopTimeUpdates().get(0);
+    var stopUpdate = command.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.pickup());
     assertNotNull(stopUpdate.dropoff());
   }
@@ -415,9 +415,9 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = assertInstanceOf(AddTrip.class, parser.parse(tripUpdate));
+    var command = assertInstanceOf(AddTrip.class, parser.parse(tripUpdate));
 
-    var stopUpdate = parsed.stopTimeUpdates().get(0);
+    var stopUpdate = command.stopTimeUpdates().get(0);
     assertNotNull(stopUpdate.arrivalUpdate());
     assertEquals(30600, asAbsolute(stopUpdate.arrivalUpdate()).time());
     assertEquals(30000, asAbsolute(stopUpdate.arrivalUpdate()).aimedTime());
@@ -437,14 +437,14 @@ class GtfsRtTripUpdateParserTest {
       )
       .build();
 
-    var parsed = assertInstanceOf(ReviseTrip.class, parser.parse(tripUpdate));
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(tripUpdate));
 
-    assertTrue(parsed.stopTimeUpdates().isEmpty());
+    assertTrue(command.stopTimeUpdates().isEmpty());
   }
 
   @Test
   void parseOptionsPreserved() {
-    var parsed = assertInstanceOf(
+    var command = assertInstanceOf(
       ReviseTrip.class,
       parser.parse(
         GtfsRealtime.TripUpdate.newBuilder()
@@ -459,11 +459,11 @@ class GtfsRtTripUpdateParserTest {
 
     assertEquals(
       ForwardsDelayPropagationType.DEFAULT,
-      parsed.formatPolicy().delayPropagation().forwards()
+      command.formatPolicy().delayPropagation().forwards()
     );
     assertEquals(
       BackwardsDelayPropagationType.ALWAYS,
-      parsed.formatPolicy().delayPropagation().backwards()
+      command.formatPolicy().delayPropagation().backwards()
     );
   }
 

@@ -13,10 +13,11 @@ import org.slf4j.LoggerFactory;
  * Creates a brand-new trip that is not part of the static schedule.
  * Maps to GTFS-RT NEW/ADDED and SIRI-ET extra journeys.
  * <p>
- * The update itself is applied by {@link TripCreation#apply} - this class supplies the
- * collaborators it needs and translates invalid real-time data into an update error.
- * Subsequent updates to a trip added earlier are resolved to a
- * {@link org.opentripplanner.updater.trip.model.AddedTripRevision} and updated by
+ * The creation arrives fully specified and validated by the {@link TripAdditionFactory} and
+ * applies itself through {@link TripCreation#apply} - this class supplies the collaborators it
+ * needs and translates invalid real-time data into an update error.
+ * Subsequent updates to a trip added earlier are resolved into an
+ * {@link org.opentripplanner.updater.trip.model.AddedTripRevision} and revised by
  * {@link AddedTripReviser}; the {@link TripAdditionFactory} decides which of the two applies.
  */
 public class TripCreator {

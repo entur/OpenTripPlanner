@@ -11,10 +11,10 @@ import org.slf4j.LoggerFactory;
  * (GTFS-RT DELETED); they differ only in the real-time state the trip ends up in, which is what
  * {@link #applyRemoval} contributes.
  * <p>
- * The update arrives already resolved to a trip in the transit model by the
- * {@link TripRemovalFactory} - a scheduled trip or one added by an earlier real-time message - and
+ * The removal arrives fully specified by the {@link TripRemovalFactory} - resolved to a trip in
+ * the transit model, either a scheduled trip or one added by an earlier real-time message - and
  * applies itself through {@link TripRemoval#apply}. This class only supplies the removal
- * and logs the outcome.
+ * operation and logs the outcome.
  */
 public abstract sealed class TripRemover permits TripCanceller, TripDeleter {
 

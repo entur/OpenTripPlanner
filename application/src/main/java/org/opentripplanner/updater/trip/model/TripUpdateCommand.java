@@ -8,7 +8,7 @@ import org.opentripplanner.core.model.i18n.I18NString;
 /**
  * A command asking for one change to the real-time transit data, parsed from either SIRI-ET or
  * GTFS-RT. This sealed interface is the format-independent model that both parsers produce and the
- * apply stage executes.
+ * {@link org.opentripplanner.updater.trip.TripUpdateDispatcher} executes.
  * <p>
  * The type hierarchy mirrors the change factories:
  * <ul>

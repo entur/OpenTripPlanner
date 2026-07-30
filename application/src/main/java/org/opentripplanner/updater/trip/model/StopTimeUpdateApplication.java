@@ -10,12 +10,11 @@ import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.policy.StopReplacementPolicy;
 
 /**
- * Applies the stop time updates of one revision scheduled-trip update to a {@link
+ * Applies the stop time updates of one {@link TripRevision} to a {@link
  * RealTimeTripTimesBuilder}, accumulating the resulting changes into an immutable {@link
- * PatternModification}. This is the cohesive command run by
- * {@link TripRevision#apply}.
+ * PatternModification}. Run by {@link TripRevision#apply}.
  * <p>
- * Format divergence is revision through the {@code FormatPolicy} carried by the revision update:
+ * Format divergence is handled through the {@code FormatPolicy} carried by the revision:
  * stop matching, stop replacement, pick/drop and delay propagation are all asked of the policy
  * rather than branched on a format flag.
  */

@@ -69,7 +69,7 @@ public final class PickDropChange {
    * this value.
    * <p>
    * This lets a parser that does not yet hold the scheduled pattern capture the intent now and
-   * defer the routability reconciliation to the apply side (see
+   * defer the routability reconciliation to the change side (see
    * {@code org.opentripplanner.updater.trip.policy.PickDropPolicy#ROUTABILITY_CHANGE_ONLY}), rather
    * than resolving against a placeholder scheduled value.
    */

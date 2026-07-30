@@ -22,13 +22,13 @@ public class AddedTripReviser {
     var tripId = revision.tripId();
     var serviceDate = revision.serviceDate();
 
-    LOG.debug("Updating existing added trip {} on {}", tripId, serviceDate);
+    LOG.debug("Revising added trip {} on {}", tripId, serviceDate);
     try {
       var result = revision.apply();
-      LOG.debug("Updated existing added trip {} on {}", tripId, serviceDate);
+      LOG.debug("Revised added trip {} on {}", tripId, serviceDate);
       return result;
     } catch (DataValidationException e) {
-      LOG.info("Invalid real-time data for updated added trip {}: {}", tripId, e.getMessage());
+      LOG.info("Invalid real-time data for added trip {}: {}", tripId, e.getMessage());
       throw DataValidationExceptionMapper.map(e);
     }
   }

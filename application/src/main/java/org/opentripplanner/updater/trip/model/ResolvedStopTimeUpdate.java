@@ -15,8 +15,8 @@ import org.opentripplanner.updater.trip.StopResolver;
 /**
  * A stop time update with pre-resolved {@link TimeUpdate} values.
  * <p>
- * Created by resolvers after the service date is known, so that the apply side
- * always work with fully-resolved time data.
+ * Created by the change factories once the service date is known, so that the change side
+ * always works with fully-resolved time data.
  */
 public final class ResolvedStopTimeUpdate {
 
