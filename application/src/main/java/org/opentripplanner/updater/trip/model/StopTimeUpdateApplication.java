@@ -1,4 +1,4 @@
-package org.opentripplanner.updater.trip;
+package org.opentripplanner.updater.trip.model;
 
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -7,16 +7,13 @@ import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
-import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.PatternModification;
-import org.opentripplanner.updater.trip.model.ResolvedScheduledTripUpdate;
-import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.policy.StopReplacementPolicy;
 
 /**
  * Applies the stop time updates of one resolved scheduled-trip update to a {@link
  * RealTimeTripTimesBuilder}, accumulating the resulting changes into an immutable {@link
- * PatternModification}. This is the cohesive command run by the {@link ScheduledTripUpdater}.
+ * PatternModification}. This is the cohesive command run by
+ * {@link ResolvedScheduledTripUpdate#apply}.
  * <p>
  * Format divergence is resolved through the {@code FormatPolicy} carried by the resolved update:
  * stop matching, stop replacement, pick/drop and delay propagation are all asked of the policy

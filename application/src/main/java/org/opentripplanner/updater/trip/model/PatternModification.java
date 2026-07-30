@@ -3,13 +3,16 @@ package org.opentripplanner.updater.trip.model;
 import java.util.HashMap;
 import java.util.Map;
 import org.opentripplanner.model.PickDrop;
+import org.opentripplanner.transit.model.network.StopPattern;
+import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
 
 /**
  * Immutable record of the changes accumulated while applying the stop time updates of an existing
  * trip: which stops were replaced, which pickup/dropoff values changed, and whether there were
- * time updates, cancellations or no-data stops. Built by {@code StopTimeUpdateApplication}; consumed
- * by the {@code ScheduledTripUpdater} to decide whether a modified pattern is needed and how to mark the real-time state.
+ * time updates, cancellations or no-data stops. Built by {@link StopTimeUpdateApplication} and
+ * consumed by {@link ResolvedScheduledTripUpdate#apply}, which asks it whether the update changes
+ * anything at all, and - through {@link #applyTo} - what the trip's stop pattern becomes.
  */
 public final class PatternModification {
 
@@ -49,16 +52,25 @@ public final class PatternModification {
     return hasTimeUpdates || hasPatternChanges();
   }
 
-  public Map<Integer, StopLocation> stopReplacements() {
-    return stopReplacements;
-  }
+  /**
+   * Apply the accumulated changes to the stop pattern of the scheduled pattern. The returned stop
+   * pattern may still be equal to the original one: the builder deduplicates, so a change that
+   * resolves to the scheduled value leaves the pattern untouched.
+   */
+  public StopPattern applyTo(TripPattern scheduledPattern) {
+    var builder = scheduledPattern.copyPlannedStopPattern();
 
-  public Map<Integer, PickDrop> pickupChanges() {
-    return pickupChanges;
-  }
+    if (!stopReplacements.isEmpty()) {
+      builder.replaceStops(stopReplacements);
+    }
+    if (!pickupChanges.isEmpty()) {
+      builder.updatePickups(pickupChanges);
+    }
+    if (!dropoffChanges.isEmpty()) {
+      builder.updateDropoffs(dropoffChanges);
+    }
 
-  public Map<Integer, PickDrop> dropoffChanges() {
-    return dropoffChanges;
+    return builder.build();
   }
 
   /** Mutable accumulator, frozen into an immutable {@link PatternModification} on {@link #build()}. */
