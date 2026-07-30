@@ -10,6 +10,8 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.updater.trip.model.ResolvedAddedTripRemoval;
+import org.opentripplanner.updater.trip.model.ResolvedScheduledTripRemoval;
 import org.opentripplanner.updater.trip.model.ResolvedTripRemoval;
 import org.opentripplanner.updater.trip.model.TripRemoval;
 
@@ -22,7 +24,8 @@ import org.opentripplanner.updater.trip.model.TripRemoval;
  * <p>
  * This resolver looks up scheduled trips first, then checks for previously added (real-time)
  * trips via the transit service, which sees all in-progress real-time updates in the
- * timetable snapshot buffer of the current update task.
+ * timetable snapshot buffer of the current update task. Which of the two it finds decides whether
+ * the removal is a {@link ResolvedScheduledTripRemoval} or a {@link ResolvedAddedTripRemoval}.
  */
 public class TripRemovalResolver {
 
@@ -80,7 +83,7 @@ public class TripRemovalResolver {
       var rtTimetable = transitService.findTimetable(pattern, serviceDate);
       var rtTripTimes = rtTimetable.getTripTimes(trip.getId());
       if (rtTripTimes != null && rtTripTimes.isAdded()) {
-        return ResolvedTripRemoval.forPreviouslyAddedTrip(
+        return new ResolvedAddedTripRemoval(
           serviceDate,
           trip.getId(),
           pattern,
@@ -96,14 +99,9 @@ public class TripRemovalResolver {
       return resolveAddedTripOrNotFound(serviceDate, trip.getId(), dataSource);
     }
 
-    // Cancellation of a scheduled trip always reverts any previous real-time modifications
-    // (quay changes, time updates) and marks the trip as cancelled on the scheduled pattern.
-    // TripRemover sets revertPreviousRealTimeUpdates=true so that any existing
-    // RT-modified pattern entry for this trip is cleared from the snapshot.
-    //
     // Note: extra call cancellations (SIRI Cancellation=true with extra call stops) are NOT
     // routed here — they go through TripModifier instead (see SiriTripUpdateParser).
-    return ResolvedTripRemoval.forScheduledTrip(serviceDate, trip, pattern, tripTimes, dataSource);
+    return new ResolvedScheduledTripRemoval(serviceDate, trip, pattern, tripTimes, dataSource);
   }
 
   /**
@@ -121,13 +119,7 @@ public class TripRemovalResolver {
         var timetable = transitService.findTimetable(pattern, serviceDate);
         var tripTimes = timetable.getTripTimes(tripId);
         if (tripTimes != null && tripTimes.isAdded()) {
-          return ResolvedTripRemoval.forPreviouslyAddedTrip(
-            serviceDate,
-            tripId,
-            pattern,
-            tripTimes,
-            dataSource
-          );
+          return new ResolvedAddedTripRemoval(serviceDate, tripId, pattern, tripTimes, dataSource);
         }
       }
     }

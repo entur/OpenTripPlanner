@@ -2,202 +2,67 @@ package org.opentripplanner.updater.trip.model;
 
 import java.time.LocalDate;
 import java.util.Objects;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.transit.model.network.TripPattern;
-import org.opentripplanner.transit.model.timetable.Trip;
-import org.opentripplanner.transit.model.timetable.TripTimes;
+import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
+import org.opentripplanner.updater.trip.TripUpdateResult;
 
 /**
- * Resolved data for cancelling or deleting trips.
+ * Resolved data for cancelling or deleting a trip on one service date.
  * <p>
- * A removal targets either a trip of the static schedule or a trip that a previous real-time
- * message added, never both and never neither. The two shapes are built through
- * {@link #forScheduledTrip} and {@link #forPreviouslyAddedTrip}, and the invariant is enforced on
- * construction, so the removal always describes exactly one trip to remove.
- * <p>
- * Used by {@link org.opentripplanner.updater.trip.TripCanceller}
- * and {@link org.opentripplanner.updater.trip.TripDeleter}.
+ * A removal targets exactly one trip, and which kind of trip it is can only be decided against the
+ * current transit model, so {@link org.opentripplanner.updater.trip.TripRemovalResolver} decides it
+ * and the resolved update carries the answer:
+ * <ul>
+ *   <li>{@link ResolvedScheduledTripRemoval} - a trip of the static schedule</li>
+ *   <li>{@link ResolvedAddedTripRemoval} - a trip a previous real-time message added</li>
+ * </ul>
+ * The update owns its own application through {@link #apply}, which takes the removal itself as a
+ * parameter: {@link org.opentripplanner.updater.trip.TripCanceller} and
+ * {@link org.opentripplanner.updater.trip.TripDeleter} differ only in the real-time state the trip
+ * ends up in, and both apply to either kind of trip.
  */
-public final class ResolvedTripRemoval {
+public abstract sealed class ResolvedTripRemoval
+  permits ResolvedScheduledTripRemoval, ResolvedAddedTripRemoval {
 
   private final LocalDate serviceDate;
   private final FeedScopedId tripId;
 
-  // From scheduled data (may be null if trip not found in schedule)
-  @Nullable
-  private final Trip scheduledTrip;
-
-  @Nullable
-  private final TripPattern scheduledPattern;
-
-  @Nullable
-  private final TripTimes scheduledTripTimes;
-
-  // From real-time data (previously added trip, may be null)
-  @Nullable
-  private final TripPattern addedTripPattern;
-
-  @Nullable
-  private final TripTimes addedTripTimes;
-
   @Nullable
   private final String dataSource;
 
-  private ResolvedTripRemoval(
+  protected ResolvedTripRemoval(
     LocalDate serviceDate,
     FeedScopedId tripId,
-    @Nullable Trip scheduledTrip,
-    @Nullable TripPattern scheduledPattern,
-    @Nullable TripTimes scheduledTripTimes,
-    @Nullable TripPattern addedTripPattern,
-    @Nullable TripTimes addedTripTimes,
     @Nullable String dataSource
   ) {
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
-    this.tripId = tripId;
-    this.scheduledTrip = scheduledTrip;
-    this.scheduledPattern = scheduledPattern;
-    this.scheduledTripTimes = scheduledTripTimes;
-    this.addedTripPattern = addedTripPattern;
-    this.addedTripTimes = addedTripTimes;
+    this.tripId = Objects.requireNonNull(tripId, "tripId must not be null");
     this.dataSource = dataSource;
-    validate();
   }
 
   /**
-   * A removal describes exactly one trip to remove: either a scheduled trip with its pattern and
-   * times, or a previously added trip with its real-time pattern and times.
+   * Remove the trip from the timetable on the service date and return the result as a real-time
+   * update.
+   *
+   * @param removal marks the trip as cancelled or deleted - injects
+   *                {@code TripRemover#applyRemoval}
    */
-  private void validate() {
-    boolean scheduled =
-      scheduledTrip != null && scheduledPattern != null && scheduledTripTimes != null;
-    boolean previouslyAdded = addedTripPattern != null && addedTripTimes != null;
-
-    if (scheduled == previouslyAdded) {
-      throw new IllegalArgumentException(
-        "A trip removal targets either a scheduled trip or a previously added one: " + this
-      );
-    }
-  }
-
-  /**
-   * Create for a scheduled trip that was found.
-   */
-  public static ResolvedTripRemoval forScheduledTrip(
-    LocalDate serviceDate,
-    Trip trip,
-    TripPattern pattern,
-    TripTimes tripTimes,
-    @Nullable String dataSource
-  ) {
-    return new ResolvedTripRemoval(
-      serviceDate,
-      trip.getId(),
-      Objects.requireNonNull(trip),
-      Objects.requireNonNull(pattern),
-      Objects.requireNonNull(tripTimes),
-      null,
-      null,
-      dataSource
-    );
-  }
-
-  /**
-   * Create for a previously added (real-time) trip.
-   */
-  public static ResolvedTripRemoval forPreviouslyAddedTrip(
-    LocalDate serviceDate,
-    FeedScopedId tripId,
-    TripPattern addedTripPattern,
-    TripTimes addedTripTimes,
-    @Nullable String dataSource
-  ) {
-    return new ResolvedTripRemoval(
-      serviceDate,
-      tripId,
-      null,
-      null,
-      null,
-      Objects.requireNonNull(addedTripPattern),
-      Objects.requireNonNull(addedTripTimes),
-      dataSource
-    );
-  }
-
-  // ========== Resolved data accessors ==========
+  public abstract TripUpdateResult apply(Consumer<RealTimeTripTimesBuilder> removal);
 
   public LocalDate serviceDate() {
     return serviceDate;
   }
 
-  /**
-   * The trip ID from the update.
-   */
-  @Nullable
+  /** The id of the trip to remove. */
   public FeedScopedId tripId() {
     return tripId;
   }
 
-  /**
-   * The scheduled trip, or null if not found in schedule.
-   */
-  @Nullable
-  public Trip scheduledTrip() {
-    return scheduledTrip;
-  }
-
-  /**
-   * The scheduled pattern, or null if trip not found.
-   */
-  @Nullable
-  public TripPattern scheduledPattern() {
-    return scheduledPattern;
-  }
-
-  /**
-   * The scheduled trip times, or null if trip not found.
-   */
-  @Nullable
-  public TripTimes scheduledTripTimes() {
-    return scheduledTripTimes;
-  }
-
-  /**
-   * The pattern for a previously added (real-time) trip, or null if not found.
-   */
-  @Nullable
-  public TripPattern addedTripPattern() {
-    return addedTripPattern;
-  }
-
-  /**
-   * The trip times for a previously added (real-time) trip, or null if not found.
-   */
-  @Nullable
-  public TripTimes addedTripTimes() {
-    return addedTripTimes;
-  }
-
-  /**
-   * The data source / producer of the real-time update.
-   */
+  /** The data source / producer of the real-time update. */
   @Nullable
   public String dataSource() {
     return dataSource;
-  }
-
-  @Override
-  public String toString() {
-    return (
-      "ResolvedTripRemoval{" +
-      "serviceDate=" +
-      serviceDate +
-      ", tripId=" +
-      tripId +
-      ", scheduledTrip=" +
-      (scheduledTrip != null ? scheduledTrip.getId() : "null") +
-      '}'
-    );
   }
 }
