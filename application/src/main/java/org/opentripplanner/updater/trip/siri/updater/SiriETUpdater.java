@@ -5,7 +5,7 @@ import java.util.function.Consumer;
 import org.opentripplanner.updater.spi.PollingGraphUpdater;
 import org.opentripplanner.updater.spi.ResultLogger;
 import org.opentripplanner.updater.spi.UpdateResult;
-import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.siri.SiriTripUpdateAdapter;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +34,7 @@ public class SiriETUpdater extends PollingGraphUpdater {
 
   public SiriETUpdater(
     SiriETUpdaterParameters config,
-    SiriRealTimeTripUpdateAdapter adapter,
+    SiriTripUpdateAdapter adapter,
     EstimatedTimetableSource source,
     Consumer<UpdateResult> metricsConsumer
   ) {

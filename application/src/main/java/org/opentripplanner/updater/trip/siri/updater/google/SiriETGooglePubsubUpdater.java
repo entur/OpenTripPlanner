@@ -5,7 +5,7 @@ import org.opentripplanner.updater.spi.GraphUpdater;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.WriteToGraphCallback;
 import org.opentripplanner.updater.trip.metrics.TripUpdateMetrics;
-import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.siri.SiriTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.updater.AsyncEstimatedTimetableProcessor;
 import org.opentripplanner.updater.trip.siri.updater.AsyncEstimatedTimetableSource;
 import org.opentripplanner.updater.trip.siri.updater.EstimatedTimetableHandler;
@@ -25,7 +25,7 @@ public class SiriETGooglePubsubUpdater implements GraphUpdater {
 
   public SiriETGooglePubsubUpdater(
     SiriETGooglePubsubUpdaterParameters config,
-    SiriRealTimeTripUpdateAdapter adapter
+    SiriTripUpdateAdapter adapter
   ) {
     configRef = config.configRef();
 

@@ -39,6 +39,7 @@ class SiriETCarpoolingUpdaterTest {
       Duration.ofMinutes(15),
       false,
       HttpHeaders.empty(),
+      false,
       false
     );
     updater = new SiriETCarpoolingUpdater(params, repository);

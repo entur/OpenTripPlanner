@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip.gtfs;
 
 import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
+import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor.WheelchairAccessible;
 import de.mfdz.MfdzRealtimeExtensions;
 import de.mfdz.MfdzRealtimeExtensions.StopTimePropertiesExtension.DropOffPickupType;
 import java.time.LocalDate;
@@ -83,6 +84,25 @@ public class TripUpdateBuilder {
       time,
       time,
       NO_STOP_SEQUENCE,
+      NO_DELAY,
+      NO_DELAY,
+      DEFAULT_SCHEDULE_RELATIONSHIP,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    );
+  }
+
+  /** A call identified both by its stop and by the stop sequence the static feed gave it. */
+  public TripUpdateBuilder addStopTime(String stopId, int stopSequence, String time) {
+    return addStopTime(
+      stopId,
+      time,
+      time,
+      stopSequence,
       NO_DELAY,
       NO_DELAY,
       DEFAULT_SCHEDULE_RELATIONSHIP,
@@ -537,10 +557,30 @@ public class TripUpdateBuilder {
     return this;
   }
 
-  public TripUpdateBuilder withVehicleId(String vehicleId) {
-    tripUpdateBuilder.setVehicle(
-      GtfsRealtime.VehicleDescriptor.newBuilder().setId(vehicleId).build()
+  public TripUpdateBuilder withTripHeadsign(String tripHeadsign) {
+    tripUpdateBuilder.setTripProperties(
+      tripUpdateBuilder.getTripProperties().toBuilder().setTripHeadsign(tripHeadsign).build()
     );
     return this;
+  }
+
+  public TripUpdateBuilder withVehicleId(String vehicleId) {
+    tripUpdateBuilder.setVehicle(vehicleDescriptor().setId(vehicleId).build());
+    return this;
+  }
+
+  public TripUpdateBuilder withWheelchairAccessible(WheelchairAccessible wheelchairAccessible) {
+    tripUpdateBuilder.setVehicle(
+      vehicleDescriptor().setWheelchairAccessible(wheelchairAccessible).build()
+    );
+    return this;
+  }
+
+  /**
+   * The vehicle descriptor built so far, so that the vehicle attributes can be set independently
+   * of each other and in any order.
+   */
+  private GtfsRealtime.VehicleDescriptor.Builder vehicleDescriptor() {
+    return tripUpdateBuilder.getVehicle().toBuilder();
   }
 }
