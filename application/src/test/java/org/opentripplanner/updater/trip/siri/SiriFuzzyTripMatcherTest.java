@@ -14,6 +14,7 @@ import org.opentripplanner.transit.model.TripInput;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
+import org.opentripplanner.updater.trip.resolver.TripAndPattern;
 import uk.org.siri.siri21.EstimatedVehicleJourney;
 
 class SiriFuzzyTripMatcherTest implements RealtimeTestConstants {

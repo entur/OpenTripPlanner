@@ -9,20 +9,18 @@ import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
-import org.opentripplanner.updater.trip.FuzzyTripMatcher;
-import org.opentripplanner.updater.trip.GtfsRtRouteCreationStrategy;
-import org.opentripplanner.updater.trip.GtfsTripMatcher;
-import org.opentripplanner.updater.trip.NoOpFuzzyTripMatcher;
 import org.opentripplanner.updater.trip.TripUpdateDispatcher;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
+import org.opentripplanner.updater.trip.resolver.FuzzyTripMatcher;
+import org.opentripplanner.updater.trip.resolver.NoOpFuzzyTripMatcher;
 
 /**
  * New implementation of the GTFS-RT trip update adapter using the common trip update
  * infrastructure. It produces per-task handlers that use {@link GtfsRtTripUpdateParser} to parse
- * GTFS-RT messages into {@link org.opentripplanner.updater.trip.model.TripUpdateCommand} and
+ * GTFS-RT messages into {@link org.opentripplanner.updater.trip.model.command.TripUpdateCommand} and
  * {@link TripUpdateDispatcher} to apply them.
  * <p>
  * This is a drop-in replacement for {@link GtfsRealTimeTripUpdateAdapter} when the new

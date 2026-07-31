@@ -18,12 +18,14 @@ import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
-import org.opentripplanner.updater.trip.model.CancelTrip;
-import org.opentripplanner.updater.trip.model.DeleteTrip;
-import org.opentripplanner.updater.trip.model.ReviseTrip;
-import org.opentripplanner.updater.trip.model.TripReference;
+import org.opentripplanner.updater.trip.gtfs.GtfsRtRouteCreationStrategy;
+import org.opentripplanner.updater.trip.model.command.CancelTrip;
+import org.opentripplanner.updater.trip.model.command.DeleteTrip;
+import org.opentripplanner.updater.trip.model.command.ReviseTrip;
+import org.opentripplanner.updater.trip.model.command.TripReference;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
+import org.opentripplanner.updater.trip.resolver.NoOpFuzzyTripMatcher;
 
 /**
  * Tests for TripUpdateDispatcher.

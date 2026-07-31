@@ -5,20 +5,17 @@ import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.TimetableRepository;
-import org.opentripplanner.updater.trip.FuzzyTripMatcher;
-import org.opentripplanner.updater.trip.NoOpFuzzyTripMatcher;
-import org.opentripplanner.updater.trip.SiriRouteCreationStrategy;
-import org.opentripplanner.updater.trip.SiriTripMatcher;
-import org.opentripplanner.updater.trip.SiriTripMatcherCache;
-import org.opentripplanner.updater.trip.StopResolver;
 import org.opentripplanner.updater.trip.TripUpdateDispatcher;
 import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
+import org.opentripplanner.updater.trip.resolver.FuzzyTripMatcher;
+import org.opentripplanner.updater.trip.resolver.NoOpFuzzyTripMatcher;
+import org.opentripplanner.updater.trip.resolver.StopResolver;
 
 /**
  * New implementation of the SIRI-ET trip update adapter using the common trip update
  * infrastructure. It produces per-task handlers that use {@link SiriTripUpdateParser} to parse
- * SIRI messages into {@link org.opentripplanner.updater.trip.model.TripUpdateCommand} and
+ * SIRI messages into {@link org.opentripplanner.updater.trip.model.command.TripUpdateCommand} and
  * {@link TripUpdateDispatcher} to apply them.
  * <p>
  * This is a drop-in replacement for {@link SiriRealTimeTripUpdateAdapter} when the new

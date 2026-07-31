@@ -9,9 +9,9 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
-import org.opentripplanner.updater.trip.model.ReviseTrip;
-import org.opentripplanner.updater.trip.model.TripReference;
-import org.opentripplanner.updater.trip.model.TripUpdateCommand;
+import org.opentripplanner.updater.trip.model.command.ReviseTrip;
+import org.opentripplanner.updater.trip.model.command.TripReference;
+import org.opentripplanner.updater.trip.model.command.TripUpdateCommand;
 
 class TripUpdateParserTest {
 

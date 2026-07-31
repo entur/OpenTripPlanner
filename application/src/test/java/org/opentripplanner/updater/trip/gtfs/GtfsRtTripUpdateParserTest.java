@@ -18,16 +18,16 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
-import org.opentripplanner.updater.trip.model.AbsoluteTimeUpdate;
-import org.opentripplanner.updater.trip.model.AddTrip;
-import org.opentripplanner.updater.trip.model.CancelTrip;
-import org.opentripplanner.updater.trip.model.DeleteTrip;
-import org.opentripplanner.updater.trip.model.ModifyTrip;
-import org.opentripplanner.updater.trip.model.ParsedStopTimeUpdate;
-import org.opentripplanner.updater.trip.model.ParsedTimeUpdate;
-import org.opentripplanner.updater.trip.model.RemoveTripCommand;
-import org.opentripplanner.updater.trip.model.ReviseTrip;
-import org.opentripplanner.updater.trip.model.TimeUpdate;
+import org.opentripplanner.updater.trip.model.command.AbsoluteTimeUpdate;
+import org.opentripplanner.updater.trip.model.command.AddTrip;
+import org.opentripplanner.updater.trip.model.command.CancelTrip;
+import org.opentripplanner.updater.trip.model.command.DeleteTrip;
+import org.opentripplanner.updater.trip.model.command.ModifyTrip;
+import org.opentripplanner.updater.trip.model.command.ParsedStopTimeUpdate;
+import org.opentripplanner.updater.trip.model.command.ParsedTimeUpdate;
+import org.opentripplanner.updater.trip.model.command.RemoveTripCommand;
+import org.opentripplanner.updater.trip.model.command.ReviseTrip;
+import org.opentripplanner.updater.trip.model.command.TimeUpdate;
 
 class GtfsRtTripUpdateParserTest {
 

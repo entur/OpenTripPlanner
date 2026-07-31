@@ -7,7 +7,7 @@ import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
-import org.opentripplanner.updater.trip.model.ResolvedStopTimeUpdate;
+import org.opentripplanner.updater.trip.model.change.ResolvedStopTimeUpdate;
 
 /**
  * Resolves each stop time update to a position in the scheduled pattern. This replaces the

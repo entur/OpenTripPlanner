@@ -1,0 +1,15 @@
+package org.opentripplanner.updater.trip;
+
+/**
+ * Internal classification of trip update types used by parsers to determine which concrete
+ * {@link org.opentripplanner.updater.trip.model.command.TripUpdateCommand TripUpdateCommand} subtype to construct. This enum is not exposed in the command model -
+ * the type hierarchy itself encodes update semantics.
+ */
+public enum TripUpdateType {
+  UPDATE_EXISTING,
+  CANCEL_TRIP,
+  DELETE_TRIP,
+  ADD_NEW_TRIP,
+  MODIFY_TRIP,
+  DUPLICATE_TRIP,
+}

@@ -1,7 +1,7 @@
 package org.opentripplanner.updater.trip;
 
 import org.opentripplanner.updater.spi.UpdateException;
-import org.opentripplanner.updater.trip.model.TripUpdateCommand;
+import org.opentripplanner.updater.trip.model.command.TripUpdateCommand;
 
 /**
  * Interface for parsing format-specific real-time messages into the common model.
