@@ -17,6 +17,7 @@ import org.opentripplanner.updater.trip.model.change.ResolvedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.change.TripAddition;
 import org.opentripplanner.updater.trip.model.change.TripCreation;
 import org.opentripplanner.updater.trip.model.command.AddTrip;
+import org.opentripplanner.updater.trip.model.command.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.command.TripCreationInfo;
 import org.opentripplanner.updater.trip.resolver.ServiceDateResolver;
 import org.opentripplanner.updater.trip.resolver.StopResolver;
@@ -88,12 +89,7 @@ public class TripAdditionFactory {
     }
 
     // Resolve stop time updates now that service date is known
-    var resolvedStopTimeUpdates = ResolvedStopTimeUpdate.resolveAll(
-      command.stopTimeUpdates(),
-      serviceDate,
-      timeZone,
-      stopResolver
-    );
+    var resolvedStopTimeUpdates = resolveStopTimeUpdates(command.stopTimeUpdates(), serviceDate);
 
     // Check if trip was already added in real-time (update rather than create)
     Trip existingRealTimeTrip = transitService.getTrip(tripId);
@@ -192,5 +188,21 @@ public class TripAdditionFactory {
       pattern,
       tripTimes
     );
+  }
+
+  /**
+   * Resolve the stop reference of each parsed stop time update and convert its time values, now
+   * that the service date is known.
+   */
+  private List<ResolvedStopTimeUpdate> resolveStopTimeUpdates(
+    List<ParsedStopTimeUpdate> updates,
+    LocalDate serviceDate
+  ) {
+    return updates
+      .stream()
+      .map(u ->
+        ResolvedStopTimeUpdate.of(u, serviceDate, timeZone, stopResolver.resolve(u.stopReference()))
+      )
+      .toList();
   }
 }

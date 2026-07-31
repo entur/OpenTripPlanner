@@ -13,7 +13,6 @@ import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.updater.trip.model.command.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.command.StopReference;
 import org.opentripplanner.updater.trip.model.command.TimeUpdate;
-import org.opentripplanner.updater.trip.resolver.StopResolver;
 
 /**
  * A stop time update with pre-resolved {@link TimeUpdate} values.
@@ -89,14 +88,19 @@ public final class ResolvedStopTimeUpdate {
   }
 
   /**
-   * Resolve a single {@link ParsedStopTimeUpdate} by converting its
-   * {@link org.opentripplanner.updater.trip.model.command.ParsedTimeUpdate ParsedTimeUpdate} values to {@link TimeUpdate} and resolving the stop.
+   * Create a resolved stop time update from a {@link ParsedStopTimeUpdate} by converting its
+   * {@link org.opentripplanner.updater.trip.model.command.ParsedTimeUpdate ParsedTimeUpdate}
+   * values to {@link TimeUpdate}. This is a pure conversion - resolving the stop reference
+   * against the transit model is the change factories' job, so the resolved stop is taken as
+   * given.
+   *
+   * @param stop the resolved stop location, or {@code null} if the stop could not be resolved
    */
-  public static ResolvedStopTimeUpdate resolve(
+  public static ResolvedStopTimeUpdate of(
     ParsedStopTimeUpdate parsed,
     LocalDate serviceDate,
     ZoneId timeZone,
-    StopResolver stopResolver
+    @Nullable StopLocation stop
   ) {
     var arrival = parsed.arrivalUpdate() != null
       ? parsed.arrivalUpdate().resolve(serviceDate, timeZone)
@@ -104,7 +108,6 @@ public final class ResolvedStopTimeUpdate {
     var departure = parsed.departureUpdate() != null
       ? parsed.departureUpdate().resolve(serviceDate, timeZone)
       : null;
-    var stop = stopResolver.resolve(parsed.stopReference());
     return new ResolvedStopTimeUpdate(
       parsed.stopReference(),
       parsed.stopSequence(),
@@ -121,21 +124,6 @@ public final class ResolvedStopTimeUpdate {
       departure,
       stop
     );
-  }
-
-  /**
-   * Resolve all stop time updates in a list.
-   */
-  public static List<ResolvedStopTimeUpdate> resolveAll(
-    List<ParsedStopTimeUpdate> updates,
-    LocalDate serviceDate,
-    ZoneId timeZone,
-    StopResolver stopResolver
-  ) {
-    return updates
-      .stream()
-      .map(u -> resolve(u, serviceDate, timeZone, stopResolver))
-      .toList();
   }
 
   @Nullable

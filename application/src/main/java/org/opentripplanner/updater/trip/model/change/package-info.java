@@ -6,7 +6,7 @@
  * <p>
  * Changes are produced by the factories in {@code org.opentripplanner.updater.trip.factory} and
  * carried out by the domain services in {@code org.opentripplanner.updater.trip.service}. This
- * package depends on the command model and the reference resolvers, never on the factories or
- * the domain services.
+ * package depends only on the command model - never on the resolvers, the factories or the
+ * domain services.
  */
 package org.opentripplanner.updater.trip.model.change;

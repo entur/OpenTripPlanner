@@ -17,7 +17,6 @@ import org.opentripplanner.updater.trip.model.command.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.command.StopReference;
 import org.opentripplanner.updater.trip.model.command.TimeUpdate;
 import org.opentripplanner.updater.trip.policy.FirstLastStopTimePolicy;
-import org.opentripplanner.updater.trip.resolver.StopResolver;
 
 class NewStopPatternFactoryTest {
 
@@ -29,7 +28,6 @@ class NewStopPatternFactoryTest {
   private RegularStop stopA;
   private RegularStop stopB;
   private Trip trip;
-  private StopResolver stopResolver;
 
   @BeforeEach
   void setUp() {
@@ -42,7 +40,6 @@ class NewStopPatternFactoryTest {
       .build();
 
     trip = env.transitService().getTrip(new FeedScopedId(FEED_ID, "test-trip"));
-    stopResolver = new StopResolver(env.transitService());
   }
 
   /**
@@ -55,19 +52,23 @@ class NewStopPatternFactoryTest {
     int dep1Seconds = 12 * 3600;
     int dep2Seconds = 12 * 3600 + 10 * 60;
 
-    var parsedUpdates = List.of(
-      ParsedStopTimeUpdate.builder(StopReference.ofStopId(stopA.getId()))
-        .withDepartureUpdate(TimeUpdate.ofAbsolute(dep1Seconds + 60, dep1Seconds))
-        .build(),
-      ParsedStopTimeUpdate.builder(StopReference.ofStopId(stopB.getId()))
-        .withDepartureUpdate(TimeUpdate.ofAbsolute(dep2Seconds + 60, dep2Seconds))
-        .build()
-    );
-    var stopUpdates = ResolvedStopTimeUpdate.resolveAll(
-      parsedUpdates,
-      SERVICE_DATE,
-      ZONE_ID,
-      stopResolver
+    var stopUpdates = List.of(
+      ResolvedStopTimeUpdate.of(
+        ParsedStopTimeUpdate.builder(StopReference.ofStopId(stopA.getId()))
+          .withDepartureUpdate(TimeUpdate.ofAbsolute(dep1Seconds + 60, dep1Seconds))
+          .build(),
+        SERVICE_DATE,
+        ZONE_ID,
+        stopA
+      ),
+      ResolvedStopTimeUpdate.of(
+        ParsedStopTimeUpdate.builder(StopReference.ofStopId(stopB.getId()))
+          .withDepartureUpdate(TimeUpdate.ofAbsolute(dep2Seconds + 60, dep2Seconds))
+          .build(),
+        SERVICE_DATE,
+        ZONE_ID,
+        stopB
+      )
     );
 
     var stopTimesAndPattern = NewStopPatternFactory.buildNewStopPattern(
@@ -111,19 +112,23 @@ class NewStopPatternFactoryTest {
     int arr1Seconds = 12 * 3600;
     int arr2Seconds = 12 * 3600 + 10 * 60;
 
-    var parsedUpdates = List.of(
-      ParsedStopTimeUpdate.builder(StopReference.ofStopId(stopA.getId()))
-        .withArrivalUpdate(TimeUpdate.ofAbsolute(arr1Seconds + 60, arr1Seconds))
-        .build(),
-      ParsedStopTimeUpdate.builder(StopReference.ofStopId(stopB.getId()))
-        .withArrivalUpdate(TimeUpdate.ofAbsolute(arr2Seconds + 60, arr2Seconds))
-        .build()
-    );
-    var stopUpdates = ResolvedStopTimeUpdate.resolveAll(
-      parsedUpdates,
-      SERVICE_DATE,
-      ZONE_ID,
-      stopResolver
+    var stopUpdates = List.of(
+      ResolvedStopTimeUpdate.of(
+        ParsedStopTimeUpdate.builder(StopReference.ofStopId(stopA.getId()))
+          .withArrivalUpdate(TimeUpdate.ofAbsolute(arr1Seconds + 60, arr1Seconds))
+          .build(),
+        SERVICE_DATE,
+        ZONE_ID,
+        stopA
+      ),
+      ResolvedStopTimeUpdate.of(
+        ParsedStopTimeUpdate.builder(StopReference.ofStopId(stopB.getId()))
+          .withArrivalUpdate(TimeUpdate.ofAbsolute(arr2Seconds + 60, arr2Seconds))
+          .build(),
+        SERVICE_DATE,
+        ZONE_ID,
+        stopB
+      )
     );
 
     var stopTimesAndPattern = NewStopPatternFactory.buildNewStopPattern(

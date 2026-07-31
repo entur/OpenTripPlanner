@@ -15,6 +15,7 @@ import org.opentripplanner.updater.trip.model.change.TripModification;
 import org.opentripplanner.updater.trip.model.change.TripRevision;
 import org.opentripplanner.updater.trip.model.command.ExistingTripCommand;
 import org.opentripplanner.updater.trip.model.command.ModifyTrip;
+import org.opentripplanner.updater.trip.model.command.ParsedStopTimeUpdate;
 import org.opentripplanner.updater.trip.model.command.ReviseTrip;
 import org.opentripplanner.updater.trip.model.command.TripReference;
 import org.opentripplanner.updater.trip.resolver.FuzzyTripMatcher;
@@ -167,12 +168,7 @@ public class ExistingTripChangeFactory {
     }
 
     // Resolve stop time updates now that service date is known
-    var resolvedStopTimeUpdates = ResolvedStopTimeUpdate.resolveAll(
-      command.stopTimeUpdates(),
-      serviceDate,
-      timeZone,
-      stopResolver
-    );
+    var resolvedStopTimeUpdates = resolveStopTimeUpdates(command.stopTimeUpdates(), serviceDate);
 
     return new ExistingTripResolution(
       serviceDate,
@@ -226,6 +222,22 @@ public class ExistingTripChangeFactory {
       // Return the original exact match error
       throw exactMatchException;
     }
+  }
+
+  /**
+   * Resolve the stop reference of each parsed stop time update and convert its time values, now
+   * that the service date is known.
+   */
+  private List<ResolvedStopTimeUpdate> resolveStopTimeUpdates(
+    List<ParsedStopTimeUpdate> updates,
+    LocalDate serviceDate
+  ) {
+    return updates
+      .stream()
+      .map(u ->
+        ResolvedStopTimeUpdate.of(u, serviceDate, timeZone, stopResolver.resolve(u.stopReference()))
+      )
+      .toList();
   }
 
   /**
