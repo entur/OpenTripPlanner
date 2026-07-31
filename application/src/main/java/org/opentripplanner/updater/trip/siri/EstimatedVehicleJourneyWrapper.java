@@ -26,7 +26,7 @@ import uk.org.siri.siri21.VehicleRef;
  * A wrapper around a JAXB {@link EstimatedVehicleJourney} that also owns the parsed and validated
  * {@link CallWrapper}s for that journey.
  */
-final class EstimatedVehicleJourneyWrapper {
+public final class EstimatedVehicleJourneyWrapper {
 
   private final EstimatedVehicleJourney journey;
   private final List<CallWrapper> calls;
@@ -44,7 +44,8 @@ final class EstimatedVehicleJourneyWrapper {
 
   /* Construction and validation */
 
-  static EstimatedVehicleJourneyWrapper of(EstimatedVehicleJourney journey) throws UpdateException {
+  public static EstimatedVehicleJourneyWrapper of(EstimatedVehicleJourney journey)
+    throws UpdateException {
     var wrapper = new EstimatedVehicleJourneyWrapper(journey, CallWrapper.of(journey));
     wrapper.validate();
     return wrapper;
@@ -69,32 +70,32 @@ final class EstimatedVehicleJourneyWrapper {
 
   /* Calls */
 
-  List<CallWrapper> calls() {
+  public List<CallWrapper> calls() {
     return calls;
   }
 
   /**
    * Whether at least one call of this journey is an extra (unplanned) call.
    */
-  boolean hasExtraCall() {
+  public boolean hasExtraCall() {
     return calls.stream().anyMatch(CallWrapper::isExtraCall);
   }
 
   /* Journey status */
 
-  boolean isMonitored() {
+  public boolean isMonitored() {
     return TRUE.equals(journey.isMonitored());
   }
 
-  boolean isCancellation() {
+  public boolean isCancellation() {
     return TRUE.equals(journey.isCancellation());
   }
 
-  boolean isExtraJourney() {
+  public boolean isExtraJourney() {
     return TRUE.equals(journey.isExtraJourney());
   }
 
-  boolean isPredictionInaccurate() {
+  public boolean isPredictionInaccurate() {
     return TRUE.equals(journey.isPredictionInaccurate());
   }
 
@@ -105,14 +106,14 @@ final class EstimatedVehicleJourneyWrapper {
    * viewed as either a {@code ServiceJourney} or a {@code DatedServiceJourney} id. {@code empty} when
    * the journey carries no code.
    */
-  Optional<EstimatedVehicleJourneyCode> code() {
+  public Optional<EstimatedVehicleJourneyCode> code() {
     return Optional.ofNullable(code);
   }
 
   /**
    * The dated vehicle journey identified by unique id.
    */
-  Optional<String> datedVehicleJourneyRef() {
+  public Optional<String> datedVehicleJourneyRef() {
     return Optional.ofNullable(journey.getDatedVehicleJourneyRef()).map(
       DatedVehicleJourneyRef::getValue
     );
@@ -121,7 +122,7 @@ final class EstimatedVehicleJourneyWrapper {
   /**
    * The dated vehicle journey identified by the pair (service journey id, service date).
    */
-  Optional<VehicleJourneyIdAndServiceDate> vehicleJourneyIdAndServiceDate() {
+  public Optional<VehicleJourneyIdAndServiceDate> vehicleJourneyIdAndServiceDate() {
     return Optional.ofNullable(
       VehicleJourneyIdAndServiceDate.of(journey.getFramedVehicleJourneyRef())
     );
@@ -131,7 +132,7 @@ final class EstimatedVehicleJourneyWrapper {
    * The reference to the vehicle operating this journey.
    * Also used for fuzzy matching
    */
-  Optional<String> vehicleRef() {
+  public Optional<String> vehicleRef() {
     return Optional.ofNullable(journey.getVehicleRef())
       .map(VehicleRef::getValue)
       .filter(v -> !v.isBlank());
@@ -142,14 +143,14 @@ final class EstimatedVehicleJourneyWrapper {
   /**
    * The dated vehicle journey this journey replaces.
    */
-  Optional<String> replacedDatedVehicleJourneyRef() {
+  public Optional<String> replacedDatedVehicleJourneyRef() {
     return Optional.ofNullable(journey.getVehicleJourneyRef()).map(VehicleJourneyRef::getValue);
   }
 
   /**
    * Additional dated vehicle journeys this journey replaces (beyond {@link #replacedDatedVehicleJourneyRef()}).
    */
-  List<VehicleJourneyIdAndServiceDate> additionalReplacedDatedVehicleJourneyRefs() {
+  public List<VehicleJourneyIdAndServiceDate> additionalReplacedDatedVehicleJourneyRefs() {
     return journey
       .getAdditionalVehicleJourneyReves()
       .stream()
@@ -160,30 +161,30 @@ final class EstimatedVehicleJourneyWrapper {
   /**
    * In case of a replacement departure, the line of the replaced vehicle journey.
    */
-  Optional<String> externalLineRef() {
+  public Optional<String> externalLineRef() {
     return Optional.ofNullable(journey.getExternalLineRef()).map(LineRef::getValue);
   }
 
   /* Line, operator and mode */
-  Optional<String> lineRef() {
+  public Optional<String> lineRef() {
     return Optional.ofNullable(journey.getLineRef()).map(LineRef::getValue);
   }
 
-  Optional<String> operatorRef() {
+  public Optional<String> operatorRef() {
     return Optional.ofNullable(journey.getOperatorRef()).map(OperatorRefStructure::getValue);
   }
 
   /**
    * Whether this journey is operated by rail.
    */
-  boolean isRail() {
+  public boolean isRail() {
     return journey.getVehicleModes().contains(VehicleModesEnumeration.RAIL);
   }
 
   /**
    * The OTP transit mode of this journey, derived from its SIRI vehicle modes.
    */
-  TransitMode transitMode() {
+  public TransitMode transitMode() {
     return SiriTransportModeMapper.mapTransitMainMode(journey.getVehicleModes());
   }
 
@@ -192,22 +193,22 @@ final class EstimatedVehicleJourneyWrapper {
   /**
    * The published line name, or an empty string if not set.
    */
-  String publishedLineName() {
+  public String publishedLineName() {
     return getFirstStringFromList(journey.getPublishedLineNames());
   }
 
   /**
    * The destination name (headsign), or an empty string if not set.
    */
-  String destinationName() {
+  public String destinationName() {
     return getFirstStringFromList(journey.getDestinationNames());
   }
 
-  Optional<OccupancyStatus> occupancy() {
+  public Optional<OccupancyStatus> occupancy() {
     return Optional.ofNullable(journey.getOccupancy()).map(OccupancyMapper::mapOccupancyStatus);
   }
 
-  Optional<String> dataSource() {
+  public Optional<String> dataSource() {
     return Optional.ofNullable(journey.getDataSource());
   }
 

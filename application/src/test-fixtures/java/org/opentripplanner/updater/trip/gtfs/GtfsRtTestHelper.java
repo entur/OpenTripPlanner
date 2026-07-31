@@ -7,6 +7,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
+import org.opentripplanner.ext.updater.trip.unified.gtfs.GtfsNewTripUpdateAdapter;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
@@ -16,14 +17,17 @@ import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagat
 public class GtfsRtTestHelper {
 
   private final TransitTestEnvironment transitTestEnvironment;
-  private final GtfsRealTimeTripUpdateAdapter gtfsAdapter;
+  private final GtfsTripUpdateAdapter gtfsAdapter;
 
   GtfsRtTestHelper(TransitTestEnvironment transitTestEnvironment) {
     this.transitTestEnvironment = transitTestEnvironment;
-    this.gtfsAdapter = new GtfsRealTimeTripUpdateAdapter(
+    this.gtfsAdapter = new GtfsNewTripUpdateAdapter(
       transitTestEnvironment.timetableRepository(),
       DeduplicatorService.NOOP,
-      transitTestEnvironment::defaultServiceDate
+      ForwardsDelayPropagationType.DEFAULT,
+      BackwardsDelayPropagationType.REQUIRED_NO_DATA,
+      false,
+      transitTestEnvironment.feedId()
     );
   }
 

@@ -55,12 +55,45 @@ public final class PickDropChange {
     if (cancelled) {
       return scheduled.isNotRoutable() ? Optional.empty() : Optional.of(CANCELLED);
     }
+    return intent().flatMap(target -> reconcile(target, scheduled));
+  }
+
+  /**
+   * The pick/drop target reported by SIRI for this call end, independent of any scheduled value.
+   * <p>
+   * Where {@link #applyTo(PickDrop)} resolves the change against a known scheduled value, this
+   * returns the raw routability target the message asks for: {@link PickDrop#SCHEDULED} to
+   * board/alight, {@link PickDrop#NONE} to forbid it, {@link PickDrop#CANCELLED} to pass through.
+   * The result is empty when the message carries no such information — an unspecified boarding
+   * activity, or a cancelled call, whose boarding is governed by the cancellation rather than by
+   * this value.
+   * <p>
+   * This lets a parser that does not yet hold the scheduled pattern capture the intent now and
+   * defer the routability reconciliation to the change side, rather than resolving against a
+   * placeholder scheduled value.
+   */
+  public Optional<PickDrop> intent() {
+    if (cancelled) {
+      return Optional.empty();
+    }
     return switch (activity) {
       case UNSPECIFIED -> Optional.empty();
-      case ALLOWED -> scheduled.isNotRoutable() ? Optional.of(SCHEDULED) : Optional.empty();
+      case ALLOWED -> Optional.of(SCHEDULED);
       case NOT_ALLOWED -> Optional.of(NONE);
       case PASS_THRU -> Optional.of(CANCELLED);
     };
+  }
+
+  /**
+   * Reconcile a SIRI routability {@code target} against the {@code scheduled} value. SIRI only
+   * signals routability transitions: a routable target re-enables a previously non-routable stop
+   * and is otherwise a no-op, while a non-routable target is applied as-is.
+   */
+  private static Optional<PickDrop> reconcile(PickDrop target, PickDrop scheduled) {
+    if (target.isRoutable()) {
+      return scheduled.isNotRoutable() ? Optional.of(SCHEDULED) : Optional.empty();
+    }
+    return Optional.of(target);
   }
 
   /**

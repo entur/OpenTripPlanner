@@ -1,0 +1,348 @@
+package org.opentripplanner.ext.updater.trip.unified.gtfs;
+
+import static org.opentripplanner.updater.spi.UpdateErrorType.INVALID_INPUT_STRUCTURE;
+import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_UNSCHEDULED;
+
+import com.google.transit.realtime.GtfsRealtime;
+import com.google.transit.realtime.GtfsRealtime.TripDescriptor.ScheduleRelationship;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.function.Supplier;
+import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.ext.updater.trip.unified.TripUpdateParser;
+import org.opentripplanner.ext.updater.trip.unified.TripUpdateType;
+import org.opentripplanner.ext.updater.trip.unified.model.command.AddTrip;
+import org.opentripplanner.ext.updater.trip.unified.model.command.CancelTrip;
+import org.opentripplanner.ext.updater.trip.unified.model.command.DeleteTrip;
+import org.opentripplanner.ext.updater.trip.unified.model.command.DuplicateTrip;
+import org.opentripplanner.ext.updater.trip.unified.model.command.ModifyTrip;
+import org.opentripplanner.ext.updater.trip.unified.model.command.ParsedStopTimeUpdate;
+import org.opentripplanner.ext.updater.trip.unified.model.command.ReviseTrip;
+import org.opentripplanner.ext.updater.trip.unified.model.command.RouteCreationInfo;
+import org.opentripplanner.ext.updater.trip.unified.model.command.StopReference;
+import org.opentripplanner.ext.updater.trip.unified.model.command.StopResolutionStrategy;
+import org.opentripplanner.ext.updater.trip.unified.model.command.TimeUpdate;
+import org.opentripplanner.ext.updater.trip.unified.model.command.TripCreationInfo;
+import org.opentripplanner.ext.updater.trip.unified.model.command.TripReference;
+import org.opentripplanner.ext.updater.trip.unified.model.command.TripUpdateCommand;
+import org.opentripplanner.ext.updater.trip.unified.model.command.VehicleDescription;
+import org.opentripplanner.ext.updater.trip.unified.policy.FormatPolicy;
+import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
+import org.opentripplanner.gtfs.mapping.DirectionMapper;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.gtfs.model.AddedRoute;
+import org.opentripplanner.updater.trip.gtfs.model.StopTimeUpdate;
+import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
+import org.opentripplanner.utils.time.TimeUtils;
+
+/**
+ * Parser for GTFS-RT TripUpdate messages into the common TripUpdateCommand model.
+ */
+public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.TripUpdate> {
+
+  private final ForwardsDelayPropagationType forwardsDelayPropagationType;
+  private final BackwardsDelayPropagationType backwardsDelayPropagationType;
+  private final String feedId;
+  private final ZoneId timeZone;
+  private final Supplier<LocalDate> localDateNow;
+  private final DirectionMapper directionMapper = new DirectionMapper(DataImportIssueStore.NOOP);
+
+  public GtfsRtTripUpdateParser(
+    ForwardsDelayPropagationType forwardsDelayPropagationType,
+    BackwardsDelayPropagationType backwardsDelayPropagationType,
+    String feedId,
+    ZoneId timeZone,
+    Supplier<LocalDate> localDateNow
+  ) {
+    this.forwardsDelayPropagationType = forwardsDelayPropagationType;
+    this.backwardsDelayPropagationType = backwardsDelayPropagationType;
+    this.feedId = Objects.requireNonNull(feedId);
+    this.timeZone = Objects.requireNonNull(timeZone);
+    this.localDateNow = Objects.requireNonNull(localDateNow);
+  }
+
+  @Override
+  public TripUpdateCommand parse(GtfsRealtime.TripUpdate update) {
+    var tripUpdate = new TripUpdate(feedId, update, localDateNow);
+
+    tripUpdate.validate();
+
+    var tripId = tripUpdate.tripId();
+    var scheduleRelationship = tripUpdate.scheduleRelationship();
+    LocalDate serviceDate = tripUpdate.startDate();
+
+    var tripReference = buildTripReference(tripId, tripUpdate, serviceDate);
+    var updateType = mapScheduleRelationship(scheduleRelationship);
+
+    if (updateType == null) {
+      throw switch (scheduleRelationship) {
+        case UNSCHEDULED -> UpdateException.of(tripId, NOT_IMPLEMENTED_UNSCHEDULED);
+        default -> UpdateException.of(tripId, INVALID_INPUT_STRUCTURE);
+      };
+    }
+
+    var gtfsPolicy = FormatPolicy.gtfsRt(
+      forwardsDelayPropagationType,
+      backwardsDelayPropagationType
+    );
+
+    if (updateType == TripUpdateType.CANCEL_TRIP) {
+      return new CancelTrip(tripReference, serviceDate, null, null);
+    }
+    if (updateType == TripUpdateType.DELETE_TRIP) {
+      return new DeleteTrip(tripReference, serviceDate, null, null);
+    }
+    if (updateType == TripUpdateType.DUPLICATE_TRIP) {
+      tripUpdate.validateDuplicated();
+      return new DuplicateTrip(tripReference, serviceDate, tripUpdate.startTime().orElseThrow());
+    }
+
+    var stopTimeUpdates = parseStopTimeUpdates(
+      tripId,
+      tripUpdate.stopTimeUpdates(),
+      serviceDate,
+      updateType == TripUpdateType.ADD_NEW_TRIP
+    );
+
+    var vehicle = VehicleDescription.of(
+      tripUpdate.vehicleId().orElse(null),
+      tripUpdate.wheelchairAccessibility().orElse(null)
+    );
+    var tripHeadsign = tripUpdate.tripHeadsign().orElse(null);
+
+    return switch (updateType) {
+      case UPDATE_EXISTING -> ReviseTrip.builder(tripReference, serviceDate)
+        .withFormatPolicy(gtfsPolicy)
+        .withVehicleDescription(vehicle)
+        .withTripHeadsign(tripHeadsign)
+        .withStopTimeUpdates(stopTimeUpdates)
+        .build();
+      case MODIFY_TRIP -> ModifyTrip.builder(tripReference, serviceDate)
+        .withFormatPolicy(gtfsPolicy)
+        .withVehicleDescription(vehicle)
+        .withTripHeadsign(tripHeadsign)
+        .withStopTimeUpdates(stopTimeUpdates)
+        .build();
+      case ADD_NEW_TRIP -> AddTrip.builder(
+        tripReference,
+        serviceDate,
+        buildTripCreationInfo(tripId, tripUpdate)
+      )
+        .withFormatPolicy(gtfsPolicy)
+        .withVehicleDescription(vehicle)
+        .withTripHeadsign(tripHeadsign)
+        .withStopTimeUpdates(stopTimeUpdates)
+        .build();
+      case CANCEL_TRIP, DELETE_TRIP, DUPLICATE_TRIP -> throw new IllegalStateException(
+        "Unexpected update type: " + updateType
+      );
+    };
+  }
+
+  private FeedScopedId createId(String entityId) {
+    return new FeedScopedId(feedId, entityId);
+  }
+
+  @Nullable
+  private TripUpdateType mapScheduleRelationship(ScheduleRelationship relationship) {
+    return switch (relationship) {
+      case SCHEDULED -> TripUpdateType.UPDATE_EXISTING;
+      case CANCELED -> TripUpdateType.CANCEL_TRIP;
+      case DELETED -> TripUpdateType.DELETE_TRIP;
+      case NEW, ADDED -> TripUpdateType.ADD_NEW_TRIP;
+      case REPLACEMENT -> TripUpdateType.MODIFY_TRIP;
+      case DUPLICATED -> TripUpdateType.DUPLICATE_TRIP;
+      case UNSCHEDULED -> null;
+    };
+  }
+
+  private TripReference buildTripReference(
+    FeedScopedId tripId,
+    TripUpdate tripUpdate,
+    LocalDate serviceDate
+  ) {
+    var builder = TripReference.builder().withTripId(tripId).withStartDate(serviceDate);
+
+    tripUpdate.routeId().ifPresent(builder::withRouteId);
+
+    tripUpdate
+      .startTime()
+      .ifPresent(time -> builder.withStartTime(TimeUtils.timeToStrCompact(time.toSecondOfDay())));
+
+    tripUpdate
+      .descriptor()
+      .directionId()
+      .ifPresent(dirId -> builder.withDirection(directionMapper.map(dirId)));
+
+    return builder.build();
+  }
+
+  private List<ParsedStopTimeUpdate> parseStopTimeUpdates(
+    FeedScopedId tripId,
+    List<StopTimeUpdate> updates,
+    LocalDate serviceDate,
+    boolean isNewTrip
+  ) {
+    var result = new ArrayList<ParsedStopTimeUpdate>();
+
+    for (var update : updates) {
+      var stopId = update.stopId().map(this::createId);
+      var assignedStopId = update.assignedStopId().map(this::createId).orElse(null);
+      var stopSequence = update.stopSequence();
+
+      // Both stop_id and stop_sequence are missing — invalid stop time update
+      if (stopId.isEmpty() && stopSequence.isEmpty()) {
+        throw UpdateException.of(tripId, UpdateErrorType.INVALID_STOP_REFERENCE);
+      }
+
+      // Create StopReference - may have null stopId if only stopSequence is provided
+      var stopReference = stopId.isPresent()
+        ? StopReference.ofStopId(stopId.get(), assignedStopId)
+        : new StopReference(null, assignedStopId, StopResolutionStrategy.DIRECT);
+
+      var builder = ParsedStopTimeUpdate.builder(stopReference);
+
+      stopSequence.ifPresent(builder::withStopSequence);
+
+      var status = mapStopTimeStatus(update);
+      builder.withStatus(status);
+
+      if (isNewTrip) {
+        parseNewTripStopTimeUpdate(update, builder, serviceDate);
+      } else {
+        parseScheduledTripStopTimeUpdate(update, builder, serviceDate);
+      }
+
+      update.stopHeadsign().ifPresent(builder::withStopHeadsign);
+
+      update.pickup().ifPresent(builder::withPickup);
+      update.dropoff().ifPresent(builder::withDropoff);
+
+      result.add(builder.build());
+    }
+
+    return result;
+  }
+
+  private ParsedStopTimeUpdate.StopUpdateStatus mapStopTimeStatus(StopTimeUpdate update) {
+    if (update.isSkipped()) {
+      return ParsedStopTimeUpdate.StopUpdateStatus.SKIPPED;
+    }
+    if (update.isNoData()) {
+      return ParsedStopTimeUpdate.StopUpdateStatus.NO_DATA;
+    }
+    return ParsedStopTimeUpdate.StopUpdateStatus.SCHEDULED;
+  }
+
+  private void parseScheduledTripStopTimeUpdate(
+    StopTimeUpdate update,
+    ParsedStopTimeUpdate.Builder builder,
+    LocalDate serviceDate
+  ) {
+    // Calculate midnight seconds for absolute time conversion
+    var midnight = serviceDate.atStartOfDay(timeZone);
+    long midnightSecondsSinceEpoch = midnight.toEpochSecond();
+
+    // Handle arrival time: prefer absolute time, fall back to delay
+    var arrivalTime = update.arrivalTime();
+    var arrivalDelay = update.arrivalDelay();
+    if (arrivalTime.isPresent()) {
+      int time = (int) (arrivalTime.getAsLong() - midnightSecondsSinceEpoch);
+      // Get scheduled time if available for proper TimeUpdate
+      var scheduledArrival = update.scheduledArrivalTimeWithRealTimeFallback().isPresent()
+        ? (int) (update.scheduledArrivalTimeWithRealTimeFallback().getAsLong() -
+            midnightSecondsSinceEpoch)
+        : null;
+      builder.withArrivalUpdate(TimeUpdate.ofAbsolute(time, scheduledArrival));
+    } else if (arrivalDelay.isPresent()) {
+      builder.withArrivalUpdate(TimeUpdate.ofDelay(arrivalDelay.getAsInt()));
+    }
+
+    // Handle departure time: prefer absolute time, fall back to delay
+    var departureTime = update.departureTime();
+    var departureDelay = update.departureDelay();
+    if (departureTime.isPresent()) {
+      int time = (int) (departureTime.getAsLong() - midnightSecondsSinceEpoch);
+      // Get scheduled time if available for proper TimeUpdate
+      var scheduledDeparture = update.scheduledDepartureTimeWithRealTimeFallback().isPresent()
+        ? (int) (update.scheduledDepartureTimeWithRealTimeFallback().getAsLong() -
+            midnightSecondsSinceEpoch)
+        : null;
+      builder.withDepartureUpdate(TimeUpdate.ofAbsolute(time, scheduledDeparture));
+    } else if (departureDelay.isPresent()) {
+      builder.withDepartureUpdate(TimeUpdate.ofDelay(departureDelay.getAsInt()));
+    }
+  }
+
+  private void parseNewTripStopTimeUpdate(
+    StopTimeUpdate update,
+    ParsedStopTimeUpdate.Builder builder,
+    LocalDate serviceDate
+  ) {
+    // Calculate midnight seconds for absolute time conversion
+    var midnight = serviceDate.atStartOfDay(timeZone);
+    long midnightSecondsSinceEpoch = midnight.toEpochSecond();
+
+    var arrivalTimeOpt = update.arrivalTime();
+    var departureTimeOpt = update.departureTime();
+    var scheduledArrivalOpt = update.scheduledArrivalTimeWithRealTimeFallback();
+    var scheduledDepartureOpt = update.scheduledDepartureTimeWithRealTimeFallback();
+
+    if (arrivalTimeOpt.isPresent()) {
+      int arrivalTime = (int) (arrivalTimeOpt.getAsLong() - midnightSecondsSinceEpoch);
+      Integer scheduledArrival = scheduledArrivalOpt.isPresent()
+        ? (int) (scheduledArrivalOpt.getAsLong() - midnightSecondsSinceEpoch)
+        : null;
+      builder.withArrivalUpdate(TimeUpdate.ofAbsolute(arrivalTime, scheduledArrival));
+    }
+
+    if (departureTimeOpt.isPresent()) {
+      int departureTime = (int) (departureTimeOpt.getAsLong() - midnightSecondsSinceEpoch);
+      Integer scheduledDeparture = scheduledDepartureOpt.isPresent()
+        ? (int) (scheduledDepartureOpt.getAsLong() - midnightSecondsSinceEpoch)
+        : null;
+      builder.withDepartureUpdate(TimeUpdate.ofAbsolute(departureTime, scheduledDeparture));
+    }
+  }
+
+  private TripCreationInfo buildTripCreationInfo(FeedScopedId tripId, TripUpdate tripUpdate) {
+    var builder = TripCreationInfo.builder(tripId);
+
+    // Get route ID from trip update
+    var routeId = tripUpdate.routeId().orElse(null);
+
+    if (routeId != null) {
+      builder.withRouteId(routeId);
+    }
+
+    tripUpdate.tripShortName().ifPresent(builder::withShortName);
+
+    // Extract route creation info from MFDZ extensions
+    var addedRoute = AddedRoute.ofTripDescriptor(tripUpdate);
+    if (routeId != null && (addedRoute.routeUrl() != null || addedRoute.routeLongName() != null)) {
+      var agencyId = addedRoute.agencyId() != null
+        ? new FeedScopedId(tripId.getFeedId(), addedRoute.agencyId())
+        : null;
+      var mode = org.opentripplanner.gtfs.mapping.TransitModeMapper.mapMode(addedRoute.routeType());
+      var routeCreationInfo = new RouteCreationInfo(
+        addedRoute.routeLongName(),
+        mode,
+        null,
+        null,
+        addedRoute.routeUrl(),
+        agencyId,
+        addedRoute.routeType()
+      );
+      builder.withRouteCreationInfo(routeCreationInfo);
+    }
+
+    return builder.build();
+  }
+}

@@ -14,7 +14,7 @@ import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
  * Application-scoped factory for GTFS-RT trip update processing. Holds stable, application-lifetime
  * state and produces a per-task {@link GtfsRealTimeUpdateHandler} via {@link #forUpdate(MutableTimetableSnapshot)}.
  */
-public class GtfsRealTimeTripUpdateAdapter {
+public class GtfsRealTimeTripUpdateAdapter implements GtfsTripUpdateAdapter {
 
   private final TimetableRepository timetableRepository;
   private final Supplier<LocalDate> localDateNow;
@@ -43,6 +43,7 @@ public class GtfsRealTimeTripUpdateAdapter {
    * the given buffer, so all pattern and trip lookups within the task see in-progress real-time
    * additions.
    */
+  @Override
   public GtfsRealTimeUpdateHandler forUpdate(MutableTimetableSnapshot buffer) {
     var editorService = new DefaultTransitService(timetableRepository, buffer);
     return new GtfsRealTimeUpdateHandler(

@@ -8,6 +8,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Optional;
+import java.util.OptionalInt;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.utils.lang.StringUtils;
@@ -66,6 +67,12 @@ public class TripDescriptor {
     return tripDescriptor.hasTripId()
       ? Optional.of(tripDescriptor.getTripId()).filter(StringUtils::hasValue)
       : Optional.empty();
+  }
+
+  public OptionalInt directionId() {
+    return tripDescriptor.hasDirectionId()
+      ? OptionalInt.of(tripDescriptor.getDirectionId())
+      : OptionalInt.empty();
   }
 
   GtfsRealtime.TripDescriptor original() {

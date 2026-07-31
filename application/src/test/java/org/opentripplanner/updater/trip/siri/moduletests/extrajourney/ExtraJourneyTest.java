@@ -111,6 +111,37 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     );
   }
 
+  /**
+   * The added trip takes the ServiceJourney form of the EstimatedVehicleJourneyCode, while the added
+   * trip on service date is identified by the DatedServiceJourney form of the same code - that is
+   * the id {@code datedServiceJourney} queries look it up by.
+   */
+  @Test
+  void testAddJourneyIsIdentifiedByItsDatedServiceJourneyId() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = createValidAddedJourney(siri)
+      .withEstimatedVehicleJourneyCode("RUT:ServiceJourney:1234")
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    var transitService = env.transitService();
+    var tripOnServiceDate = transitService.getTripOnServiceDate(id("RUT:DatedServiceJourney:1234"));
+
+    assertNotNull(
+      tripOnServiceDate,
+      "The added trip on service date should be found by its DatedServiceJourney id"
+    );
+    assertTrue(tripOnServiceDate.isExtraJourney());
+    assertEquals(id("RUT:ServiceJourney:1234"), tripOnServiceDate.getTrip().getId());
+    assertNull(
+      transitService.getTripOnServiceDate(id("RUT:ServiceJourney:1234")),
+      "The ServiceJourney id identifies the trip, not the trip on service date"
+    );
+  }
+
   @Test
   void testAddJourneyWithNewRoute() {
     // we actually don't need the trip, but it's the only way to add a route to the index
@@ -236,6 +267,30 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     assertNotNull(
       env.transitService().getTrip(id(ADDED_TRIP_ID)),
       "An unmonitored but cancelled extra journey must still be added"
+    );
+  }
+
+  /**
+   * The DataFrameRef of the FramedVehicleJourneyRef dates the extra journey. A journey dated
+   * outside the feed's service period cannot run and must be rejected.
+   */
+  @Test
+  void testRejectExtraJourneyOutsideServicePeriod() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = createValidAddedJourney(siri)
+      .withFramedVehicleJourneyRef(builder ->
+        builder.withServiceDate(env.defaultServiceDate().plusYears(1))
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    var result = siri.applyEstimatedTimetable(updates);
+
+    assertFailure(UpdateErrorType.OUTSIDE_SERVICE_PERIOD, result);
+    assertNull(
+      env.transitService().getTrip(id(ADDED_TRIP_ID)),
+      "An extra journey dated outside the service period must not be added"
     );
   }
 

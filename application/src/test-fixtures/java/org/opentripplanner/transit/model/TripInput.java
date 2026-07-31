@@ -53,6 +53,10 @@ public class TripInput {
   @Nullable
   private String netexInternalPlanningCode;
 
+  // Null means number the calls by their position
+  @Nullable
+  private int[] stopSequences = null;
+
   private final boolean isFlex;
 
   private TripInput(String id, boolean isFlex) {
@@ -78,8 +82,13 @@ public class TripInput {
   }
 
   public List<StopTime> stopTimes(Trip trip) {
+    if (stopSequences != null && stopSequences.length != stops.size()) {
+      throw new IllegalStateException(
+        "The trip has %d stops but %d stop sequences.".formatted(stops.size(), stopSequences.length)
+      );
+    }
     return IntStream.range(0, stops.size())
-      .mapToObj(i -> stops.get(i).toStopTime(trip, i))
+      .mapToObj(i -> stops.get(i).toStopTime(trip, stopSequences == null ? i : stopSequences[i]))
       .toList();
   }
 
@@ -173,6 +182,18 @@ public class TripInput {
 
   public TripInput addStop(AreaStop stop, String windowStart, String windowEnd) {
     stops.add(new FlexStopCallInput(stop, TimeUtils.time(windowStart), TimeUtils.time(windowEnd)));
+    return this;
+  }
+
+  /**
+   * The number each call is given in the static feed (GTFS {@code stop_sequence}), in call order.
+   * GTFS numbering only has to increase along the trip, and real feeds rarely start at 0, so use
+   * this to build a trip whose stop sequences are not its stop positions.
+   * <p>
+   * By default the calls are numbered by their position, as the NeTEx import does.
+   */
+  public TripInput withStopSequences(int... stopSequences) {
+    this.stopSequences = stopSequences;
     return this;
   }
 

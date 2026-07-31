@@ -10,4 +10,10 @@ public interface SiriETUpdaterParameters
   boolean blockReadinessUntilInitialized();
 
   boolean fuzzyTripMatching();
+
+  /**
+   * Whether to use the new unified updater implementation shared by SIRI-ET and GTFS-RT.
+   * When false (default), uses the legacy SiriRealTimeTripUpdateAdapter.
+   */
+  boolean useNewUpdaterImplementation();
 }

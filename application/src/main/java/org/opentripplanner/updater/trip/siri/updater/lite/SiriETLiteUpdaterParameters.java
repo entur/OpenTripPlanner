@@ -12,7 +12,8 @@ public record SiriETLiteUpdaterParameters(
   Duration frequency,
   Duration timeout,
   boolean fuzzyTripMatching,
-  HttpHeaders httpRequestHeaders
+  HttpHeaders httpRequestHeaders,
+  boolean useNewUpdaterImplementation
 ) implements SiriETUpdaterParameters, SiriETLiteHttpTripUpdateSource.Parameters {
   @Override
   public String url() {
