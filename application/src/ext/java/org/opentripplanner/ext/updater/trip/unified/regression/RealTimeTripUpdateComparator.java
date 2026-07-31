@@ -11,22 +11,29 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimes;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimes;
+import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.utils.time.TimeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Compares {@link RealTimeTripUpdate} records produced by the primary (legacy) adapter against
- * those produced by the shadow (new/unified) adapter. Mismatches are logged as warnings so that
+ * Compares what the primary (legacy) adapter did with a trip update against what the shadow
+ * (new/unified) adapter did with the same update. Divergences are logged as warnings so that
  * operators can verify the new implementation without any routing impact.
  * <p>
- * When an output directory is configured, detailed mismatch reports (including the input message
- * and per-stop detail for both primary and shadow records) are written to a file.
+ * The comparison is driven by an {@link AdapterOutcome} per side rather than a nullable record, so
+ * that the three ways of not producing a record stay distinguishable: only "both adapters produced
+ * the same record" counts as a match, "both rejected the update" is tallied on its own, and an
+ * adapter that threw is always reported even when the other adapter produced nothing either.
+ * <p>
+ * When an output directory is configured, detailed reports (including the input message and per-stop
+ * detail for both sides) are written to a file.
  * <p>
  * Used exclusively by the shadow comparison mode.
  */
@@ -43,106 +50,65 @@ public class RealTimeTripUpdateComparator {
   private int totalCompared = 0;
   private int matched = 0;
   private int mismatched = 0;
-  private int shadowErrors = 0;
-  private int primaryErrors = 0;
+  private int bothRejected = 0;
+  private int rejectedForDifferentReasons = 0;
+  private int onlyPrimaryPublished = 0;
+  private int onlyShadowPublished = 0;
+  private int shadowCrashes = 0;
+  private int primaryCrashes = 0;
 
   public RealTimeTripUpdateComparator(@Nullable Path outputDirectory) {
     this.outputDirectory = outputDirectory;
   }
 
   /**
-   * Compare a primary record against a shadow record for the same trip.
+   * Compare what the primary (legacy) adapter did with a single trip update against what the shadow
+   * (unified) adapter did with the same update.
    *
-   * @param primary              the record produced by the primary (legacy) adapter, or null if
-   *                             the primary produced an error
-   * @param shadow               the record produced by the shadow (new) adapter, or null if the
-   *                             shadow produced an error
+   * @param primary              what the primary (legacy) adapter did
+   * @param shadow               what the shadow (unified) adapter did
    * @param tripId               a human-readable trip identifier for logging
    * @param inputMessageSupplier lazy supplier that serializes the input message; only evaluated
-   *                             when a mismatch is detected and file output is enabled
+   *                             when a divergence is detected and file output is enabled
    */
   public void compare(
-    @Nullable RealTimeTripUpdate primary,
-    @Nullable RealTimeTripUpdate shadow,
+    AdapterOutcome primary,
+    AdapterOutcome shadow,
     String tripId,
     Supplier<String> inputMessageSupplier
   ) {
-    compare(primary, shadow, tripId, inputMessageSupplier, null, null);
+    totalCompared++;
+
+    if (
+      primary instanceof AdapterOutcome.Published primaryPublished &&
+      shadow instanceof AdapterOutcome.Published shadowPublished
+    ) {
+      comparePublished(primaryPublished, shadowPublished, tripId, inputMessageSupplier);
+      return;
+    }
+
+    if (
+      primary instanceof AdapterOutcome.Rejected(var primaryReason) &&
+      shadow instanceof AdapterOutcome.Rejected(var shadowReason)
+    ) {
+      compareRejections(primaryReason, shadowReason, primary, shadow, tripId, inputMessageSupplier);
+      return;
+    }
+
+    reportDivergentOutcomes(primary, shadow, tripId, inputMessageSupplier);
   }
 
   /**
-   * Compare a primary record against a shadow record for the same trip, with optional failure
-   * reasons for diagnostics.
-   *
-   * @param primary              the record produced by the primary (legacy) adapter, or null if
-   *                             the primary produced an error
-   * @param shadow               the record produced by the shadow (new) adapter, or null if the
-   *                             shadow produced an error
-   * @param tripId               a human-readable trip identifier for logging
-   * @param inputMessageSupplier lazy supplier that serializes the input message; only evaluated
-   *                             when a mismatch is detected and file output is enabled
-   * @param primaryFailureReason the reason the primary adapter failed, or null if it succeeded
-   * @param shadowFailureReason  the reason the shadow adapter failed, or null if it succeeded
+   * Both adapters produced a record: the records themselves are compared.
    */
-  public void compare(
-    @Nullable RealTimeTripUpdate primary,
-    @Nullable RealTimeTripUpdate shadow,
+  private void comparePublished(
+    AdapterOutcome.Published primary,
+    AdapterOutcome.Published shadow,
     String tripId,
-    Supplier<String> inputMessageSupplier,
-    @Nullable String primaryFailureReason,
-    @Nullable String shadowFailureReason
+    Supplier<String> inputMessageSupplier
   ) {
-    totalCompared++;
-
-    if (primary == null && shadow == null) {
-      matched++;
-      return;
-    }
-
-    if (primary == null) {
-      primaryErrors++;
-      LOG.warn(
-        "Shadow comparison: primary error but shadow succeeded for trip {}: {}",
-        tripId,
-        primaryFailureReason != null ? primaryFailureReason : "(unknown)"
-      );
-      bufferReport(
-        tripId,
-        null,
-        shadow,
-        inputMessageSupplier,
-        primaryFailureReason != null
-          ? "PRIMARY ERROR: " + primaryFailureReason
-          : "PRIMARY ERROR (null)",
-        primaryFailureReason,
-        shadowFailureReason
-      );
-      return;
-    }
-
-    if (shadow == null) {
-      shadowErrors++;
-      LOG.warn(
-        "Shadow comparison: shadow error but primary succeeded for trip {}: {}",
-        tripId,
-        shadowFailureReason != null ? shadowFailureReason : "(unknown)"
-      );
-      bufferReport(
-        tripId,
-        primary,
-        null,
-        inputMessageSupplier,
-        shadowFailureReason != null
-          ? "SHADOW ERROR: " + shadowFailureReason
-          : "SHADOW ERROR (null)",
-        primaryFailureReason,
-        shadowFailureReason
-      );
-      return;
-    }
-
-    var primaryEncoding = encode(primary);
-    var shadowEncoding = encode(shadow);
+    var primaryEncoding = encode(primary.update());
+    var shadowEncoding = encode(shadow.update());
 
     if (primaryEncoding.equals(shadowEncoding)) {
       matched++;
@@ -154,22 +120,149 @@ public class RealTimeTripUpdateComparator {
         primaryEncoding,
         shadowEncoding
       );
-      bufferReport(tripId, primary, shadow, inputMessageSupplier, "MISMATCH", null, null);
+      bufferReport(tripId, primary, shadow, inputMessageSupplier, "MISMATCH");
     }
   }
 
   /**
-   * Log a summary of comparison statistics for the current message batch. If any mismatches were
+   * Both adapters rejected the update. Agreeing on the reason is not a match — nothing was compared
+   * — so it is tallied separately. Disagreeing on the reason is a divergence: the same input was
+   * declined for two different causes, which regularly means one of the two got there by accident.
+   */
+  private void compareRejections(
+    UpdateErrorType primaryReason,
+    UpdateErrorType shadowReason,
+    AdapterOutcome primary,
+    AdapterOutcome shadow,
+    String tripId,
+    Supplier<String> inputMessageSupplier
+  ) {
+    if (primaryReason == shadowReason) {
+      // Real feeds produce these in bulk (negative hop times, unknown stops), so they are counted
+      // but not reported.
+      bothRejected++;
+      return;
+    }
+    rejectedForDifferentReasons++;
+    LOG.warn(
+      "Shadow comparison: both adapters rejected trip {}, but for different reasons: primary {}, shadow {}",
+      tripId,
+      primaryReason,
+      shadowReason
+    );
+    bufferReport(tripId, primary, shadow, inputMessageSupplier, "REJECTION MISMATCH");
+  }
+
+  /**
+   * One adapter produced a record the other did not, or an adapter threw. A crash is always counted
+   * against the adapter that threw, even when the other adapter also produced nothing.
+   */
+  private void reportDivergentOutcomes(
+    AdapterOutcome primary,
+    AdapterOutcome shadow,
+    String tripId,
+    Supplier<String> inputMessageSupplier
+  ) {
+    var shadowCrashed = shadow instanceof AdapterOutcome.Crashed;
+    var primaryCrashed = primary instanceof AdapterOutcome.Crashed;
+
+    if (shadowCrashed) {
+      shadowCrashes++;
+    }
+    if (primaryCrashed) {
+      primaryCrashes++;
+    }
+    if (!shadowCrashed && !primaryCrashed) {
+      if (primary instanceof AdapterOutcome.Published) {
+        onlyPrimaryPublished++;
+      } else {
+        onlyShadowPublished++;
+      }
+    }
+
+    LOG.warn(
+      "Shadow comparison divergence for trip {}: primary {}, shadow {}",
+      tripId,
+      primary.describe(),
+      shadow.describe()
+    );
+    bufferReport(tripId, primary, shadow, inputMessageSupplier, divergenceLabel(primary, shadow));
+  }
+
+  /**
+   * The report header label for a divergence, naming the side at fault. A crash takes precedence: it
+   * is a defect in that adapter rather than a difference of opinion about the input.
+   */
+  private static String divergenceLabel(AdapterOutcome primary, AdapterOutcome shadow) {
+    if (shadow instanceof AdapterOutcome.Crashed) {
+      return "SHADOW ERROR: " + shadow.describe();
+    }
+    if (primary instanceof AdapterOutcome.Crashed) {
+      return "PRIMARY ERROR: " + primary.describe();
+    }
+    return shadow instanceof AdapterOutcome.Published
+      ? "PRIMARY ERROR: " + primary.describe()
+      : "SHADOW ERROR: " + shadow.describe();
+  }
+
+  /**
+   * The comparison tally for the current message batch. Exposed so that callers and tests can
+   * assert on the distribution of outcomes instead of parsing the log line.
+   *
+   * @param total                       the number of trip updates compared
+   * @param matched                     both adapters produced the same record
+   * @param mismatched                  both produced a record, but they differ
+   * @param bothRejected                both rejected the update, for the same reason
+   * @param rejectedForDifferentReasons both rejected the update, but for different reasons
+   * @param onlyPrimaryPublished        the primary produced a record, the shadow rejected the update
+   * @param onlyShadowPublished         the shadow produced a record, the primary rejected the update
+   * @param shadowCrashes               the shadow adapter threw
+   * @param primaryCrashes              the primary adapter threw
+   */
+  public record Summary(
+    int total,
+    int matched,
+    int mismatched,
+    int bothRejected,
+    int rejectedForDifferentReasons,
+    int onlyPrimaryPublished,
+    int onlyShadowPublished,
+    int shadowCrashes,
+    int primaryCrashes
+  ) {}
+
+  public Summary summary() {
+    return new Summary(
+      totalCompared,
+      matched,
+      mismatched,
+      bothRejected,
+      rejectedForDifferentReasons,
+      onlyPrimaryPublished,
+      onlyShadowPublished,
+      shadowCrashes,
+      primaryCrashes
+    );
+  }
+
+  /**
+   * Log a summary of comparison statistics for the current message batch. If any divergences were
    * detected and an output directory is configured, writes the detailed reports to a file.
    */
   public void logSummary() {
     LOG.info(
-      "Shadow comparison summary: total={}, matched={}, mismatched={}, shadowErrors={}, primaryErrors={}",
+      "Shadow comparison summary: total={}, matched={}, mismatched={}, bothRejected={}, " +
+        "rejectedForDifferentReasons={}, onlyPrimaryPublished={}, onlyShadowPublished={}, " +
+        "shadowCrashes={}, primaryCrashes={}",
       totalCompared,
       matched,
       mismatched,
-      shadowErrors,
-      primaryErrors
+      bothRejected,
+      rejectedForDifferentReasons,
+      onlyPrimaryPublished,
+      onlyShadowPublished,
+      shadowCrashes,
+      primaryCrashes
     );
 
     if (!mismatchReports.isEmpty() && outputDirectory != null) {
@@ -355,6 +448,13 @@ public class RealTimeTripUpdateComparator {
         .append(i)
         .append(" ")
         .append(stopName)
+        .append(" (")
+        .append(stops.get(i).getId())
+        .append(", ")
+        .append(pattern.getBoardType(i))
+        .append("/")
+        .append(pattern.getAlightType(i))
+        .append(")")
         .append("  sched ")
         .append(schedArr)
         .append("/")
@@ -385,12 +485,10 @@ public class RealTimeTripUpdateComparator {
 
   private void bufferReport(
     String tripId,
-    @Nullable RealTimeTripUpdate primary,
-    @Nullable RealTimeTripUpdate shadow,
+    AdapterOutcome primary,
+    AdapterOutcome shadow,
     Supplier<String> inputMessageSupplier,
-    String reason,
-    @Nullable String primaryFailureReason,
-    @Nullable String shadowFailureReason
+    String reason
   ) {
     if (outputDirectory == null) {
       return;
@@ -403,14 +501,14 @@ public class RealTimeTripUpdateComparator {
     sb.append("Timestamp : ").append(Instant.now()).append('\n');
     sb.append("Trip ID   : ").append(tripId).append('\n');
 
-    if (primaryFailureReason != null) {
+    if (!(primary instanceof AdapterOutcome.Published)) {
       sb.append("\n--- PRIMARY FAILURE REASON ---\n");
-      sb.append("  ").append(primaryFailureReason).append('\n');
+      sb.append("  ").append(primary.describe()).append('\n');
     }
 
-    if (shadowFailureReason != null) {
+    if (!(shadow instanceof AdapterOutcome.Published)) {
       sb.append("\n--- SHADOW FAILURE REASON ---\n");
-      sb.append("  ").append(shadowFailureReason).append('\n');
+      sb.append("  ").append(shadow.describe()).append('\n');
     }
 
     sb.append("\n--- INPUT MESSAGE ---\n");
@@ -421,21 +519,27 @@ public class RealTimeTripUpdateComparator {
     }
 
     sb.append("\n--- PRIMARY RealTimeTripUpdate ---\n");
-    if (primary != null) {
-      sb.append(encodeDetailed(primary));
-    } else {
-      sb.append("  (null)\n");
-    }
+    appendOutcomeDetail(sb, primary);
 
     sb.append("\n--- SHADOW RealTimeTripUpdate ---\n");
-    if (shadow != null) {
-      sb.append(encodeDetailed(shadow));
-    } else {
-      sb.append("  (null)\n");
-    }
+    appendOutcomeDetail(sb, shadow);
 
     sb.append('\n');
     mismatchReports.add(sb.toString());
+  }
+
+  private static void appendOutcomeDetail(StringBuilder sb, AdapterOutcome outcome) {
+    switch (outcome) {
+      case AdapterOutcome.Published(var update) -> sb.append(encodeDetailed(update));
+      case AdapterOutcome.Rejected(var reason) -> sb
+        .append("  (rejected: ")
+        .append(reason)
+        .append(")\n");
+      case AdapterOutcome.Crashed(var detail) -> sb
+        .append("  (crashed: ")
+        .append(detail)
+        .append(")\n");
+    }
   }
 
   private void writeReportsToFile() {
@@ -469,8 +573,29 @@ public class RealTimeTripUpdateComparator {
   }
 
   /**
+   * A one-letter code for a pickup or dropoff value, so that adding it for every stop keeps the
+   * comparison string readable on long patterns: (S)cheduled, (N)one, call (A)gency,
+   * (C)oordinate with driver, cancelled (X).
+   */
+  private static char pickDropCode(PickDrop pickDrop) {
+    return switch (pickDrop) {
+      case SCHEDULED -> 'S';
+      case NONE -> 'N';
+      case CALL_AGENCY -> 'A';
+      case COORDINATE_WITH_DRIVER -> 'C';
+      case CANCELLED -> 'X';
+    };
+  }
+
+  /**
    * Encode trip times and stop information as a compact string for comparison.
-   * Format: "STATE_FLAGS | stop1 [FLAGS] arrivalTime departureTime | stop2 ..."
+   * Format: "STATE_FLAGS | stopId boardAlight [FLAGS] arrivalTime departureTime | ..."
+   * <p>
+   * The stop <em>id</em> and the pickup/dropoff pair are part of the comparison because both are
+   * load-bearing outputs the two adapters can diverge on: a stop substitution or a pick/drop
+   * difference yields a different {@link org.opentripplanner.transit.model.network.StopPattern},
+   * hence a different real-time pattern, while the stop names stay the same. Names carry no
+   * information the id does not, so they are reserved for {@link #encodeDetailed}.
    */
   private static String encodeTripTimes(TripTimes tripTimes, TripPattern pattern) {
     var stops = pattern.getStops();
@@ -503,7 +628,11 @@ public class RealTimeTripUpdateComparator {
       if (tripTimes.isExtraCall(i)) {
         flags.add("EC");
       }
-      s.append(" | ").append(stops.get(i).getName());
+      s.append(" | ").append(stops.get(i).getId());
+      s
+        .append(" ")
+        .append(pickDropCode(pattern.getBoardType(i)))
+        .append(pickDropCode(pattern.getAlightType(i)));
       if (!flags.isEmpty()) {
         s.append(" [").append(String.join(",", flags)).append("]");
       }

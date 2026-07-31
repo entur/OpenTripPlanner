@@ -8,9 +8,9 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
+import org.opentripplanner.ext.updater.trip.unified.regression.AdapterOutcome;
 import org.opentripplanner.ext.updater.trip.unified.regression.RealTimeTripUpdateComparator;
 import org.opentripplanner.ext.updater.trip.unified.regression.RecordingTimetableSnapshot;
-import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateResult;
@@ -110,15 +110,16 @@ class ShadowGtfsTripUpdateHandler implements GtfsTripUpdateHandler {
     var tripId = update.getTrip().getTripId();
 
     // 1. SHADOW FIRST: parse + apply but do NOT write to buffer
-    RealTimeTripUpdate shadowRecord = null;
-    String shadowFailureReason = null;
+    AdapterOutcome shadowOutcome;
     try {
-      shadowRecord = shadowHandler.parseAndExecute(update).realTimeTripUpdate();
+      shadowOutcome = new AdapterOutcome.Published(
+        shadowHandler.parseAndExecute(update).realTimeTripUpdate()
+      );
     } catch (UpdateException e) {
-      shadowFailureReason = "failed: " + e.errorType();
+      shadowOutcome = new AdapterOutcome.Rejected(e.errorType());
       LOG.warn("Shadow failed for trip {}: {}", tripId, e.errorType());
     } catch (Exception e) {
-      shadowFailureReason = "exception: " + e.getMessage();
+      shadowOutcome = new AdapterOutcome.Crashed(e.toString());
       LOG.warn("Shadow adapter error for trip {}", tripId, e);
     }
 
@@ -133,21 +134,10 @@ class ShadowGtfsTripUpdateHandler implements GtfsTripUpdateHandler {
       List.of(update),
       feedId
     );
-    var primaryRecord = recordingBuffer.lastUpdate();
+    var primaryOutcome = AdapterOutcome.ofPrimary(primaryResult, recordingBuffer.lastUpdate());
 
     // 3. COMPARE
-    String primaryFailureReason = null;
-    if (primaryRecord == null && primaryResult.failed() > 0 && !primaryResult.errors().isEmpty()) {
-      primaryFailureReason = primaryResult.errors().getFirst().toString();
-    }
-    comparator.compare(
-      primaryRecord,
-      shadowRecord,
-      tripId,
-      update::toString,
-      primaryFailureReason,
-      shadowFailureReason
-    );
+    comparator.compare(primaryOutcome, shadowOutcome, tripId, update::toString);
 
     // Return the primary result (single trip -> single result)
     if (primaryResult.failed() > 0 && !primaryResult.errors().isEmpty()) {
