@@ -1,0 +1,475 @@
+package org.opentripplanner.ext.updater.trip.unified.model.command;
+
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.util.Objects;
+import javax.annotation.Nullable;
+import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.ext.updater.trip.unified.model.ServiceTime;
+import org.opentripplanner.ext.updater.trip.unified.model.StopSequence;
+import org.opentripplanner.model.PickDrop;
+import org.opentripplanner.transit.model.timetable.OccupancyStatus;
+
+/**
+ * A parsed stop time update from a real-time feed (SIRI-ET or GTFS-RT).
+ * Contains all the information needed to update the arrival/departure times
+ * and other attributes for a single stop visit.
+ */
+public final class ParsedStopTimeUpdate {
+
+  private final StopReference stopReference;
+
+  @Nullable
+  private final StopSequence stopSequence;
+
+  private final StopUpdateStatus status;
+
+  @Nullable
+  private final ParsedTimeUpdate arrivalUpdate;
+
+  @Nullable
+  private final ParsedTimeUpdate departureUpdate;
+
+  @Nullable
+  private final PickDrop pickup;
+
+  @Nullable
+  private final PickDrop dropoff;
+
+  @Nullable
+  private final I18NString stopHeadsign;
+
+  @Nullable
+  private final OccupancyStatus occupancy;
+
+  private final boolean pickupCancelled;
+  private final boolean dropoffCancelled;
+  private final boolean isExtraCall;
+  private final boolean predictionInaccurate;
+  private final boolean hasArrived;
+  private final boolean hasDeparted;
+
+  /**
+   * @param stopReference Reference to the stop (by ID or stop point ref)
+   * @param stopSequence The number the call carries in the static feed, or null if the message
+   *                     does not number its calls.
+   * @param status The status of this stop (scheduled, skipped, cancelled, etc.)
+   * @param arrivalUpdate The arrival time update
+   * @param departureUpdate The departure time update
+   * @param pickup The pickup type at this stop
+   * @param dropoff The dropoff type at this stop
+   * @param stopHeadsign The headsign to display at this stop
+   * @param occupancy The occupancy status of the vehicle at this stop
+   * @param pickupCancelled True if the message cancels the departure end of this call on its own,
+   *                        without cancelling the call as a whole (SIRI-ET
+   *                        {@code DepartureStatus=cancelled})
+   * @param dropoffCancelled True if the message cancels the arrival end of this call on its own
+   *                         (SIRI-ET {@code ArrivalStatus=cancelled})
+   * @param isExtraCall True if this is an extra call (not in the scheduled pattern)
+   * @param predictionInaccurate True if the prediction is marked as inaccurate
+   * @param hasArrived True if the vehicle has arrived at this stop
+   * @param hasDeparted True if the vehicle has departed from this stop
+   */
+  public ParsedStopTimeUpdate(
+    StopReference stopReference,
+    @Nullable StopSequence stopSequence,
+    StopUpdateStatus status,
+    @Nullable ParsedTimeUpdate arrivalUpdate,
+    @Nullable ParsedTimeUpdate departureUpdate,
+    @Nullable PickDrop pickup,
+    @Nullable PickDrop dropoff,
+    @Nullable I18NString stopHeadsign,
+    @Nullable OccupancyStatus occupancy,
+    boolean pickupCancelled,
+    boolean dropoffCancelled,
+    boolean isExtraCall,
+    boolean predictionInaccurate,
+    boolean hasArrived,
+    boolean hasDeparted
+  ) {
+    this.stopReference = Objects.requireNonNull(stopReference, "stopReference must not be null");
+    this.stopSequence = stopSequence;
+    this.status = Objects.requireNonNull(status, "status must not be null");
+    this.arrivalUpdate = arrivalUpdate;
+    this.departureUpdate = departureUpdate;
+    this.pickup = pickup;
+    this.dropoff = dropoff;
+    this.stopHeadsign = stopHeadsign;
+    this.occupancy = occupancy;
+    this.pickupCancelled = pickupCancelled;
+    this.dropoffCancelled = dropoffCancelled;
+    this.isExtraCall = isExtraCall;
+    this.predictionInaccurate = predictionInaccurate;
+    this.hasArrived = hasArrived;
+    this.hasDeparted = hasDeparted;
+  }
+
+  /**
+   * The status of a stop in a trip update.
+   */
+  public enum StopUpdateStatus {
+    /**
+     * Normal scheduled stop.
+     */
+    SCHEDULED,
+
+    /**
+     * Stop is skipped (vehicle passes through without stopping).
+     */
+    SKIPPED,
+
+    /**
+     * Stop is cancelled (no service at this stop).
+     */
+    CANCELLED,
+
+    /**
+     * No prediction data available for this stop.
+     */
+    NO_DATA,
+
+    /**
+     * Extra call - this stop is not in the scheduled pattern.
+     */
+    ADDED,
+  }
+
+  /**
+   * Create a builder for a stop time update.
+   */
+  public static Builder builder(StopReference stopReference) {
+    return new Builder(stopReference);
+  }
+
+  public StopReference stopReference() {
+    return stopReference;
+  }
+
+  @Nullable
+  public StopSequence stopSequence() {
+    return stopSequence;
+  }
+
+  public StopUpdateStatus status() {
+    return status;
+  }
+
+  @Nullable
+  public ParsedTimeUpdate arrivalUpdate() {
+    return arrivalUpdate;
+  }
+
+  @Nullable
+  public ParsedTimeUpdate departureUpdate() {
+    return departureUpdate;
+  }
+
+  @Nullable
+  public PickDrop pickup() {
+    return pickup;
+  }
+
+  @Nullable
+  public PickDrop dropoff() {
+    return dropoff;
+  }
+
+  @Nullable
+  public I18NString stopHeadsign() {
+    return stopHeadsign;
+  }
+
+  @Nullable
+  public OccupancyStatus occupancy() {
+    return occupancy;
+  }
+
+  /**
+   * Whether the message cancels the departure end of this call on its own. A cancellation of the
+   * whole call is reported through {@link #status()} instead and cancels both ends.
+   */
+  public boolean pickupCancelled() {
+    return pickupCancelled;
+  }
+
+  /** Whether the message cancels the arrival end of this call on its own. */
+  public boolean dropoffCancelled() {
+    return dropoffCancelled;
+  }
+
+  public boolean isExtraCall() {
+    return isExtraCall;
+  }
+
+  public boolean predictionInaccurate() {
+    return predictionInaccurate;
+  }
+
+  public boolean hasArrived() {
+    return hasArrived;
+  }
+
+  public boolean hasDeparted() {
+    return hasDeparted;
+  }
+
+  /**
+   * Returns true if this update has arrival time information.
+   */
+  public boolean hasArrivalUpdate() {
+    return arrivalUpdate != null;
+  }
+
+  /**
+   * Returns true if this update has departure time information.
+   */
+  public boolean hasDepartureUpdate() {
+    return departureUpdate != null;
+  }
+
+  /**
+   * Returns true if this stop is skipped or cancelled (no service).
+   */
+  public boolean isSkipped() {
+    return status == StopUpdateStatus.SKIPPED || status == StopUpdateStatus.CANCELLED;
+  }
+
+  /**
+   * Resolve the scheduled arrival time, or null if no arrival update.
+   */
+  @Nullable
+  public ServiceTime resolveScheduledArrivalTime(LocalDate serviceDate, ZoneId timeZone) {
+    return resolveAimedTime(arrivalUpdate, serviceDate, timeZone);
+  }
+
+  /**
+   * Resolve the scheduled departure time, or null if no departure update.
+   */
+  @Nullable
+  public ServiceTime resolveScheduledDepartureTime(LocalDate serviceDate, ZoneId timeZone) {
+    return resolveAimedTime(departureUpdate, serviceDate, timeZone);
+  }
+
+  /**
+   * The aimed time reported by the feed, or null if there is no update or the update is
+   * delay-based - a delay carries no aimed time of its own.
+   */
+  @Nullable
+  private static ServiceTime resolveAimedTime(
+    @Nullable ParsedTimeUpdate update,
+    LocalDate serviceDate,
+    ZoneId timeZone
+  ) {
+    if (update == null) {
+      return null;
+    }
+    return update.resolve(serviceDate, timeZone) instanceof AbsoluteTimeUpdate absolute
+      ? absolute.aimedTime()
+      : null;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+    ParsedStopTimeUpdate that = (ParsedStopTimeUpdate) o;
+    return (
+      pickupCancelled == that.pickupCancelled &&
+      dropoffCancelled == that.dropoffCancelled &&
+      isExtraCall == that.isExtraCall &&
+      predictionInaccurate == that.predictionInaccurate &&
+      hasArrived == that.hasArrived &&
+      hasDeparted == that.hasDeparted &&
+      Objects.equals(stopReference, that.stopReference) &&
+      Objects.equals(stopSequence, that.stopSequence) &&
+      status == that.status &&
+      Objects.equals(arrivalUpdate, that.arrivalUpdate) &&
+      Objects.equals(departureUpdate, that.departureUpdate) &&
+      pickup == that.pickup &&
+      dropoff == that.dropoff &&
+      Objects.equals(stopHeadsign, that.stopHeadsign) &&
+      occupancy == that.occupancy
+    );
+  }
+
+  @Override
+  public int hashCode() {
+    return Objects.hash(
+      stopReference,
+      stopSequence,
+      status,
+      arrivalUpdate,
+      departureUpdate,
+      pickup,
+      dropoff,
+      stopHeadsign,
+      occupancy,
+      pickupCancelled,
+      dropoffCancelled,
+      isExtraCall,
+      predictionInaccurate,
+      hasArrived,
+      hasDeparted
+    );
+  }
+
+  @Override
+  public String toString() {
+    return (
+      "ParsedStopTimeUpdate{" +
+      "stopReference=" +
+      stopReference +
+      ", stopSequence=" +
+      stopSequence +
+      ", status=" +
+      status +
+      ", arrivalUpdate=" +
+      arrivalUpdate +
+      ", departureUpdate=" +
+      departureUpdate +
+      ", pickup=" +
+      pickup +
+      ", dropoff=" +
+      dropoff +
+      ", stopHeadsign=" +
+      stopHeadsign +
+      ", occupancy=" +
+      occupancy +
+      ", pickupCancelled=" +
+      pickupCancelled +
+      ", dropoffCancelled=" +
+      dropoffCancelled +
+      ", isExtraCall=" +
+      isExtraCall +
+      ", predictionInaccurate=" +
+      predictionInaccurate +
+      ", hasArrived=" +
+      hasArrived +
+      ", hasDeparted=" +
+      hasDeparted +
+      '}'
+    );
+  }
+
+  /**
+   * Builder for ParsedStopTimeUpdate.
+   */
+  public static class Builder {
+
+    private final StopReference stopReference;
+    private StopSequence stopSequence;
+    private StopUpdateStatus status = StopUpdateStatus.SCHEDULED;
+    private ParsedTimeUpdate arrivalUpdate;
+    private ParsedTimeUpdate departureUpdate;
+    private PickDrop pickup;
+    private PickDrop dropoff;
+    private I18NString stopHeadsign;
+    private OccupancyStatus occupancy;
+    private boolean pickupCancelled;
+    private boolean dropoffCancelled;
+    private boolean isExtraCall;
+    private boolean predictionInaccurate;
+    private boolean hasArrived;
+    private boolean hasDeparted;
+
+    private Builder(StopReference stopReference) {
+      this.stopReference = Objects.requireNonNull(stopReference);
+    }
+
+    public Builder withStopSequence(StopSequence stopSequence) {
+      this.stopSequence = stopSequence;
+      return this;
+    }
+
+    public Builder withStatus(StopUpdateStatus status) {
+      this.status = status;
+      return this;
+    }
+
+    public Builder withArrivalUpdate(ParsedTimeUpdate arrivalUpdate) {
+      this.arrivalUpdate = arrivalUpdate;
+      return this;
+    }
+
+    public Builder withDepartureUpdate(ParsedTimeUpdate departureUpdate) {
+      this.departureUpdate = departureUpdate;
+      return this;
+    }
+
+    public Builder withPickup(PickDrop pickup) {
+      this.pickup = pickup;
+      return this;
+    }
+
+    public Builder withDropoff(PickDrop dropoff) {
+      this.dropoff = dropoff;
+      return this;
+    }
+
+    public Builder withStopHeadsign(I18NString stopHeadsign) {
+      this.stopHeadsign = stopHeadsign;
+      return this;
+    }
+
+    public Builder withOccupancy(OccupancyStatus occupancy) {
+      this.occupancy = occupancy;
+      return this;
+    }
+
+    /** SIRI-ET {@code DepartureStatus=cancelled}: the departure end alone is cancelled. */
+    public Builder withPickupCancelled(boolean pickupCancelled) {
+      this.pickupCancelled = pickupCancelled;
+      return this;
+    }
+
+    /** SIRI-ET {@code ArrivalStatus=cancelled}: the arrival end alone is cancelled. */
+    public Builder withDropoffCancelled(boolean dropoffCancelled) {
+      this.dropoffCancelled = dropoffCancelled;
+      return this;
+    }
+
+    public Builder withIsExtraCall(boolean isExtraCall) {
+      this.isExtraCall = isExtraCall;
+      return this;
+    }
+
+    public Builder withPredictionInaccurate(boolean predictionInaccurate) {
+      this.predictionInaccurate = predictionInaccurate;
+      return this;
+    }
+
+    public Builder withHasArrived(boolean hasArrived) {
+      this.hasArrived = hasArrived;
+      return this;
+    }
+
+    public Builder withHasDeparted(boolean hasDeparted) {
+      this.hasDeparted = hasDeparted;
+      return this;
+    }
+
+    public ParsedStopTimeUpdate build() {
+      return new ParsedStopTimeUpdate(
+        stopReference,
+        stopSequence,
+        status,
+        arrivalUpdate,
+        departureUpdate,
+        pickup,
+        dropoff,
+        stopHeadsign,
+        occupancy,
+        pickupCancelled,
+        dropoffCancelled,
+        isExtraCall,
+        predictionInaccurate,
+        hasArrived,
+        hasDeparted
+      );
+    }
+  }
+}

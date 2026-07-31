@@ -46,4 +46,25 @@ class InvalidScheduledStopSequenceTest implements RealtimeTestConstants {
 
     assertFailure(INVALID_STOP_SEQUENCE, rt.applyTripUpdate(update));
   }
+
+  /**
+   * A stop sequence that increases along the trip but is not one of the numbers the static feed gave
+   * the calls identifies no call at all.
+   */
+  @Test
+  void stopSequenceNotUsedByTheTrip() {
+    var env = envBuilder
+      .addTrip(
+        TripInput.of(TRIP_1_ID)
+          .withStopSequences(1, 2)
+          .addStop(stopA, "10:00", "10:00")
+          .addStop(stopB, "10:01", "10:01")
+      )
+      .build();
+    var rt = GtfsRtTestHelper.of(env);
+
+    var update = rt.tripUpdateScheduled(TRIP_1_ID).addDelayedStopTime(3, 60).build();
+
+    assertFailure(INVALID_STOP_SEQUENCE, rt.applyTripUpdate(update));
+  }
 }

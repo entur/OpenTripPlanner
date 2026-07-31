@@ -15,6 +15,7 @@ import org.opentripplanner.updater.trip.gtfs.updater.http.PollingTripUpdaterPara
 public class PollingTripUpdaterConfig {
 
   public static PollingTripUpdaterParameters create(String configRef, NodeAdapter c) {
+    var adapterSelection = TripUpdateAdapterSelectionConfig.create(c);
     var url = c
       .of("url")
       .since(V1_5)
@@ -52,7 +53,10 @@ public class PollingTripUpdaterConfig {
         .asEnum(BackwardsDelayPropagationType.REQUIRED_NO_DATA),
       c.of("feedId").since(V1_5).summary("Which feed the updates apply to.").asString(),
       url,
-      headers
+      headers,
+      adapterSelection.useNewUpdaterImplementation(),
+      adapterSelection.shadowComparison(),
+      adapterSelection.shadowComparisonReportDirectory()
     );
   }
 }

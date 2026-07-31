@@ -13,7 +13,7 @@ import org.opentripplanner.updater.trip.patterncache.TripPatternIdGenerator;
  * application-lifetime state and produces a per-task {@link SiriRealTimeUpdateHandler} via
  * {@link #forUpdate(TimetableRepository)}.
  */
-public class SiriRealTimeTripUpdateAdapter {
+public class SiriRealTimeTripUpdateAdapter implements SiriTripUpdateAdapter {
 
   /**
    * Use an id generator to generate TripPattern ids for new TripPatterns created by RealTime
@@ -48,6 +48,7 @@ public class SiriRealTimeTripUpdateAdapter {
    * {@link org.opentripplanner.transit.service.TransitEditorService} constructed from the given
    * buffer, so all pattern and trip lookups within the task see in-progress real-time additions.
    */
+  @Override
   public SiriRealTimeUpdateHandler forUpdate(TimetableRepository buffer) {
     var transitService = new DefaultTransitService(transitRepository, buffer);
     var fuzzyTripMatcher = siriFuzzyTripMatcherCache != null

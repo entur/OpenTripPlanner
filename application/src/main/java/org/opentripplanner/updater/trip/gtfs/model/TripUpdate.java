@@ -13,6 +13,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -75,6 +76,10 @@ public final class TripUpdate {
       );
   }
 
+  /**
+   * The service date to apply this update on: the one the feed reported, or the current date as a
+   * guess when it reported none.
+   */
   public LocalDate startDate() {
     if (startDate != null) {
       return startDate;
@@ -83,6 +88,18 @@ public final class TripUpdate {
     // starts for example at 40:00, yesterday would probably be a better guess.
     startDate = tripDescriptor.startDate().orElse(localDateNow.get());
     return startDate;
+  }
+
+  /**
+   * The service date the feed reported, empty if it left {@code start_date} out.
+   * <p>
+   * Not the same question as {@link #startDate()}, which answers with a guess rather than nothing so
+   * that the update can be applied at all. Anything that identifies a trip <em>by</em> its date -
+   * fuzzy matching - has to ask this one instead: a guessed date would identify whichever trip
+   * happens to run today.
+   */
+  public Optional<LocalDate> reportedStartDate() {
+    return tripDescriptor.startDate();
   }
 
   public ScheduleRelationship scheduleRelationship() {
@@ -102,11 +119,31 @@ public final class TripUpdate {
       );
   }
 
+  /**
+   * The trip id the message names, or {@code null} when it names none. A message without a trip id
+   * may still identify its trip by route, direction, start time and start date - fuzzy trip
+   * matching - so a missing id is an answer here, not an error as in {@link #tripId()}.
+   */
+  @Nullable
+  public FeedScopedId tripIdOrNull() {
+    return tripDescriptor
+      .tripId()
+      .map(id -> new FeedScopedId(feedId, id))
+      .orElse(null);
+  }
+
   public void validate() throws DataValidationException, UpdateException {
     if (tripDescriptor.tripId().isEmpty()) {
       throw UpdateException.noTripId(INVALID_INPUT_STRUCTURE);
     }
+    validateWithoutTripId();
+  }
 
+  /**
+   * Everything {@link #validate()} checks except the presence of a trip id, for a caller that
+   * accepts a message naming its trip another way - by the identifiers fuzzy trip matching reads.
+   */
+  public void validateWithoutTripId() throws DataValidationException, UpdateException {
     // exercise the getter, would throw an UpdateException if start date is malformed
     tripDescriptor.startDate();
 
@@ -117,10 +154,10 @@ public final class TripUpdate {
       if (stopSequence.isPresent()) {
         var seq = stopSequence.getAsInt();
         if (seq < 0) {
-          throw UpdateException.of(tripId(), INVALID_STOP_SEQUENCE);
+          throw UpdateException.of(tripIdOrNull(), INVALID_STOP_SEQUENCE);
         }
         if (seq <= lastStopSequence) {
-          throw UpdateException.of(tripId(), INVALID_STOP_SEQUENCE);
+          throw UpdateException.of(tripIdOrNull(), INVALID_STOP_SEQUENCE);
         }
         lastStopSequence = seq;
       }
@@ -130,7 +167,7 @@ public final class TripUpdate {
   /// Validates the requirement for the schedule relationship DUPLICATED.
   public void validateDuplicated() throws DataValidationException {
     if (tripDescriptor.startDate().isEmpty() || tripDescriptor.startTime().isEmpty()) {
-      throw UpdateException.of(tripId(), INVALID_INPUT_STRUCTURE);
+      throw UpdateException.of(tripIdOrNull(), INVALID_INPUT_STRUCTURE);
     }
   }
 

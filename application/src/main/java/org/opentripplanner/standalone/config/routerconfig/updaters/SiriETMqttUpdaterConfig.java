@@ -101,6 +101,8 @@ public class SiriETMqttUpdaterConfig {
       )
       .asDuration(Duration.ofSeconds(30));
 
+    var adapterSelection = TripUpdateAdapterSelectionConfig.create(siriMqttRoot);
+
     return new MqttSiriETUpdaterParameters(
       configRef,
       feedId,
@@ -113,7 +115,10 @@ public class SiriETMqttUpdaterConfig {
       fuzzyTripMatching,
       numberOfPrimingWorkers,
       maxPrimingIdleTime,
-      connectionStartupTimeout
+      connectionStartupTimeout,
+      adapterSelection.useNewUpdaterImplementation(),
+      adapterSelection.shadowComparison(),
+      adapterSelection.shadowComparisonReportDirectory()
     );
   }
 }

@@ -1,7 +1,9 @@
 package org.opentripplanner.updater.trip.siri.updater.lite;
 
 import java.net.URI;
+import java.nio.file.Path;
 import java.time.Duration;
+import javax.annotation.Nullable;
 import org.opentripplanner.framework.io.HttpHeaders;
 import org.opentripplanner.updater.trip.siri.updater.SiriETUpdaterParameters;
 
@@ -12,7 +14,10 @@ public record SiriETLiteUpdaterParameters(
   Duration frequency,
   Duration timeout,
   boolean fuzzyTripMatching,
-  HttpHeaders httpRequestHeaders
+  HttpHeaders httpRequestHeaders,
+  boolean useNewUpdaterImplementation,
+  boolean shadowComparison,
+  @Nullable Path shadowComparisonReportDirectory
 ) implements SiriETUpdaterParameters, SiriETLiteHttpTripUpdateSource.Parameters {
   @Override
   public String url() {

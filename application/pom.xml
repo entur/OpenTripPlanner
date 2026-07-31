@@ -417,6 +417,42 @@
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <!-- Inherits the configuration (forking, argLine, reporting) from the parent pom. -->
+                <executions>
+                    <!--
+                      The real-time module tests are the specification of the trip updaters, and there
+                      are two implementations of those: the legacy one production runs, and the
+                      unified one that is to replace it. The default execution runs them against the
+                      legacy implementation, so a plain `mvn test` remains the regression suite for
+                      the production path. This second execution re-runs only those module tests
+                      against the unified implementation - the rest of the suite is not run twice.
+
+                      Delete this execution once production runs the unified implementation and the
+                      legacy adapters are gone; see TripUpdateAdapterUnderTest.
+                    -->
+                    <execution>
+                        <id>unified-trip-updater-tests</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>test</goal>
+                        </goals>
+                        <configuration>
+                            <includes>
+                                <include>org/opentripplanner/updater/trip/gtfs/moduletests/**/*Test.java</include>
+                                <include>org/opentripplanner/updater/trip/siri/moduletests/**/*Test.java</include>
+                                <include>org/opentripplanner/updater/trip/RaptorCumulativeUpdateTest.java</include>
+                            </includes>
+                            <systemPropertyVariables>
+                                <otp.test.tripUpdateAdapter>unified</otp.test.tripUpdateAdapter>
+                            </systemPropertyVariables>
+                            <reportsDirectory>${project.build.directory}/surefire-reports-unified-updater</reportsDirectory>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
                     <annotationProcessorPaths>

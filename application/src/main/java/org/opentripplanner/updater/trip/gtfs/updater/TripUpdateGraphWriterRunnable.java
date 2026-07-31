@@ -1,14 +1,17 @@
 package org.opentripplanner.updater.trip.gtfs.updater;
 
+import static org.opentripplanner.updater.trip.UpdateIncrementality.FULL_DATASET;
+
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import org.opentripplanner.updater.GraphWriterRunnable;
 import org.opentripplanner.updater.RealTimeUpdateContext;
+import org.opentripplanner.updater.spi.ResultLogger;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
-import org.opentripplanner.updater.trip.gtfs.GtfsRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.gtfs.GtfsTripUpdateAdapter;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 
@@ -28,10 +31,10 @@ public class TripUpdateGraphWriterRunnable implements GraphWriterRunnable {
 
   private final String feedId;
   private final Consumer<UpdateResult> sendMetrics;
-  private final GtfsRealTimeTripUpdateAdapter adapter;
+  private final GtfsTripUpdateAdapter adapter;
 
   public TripUpdateGraphWriterRunnable(
-    GtfsRealTimeTripUpdateAdapter adapter,
+    GtfsTripUpdateAdapter adapter,
     boolean fuzzyTripMatching,
     ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType,
@@ -62,6 +65,14 @@ public class TripUpdateGraphWriterRunnable implements GraphWriterRunnable {
         updates,
         feedId
       );
+
+    // Summarize the whole poll. This belongs here rather than inside the handler: the handler is
+    // also driven one trip at a time by the shadow-comparison adapter, and this must stay a single
+    // line per poll.
+    if (updateIncrementality == FULL_DATASET) {
+      ResultLogger.logUpdateResult(feedId, "gtfs-rt-trip-updates", result);
+    }
+
     sendMetrics.accept(result);
   }
 }

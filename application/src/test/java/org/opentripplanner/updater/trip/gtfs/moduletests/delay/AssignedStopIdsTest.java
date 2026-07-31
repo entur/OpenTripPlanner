@@ -33,16 +33,22 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
   private final RegularStop STOP_C = ENV_BUILDER.stop(STOP_C_ID);
 
   // these stops need to be created for use in assigned stops
-  {
-    ENV_BUILDER.stop(STOP_D_ID);
-    ENV_BUILDER.stop(STOP_E_ID);
-  }
+  private final RegularStop STOP_D = ENV_BUILDER.stop(STOP_D_ID);
+  private final RegularStop STOP_E = ENV_BUILDER.stop(STOP_E_ID);
 
   private final TripInput TRIP_1_INPUT = TripInput.of(TRIP_1_ID)
     .withServiceDates(SERVICE_DATE, SERVICE_DATE_PLUS)
     .addStop(STOP_A, "10:00:00", "10:00:00")
     .addStop(STOP_B, "10:01:00", "10:01:00")
     .addStop(STOP_C, "10:02:00", "10:02:00");
+
+  /** A trip that also calls at the stop the assignment tests assign, so it can be mismatched. */
+  private final TripInput TRIP_1_CALLING_AT_D_INPUT = TripInput.of(TRIP_1_ID)
+    .withServiceDates(SERVICE_DATE, SERVICE_DATE_PLUS)
+    .addStop(STOP_A, "10:00:00", "10:00:00")
+    .addStop(STOP_B, "10:01:00", "10:01:00")
+    .addStop(STOP_C, "10:02:00", "10:02:00")
+    .addStop(STOP_D, "10:03:00", "10:03:00");
 
   private final TripInput TRIP_2_INPUT = TripInput.of(TRIP_2_ID)
     .withServiceDates(SERVICE_DATE, SERVICE_DATE_PLUS)
@@ -103,6 +109,79 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
 
     assertFalse(env.tripData(TRIP_1_ID).tripPattern().isStopPatternModifiedInRealTime());
     assertEquals(List.of("F:Pattern1[U]"), env.raptorData().summarizePatterns());
+  }
+
+  /**
+   * A call that identifies itself by stop id says which scheduled call the update is about; an
+   * assigned stop id says which stop the vehicle will use instead. Mixing the two up makes the
+   * update land on the assigned stop's position, which here would be the trip's last call.
+   */
+  @Test
+  void assignedStopIdWithoutStopSequenceAppliesTimesAtTheReportedStop() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_CALLING_AT_D_INPUT).build();
+
+    var rt = GtfsRtTestHelper.of(env);
+    var tripUpdate = rt
+      .tripUpdateScheduled(TRIP_1_ID)
+      .addStopTime(STOP_A_ID, "10:00:00")
+      // the call at B is served at D instead
+      .addAssignedStopTime(STOP_B_ID, "10:05:00", STOP_D_ID)
+      .addStopTime(STOP_C_ID, "10:06:00")
+      .addStopTime(STOP_D_ID, "10:07:00")
+      .build();
+
+    assertSuccess(rt.applyTripUpdate(tripUpdate));
+    assertEquals(
+      "U | A 10:00 10:00 | D 10:05 10:05 | C 10:06 10:06 | D 10:07 10:07",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
+    assertTrue(env.tripData(TRIP_1_ID).tripPattern().isStopPatternModifiedInRealTime());
+  }
+
+  /**
+   * The assigned stop does not have to be one the trip calls at - it is a replacement, not a way of
+   * finding the call.
+   */
+  @Test
+  void assignedStopOutsideThePatternIsStillAReplacement() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+
+    var rt = GtfsRtTestHelper.of(env);
+    var tripUpdate = rt
+      .tripUpdateScheduled(TRIP_1_ID)
+      .addStopTime(STOP_A_ID, "10:00:00")
+      .addAssignedStopTime(STOP_B_ID, "10:05:00", STOP_E_ID)
+      .addStopTime(STOP_C_ID, "10:06:00")
+      .build();
+
+    assertSuccess(rt.applyTripUpdate(tripUpdate));
+    assertEquals(
+      "U | A 10:00 10:00 | E 10:05 10:05 | C 10:06 10:06",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
+    assertTrue(env.tripData(TRIP_1_ID).tripPattern().isStopPatternModifiedInRealTime());
+  }
+
+  /**
+   * An assignment naming a stop the transit model does not know costs the trip its pattern change,
+   * not its real-time times.
+   */
+  @Test
+  void unresolvableAssignedStopIdKeepsTheTimesAndDropsThePatternChange() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+
+    var rt = GtfsRtTestHelper.of(env);
+    var tripUpdate = rt
+      .tripUpdateScheduled(TRIP_1_ID)
+      .addAssignedStopTime(0, "10:05:00", "no-such-stop")
+      .build();
+
+    assertSuccess(rt.applyTripUpdate(tripUpdate));
+    assertEquals(
+      "U | A 10:05 10:05 | B 10:06 10:06 | C 10:07 10:07",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
+    assertFalse(env.tripData(TRIP_1_ID).tripPattern().isStopPatternModifiedInRealTime());
   }
 
   @Test

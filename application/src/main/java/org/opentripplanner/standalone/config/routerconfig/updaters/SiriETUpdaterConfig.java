@@ -11,6 +11,7 @@ import org.opentripplanner.updater.trip.siri.updater.DefaultSiriETUpdaterParamet
 public class SiriETUpdaterConfig {
 
   public static DefaultSiriETUpdaterParameters create(String configRef, NodeAdapter c) {
+    var adapterSelection = TripUpdateAdapterSelectionConfig.create(c);
     return new DefaultSiriETUpdaterParameters(
       configRef,
       c.of("feedId").since(V2_0).summary("The ID of the feed to apply the updates to.").asString(),
@@ -49,7 +50,10 @@ public class SiriETUpdaterConfig {
         .of("producerMetrics")
         .since(V2_7)
         .summary("If failure, success, and warning metrics should be collected per producer.")
-        .asBoolean(false)
+        .asBoolean(false),
+      adapterSelection.useNewUpdaterImplementation(),
+      adapterSelection.shadowComparison(),
+      adapterSelection.shadowComparisonReportDirectory()
     );
   }
 }

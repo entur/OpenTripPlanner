@@ -10,7 +10,9 @@ import static uk.org.siri.siri21.DepartureBoardingActivityEnumeration.NO_BOARDIN
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.model.PickDrop;
+import uk.org.siri.siri21.ArrivalBoardingActivityEnumeration;
 import uk.org.siri.siri21.CallStatusEnumeration;
+import uk.org.siri.siri21.DepartureBoardingActivityEnumeration;
 
 class CallWrapperPickDropTest {
 
@@ -260,5 +262,60 @@ class CallWrapperPickDropTest {
       testResult.isEmpty(),
       "A cancelled call must not re-enable alighting that was not routable in the schedule"
     );
+  }
+
+  @Test
+  public void intentBoardingAllowedIsScheduled() {
+    TestCall call = TestCall.of().withDepartureBoardingActivity(BOARDING).build();
+    assertEquals(PickDrop.SCHEDULED, call.pickUp().intent().orElseThrow());
+  }
+
+  @Test
+  public void intentAlightingAllowedIsScheduled() {
+    TestCall call = TestCall.of().withArrivalBoardingActivity(ALIGHTING).build();
+    assertEquals(PickDrop.SCHEDULED, call.dropOff().intent().orElseThrow());
+  }
+
+  @Test
+  public void intentNoBoardingIsNone() {
+    TestCall call = TestCall.of().withDepartureBoardingActivity(NO_BOARDING).build();
+    assertEquals(PickDrop.NONE, call.pickUp().intent().orElseThrow());
+  }
+
+  @Test
+  public void intentNoAlightingIsNone() {
+    TestCall call = TestCall.of().withArrivalBoardingActivity(NO_ALIGHTING).build();
+    assertEquals(PickDrop.NONE, call.dropOff().intent().orElseThrow());
+  }
+
+  @Test
+  public void intentPassThruIsCancelled() {
+    TestCall call = TestCall.of()
+      .withDepartureBoardingActivity(DepartureBoardingActivityEnumeration.PASS_THRU)
+      .withArrivalBoardingActivity(ArrivalBoardingActivityEnumeration.PASS_THRU)
+      .build();
+    assertEquals(PickDrop.CANCELLED, call.pickUp().intent().orElseThrow());
+    assertEquals(PickDrop.CANCELLED, call.dropOff().intent().orElseThrow());
+  }
+
+  @Test
+  public void intentIsEmptyWhenNoBoardingActivityReported() {
+    TestCall call = TestCall.of().build();
+    assertTrue(call.pickUp().intent().isEmpty());
+    assertTrue(call.dropOff().intent().isEmpty());
+  }
+
+  @Test
+  public void intentIsEmptyForCancelledCall() {
+    TestCall call = TestCall.of()
+      .withCancellation(Boolean.TRUE)
+      .withDepartureBoardingActivity(BOARDING)
+      .withArrivalBoardingActivity(ALIGHTING)
+      .build();
+    assertTrue(
+      call.pickUp().intent().isEmpty(),
+      "A cancelled call carries no pick/drop intent; cancellation governs boarding"
+    );
+    assertTrue(call.dropOff().intent().isEmpty());
   }
 }

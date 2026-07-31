@@ -12,7 +12,6 @@ import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.repository.TimetableRepository;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
-import org.opentripplanner.updater.spi.ResultLogger;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateResult;
@@ -27,7 +26,7 @@ import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
  * per-task collaborators (sub-handlers constructed with an update-scoped {@code TransitEditorService})
  * and applies GTFS-RT trip updates against the mutable timetable snapshot.
  */
-public class GtfsRealTimeUpdateHandler {
+public class GtfsRealTimeUpdateHandler implements GtfsTripUpdateHandler {
 
   private final TimetableRepository buffer;
   private final Supplier<LocalDate> localDateNow;
@@ -65,6 +64,7 @@ public class GtfsRealTimeUpdateHandler {
    *                                      of all previous updates for the given feed id.
    * @param updates                       GTFS-RT TripUpdate's that should be applied atomically
    */
+  @Override
   public UpdateResult applyTripUpdates(
     @Nullable GtfsRealtimeFuzzyTripMatcher fuzzyTripMatcher,
     ForwardsDelayPropagationType forwardsDelayPropagationType,
@@ -106,12 +106,7 @@ public class GtfsRealTimeUpdateHandler {
       }
     }
 
-    var updateResult = UpdateResult.of(successes, errors);
-
-    if (updateIncrementality == FULL_DATASET) {
-      ResultLogger.logUpdateResult(feedId, "gtfs-rt-trip-updates", updateResult);
-    }
-    return updateResult;
+    return UpdateResult.of(successes, errors);
   }
 
   private UpdateSuccess applyUpdate(

@@ -13,6 +13,7 @@ import java.time.format.DateTimeParseException;
 import org.opentripplanner.ext.siri.updater.azure.AuthenticationType;
 import org.opentripplanner.ext.siri.updater.azure.SiriAzureUpdaterParameters;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
+import org.opentripplanner.standalone.config.routerconfig.updaters.TripUpdateAdapterSelectionConfig;
 
 public abstract class SiriAzureUpdaterConfig {
 
@@ -86,6 +87,15 @@ public abstract class SiriAzureUpdaterConfig {
       );
       parameters.setTimeout(
         history.of("timeout").since(NA).summary("Timeout in milliseconds").asInt(300000)
+      );
+    }
+
+    var adapterSelection = TripUpdateAdapterSelectionConfig.create(c);
+    parameters.setUseNewUpdaterImplementation(adapterSelection.useNewUpdaterImplementation());
+    parameters.setShadowComparison(adapterSelection.shadowComparison());
+    if (adapterSelection.shadowComparisonReportDirectory() != null) {
+      parameters.setShadowComparisonReportDirectory(
+        adapterSelection.shadowComparisonReportDirectory()
       );
     }
   }

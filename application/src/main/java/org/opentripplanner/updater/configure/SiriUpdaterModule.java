@@ -13,7 +13,7 @@ import org.opentripplanner.updater.support.siri.SiriHttpLoader;
 import org.opentripplanner.updater.support.siri.SiriLoader;
 import org.opentripplanner.updater.trip.metrics.TripUpdateMetrics;
 import org.opentripplanner.updater.trip.siri.SiriFuzzyTripMatcherCache;
-import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.siri.SiriTripUpdateAdapter;
 import org.opentripplanner.updater.trip.siri.updater.DefaultSiriETUpdaterParameters;
 import org.opentripplanner.updater.trip.siri.updater.EstimatedTimetableSource;
 import org.opentripplanner.updater.trip.siri.updater.SiriETHttpTripUpdateSource;
@@ -29,7 +29,7 @@ public class SiriUpdaterModule {
 
   public static SiriETUpdater createSiriETUpdater(
     SiriETUpdaterParameters params,
-    SiriRealTimeTripUpdateAdapter adapter
+    SiriTripUpdateAdapter adapter
   ) {
     return new SiriETUpdater(params, adapter, createSource(params), createMetricsConsumer(params));
   }

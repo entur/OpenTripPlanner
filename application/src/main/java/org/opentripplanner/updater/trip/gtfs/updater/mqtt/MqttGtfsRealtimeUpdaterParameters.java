@@ -1,5 +1,7 @@
 package org.opentripplanner.updater.trip.gtfs.updater.mqtt;
 
+import java.nio.file.Path;
+import javax.annotation.Nullable;
 import org.opentripplanner.updater.trip.UrlUpdaterParameters;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
@@ -12,5 +14,8 @@ public record MqttGtfsRealtimeUpdaterParameters(
   int qos,
   boolean fuzzyTripMatching,
   ForwardsDelayPropagationType forwardsDelayPropagationType,
-  BackwardsDelayPropagationType backwardsDelayPropagationType
+  BackwardsDelayPropagationType backwardsDelayPropagationType,
+  boolean useNewUpdaterImplementation,
+  boolean shadowComparison,
+  @Nullable Path shadowComparisonReportDirectory
 ) implements UrlUpdaterParameters {}

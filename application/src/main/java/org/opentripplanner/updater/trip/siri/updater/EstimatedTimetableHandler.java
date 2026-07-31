@@ -4,7 +4,7 @@ import java.util.List;
 import org.opentripplanner.updater.RealTimeUpdateContext;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
-import org.opentripplanner.updater.trip.siri.SiriRealTimeTripUpdateAdapter;
+import org.opentripplanner.updater.trip.siri.SiriTripUpdateAdapter;
 import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 
 /**
@@ -12,13 +12,13 @@ import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
  */
 public class EstimatedTimetableHandler {
 
-  private final SiriRealTimeTripUpdateAdapter adapter;
+  private final SiriTripUpdateAdapter adapter;
   /**
    * The ID for the static feed to which these real time updates are applied
    */
   private final String feedId;
 
-  public EstimatedTimetableHandler(SiriRealTimeTripUpdateAdapter adapter, String feedId) {
+  public EstimatedTimetableHandler(SiriTripUpdateAdapter adapter, String feedId) {
     this.adapter = adapter;
     this.feedId = feedId;
   }

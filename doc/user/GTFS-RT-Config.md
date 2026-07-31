@@ -74,16 +74,19 @@ HTTP request and polled regularly.
 <!-- stop-time-updater BEGIN -->
 <!-- NOTE! This section is auto-generated. Do not change, change doc in code instead. -->
 
-| Config Parameter                                                      |       Type      | Summary                                                                    |  Req./Opt. | Default Value        | Since |
-|-----------------------------------------------------------------------|:---------------:|----------------------------------------------------------------------------|:----------:|----------------------|:-----:|
-| type = "stop-time-updater"                                            |      `enum`     | The type of the updater.                                                   | *Required* |                      |  1.5  |
-| [backwardsDelayPropagationType](#u__5__backwardsDelayPropagationType) |      `enum`     | How backwards propagation should be handled.                               | *Optional* | `"required-no-data"` |  2.2  |
-| feedId                                                                |     `string`    | Which feed the updates apply to.                                           | *Required* |                      |  1.5  |
-| [forwardsDelayPropagationType](#u__5__forwardsDelayPropagationType)   |      `enum`     | How forwards propagation should be handled.                                | *Optional* | `"default"`          |  2.8  |
-| frequency                                                             |    `duration`   | How often the data should be downloaded.                                   | *Optional* | `"PT1M"`             |  1.5  |
-| fuzzyTripMatching                                                     |    `boolean`    | If the trips should be matched fuzzily.                                    | *Optional* | `false`              |  1.5  |
-| [url](#u__5__url)                                                     |     `string`    | The URL of the GTFS-RT resource.                                           | *Required* |                      |  1.5  |
-| [headers](#u__5__headers)                                             | `map of string` | HTTP headers to add to the request. Any header key, value can be inserted. | *Optional* |                      |  2.3  |
+| Config Parameter                                                      |       Type      | Summary                                                                                      |  Req./Opt. | Default Value        | Since |
+|-----------------------------------------------------------------------|:---------------:|----------------------------------------------------------------------------------------------|:----------:|----------------------|:-----:|
+| type = "stop-time-updater"                                            |      `enum`     | The type of the updater.                                                                     | *Required* |                      |  1.5  |
+| [backwardsDelayPropagationType](#u__5__backwardsDelayPropagationType) |      `enum`     | How backwards propagation should be handled.                                                 | *Optional* | `"required-no-data"` |  2.2  |
+| feedId                                                                |     `string`    | Which feed the updates apply to.                                                             | *Required* |                      |  1.5  |
+| [forwardsDelayPropagationType](#u__5__forwardsDelayPropagationType)   |      `enum`     | How forwards propagation should be handled.                                                  | *Optional* | `"default"`          |  2.8  |
+| frequency                                                             |    `duration`   | How often the data should be downloaded.                                                     | *Optional* | `"PT1M"`             |  1.5  |
+| fuzzyTripMatching                                                     |    `boolean`    | If the trips should be matched fuzzily.                                                      | *Optional* | `false`              |  1.5  |
+| [shadowComparison](#u__5__shadowComparison)                           |    `boolean`    | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`              |  2.10 |
+| shadowComparisonReportDirectory                                       |     `string`    | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |                      |  2.10 |
+| [url](#u__5__url)                                                     |     `string`    | The URL of the GTFS-RT resource.                                                             | *Required* |                      |  1.5  |
+| [useNewUpdaterImplementation](#u__5__useNewUpdaterImplementation)     |    `boolean`    | Use the new unified trip update implementation.                                              | *Optional* | `false`              |  2.10 |
+| [headers](#u__5__headers)                                             | `map of string` | HTTP headers to add to the request. Any header key, value can be inserted.                   | *Optional* |                      |  2.3  |
 
 
 ##### Parameter details
@@ -129,6 +132,19 @@ How forwards propagation should be handled.
    scheduled and real times from the previous to the next stop.
 
 
+<h4 id="u__5__shadowComparison">shadowComparison</h4>
+
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Path:** /updaters/[5] 
+
+Run the legacy and unified trip update implementations in parallel, comparing their outputs.
+
+The legacy implementation stays in charge and writes to the timetable snapshot; the
+unified implementation runs read-only in its shadow, and mismatches between the two are
+logged as warnings. Mutually exclusive with `useNewUpdaterImplementation` - shadow
+comparison always serves the legacy implementation.
+
+
 <h4 id="u__5__url">url</h4>
 
 **Since version:** `1.5` ∙ **Type:** `string` ∙ **Cardinality:** `Required`   
@@ -137,6 +153,19 @@ How forwards propagation should be handled.
 The URL of the GTFS-RT resource.
 
 `file:` URLs are also supported if you want to read a file from the local disk.
+
+<h4 id="u__5__useNewUpdaterImplementation">useNewUpdaterImplementation</h4>
+
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Path:** /updaters/[5] 
+
+Use the new unified trip update implementation.
+
+When `true`, trip updates are applied through the new format-independent implementation
+shared by SIRI-ET and GTFS-RT. This is experimental and should be used with caution.
+When `false` (the default), the legacy implementation for this updater's format is used.
+Mutually exclusive with `shadowComparison`.
+
 
 <h4 id="u__5__headers">headers</h4>
 
@@ -181,16 +210,19 @@ This system powers the real-time updates in Helsinki and more information can be
 <!-- mqtt-gtfs-rt-updater BEGIN -->
 <!-- NOTE! This section is auto-generated. Do not change, change doc in code instead. -->
 
-| Config Parameter                                                      |    Type   | Summary                                      |  Req./Opt. | Default Value        | Since |
-|-----------------------------------------------------------------------|:---------:|----------------------------------------------|:----------:|----------------------|:-----:|
-| type = "mqtt-gtfs-rt-updater"                                         |   `enum`  | The type of the updater.                     | *Required* |                      |  1.5  |
-| [backwardsDelayPropagationType](#u__6__backwardsDelayPropagationType) |   `enum`  | How backwards propagation should be handled. | *Optional* | `"required-no-data"` |  2.2  |
-| feedId                                                                |  `string` | The feed id to apply the updates to.         | *Required* |                      |  2.0  |
-| [forwardsDelayPropagationType](#u__6__forwardsDelayPropagationType)   |   `enum`  | How forwards propagation should be handled.  | *Optional* | `"default"`          |  2.8  |
-| fuzzyTripMatching                                                     | `boolean` | Whether to match trips fuzzily.              | *Optional* | `false`              |  2.0  |
-| qos                                                                   | `integer` | QOS level.                                   | *Optional* | `0`                  |  2.0  |
-| topic                                                                 |  `string` | The topic to subscribe to.                   | *Required* |                      |  2.0  |
-| url                                                                   |  `string` | URL of the MQTT broker.                      | *Required* |                      |  2.0  |
+| Config Parameter                                                      |    Type   | Summary                                                                                      |  Req./Opt. | Default Value        | Since |
+|-----------------------------------------------------------------------|:---------:|----------------------------------------------------------------------------------------------|:----------:|----------------------|:-----:|
+| type = "mqtt-gtfs-rt-updater"                                         |   `enum`  | The type of the updater.                                                                     | *Required* |                      |  1.5  |
+| [backwardsDelayPropagationType](#u__6__backwardsDelayPropagationType) |   `enum`  | How backwards propagation should be handled.                                                 | *Optional* | `"required-no-data"` |  2.2  |
+| feedId                                                                |  `string` | The feed id to apply the updates to.                                                         | *Required* |                      |  2.0  |
+| [forwardsDelayPropagationType](#u__6__forwardsDelayPropagationType)   |   `enum`  | How forwards propagation should be handled.                                                  | *Optional* | `"default"`          |  2.8  |
+| fuzzyTripMatching                                                     | `boolean` | Whether to match trips fuzzily.                                                              | *Optional* | `false`              |  2.0  |
+| qos                                                                   | `integer` | QOS level.                                                                                   | *Optional* | `0`                  |  2.0  |
+| [shadowComparison](#u__6__shadowComparison)                           | `boolean` | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`              |  2.10 |
+| shadowComparisonReportDirectory                                       |  `string` | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |                      |  2.10 |
+| topic                                                                 |  `string` | The topic to subscribe to.                                                                   | *Required* |                      |  2.0  |
+| url                                                                   |  `string` | URL of the MQTT broker.                                                                      | *Required* |                      |  2.0  |
+| [useNewUpdaterImplementation](#u__6__useNewUpdaterImplementation)     | `boolean` | Use the new unified trip update implementation.                                              | *Optional* | `false`              |  2.10 |
 
 
 ##### Parameter details
@@ -234,6 +266,32 @@ How forwards propagation should be handled.
    non-decreasing.
    For `SKIPPED` stops without time given, interpolate the estimated time using the ratio between
    scheduled and real times from the previous to the next stop.
+
+
+<h4 id="u__6__shadowComparison">shadowComparison</h4>
+
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Path:** /updaters/[6] 
+
+Run the legacy and unified trip update implementations in parallel, comparing their outputs.
+
+The legacy implementation stays in charge and writes to the timetable snapshot; the
+unified implementation runs read-only in its shadow, and mismatches between the two are
+logged as warnings. Mutually exclusive with `useNewUpdaterImplementation` - shadow
+comparison always serves the legacy implementation.
+
+
+<h4 id="u__6__useNewUpdaterImplementation">useNewUpdaterImplementation</h4>
+
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Path:** /updaters/[6] 
+
+Use the new unified trip update implementation.
+
+When `true`, trip updates are applied through the new format-independent implementation
+shared by SIRI-ET and GTFS-RT. This is experimental and should be used with caution.
+When `false` (the default), the legacy implementation for this updater's format is used.
+Mutually exclusive with `shadowComparison`.
 
 
 

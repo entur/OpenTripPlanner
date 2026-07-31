@@ -13,6 +13,7 @@ import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdate
 public class MqttGtfsRealtimeUpdaterConfig {
 
   public static MqttGtfsRealtimeUpdaterParameters create(String configRef, NodeAdapter c) {
+    var adapterSelection = TripUpdateAdapterSelectionConfig.create(c);
     return new MqttGtfsRealtimeUpdaterParameters(
       configRef,
       c.of("feedId").since(V2_0).summary("The feed id to apply the updates to.").asString(),
@@ -35,7 +36,10 @@ public class MqttGtfsRealtimeUpdaterConfig {
         .since(V2_2)
         .summary(BackwardsDelayPropagationType.REQUIRED_NO_DATA.typeDescription())
         .description(docEnumValueList(BackwardsDelayPropagationType.values()))
-        .asEnum(BackwardsDelayPropagationType.REQUIRED_NO_DATA)
+        .asEnum(BackwardsDelayPropagationType.REQUIRED_NO_DATA),
+      adapterSelection.useNewUpdaterImplementation(),
+      adapterSelection.shadowComparison(),
+      adapterSelection.shadowComparisonReportDirectory()
     );
   }
 }

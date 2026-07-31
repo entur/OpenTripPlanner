@@ -11,6 +11,7 @@ import org.opentripplanner.updater.trip.siri.updater.google.SiriETGooglePubsubUp
 public class SiriETGooglePubsubUpdaterConfig {
 
   public static SiriETGooglePubsubUpdaterParameters create(String configRef, NodeAdapter c) {
+    var adapterSelection = TripUpdateAdapterSelectionConfig.create(c);
     return new SiriETGooglePubsubUpdaterParameters(
       configRef,
       c
@@ -85,7 +86,10 @@ public class SiriETGooglePubsubUpdaterConfig {
         .of("producerMetrics")
         .since(V2_7)
         .summary("If failure, success, and warning metrics should be collected per producer.")
-        .asBoolean(false)
+        .asBoolean(false),
+      adapterSelection.useNewUpdaterImplementation(),
+      adapterSelection.shadowComparison(),
+      adapterSelection.shadowComparisonReportDirectory()
     );
   }
 }

@@ -1,0 +1,164 @@
+package org.opentripplanner.ext.updater.trip.unified;
+
+import static org.opentripplanner.OtpArchitectureModules.FRAMEWORK_UTILS;
+import static org.opentripplanner.OtpArchitectureModules.OTP_ROOT;
+import static org.opentripplanner.OtpArchitectureModules.TRANSIT;
+import static org.opentripplanner.OtpArchitectureModules.TRANSIT_MODEL;
+
+import org.junit.jupiter.api.Test;
+import org.opentripplanner._support.arch.Package;
+
+/**
+ * Enforces the package structure of the unified trip updater. The packages follow the pipeline
+ * stages of the ubiquitous language: a parser translates a message into a command
+ * ({@code model.command}); the dispatcher executes it by having a factory ({@code factory})
+ * resolve it against the transit model - each reference resolved into its entity by a resolver
+ * ({@code resolver}) - into a validated change ({@code model.change}); the change applies itself,
+ * and the domain service for its type ({@code service}) carries it out.
+ * <p>
+ * The model packages are the bottom layer: they depend on nothing in the component except the
+ * policies, and no package below the component root sees the factories or the domain services.
+ */
+public class TripUpdaterArchitectureTest {
+
+  private static final Package LEGACY_MODEL = OTP_ROOT.subPackage("model");
+  private static final Package UPDATER_SPI = OTP_ROOT.subPackage("updater").subPackage("spi");
+  private static final Package UPDATER_TRIP = OTP_ROOT.subPackage("updater").subPackage("trip");
+  private static final Package UNIFIED = OTP_ROOT.subPackage("ext")
+    .subPackage("updater")
+    .subPackage("trip")
+    .subPackage("unified");
+
+  private static final Package MODEL = UNIFIED.subPackage("model");
+  private static final Package MODEL_COMMAND = MODEL.subPackage("command");
+  private static final Package MODEL_CHANGE = MODEL.subPackage("change");
+  private static final Package POLICY = UNIFIED.subPackage("policy");
+  private static final Package RESOLVER = UNIFIED.subPackage("resolver");
+  private static final Package FACTORY = UNIFIED.subPackage("factory");
+  private static final Package SERVICE = UNIFIED.subPackage("service");
+  private static final Package PATTERN_CACHE = UPDATER_TRIP.subPackage("patterncache");
+  private static final Package GTFS_INTERPOLATION = UPDATER_TRIP.subPackage("gtfs").subPackage(
+    "interpolation"
+  );
+
+  private static final Package TRANSIT_MODEL_BASIC = TRANSIT_MODEL.subPackage("basic");
+  private static final Package TRANSIT_MODEL_FRAMEWORK = TRANSIT_MODEL.subPackage("framework");
+  private static final Package TRANSIT_MODEL_NETWORK = TRANSIT_MODEL.subPackage("network");
+  private static final Package TRANSIT_MODEL_SITE = TRANSIT_MODEL.subPackage("site");
+  private static final Package TRANSIT_MODEL_TIMETABLE = TRANSIT_MODEL.subPackage("timetable");
+  private static final Package TRANSIT_MODEL_CALENDAR = TRANSIT_MODEL.subPackage("calendar");
+  private static final Package TRANSIT_MODEL_ORGANIZATION = TRANSIT_MODEL.subPackage(
+    "organization"
+  );
+  private static final Package TRANSIT_SERVICE = TRANSIT.subPackage("service");
+
+  /** The root model package holds the value objects both model layers are built from. */
+  @Test
+  void enforceModelPackageDependencies() {
+    MODEL.dependsOn(FRAMEWORK_UTILS).verify();
+  }
+
+  @Test
+  void enforceCommandModelPackageDependencies() {
+    // UPDATER_SPI: the command constructors reject a message that violates their invariants with
+    // a typed UpdateException, just like the change model does.
+    MODEL_COMMAND.dependsOn(
+      FRAMEWORK_UTILS,
+      LEGACY_MODEL,
+      MODEL,
+      TRANSIT_MODEL_BASIC,
+      TRANSIT_MODEL_TIMETABLE,
+      UPDATER_SPI,
+      POLICY
+    ).verify();
+  }
+
+  @Test
+  void enforceChangeModelPackageDependencies() {
+    // TRANSIT_MODEL_ORGANIZATION: a trip creation carries the resolved operator it stamps the
+    // created trip with, alongside the resolved route it runs on.
+    MODEL_CHANGE.dependsOn(
+      FRAMEWORK_UTILS,
+      LEGACY_MODEL,
+      MODEL,
+      TRANSIT_MODEL_BASIC,
+      TRANSIT_MODEL_FRAMEWORK,
+      TRANSIT_MODEL_NETWORK,
+      TRANSIT_MODEL_ORGANIZATION,
+      TRANSIT_MODEL_SITE,
+      TRANSIT_MODEL_TIMETABLE,
+      UPDATER_SPI,
+      MODEL_COMMAND,
+      POLICY
+    ).verify();
+  }
+
+  @Test
+  void enforcePolicyPackageDependencies() {
+    // TODO The policies are format-neutral parameters carried by the commands, so they should
+    //  sit below the command model. Today StopMatchingPolicy and FormatPolicy reference both
+    //  models (a policy <-> model cycle: commands carry a FormatPolicy while StopMatchingPolicy
+    //  reads StopReference and ResolvedStopTimeUpdate), and DelayPropagationPolicy references
+    //  the GTFS delay interpolation machinery.
+    // MODEL: the value objects of the root model package pass through the policies too - a
+    // stop-matching cursor resolves the StopSequence a call carries.
+    POLICY.dependsOn(
+      FRAMEWORK_UTILS,
+      LEGACY_MODEL,
+      MODEL,
+      TRANSIT_MODEL_NETWORK,
+      TRANSIT_MODEL_SITE,
+      TRANSIT_MODEL_TIMETABLE,
+      UPDATER_SPI,
+      MODEL_COMMAND,
+      MODEL_CHANGE,
+      GTFS_INTERPOLATION
+    ).verify();
+  }
+
+  @Test
+  void enforceResolverPackageDependencies() {
+    // MODEL: the resolvers speak the same value objects the models are built from - a day offset
+    // is asked of the ServiceTime a scheduled departure is wrapped in.
+    RESOLVER.dependsOn(
+      FRAMEWORK_UTILS,
+      MODEL,
+      TRANSIT_MODEL_NETWORK,
+      TRANSIT_MODEL_SITE,
+      TRANSIT_MODEL_TIMETABLE,
+      TRANSIT_SERVICE,
+      UPDATER_SPI,
+      MODEL_COMMAND
+    ).verify();
+  }
+
+  @Test
+  void enforceFactoryPackageDependencies() {
+    FACTORY.dependsOn(
+      FRAMEWORK_UTILS,
+      TRANSIT_MODEL_NETWORK,
+      TRANSIT_MODEL_SITE,
+      TRANSIT_MODEL_TIMETABLE,
+      TRANSIT_MODEL_CALENDAR,
+      TRANSIT_MODEL_ORGANIZATION,
+      TRANSIT_SERVICE,
+      UPDATER_SPI,
+      MODEL_COMMAND,
+      MODEL_CHANGE,
+      RESOLVER
+    ).verify();
+  }
+
+  @Test
+  void enforceServicePackageDependencies() {
+    SERVICE.dependsOn(
+      FRAMEWORK_UTILS,
+      TRANSIT_MODEL_FRAMEWORK,
+      TRANSIT_MODEL_NETWORK,
+      TRANSIT_MODEL_TIMETABLE,
+      UPDATER_SPI,
+      MODEL_CHANGE,
+      PATTERN_CACHE
+    ).verify();
+  }
+}

@@ -28,18 +28,21 @@ To enable the SIRI-ET Google PubSub updater you need to add it to the updaters s
 <!-- siri-et-google-pubsub-updater BEGIN -->
 <!-- NOTE! This section is auto-generated. Do not change, change doc in code instead. -->
 
-| Config Parameter                                           |    Type    | Summary                                                                          |  Req./Opt. | Default Value | Since |
-|------------------------------------------------------------|:----------:|----------------------------------------------------------------------------------|:----------:|---------------|:-----:|
-| type = "siri-et-google-pubsub-updater"                     |   `enum`   | The type of the updater.                                                         | *Required* |               |  1.5  |
-| [dataInitializationUrl](#u__12__dataInitializationUrl)     |  `string`  | URL used to download over HTTP the recent history of SIRI-ET messages.           | *Optional* |               |  2.1  |
-| feedId                                                     |  `string`  | The ID of the feed to apply the updates to.                                      | *Optional* |               |  2.1  |
-| fuzzyTripMatching                                          |  `boolean` | If the trips should be matched fuzzily.                                          | *Optional* | `false`       |  2.1  |
-| [initialGetDataTimeout](#u__12__initialGetDataTimeout)     | `duration` | Timeout for retrieving the recent history of SIRI-ET messages.                   | *Optional* | `"PT30S"`     |  2.1  |
-| producerMetrics                                            |  `boolean` | If failure, success, and warning metrics should be collected per producer.       | *Optional* | `false`       |  2.7  |
-| [reconnectPeriod](#u__12__reconnectPeriod)                 | `duration` | Wait this amount of time before trying to reconnect to the PubSub subscription.  | *Optional* | `"PT30S"`     |  2.1  |
-| [subscriptionProjectName](#u__12__subscriptionProjectName) |  `string`  | The Google Cloud project that hosts the PubSub subscription.                     | *Required* |               |  2.1  |
-| topicName                                                  |  `string`  | The name of the PubSub topic that publishes the updates.                         | *Required* |               |  2.1  |
-| topicProjectName                                           |  `string`  | The Google Cloud project that hosts the PubSub topic that publishes the updates. | *Required* |               |  2.1  |
+| Config Parameter                                                   |    Type    | Summary                                                                                      |  Req./Opt. | Default Value | Since |
+|--------------------------------------------------------------------|:----------:|----------------------------------------------------------------------------------------------|:----------:|---------------|:-----:|
+| type = "siri-et-google-pubsub-updater"                             |   `enum`   | The type of the updater.                                                                     | *Required* |               |  1.5  |
+| [dataInitializationUrl](#u__12__dataInitializationUrl)             |  `string`  | URL used to download over HTTP the recent history of SIRI-ET messages.                       | *Optional* |               |  2.1  |
+| feedId                                                             |  `string`  | The ID of the feed to apply the updates to.                                                  | *Optional* |               |  2.1  |
+| fuzzyTripMatching                                                  |  `boolean` | If the trips should be matched fuzzily.                                                      | *Optional* | `false`       |  2.1  |
+| [initialGetDataTimeout](#u__12__initialGetDataTimeout)             | `duration` | Timeout for retrieving the recent history of SIRI-ET messages.                               | *Optional* | `"PT30S"`     |  2.1  |
+| producerMetrics                                                    |  `boolean` | If failure, success, and warning metrics should be collected per producer.                   | *Optional* | `false`       |  2.7  |
+| [reconnectPeriod](#u__12__reconnectPeriod)                         | `duration` | Wait this amount of time before trying to reconnect to the PubSub subscription.              | *Optional* | `"PT30S"`     |  2.1  |
+| [shadowComparison](#u__12__shadowComparison)                       |  `boolean` | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`       |  2.10 |
+| shadowComparisonReportDirectory                                    |  `string`  | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |               |  2.10 |
+| [subscriptionProjectName](#u__12__subscriptionProjectName)         |  `string`  | The Google Cloud project that hosts the PubSub subscription.                                 | *Required* |               |  2.1  |
+| topicName                                                          |  `string`  | The name of the PubSub topic that publishes the updates.                                     | *Required* |               |  2.1  |
+| topicProjectName                                                   |  `string`  | The Google Cloud project that hosts the PubSub topic that publishes the updates.             | *Required* |               |  2.1  |
+| [useNewUpdaterImplementation](#u__12__useNewUpdaterImplementation) |  `boolean` | Use the new unified trip update implementation.                                              | *Optional* | `false`       |  2.10 |
 
 
 ##### Parameter details
@@ -79,6 +82,19 @@ In case of a network error, the updater will try periodically to reconnect to th
 Google PubSub subscription.
 
 
+<h4 id="u__12__shadowComparison">shadowComparison</h4>
+
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Path:** /updaters/[12] 
+
+Run the legacy and unified trip update implementations in parallel, comparing their outputs.
+
+The legacy implementation stays in charge and writes to the timetable snapshot; the
+unified implementation runs read-only in its shadow, and mismatches between the two are
+logged as warnings. Mutually exclusive with `useNewUpdaterImplementation` - shadow
+comparison always serves the legacy implementation.
+
+
 <h4 id="u__12__subscriptionProjectName">subscriptionProjectName</h4>
 
 **Since version:** `2.1` ∙ **Type:** `string` ∙ **Cardinality:** `Required`   
@@ -90,6 +106,19 @@ During startup, the updater creates a PubSub subscription that listens
 to the PubSub topic that publishes SIRI-ET updates.
 This parameter specifies in which Google Cloud project the subscription will be created.
 The topic and the subscription can be hosted in two different projects.
+
+
+<h4 id="u__12__useNewUpdaterImplementation">useNewUpdaterImplementation</h4>
+
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Path:** /updaters/[12] 
+
+Use the new unified trip update implementation.
+
+When `true`, trip updates are applied through the new format-independent implementation
+shared by SIRI-ET and GTFS-RT. This is experimental and should be used with caution.
+When `false` (the default), the legacy implementation for this updater's format is used.
+Mutually exclusive with `shadowComparison`.
 
 
 

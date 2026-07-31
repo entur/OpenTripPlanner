@@ -27,6 +27,7 @@ import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
+import org.opentripplanner.updater.trip.UnifiedUpdaterOnly;
 import org.opentripplanner.updater.trip.siri.SiriEtBuilder;
 import org.opentripplanner.updater.trip.siri.SiriTestHelper;
 import uk.org.siri.siri21.OccupancyEnumeration;
@@ -36,6 +37,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
 
   private static final String ADDED_TRIP_ID = "newJourney";
   private static final String OPERATOR_ID = "operatorId";
+  private static final String OTHER_OPERATOR_ID = "otherOperatorId";
   private static final String ROUTE_ID = "routeId";
   private static final String RAIL_ROUTE_ID = "railRouteId";
 
@@ -46,6 +48,7 @@ class ExtraJourneyTest implements RealtimeTestConstants {
   private final RegularStop STOP_D = ENV_BUILDER.stop(STOP_D_ID);
 
   private final Operator OPERATOR = ENV_BUILDER.operator(OPERATOR_ID);
+  private final Operator OTHER_OPERATOR = ENV_BUILDER.operator(OTHER_OPERATOR_ID);
   private final Route ROUTE = ENV_BUILDER.route(ROUTE_ID, OPERATOR);
 
   private final TripInput TRIP_1_INPUT = TripInput.of(TRIP_1_ID)
@@ -108,6 +111,37 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     assertThat(env.raptorData().summarizePatterns()).containsExactly(
       "F:Pattern1[S]",
       "F:routeId::001:RT[A U]"
+    );
+  }
+
+  /**
+   * The added trip takes the ServiceJourney form of the EstimatedVehicleJourneyCode, while the added
+   * trip on service date is identified by the DatedServiceJourney form of the same code - that is
+   * the id {@code datedServiceJourney} queries look it up by.
+   */
+  @Test
+  void testAddJourneyIsIdentifiedByItsDatedServiceJourneyId() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = createValidAddedJourney(siri)
+      .withEstimatedVehicleJourneyCode("RUT:ServiceJourney:1234")
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    var transitService = env.transitService();
+    var tripOnServiceDate = transitService.getTripOnServiceDate(id("RUT:DatedServiceJourney:1234"));
+
+    assertNotNull(
+      tripOnServiceDate,
+      "The added trip on service date should be found by its DatedServiceJourney id"
+    );
+    assertTrue(tripOnServiceDate.isExtraJourney());
+    assertEquals(id("RUT:ServiceJourney:1234"), tripOnServiceDate.getTrip().getId());
+    assertNull(
+      transitService.getTripOnServiceDate(id("RUT:ServiceJourney:1234")),
+      "The ServiceJourney id identifies the trip, not the trip on service date"
     );
   }
 
@@ -310,6 +344,34 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     assertNotNull(
       env.transitService().getTrip(id(ADDED_TRIP_ID)),
       "An unmonitored but cancelled extra journey must still be added"
+    );
+  }
+
+  /**
+   * The DataFrameRef of the FramedVehicleJourneyRef dates the extra journey. A journey dated
+   * outside the feed's service period cannot run and must be rejected.
+   */
+  @Test
+  @UnifiedUpdaterOnly(
+    "The legacy implementation rejects the journey too, but classifies the rejection as UNKNOWN " +
+      "rather than OUTSIDE_SERVICE_PERIOD."
+  )
+  void testRejectExtraJourneyOutsideServicePeriod() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = createValidAddedJourney(siri)
+      .withFramedVehicleJourneyRef(builder ->
+        builder.withServiceDate(env.defaultServiceDate().plusYears(1))
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    var result = siri.applyEstimatedTimetable(updates);
+
+    assertFailure(UpdateErrorType.OUTSIDE_SERVICE_PERIOD, result);
+    assertNull(
+      env.transitService().getTrip(id(ADDED_TRIP_ID)),
+      "An extra journey dated outside the service period must not be added"
     );
   }
 
@@ -688,6 +750,67 @@ class ExtraJourneyTest implements RealtimeTestConstants {
   }
 
   @Test
+  void testAddJourneyOnExistingRouteIsOperatedByTheOperatorRef() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    // The line the journey runs on already exists and is operated by OPERATOR, while the journey
+    // itself states it is operated by someone else.
+    var updates = createValidAddedJourney(siri)
+      .withOperatorRef(OTHER_OPERATOR_ID)
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    Trip trip = env.transitService().getTrip(id(ADDED_TRIP_ID));
+    assertNotNull(trip);
+    assertEquals(
+      OTHER_OPERATOR,
+      trip.getOperator(),
+      "The new trip is operated by the operator its OperatorRef names, not by the operator of the line it runs on"
+    );
+  }
+
+  @Test
+  void testAddJourneyWithUnknownOperatorRefKeepsTheOperatorOfItsRoute() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = createValidAddedJourney(siri)
+      .withOperatorRef("noSuchOperator")
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    Trip trip = env.transitService().getTrip(id(ADDED_TRIP_ID));
+    assertNotNull(trip);
+    assertEquals(
+      OPERATOR,
+      trip.getOperator(),
+      "An operator the transit model does not know is dropped - the trip is then operated by the operator of the line it runs on"
+    );
+  }
+
+  @Test
+  void testAddJourneyDoesNotTakeItsShortNameFromThePublishedLineName() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = createValidAddedJourney(siri)
+      .withPublishedLineName("L1")
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    Trip trip = env.transitService().getTrip(id(ADDED_TRIP_ID));
+    assertNotNull(trip);
+    assertNull(
+      trip.getShortName(),
+      "PublishedLineName names the line the trip runs on, not the trip itself"
+    );
+  }
+
+  @Test
   void testAddJourneyWithNewRouteResolvesAgencyFromOperator() {
     var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
     var siri = SiriTestHelper.of(env);
@@ -734,6 +857,48 @@ class ExtraJourneyTest implements RealtimeTestConstants {
   }
 
   @Test
+  void testAddedBusReplacingRailIsItselfARailReplacementBus() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).addTrip(RAIL_TRIP_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = createValidAddedJourney(siri)
+      .withLineRef("busReplacementRoute")
+      .withExternalLineRef(RAIL_ROUTE_ID)
+      .withVehicleMode(VehicleModesEnumeration.BUS)
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    Trip trip = env.transitService().getTrip(id(ADDED_TRIP_ID));
+    assertNotNull(trip);
+    assertEquals(
+      SubMode.of("railReplacementBus"),
+      trip.getNetexSubMode(),
+      "The trip standing in for a rail service is classified as the replacement, not only its route"
+    );
+  }
+
+  /**
+   * SIRI states a mode but no submode, and only a rail replacement classifies an extra journey any
+   * further. A journey that stands in for nothing is left with the submode of the line it runs on.
+   */
+  @Test
+  void testAddJourneyOnABusLineGetsNoSubmodeOfItsOwn() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = createValidAddedJourney(siri)
+      .withVehicleMode(VehicleModesEnumeration.BUS)
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    Trip trip = env.transitService().getTrip(id(ADDED_TRIP_ID));
+    assertNotNull(trip);
+    assertEquals(ROUTE.getNetexSubmode(), trip.getNetexSubMode());
+  }
+
+  @Test
   void testAddJourneyRailReplacingRailHasReplacementRailSubmode() {
     var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).addTrip(RAIL_TRIP_INPUT).build();
     var siri = SiriTestHelper.of(env);
@@ -755,6 +920,47 @@ class ExtraJourneyTest implements RealtimeTestConstants {
       newRoute.getNetexSubmode(),
       "When an added rail trip is assigned to an existing rail route, the submode should be 'replacementRailService'"
     );
+  }
+
+  /**
+   * An extra journey announces a trip the schedule does not have, so one whose reference names an
+   * existing scheduled trip contradicts itself and is rejected, leaving the scheduled trip alone.
+   * This is the SIRI face of the same question as the GTFS-RT ADDED trip with an
+   * unknown-but-fuzzy-matchable id: what to do with an addition that identifies an existing trip.
+   */
+  @Test
+  @UnifiedUpdaterOnly(
+    "The legacy implementation applies the message as an in-place update of the scheduled trip " +
+      "and flips its real-time state to ADDED - the timetable shows 'A U' on the scheduled " +
+      "pattern, so a scheduled trip reports itself as an extra journey."
+  )
+  void testRejectExtraJourneyReusingAScheduledTripId() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withEstimatedVehicleJourneyCode(TRIP_1_ID)
+      .withIsExtraJourney(true)
+      .withOperatorRef(OPERATOR_ID)
+      .withLineRef(ROUTE_ID)
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_A)
+          .departAimedExpected("00:01", "00:02")
+          .call(STOP_B)
+          .arriveAimedExpected("00:03", "00:04")
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    var result = siri.applyEstimatedTimetable(updates);
+
+    assertFailure(UpdateErrorType.TRIP_ALREADY_EXISTS, result);
+    assertFalse(
+      env.tripData(TRIP_1_ID).tripTimes().hasAnyUpdates(),
+      "The scheduled trip the extra journey names must be left alone"
+    );
+    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1[S]");
   }
 
   private SiriEtBuilder createValidAddedJourney(SiriTestHelper siri) {

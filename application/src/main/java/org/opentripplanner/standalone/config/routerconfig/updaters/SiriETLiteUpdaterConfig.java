@@ -9,6 +9,7 @@ import org.opentripplanner.updater.trip.siri.updater.lite.SiriETLiteUpdaterParam
 public class SiriETLiteUpdaterConfig {
 
   public static SiriETLiteUpdaterParameters create(String configRef, NodeAdapter c) {
+    var adapterSelection = TripUpdateAdapterSelectionConfig.create(c);
     return new SiriETLiteUpdaterParameters(
       configRef,
       c.of("feedId").since(V2_7).summary("The ID of the feed to apply the updates to.").asString(),
@@ -33,7 +34,10 @@ public class SiriETLiteUpdaterConfig {
         .since(V2_7)
         .summary("If the fuzzy trip matcher should be used to match trips.")
         .asBoolean(false),
-      HttpHeadersConfig.headers(c, V2_7)
+      HttpHeadersConfig.headers(c, V2_7),
+      adapterSelection.useNewUpdaterImplementation(),
+      adapterSelection.shadowComparison(),
+      adapterSelection.shadowComparisonReportDirectory()
     );
   }
 }

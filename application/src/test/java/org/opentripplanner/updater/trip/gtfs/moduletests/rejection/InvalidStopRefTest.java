@@ -66,6 +66,33 @@ class InvalidStopRefTest implements RealtimeTestConstants {
   }
 
   /**
+   * A sibling quay of a scheduled stop is a different stop: a call at one identifies no call of the
+   * trip, even though the two share a station.
+   */
+  @Test
+  void stopIdOfASiblingQuayInTheSameStation() {
+    var stationBuilder = TransitTestEnvironment.of();
+    var scheduledQuay = stationBuilder.stopAtStation(STOP_A_ID, STATION_OMEGA_ID);
+    var siblingQuay = stationBuilder.stopAtStation(STOP_B_ID, STATION_OMEGA_ID);
+    var lastStop = stationBuilder.stop(STOP_C_ID);
+    var env = stationBuilder
+      .addTrip(
+        TripInput.of(TRIP_1_ID)
+          .addStop(scheduledQuay, "10:00", "10:00")
+          .addStop(lastStop, "10:10", "10:10")
+      )
+      .build();
+
+    var rt = GtfsRtTestHelper.of(env);
+    var update = rt
+      .tripUpdateScheduled(TRIP_1_ID)
+      .addStopTime(siblingQuay.getId().getId(), "10:05")
+      .build();
+
+    assertFailure(INVALID_STOP_REFERENCE, rt.applyTripUpdate(update));
+  }
+
+  /**
    * No stop id or stop sequence leads to a graceful failure.
    */
   @Test
