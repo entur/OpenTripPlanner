@@ -12,6 +12,7 @@ import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSucce
 import static org.opentripplanner.updater.trip.UpdateIncrementality.DIFFERENTIAL;
 
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
 import org.opentripplanner.transit.model.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model.TripInput;
@@ -144,6 +145,35 @@ class SkippedTest implements RealtimeTestConstants {
       "U | A [ND] 0:01 0:01:01 | B [C] 0:01:10 0:01:11 | C [ND] 0:01:20 0:01:21",
       env.tripData(tripId).showTimetable()
     );
+  }
+
+  /**
+   * GTFS-RT states the pick/drop it wants, so a SKIPPED stop is cancelled at both ends whatever the
+   * timetable said - including where boarding was not possible to begin with. This is the format
+   * difference to SIRI-ET, which only cancels what was routable, and it must not be levelled out.
+   */
+  @Test
+  void skippedStopCancelsAnAlreadyNonBoardingStop() {
+    var tripInput = TripInput.of(TRIP_2_ID)
+      .addStop(STOP_A, "0:01:00", "0:01:01")
+      .addStop(STOP_B, "0:01:10", "0:01:11", PickDrop.NONE, PickDrop.SCHEDULED)
+      .addStop(STOP_C, "0:01:20", "0:01:21");
+
+    var env = ENV_BUILDER.addTrip(tripInput).build();
+    var rt = GtfsRtTestHelper.of(env);
+
+    var tripUpdate = rt
+      .tripUpdateScheduled(TRIP_2_ID)
+      .addDelayedStopTime(0, 0)
+      .addSkippedStop(1)
+      .addDelayedStopTime(2, 90)
+      .build();
+
+    assertSuccess(rt.applyTripUpdate(tripUpdate));
+
+    var pattern = env.tripData(TRIP_2_ID).tripPattern();
+    assertEquals(PickDrop.CANCELLED, pattern.getBoardType(1));
+    assertEquals(PickDrop.CANCELLED, pattern.getAlightType(1));
   }
 
   private static void assertOriginalTripPatternIsDeleted(

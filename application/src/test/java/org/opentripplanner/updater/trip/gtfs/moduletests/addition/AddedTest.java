@@ -33,6 +33,9 @@ import org.opentripplanner.utils.time.TimeUtils;
 
 class AddedTest implements RealtimeTestConstants {
 
+  /** A second added trip, for the cases where one added trip cannot show the behaviour. */
+  private static final String SECOND_ADDED_TRIP_ID = "AddedTrip2";
+
   private final TransitTestEnvironmentBuilder envBuilder = TransitTestEnvironment.of();
   private final RegularStop STOP_A = envBuilder.stop(STOP_A_ID);
   private final RegularStop STOP_B = envBuilder.stop(STOP_B_ID);
@@ -150,6 +153,37 @@ class AddedTest implements RealtimeTestConstants {
     assertNotNull(env.transitService().getRoute(firstRoute.getId()));
   }
 
+  /**
+   * Added trips calling at the same sequence of stops run the same pattern, and GTFS-RT added trips
+   * carry no scheduled times of their own, so they share one real-time pattern. A corridor served by
+   * a fleet of replacement trips must produce one pattern, not one per trip.
+   */
+  @Test
+  void addedTripsCallingAtTheSameStopsShareOnePattern() {
+    var first = gtfsRt
+      .tripUpdate(ADDED_TRIP_ID, ADDED)
+      .addTripExtension()
+      .addStopTime(STOP_A_ID, "00:30")
+      .addStopTime(STOP_B_ID, "00:40")
+      .addStopTime(STOP_C_ID, "00:55")
+      .build();
+    var second = gtfsRt
+      .tripUpdate(SECOND_ADDED_TRIP_ID, ADDED)
+      .addTripExtension()
+      .addStopTime(STOP_A_ID, "01:30")
+      .addStopTime(STOP_B_ID, "01:40")
+      .addStopTime(STOP_C_ID, "01:55")
+      .build();
+
+    assertSuccess(gtfsRt.applyTripUpdates(List.of(first, second)));
+
+    assertSame(
+      assertAddedTrip(ADDED_TRIP_ID, env),
+      assertAddedTrip(SECOND_ADDED_TRIP_ID, env),
+      "added trips calling at the same stops should share one real-time pattern"
+    );
+  }
+
   @Test
   public void addedTripWithSkippedStop() {
     var tripUpdate = gtfsRt
@@ -175,6 +209,7 @@ class AddedTest implements RealtimeTestConstants {
     var tripTimes = env.tripData(ADDED_TRIP_ID).tripTimes();
     var trip = env.transitService().getTrip(id(ADDED_TRIP_ID));
     assertEquals(I18NString.of("A loop"), Objects.requireNonNull(trip).getHeadsign());
+    assertEquals("SW1234", trip.getShortName(), "trip_short_name names the added trip");
     assertEquals(I18NString.of("A loop"), tripTimes.getHeadsign(0));
     assertFalse(tripTimes.isCanceledStop(0));
     assertTrue(tripTimes.isCanceledStop(1));

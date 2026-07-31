@@ -23,7 +23,10 @@ public class GtfsRealtimeTripUpdateSourceTest {
         BackwardsDelayPropagationType.ALWAYS,
         "rt",
         ResourceLoader.of(this).url("septa.pbf").toString(),
-        HttpHeaders.empty()
+        HttpHeaders.empty(),
+        false,
+        false,
+        null
       )
     );
     var updates = source.getUpdates();

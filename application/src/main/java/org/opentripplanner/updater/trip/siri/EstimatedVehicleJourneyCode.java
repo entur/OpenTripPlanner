@@ -13,7 +13,7 @@ import java.util.Arrays;
  * {@code DatedServiceJourney} are normalized to the requested entity type; any other format is
  * returned unchanged.
  */
-class EstimatedVehicleJourneyCode {
+public class EstimatedVehicleJourneyCode {
 
   private static final String SERVICE_JOURNEY = "ServiceJourney";
   private static final String DATED_SERVICE_JOURNEY = "DatedServiceJourney";
@@ -21,7 +21,7 @@ class EstimatedVehicleJourneyCode {
   private final String code;
   private final String[] parts;
 
-  EstimatedVehicleJourneyCode(String code) {
+  public EstimatedVehicleJourneyCode(String code) {
     this.code = code;
     this.parts = code.split(":");
   }
@@ -30,7 +30,7 @@ class EstimatedVehicleJourneyCode {
    * This code viewed as a {@code ServiceJourney} id. A code in {@code DatedServiceJourney} form is
    * swapped to {@code ServiceJourney}.
    */
-  String asServiceJourneyId() {
+  public String asServiceJourneyId() {
     return normalizeEntityType(DATED_SERVICE_JOURNEY, SERVICE_JOURNEY);
   }
 
@@ -38,7 +38,7 @@ class EstimatedVehicleJourneyCode {
    * This code viewed as a {@code DatedServiceJourney} id. A code in {@code ServiceJourney} form is
    * swapped to {@code DatedServiceJourney}.
    */
-  String asDatedServiceJourneyId() {
+  public String asDatedServiceJourneyId() {
     return normalizeEntityType(SERVICE_JOURNEY, DATED_SERVICE_JOURNEY);
   }
 

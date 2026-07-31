@@ -141,7 +141,10 @@ class MultiFeedSiriETCarpoolingUpdaterTest {
       Duration.ofMinutes(15),
       false,
       HttpHeaders.empty(),
-      false
+      false,
+      false,
+      false,
+      null
     );
   }
 

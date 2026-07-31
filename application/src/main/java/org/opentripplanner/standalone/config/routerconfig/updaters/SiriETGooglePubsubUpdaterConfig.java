@@ -2,9 +2,11 @@ package org.opentripplanner.standalone.config.routerconfig.updaters;
 
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_1;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_7;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 import static org.opentripplanner.updater.trip.siri.updater.google.SiriETGooglePubsubUpdaterParameters.INITIAL_GET_DATA_TIMEOUT;
 import static org.opentripplanner.updater.trip.siri.updater.google.SiriETGooglePubsubUpdaterParameters.RECONNECT_PERIOD;
 
+import java.nio.file.Path;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
 import org.opentripplanner.updater.trip.siri.updater.google.SiriETGooglePubsubUpdaterParameters;
 
@@ -85,7 +87,35 @@ public class SiriETGooglePubsubUpdaterConfig {
         .of("producerMetrics")
         .since(V2_7)
         .summary("If failure, success, and warning metrics should be collected per producer.")
-        .asBoolean(false)
+        .asBoolean(false),
+      c
+        .of("useNewUpdaterImplementation")
+        .since(V2_9)
+        .summary("Use the new trip updater implementation.")
+        .description(
+          """
+          When enabled, uses the new modular trip updater implementation shared by
+          SIRI-ET and GTFS-RT. This is experimental and should be used with caution.
+          The default value is `false`, which uses the legacy implementation.
+          """
+        )
+        .asBoolean(false),
+      c
+        .of("shadowComparison")
+        .since(V2_9)
+        .summary("Run the legacy and unified adapters in parallel, comparing their outputs.")
+        .asBoolean(false),
+      optionalPath(
+        c
+          .of("shadowComparisonReportDirectory")
+          .since(V2_9)
+          .summary("Directory to write detailed shadow comparison mismatch reports to.")
+          .asString(null)
+      )
     );
+  }
+
+  private static Path optionalPath(String value) {
+    return value != null ? Path.of(value) : null;
   }
 }

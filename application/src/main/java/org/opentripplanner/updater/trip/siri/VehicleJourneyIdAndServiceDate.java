@@ -9,12 +9,12 @@ import uk.org.siri.siri21.FramedVehicleJourneyRefStructure;
 /**
  * A pair of vehicle journey id and service date used to uniquely identify a DatedVehicleJourney.
  */
-record VehicleJourneyIdAndServiceDate(
+public record VehicleJourneyIdAndServiceDate(
   @Nullable String vehicleJourneyId,
   @Nullable LocalDate serviceDate
 ) {
   @Nullable
-  static VehicleJourneyIdAndServiceDate of(@Nullable FramedVehicleJourneyRefStructure ref) {
+  public static VehicleJourneyIdAndServiceDate of(@Nullable FramedVehicleJourneyRefStructure ref) {
     if (ref == null) {
       return null;
     }

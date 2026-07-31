@@ -2,12 +2,14 @@ package org.opentripplanner.updater.trip.gtfs;
 
 import com.google.transit.realtime.GtfsRealtime;
 import com.google.transit.realtime.GtfsRealtime.TripUpdate.StopTimeUpdate;
+import com.google.transit.realtime.GtfsRealtime.VehicleDescriptor.WheelchairAccessible;
 import de.mfdz.MfdzRealtimeExtensions;
 import de.mfdz.MfdzRealtimeExtensions.StopTimePropertiesExtension.DropOffPickupType;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
 import javax.annotation.Nullable;
 import org.opentripplanner.updater.trip.gtfs.model.TripDescriptor;
 import org.opentripplanner.utils.time.ServiceDateUtils;
@@ -21,6 +23,14 @@ public class TripUpdateBuilder {
     StopTimeUpdate.ScheduleRelationship.SCHEDULED;
   private static final int NO_STOP_SEQUENCE = -989898;
   private static final int NO_DELAY = Integer.MIN_VALUE;
+
+  /**
+   * {@link TripDescriptor#GTFS_LOCAL_TIME_FORMATTER} accepts both of the forms GTFS-RT allows, which
+   * makes it a parser only: formatting with it writes both optional sections, one after the other.
+   */
+  private static final DateTimeFormatter GTFS_START_TIME_FORMATTER = DateTimeFormatter.ofPattern(
+    "HH:mm:ss"
+  );
   private final GtfsRealtime.TripDescriptor.Builder tripDescriptorBuilder;
   private final GtfsRealtime.TripUpdate.Builder tripUpdateBuilder;
   private final ZonedDateTime midnight;
@@ -95,6 +105,25 @@ public class TripUpdateBuilder {
     );
   }
 
+  /** A call identified both by its stop and by the stop sequence the static feed gave it. */
+  public TripUpdateBuilder addStopTime(String stopId, int stopSequence, String time) {
+    return addStopTime(
+      stopId,
+      time,
+      time,
+      stopSequence,
+      NO_DELAY,
+      NO_DELAY,
+      DEFAULT_SCHEDULE_RELATIONSHIP,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    );
+  }
+
   public TripUpdateBuilder addStopTime(String stopId, String time, String headsign) {
     return addStopTime(
       stopId,
@@ -140,6 +169,29 @@ public class TripUpdateBuilder {
       stopId,
       time,
       time,
+      NO_STOP_SEQUENCE,
+      NO_DELAY,
+      NO_DELAY,
+      DEFAULT_SCHEDULE_RELATIONSHIP,
+      null,
+      null,
+      null,
+      scheduledTime,
+      scheduledTime,
+      null
+    );
+  }
+
+  /**
+   * A call that reports only its scheduled time and no prediction at all. The specification allows
+   * this for the trips that bring their own schedule with them - NEW, REPLACEMENT and DUPLICATED -
+   * since for those the feed is the only source of the scheduled times.
+   */
+  public TripUpdateBuilder addStopTimeWithOnlyScheduled(String stopId, String scheduledTime) {
+    return addStopTime(
+      stopId,
+      null,
+      null,
       NO_STOP_SEQUENCE,
       NO_DELAY,
       NO_DELAY,
@@ -372,6 +424,29 @@ public class TripUpdateBuilder {
     );
   }
 
+  /**
+   * A call that identifies itself by stop id rather than by {@code stop_sequence}, and assigns
+   * another stop in place of the scheduled one. Both are needed to tell the two apart: the stop id
+   * says which call this is, the assigned stop id says where the vehicle will actually go.
+   */
+  public TripUpdateBuilder addAssignedStopTime(String stopId, String time, String assignedStopId) {
+    return addStopTime(
+      stopId,
+      time,
+      time,
+      NO_STOP_SEQUENCE,
+      NO_DELAY,
+      NO_DELAY,
+      StopTimeUpdate.ScheduleRelationship.SCHEDULED,
+      null,
+      null,
+      null,
+      null,
+      null,
+      assignedStopId
+    );
+  }
+
   public TripUpdateBuilder addAssignedStopTime(
     int stopSequence,
     String time,
@@ -412,13 +487,31 @@ public class TripUpdateBuilder {
     return this.withStartDate(ServiceDateUtils.asCompactString(startDate));
   }
 
+  /**
+   * Drop the {@code start_date} the builder sets by default, as a feed that leaves the field out
+   * does. The update is then applied on whatever date the implementation guesses.
+   */
+  public TripUpdateBuilder withoutStartDate() {
+    tripDescriptorBuilder.clearStartDate();
+    return this;
+  }
+
   public TripUpdateBuilder withRouteId(String routeId) {
     tripDescriptorBuilder.setRouteId(routeId);
     return this;
   }
 
   public TripUpdateBuilder withStartTime(LocalTime time) {
-    tripDescriptorBuilder.setStartTime(time.format(TripDescriptor.GTFS_LOCAL_TIME_FORMATTER));
+    tripDescriptorBuilder.setStartTime(time.format(GTFS_START_TIME_FORMATTER));
+    return this;
+  }
+
+  /**
+   * The GTFS {@code direction_id} of the trip: 0 for outbound, 1 for inbound. Left out by default,
+   * as feeds are free to omit it.
+   */
+  public TripUpdateBuilder withDirectionId(int directionId) {
+    tripDescriptorBuilder.setDirectionId(directionId);
     return this;
   }
 
@@ -537,10 +630,30 @@ public class TripUpdateBuilder {
     return this;
   }
 
-  public TripUpdateBuilder withVehicleId(String vehicleId) {
-    tripUpdateBuilder.setVehicle(
-      GtfsRealtime.VehicleDescriptor.newBuilder().setId(vehicleId).build()
+  public TripUpdateBuilder withTripHeadsign(String tripHeadsign) {
+    tripUpdateBuilder.setTripProperties(
+      tripUpdateBuilder.getTripProperties().toBuilder().setTripHeadsign(tripHeadsign).build()
     );
     return this;
+  }
+
+  public TripUpdateBuilder withVehicleId(String vehicleId) {
+    tripUpdateBuilder.setVehicle(vehicleDescriptor().setId(vehicleId).build());
+    return this;
+  }
+
+  public TripUpdateBuilder withWheelchairAccessible(WheelchairAccessible wheelchairAccessible) {
+    tripUpdateBuilder.setVehicle(
+      vehicleDescriptor().setWheelchairAccessible(wheelchairAccessible).build()
+    );
+    return this;
+  }
+
+  /**
+   * The vehicle descriptor built so far, so that the vehicle attributes can be set independently
+   * of each other and in any order.
+   */
+  private GtfsRealtime.VehicleDescriptor.Builder vehicleDescriptor() {
+    return tripUpdateBuilder.getVehicle().toBuilder();
   }
 }

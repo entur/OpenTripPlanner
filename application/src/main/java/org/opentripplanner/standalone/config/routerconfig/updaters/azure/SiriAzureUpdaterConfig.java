@@ -3,7 +3,9 @@ package org.opentripplanner.standalone.config.routerconfig.updaters.azure;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.NA;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_2;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_5;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 
+import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.time.Period;
@@ -87,6 +89,36 @@ public abstract class SiriAzureUpdaterConfig {
       parameters.setTimeout(
         history.of("timeout").since(NA).summary("Timeout in milliseconds").asInt(300000)
       );
+    }
+
+    parameters.setUseNewUpdaterImplementation(
+      c
+        .of("useNewUpdaterImplementation")
+        .since(V2_9)
+        .summary("Use the new trip updater implementation.")
+        .description(
+          """
+          When enabled, uses the new modular trip updater implementation shared by
+          SIRI-ET and GTFS-RT. This is experimental and should be used with caution.
+          The default value is `false`, which uses the legacy implementation.
+          """
+        )
+        .asBoolean(false)
+    );
+    parameters.setShadowComparison(
+      c
+        .of("shadowComparison")
+        .since(V2_9)
+        .summary("Run the legacy and unified adapters in parallel, comparing their outputs.")
+        .asBoolean(false)
+    );
+    String reportDir = c
+      .of("shadowComparisonReportDirectory")
+      .since(V2_9)
+      .summary("Directory to write detailed shadow comparison mismatch reports to.")
+      .asString(null);
+    if (reportDir != null) {
+      parameters.setShadowComparisonReportDirectory(Path.of(reportDir));
     }
   }
 

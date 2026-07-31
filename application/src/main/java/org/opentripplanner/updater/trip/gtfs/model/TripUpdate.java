@@ -75,6 +75,10 @@ public final class TripUpdate {
       );
   }
 
+  /**
+   * The service date to apply this update on: the one the feed reported, or the current date as a
+   * guess when it reported none.
+   */
   public LocalDate startDate() {
     if (startDate != null) {
       return startDate;
@@ -83,6 +87,18 @@ public final class TripUpdate {
     // starts for example at 40:00, yesterday would probably be a better guess.
     startDate = tripDescriptor.startDate().orElse(localDateNow.get());
     return startDate;
+  }
+
+  /**
+   * The service date the feed reported, empty if it left {@code start_date} out.
+   * <p>
+   * Not the same question as {@link #startDate()}, which answers with a guess rather than nothing so
+   * that the update can be applied at all. Anything that identifies a trip <em>by</em> its date -
+   * fuzzy matching - has to ask this one instead: a guessed date would identify whichever trip
+   * happens to run today.
+   */
+  public Optional<LocalDate> reportedStartDate() {
+    return tripDescriptor.startDate();
   }
 
   public ScheduleRelationship scheduleRelationship() {

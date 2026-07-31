@@ -3,6 +3,7 @@ package org.opentripplanner.updater.trip.siri.moduletests.cancellation;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
@@ -13,6 +14,7 @@ import org.opentripplanner.transit.model.TripInput;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.site.RegularStop;
+import org.opentripplanner.transit.model.timetable.RealTimeTripTimes;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
 import org.opentripplanner.updater.trip.siri.SiriEtBuilder;
 import org.opentripplanner.updater.trip.siri.SiriTestHelper;
@@ -81,6 +83,47 @@ class CancellationTest implements RealtimeTestConstants {
 
     assertSuccess(result);
     assertTrue(env.tripData(TRIP_1_ID).tripTimes().isCanceled());
+  }
+
+  /**
+   * A cancellation message still states the vehicle that was to serve the journey, and the
+   * cancelled trip keeps it.
+   */
+  @Test
+  void vehicleRefIsKeptOnCancelledTrip() {
+    var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withDatedVehicleJourneyRef(TRIP_1_ID)
+      .withCancellation(true)
+      .withVehicleRef("BUS-42")
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    var tripTimes = assertInstanceOf(RealTimeTripTimes.class, env.tripData(TRIP_1_ID).tripTimes());
+    assertTrue(tripTimes.isCanceled());
+    assertThat(tripTimes.getVehicleId()).hasValue("BUS-42");
+  }
+
+  @Test
+  void vehicleRefIsAbsentOnCancelledTripWhenNotStated() {
+    var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withDatedVehicleJourneyRef(TRIP_1_ID)
+      .withCancellation(true)
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    var tripTimes = assertInstanceOf(RealTimeTripTimes.class, env.tripData(TRIP_1_ID).tripTimes());
+    assertTrue(tripTimes.isCanceled());
+    assertThat(tripTimes.getVehicleId()).isEmpty();
   }
 
   /**
