@@ -1,5 +1,6 @@
 package org.opentripplanner.updater.trip.siri.updater.google;
 
+import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Objects;
 import javax.annotation.Nullable;
@@ -17,7 +18,9 @@ public record SiriETGooglePubsubUpdaterParameters(
   Duration initialGetDataTimeout,
   boolean fuzzyTripMatching,
   boolean producerMetrics,
-  boolean useNewUpdaterImplementation
+  boolean useNewUpdaterImplementation,
+  boolean shadowComparison,
+  @Nullable Path shadowComparisonReportDirectory
 ) implements UrlUpdaterParameters {
   public static Duration RECONNECT_PERIOD = Duration.ofSeconds(30);
   public static Duration INITIAL_GET_DATA_TIMEOUT = Duration.ofSeconds(30);

@@ -8,8 +8,9 @@ import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
  * {@link #forUpdate(MutableTimetableSnapshot)}.
  * <p>
  * This abstraction allows switching between the legacy implementation
- * ({@link SiriRealTimeTripUpdateAdapter}) and the new format-independent implementation
- * ({@link SiriNewTripUpdateAdapter}).
+ * ({@link SiriRealTimeTripUpdateAdapter}), the new format-independent implementation
+ * ({@link SiriNewTripUpdateAdapter}) and the shadow-comparison mode
+ * ({@link ShadowSiriTripUpdateAdapter}).
  */
 public interface SiriTripUpdateAdapter {
   /**

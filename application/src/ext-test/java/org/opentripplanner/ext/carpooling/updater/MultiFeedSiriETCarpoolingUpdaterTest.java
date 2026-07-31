@@ -133,7 +133,9 @@ class MultiFeedSiriETCarpoolingUpdaterTest {
       false,
       HttpHeaders.empty(),
       false,
-      false
+      false,
+      false,
+      null
     );
   }
 

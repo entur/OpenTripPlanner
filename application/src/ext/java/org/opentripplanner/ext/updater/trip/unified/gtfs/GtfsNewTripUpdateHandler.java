@@ -11,6 +11,7 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.updater.trip.unified.TripUpdateDispatcher;
+import org.opentripplanner.ext.updater.trip.unified.model.change.TripUpdateResult;
 import org.opentripplanner.ext.updater.trip.unified.model.command.DuplicateTrip;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
@@ -117,6 +118,15 @@ class GtfsNewTripUpdateHandler implements GtfsTripUpdateHandler {
     return TripUpdateApplier.apply(buffer, realTimeTripUpdate).addWarnings(
       tripUpdateResult.warnings()
     );
+  }
+
+  /**
+   * Parse the GTFS-RT message and execute the resulting command, without writing
+   * the result to the snapshot buffer. Used by the shadow-comparison mode to dry-run the unified
+   * path.
+   */
+  TripUpdateResult parseAndExecute(GtfsRealtime.TripUpdate update) {
+    return dispatcher.execute(parser.parse(update));
   }
 
   /**
