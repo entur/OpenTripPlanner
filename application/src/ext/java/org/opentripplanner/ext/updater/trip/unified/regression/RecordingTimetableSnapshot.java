@@ -2,7 +2,9 @@ package org.opentripplanner.ext.updater.trip.unified.regression;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
@@ -18,14 +20,27 @@ import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.transit.repository.ReadOnlyTimetableSnapshot;
 
 /**
- * Forwarding decorator for a {@link MutableTimetableSnapshot} that records the last
- * {@link RealTimeTripUpdate} passed to {@link #update}. The shadow-comparison adapters wrap the
- * buffer of the primary (legacy) handler with this decorator to capture the record the primary
- * writes for each trip, so it can be compared with the record produced by the unified path.
+ * Forwarding decorator for a {@link MutableTimetableSnapshot} that adapts a batch-oriented handler
+ * to the per-trip driving the shadow comparison needs. The shadow-comparison adapters wrap the
+ * buffer of the primary (legacy) handler with this decorator, which
+ * <ol>
+ *   <li>records the last {@link RealTimeTripUpdate} passed to {@link #update}, so the record the
+ *       primary writes for each trip can be compared with the one the unified path produces, and</li>
+ *   <li>collapses the batch-level {@link #clear} to the first call of each batch.</li>
+ * </ol>
+ * The second point is what lets the shadow adapters pass the caller's real
+ * {@link org.opentripplanner.updater.trip.UpdateIncrementality} into the primary handler. The
+ * primary is invoked once per trip, so on a full-dataset batch it asks to clear the buffer before
+ * every trip, which would discard everything applied earlier in the same batch. Ignoring all but
+ * the first clear makes the repeated request idempotent, so the primary sees the incrementality
+ * production gives it while the buffer is still cleared exactly once per batch.
  */
 public class RecordingTimetableSnapshot implements MutableTimetableSnapshot {
 
   private final MutableTimetableSnapshot delegate;
+
+  /** The feeds already cleared in the current batch. */
+  private final Set<String> clearedFeeds = new HashSet<>();
 
   @Nullable
   private RealTimeTripUpdate lastUpdate;
@@ -47,6 +62,14 @@ public class RecordingTimetableSnapshot implements MutableTimetableSnapshot {
     this.lastUpdate = null;
   }
 
+  /**
+   * Start a new batch, re-arming the once-per-batch {@link #clear}. Called by the shadow adapters
+   * before they start looping over the trips of a message.
+   */
+  public void startBatch() {
+    clearedFeeds.clear();
+  }
+
   @Override
   public void update(RealTimeTripUpdate realTimeTripUpdate) {
     this.lastUpdate = realTimeTripUpdate;
@@ -58,9 +81,15 @@ public class RecordingTimetableSnapshot implements MutableTimetableSnapshot {
     return delegate.createReadOnlySnapshot();
   }
 
+  /**
+   * Clear the feed, but only the first time it is asked for in the current batch. See the class
+   * javadoc for why the repeated requests are ignored rather than passed on.
+   */
   @Override
   public void clear(String feedId) {
-    delegate.clear(feedId);
+    if (clearedFeeds.add(feedId)) {
+      delegate.clear(feedId);
+    }
   }
 
   @Override

@@ -20,6 +20,11 @@ import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagat
  * The primary handler writes through a {@link RecordingTimetableSnapshot}, which captures the
  * record it produces for each trip so it can be compared with the record produced by the unified
  * path.
+ * <p>
+ * Turning shadow comparison on must not change what ends up in the timetable. The primary handler is
+ * driven one trip at a time, but it is given the caller's own incrementality — which decides how it
+ * treats CANCELED and DUPLICATED trips — and the recording buffer collapses the resulting repeated
+ * requests to clear the buffer down to one per batch.
  */
 public class ShadowGtfsTripUpdateAdapter implements GtfsTripUpdateAdapter {
 

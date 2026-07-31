@@ -18,6 +18,11 @@ import org.opentripplanner.updater.trip.siri.SiriTripUpdateHandler;
  * The primary handler writes through a {@link RecordingTimetableSnapshot}, which captures the
  * record it produces for each trip so it can be compared with the record produced by the unified
  * path.
+ * <p>
+ * Turning shadow comparison on must not change what ends up in the timetable. The primary handler is
+ * driven one journey at a time, but it is given the caller's own incrementality rather than a
+ * substitute, and the recording buffer collapses the resulting repeated requests to clear the buffer
+ * down to one per batch.
  */
 public class ShadowSiriTripUpdateAdapter implements SiriTripUpdateAdapter {
 

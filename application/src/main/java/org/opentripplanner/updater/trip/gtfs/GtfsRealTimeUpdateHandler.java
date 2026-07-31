@@ -12,7 +12,6 @@ import javax.annotation.Nullable;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
-import org.opentripplanner.updater.spi.ResultLogger;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateResult;
@@ -107,12 +106,7 @@ public class GtfsRealTimeUpdateHandler implements GtfsTripUpdateHandler {
       }
     }
 
-    var updateResult = UpdateResult.of(successes, errors);
-
-    if (updateIncrementality == FULL_DATASET) {
-      ResultLogger.logUpdateResult(feedId, "gtfs-rt-trip-updates", updateResult);
-    }
-    return updateResult;
+    return UpdateResult.of(successes, errors);
   }
 
   private UpdateSuccess applyUpdate(

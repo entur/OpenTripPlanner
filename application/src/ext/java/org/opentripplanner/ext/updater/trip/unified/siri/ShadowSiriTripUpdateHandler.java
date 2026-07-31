@@ -1,6 +1,5 @@
 package org.opentripplanner.ext.updater.trip.unified.siri;
 
-import static org.opentripplanner.updater.trip.UpdateIncrementality.DIFFERENTIAL;
 import static org.opentripplanner.updater.trip.UpdateIncrementality.FULL_DATASET;
 
 import jakarta.xml.bind.JAXBContext;
@@ -16,6 +15,7 @@ import org.opentripplanner.ext.updater.trip.unified.regression.AdapterOutcome;
 import org.opentripplanner.ext.updater.trip.unified.regression.RealTimeTripUpdateComparator;
 import org.opentripplanner.ext.updater.trip.unified.regression.RecordingTimetableSnapshot;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
@@ -76,7 +76,10 @@ class ShadowSiriTripUpdateHandler implements SiriTripUpdateHandler {
       return UpdateResult.empty();
     }
 
-    // Handle FULL_DATASET buffer clear once before the loop
+    // Clear the buffer once, before the first journey, so that the primary and the shadow path both
+    // start from the same state. The primary asks to clear again on every per-journey invocation
+    // below; the recording buffer ignores those repeats for the rest of this batch.
+    recordingBuffer.startBatch();
     if (incrementality == FULL_DATASET) {
       recordingBuffer.clear(feedId);
     }
@@ -90,7 +93,15 @@ class ShadowSiriTripUpdateHandler implements SiriTripUpdateHandler {
         var journeys = versionFrame.getEstimatedVehicleJourneies();
         LOG.debug("Shadow: handling {} EstimatedVehicleJourneys.", journeys.size());
         for (EstimatedVehicleJourney journey : journeys) {
-          processOneTrip(journey, entityResolver, feedId, comparator, successes, errors);
+          processOneTrip(
+            journey,
+            entityResolver,
+            incrementality,
+            feedId,
+            comparator,
+            successes,
+            errors
+          );
         }
       }
     }
@@ -104,6 +115,7 @@ class ShadowSiriTripUpdateHandler implements SiriTripUpdateHandler {
   private void processOneTrip(
     EstimatedVehicleJourney journey,
     EntityResolver entityResolver,
+    UpdateIncrementality incrementality,
     String feedId,
     RealTimeTripUpdateComparator comparator,
     List<UpdateSuccess> successes,
@@ -125,14 +137,16 @@ class ShadowSiriTripUpdateHandler implements SiriTripUpdateHandler {
       LOG.warn("Shadow adapter error for trip {}", tripId, e);
     }
 
-    // 2. PRIMARY SECOND: call through the primary handler per-trip. The recording buffer
-    // captures the RealTimeTripUpdate the primary produces.
+    // 2. PRIMARY SECOND: call through the primary handler per-journey, with the incrementality the
+    // caller gave us rather than a substitute, so that the comparison runs against the behaviour
+    // production has. The recording buffer captures the RealTimeTripUpdate the primary produces
+    // and ignores the repeated per-journey requests to clear the buffer.
     recordingBuffer.clearLastUpdate();
     var singleDelivery = wrapInDelivery(journey);
     var primaryResult = primaryHandler.applyEstimatedTimetable(
       entityResolver,
       feedId,
-      DIFFERENTIAL,
+      incrementality,
       singleDelivery
     );
     var primaryOutcome = AdapterOutcome.ofPrimary(primaryResult, recordingBuffer.lastUpdate());
@@ -140,13 +154,15 @@ class ShadowSiriTripUpdateHandler implements SiriTripUpdateHandler {
     // 3. COMPARE
     comparator.compare(primaryOutcome, shadowOutcome, tripId, () -> serializeSiriJourney(journey));
 
-    // Return the primary result (single trip -> single result)
-    if (primaryResult.failed() > 0 && !primaryResult.errors().isEmpty()) {
+    // Forward the primary result (single journey -> single result)
+    if (!primaryResult.errors().isEmpty()) {
       errors.add(primaryResult.errors().getFirst());
     } else if (!primaryResult.successes().isEmpty()) {
       successes.add(primaryResult.successes().getFirst());
     } else {
-      successes.add(UpdateSuccess.noWarnings());
+      // The primary reported neither a success nor an error. Counting that as a success would
+      // inflate the success rate for a journey nothing was written for.
+      errors.add(new UpdateError(null, UpdateErrorType.UNKNOWN, null, null, tripId));
     }
   }
 

@@ -1,6 +1,5 @@
 package org.opentripplanner.ext.updater.trip.unified.gtfs;
 
-import static org.opentripplanner.updater.trip.UpdateIncrementality.DIFFERENTIAL;
 import static org.opentripplanner.updater.trip.UpdateIncrementality.FULL_DATASET;
 
 import com.google.transit.realtime.GtfsRealtime;
@@ -12,6 +11,7 @@ import org.opentripplanner.ext.updater.trip.unified.regression.AdapterOutcome;
 import org.opentripplanner.ext.updater.trip.unified.regression.RealTimeTripUpdateComparator;
 import org.opentripplanner.ext.updater.trip.unified.regression.RecordingTimetableSnapshot;
 import org.opentripplanner.updater.spi.UpdateError;
+import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateResult;
 import org.opentripplanner.updater.spi.UpdateSuccess;
@@ -69,7 +69,10 @@ class ShadowGtfsTripUpdateHandler implements GtfsTripUpdateHandler {
       return UpdateResult.empty();
     }
 
-    // Handle FULL_DATASET buffer clear once before the loop
+    // Clear the buffer once, before the first trip, so that the primary and the shadow path both
+    // start from the same state. The primary asks to clear again on every per-trip invocation
+    // below; the recording buffer ignores those repeats for the rest of this batch.
+    recordingBuffer.startBatch();
     if (updateIncrementality == FULL_DATASET) {
       recordingBuffer.clear(feedId);
     }
@@ -84,6 +87,7 @@ class ShadowGtfsTripUpdateHandler implements GtfsTripUpdateHandler {
         fuzzyTripMatcher,
         forwardsDelayPropagationType,
         backwardsDelayPropagationType,
+        updateIncrementality,
         feedId,
         comparator,
         successes,
@@ -102,6 +106,7 @@ class ShadowGtfsTripUpdateHandler implements GtfsTripUpdateHandler {
     @Nullable GtfsRealtimeFuzzyTripMatcher fuzzyTripMatcher,
     ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType,
+    UpdateIncrementality updateIncrementality,
     String feedId,
     RealTimeTripUpdateComparator comparator,
     List<UpdateSuccess> successes,
@@ -123,14 +128,16 @@ class ShadowGtfsTripUpdateHandler implements GtfsTripUpdateHandler {
       LOG.warn("Shadow adapter error for trip {}", tripId, e);
     }
 
-    // 2. PRIMARY SECOND: call through the primary handler per-trip. The recording buffer
-    // captures the RealTimeTripUpdate the primary produces.
+    // 2. PRIMARY SECOND: call through the primary handler per-trip, with the incrementality the
+    // caller gave us — it decides how the primary treats CANCELED and DUPLICATED trips, so
+    // substituting a different value here would compare against a behaviour production never
+    // runs. The recording buffer captures the RealTimeTripUpdate the primary produces.
     recordingBuffer.clearLastUpdate();
     var primaryResult = primaryHandler.applyTripUpdates(
       fuzzyTripMatcher,
       forwardsDelayPropagationType,
       backwardsDelayPropagationType,
-      DIFFERENTIAL,
+      updateIncrementality,
       List.of(update),
       feedId
     );
@@ -139,13 +146,15 @@ class ShadowGtfsTripUpdateHandler implements GtfsTripUpdateHandler {
     // 3. COMPARE
     comparator.compare(primaryOutcome, shadowOutcome, tripId, update::toString);
 
-    // Return the primary result (single trip -> single result)
-    if (primaryResult.failed() > 0 && !primaryResult.errors().isEmpty()) {
+    // Forward the primary result (single trip -> single result)
+    if (!primaryResult.errors().isEmpty()) {
       errors.add(primaryResult.errors().getFirst());
     } else if (!primaryResult.successes().isEmpty()) {
       successes.add(primaryResult.successes().getFirst());
     } else {
-      successes.add(UpdateSuccess.noWarnings());
+      // The primary reported neither a success nor an error. Counting that as a success would
+      // inflate the success rate for a trip nothing was written for.
+      errors.add(new UpdateError(null, UpdateErrorType.UNKNOWN, null, null, tripId));
     }
   }
 }
