@@ -13,6 +13,7 @@ import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
+import org.opentripplanner.updater.trip.UnifiedUpdaterOnly;
 import org.opentripplanner.updater.trip.siri.SiriTestHelper;
 import uk.org.siri.siri21.ArrivalBoardingActivityEnumeration;
 import uk.org.siri.siri21.VehicleModesEnumeration;
@@ -45,7 +46,7 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
           .arriveAimedExpected("00:00:20", "00:00:25")
       )
       .buildEstimatedTimetableDeliveries();
-    var result = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
+    var result = siri.applyEstimatedTimetable(updates);
     assertSuccess(result);
     assertEquals(
       "U | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",
@@ -76,7 +77,7 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
       )
       .buildEstimatedTimetableDeliveries();
 
-    var result = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
+    var result = siri.applyEstimatedTimetable(updates);
     assertEquals(0, result.successful(), "Should fail gracefully");
     assertFailure(UpdateErrorType.INVALID_DEPARTURE_TIME, result);
   }
@@ -122,7 +123,7 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
       )
       .buildEstimatedTimetableDeliveries();
 
-    var result = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
+    var result = siri.applyEstimatedTimetable(updates);
     assertSuccess(result);
     assertEquals(
       "U | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",
@@ -162,7 +163,7 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
       )
       .buildEstimatedTimetableDeliveries();
 
-    var result = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
+    var result = siri.applyEstimatedTimetable(updates);
     assertSuccess(result);
     assertEquals(
       "U | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",
@@ -192,7 +193,7 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
           .arriveAimedExpected("00:00:20", "00:00:25")
       )
       .buildEstimatedTimetableDeliveries();
-    var result = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
+    var result = siri.applyEstimatedTimetable(updates);
     assertSuccess(result);
     assertEquals(
       "U | A [R] 0:00:15 0:00:15 | B 0:00:25 0:00:25",
@@ -210,6 +211,10 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
    * Both updates → MODIFIED (pattern changed relative to scheduled pattern).
    */
   @Test
+  @UnifiedUpdaterOnly(
+    "The legacy implementation moves the trip onto the new pattern on the first update, but " +
+      "reverts it to the scheduled pattern when the same update is reprocessed."
+  )
   void reprocessedFuzzyMatchedTripWithRoutabilityChangeShouldRemainModified() {
     var railRoute = ENV_BUILDER.route("RailRoute", r -> r.withMode(TransitMode.RAIL));
 
@@ -247,7 +252,7 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
       .buildEstimatedTimetableDeliveries();
 
     // First update: should produce P U (pattern changed due to routability change)
-    var result1 = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
+    var result1 = siri.applyEstimatedTimetable(updates);
     assertSuccess(result1);
     assertEquals(
       "P U | A 0:00:10 0:00:15 | B 0:00:25 0:00:25",
@@ -255,7 +260,7 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
     );
 
     // Second update (re-processing): should still be P U (pattern differs from scheduled)
-    var result2 = siri.applyEstimatedTimetableWithFuzzyMatcher(updates);
+    var result2 = siri.applyEstimatedTimetable(updates);
     assertSuccess(result2);
     assertEquals(
       "P U | A 0:00:10 0:00:15 | B 0:00:25 0:00:25",

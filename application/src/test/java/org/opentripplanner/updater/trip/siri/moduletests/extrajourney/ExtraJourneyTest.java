@@ -27,6 +27,7 @@ import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
+import org.opentripplanner.updater.trip.UnifiedUpdaterOnly;
 import org.opentripplanner.updater.trip.siri.SiriEtBuilder;
 import org.opentripplanner.updater.trip.siri.SiriTestHelper;
 import uk.org.siri.siri21.OccupancyEnumeration;
@@ -275,6 +276,10 @@ class ExtraJourneyTest implements RealtimeTestConstants {
    * outside the feed's service period cannot run and must be rejected.
    */
   @Test
+  @UnifiedUpdaterOnly(
+    "The legacy implementation rejects the journey too, but classifies the rejection as UNKNOWN " +
+      "rather than OUTSIDE_SERVICE_PERIOD."
+  )
   void testRejectExtraJourneyOutsideServicePeriod() {
     var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
     var siri = SiriTestHelper.of(env);

@@ -10,10 +10,15 @@ import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
 import org.opentripplanner.ext.updater.trip.unified.gtfs.GtfsNewTripUpdateAdapter;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
 import org.opentripplanner.updater.spi.UpdateResult;
+import org.opentripplanner.updater.trip.TripUpdateAdapterUnderTest;
 import org.opentripplanner.updater.trip.UpdateIncrementality;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 
+/**
+ * Test helper for applying GTFS-RT trip updates. Which implementation the update goes through is
+ * decided by {@link TripUpdateAdapterUnderTest}, so the same tests cover both.
+ */
 public class GtfsRtTestHelper {
 
   private final TransitTestEnvironment transitTestEnvironment;
@@ -21,14 +26,25 @@ public class GtfsRtTestHelper {
 
   GtfsRtTestHelper(TransitTestEnvironment transitTestEnvironment) {
     this.transitTestEnvironment = transitTestEnvironment;
-    this.gtfsAdapter = new GtfsNewTripUpdateAdapter(
-      transitTestEnvironment.timetableRepository(),
-      DeduplicatorService.NOOP,
-      ForwardsDelayPropagationType.DEFAULT,
-      BackwardsDelayPropagationType.REQUIRED_NO_DATA,
-      false,
-      transitTestEnvironment.feedId()
-    );
+    this.gtfsAdapter = createAdapter(transitTestEnvironment);
+  }
+
+  private static GtfsTripUpdateAdapter createAdapter(TransitTestEnvironment env) {
+    return switch (TripUpdateAdapterUnderTest.current()) {
+      case LEGACY -> new GtfsRealTimeTripUpdateAdapter(
+        env.timetableRepository(),
+        DeduplicatorService.NOOP,
+        env::defaultServiceDate
+      );
+      case UNIFIED -> new GtfsNewTripUpdateAdapter(
+        env.timetableRepository(),
+        DeduplicatorService.NOOP,
+        ForwardsDelayPropagationType.DEFAULT,
+        BackwardsDelayPropagationType.REQUIRED_NO_DATA,
+        false,
+        env.feedId()
+      );
+    };
   }
 
   public static GtfsRtTestHelper of(TransitTestEnvironment transitTestEnvironment) {

@@ -9,11 +9,13 @@ import org.opentripplanner.ext.updater.trip.unified.siri.SiriNewTripUpdateAdapte
 import org.opentripplanner.transit.model.TransitTestEnvironment;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.updater.spi.UpdateResult;
+import org.opentripplanner.updater.trip.TripUpdateAdapterUnderTest;
 import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 
 /**
- * Test helper for applying SIRI-ET estimated timetables through the unified (new) trip update
- * adapter. Fuzzy trip matching is selected when the helper is created, with
+ * Test helper for applying SIRI-ET estimated timetables. Which implementation the update goes
+ * through is decided by {@link TripUpdateAdapterUnderTest}, so the same tests cover both. Fuzzy
+ * trip matching is selected when the helper is created, with
  * {@link #ofFuzzyMatching(TransitTestEnvironment)}.
  */
 public class SiriTestHelper {
@@ -23,12 +25,27 @@ public class SiriTestHelper {
 
   SiriTestHelper(TransitTestEnvironment transitTestEnvironment, boolean fuzzyTripMatching) {
     this.transitTestEnvironment = transitTestEnvironment;
-    this.siriAdapter = new SiriNewTripUpdateAdapter(
-      transitTestEnvironment.timetableRepository(),
-      DeduplicatorService.NOOP,
-      fuzzyTripMatching,
-      transitTestEnvironment.feedId()
-    );
+    this.siriAdapter = createAdapter(transitTestEnvironment, fuzzyTripMatching);
+  }
+
+  private static SiriTripUpdateAdapter createAdapter(
+    TransitTestEnvironment env,
+    boolean fuzzyTripMatching
+  ) {
+    var repository = env.timetableRepository();
+    return switch (TripUpdateAdapterUnderTest.current()) {
+      case LEGACY -> new SiriRealTimeTripUpdateAdapter(
+        repository,
+        DeduplicatorService.NOOP,
+        fuzzyTripMatching ? new SiriFuzzyTripMatcherCache(repository) : null
+      );
+      case UNIFIED -> new SiriNewTripUpdateAdapter(
+        repository,
+        DeduplicatorService.NOOP,
+        fuzzyTripMatching,
+        env.feedId()
+      );
+    };
   }
 
   public static SiriTestHelper of(TransitTestEnvironment transitTestEnvironment) {
@@ -41,12 +58,6 @@ public class SiriTestHelper {
 
   public SiriEtBuilder etBuilder() {
     return new SiriEtBuilder(transitTestEnvironment.localTimeParser());
-  }
-
-  public UpdateResult applyEstimatedTimetableWithFuzzyMatcher(
-    List<EstimatedTimetableDeliveryStructure> updates
-  ) {
-    return applyUpdates(updates);
   }
 
   public UpdateResult applyEstimatedTimetable(List<EstimatedTimetableDeliveryStructure> updates) {
