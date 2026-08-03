@@ -48,8 +48,18 @@ public class SiriEtBuilder {
   }
 
   public List<EstimatedTimetableDeliveryStructure> buildEstimatedTimetableDeliveries() {
+    return deliveryOf(evj);
+  }
+
+  /**
+   * Wrap several journeys in one delivery, the way a real ET message carries them. Use this to
+   * assert how one journey affects the others in the same message.
+   */
+  public static List<EstimatedTimetableDeliveryStructure> deliveryOf(
+    EstimatedVehicleJourney... journeys
+  ) {
     var versionFrame = new EstimatedVersionFrameStructure();
-    versionFrame.getEstimatedVehicleJourneies().add(evj);
+    versionFrame.getEstimatedVehicleJourneies().addAll(List.of(journeys));
 
     var etd = new EstimatedTimetableDeliveryStructure();
     etd.getEstimatedJourneyVersionFrames().add(versionFrame);

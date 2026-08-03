@@ -1,6 +1,7 @@
 package org.opentripplanner.ext.updater.trip.unified.gtfs;
 
 import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_DIFFERENTIAL_DUPLICATED;
+import static org.opentripplanner.updater.spi.UpdateErrorType.UNKNOWN;
 import static org.opentripplanner.updater.trip.UpdateIncrementality.DIFFERENTIAL;
 import static org.opentripplanner.updater.trip.UpdateIncrementality.FULL_DATASET;
 
@@ -11,11 +12,14 @@ import java.util.Map;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.updater.trip.unified.TripUpdateDispatcher;
+import org.opentripplanner.ext.updater.trip.unified.TripUpdateParser;
 import org.opentripplanner.ext.updater.trip.unified.model.change.TripUpdateResult;
 import org.opentripplanner.ext.updater.trip.unified.model.command.DuplicateTrip;
+import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
 import org.opentripplanner.transit.repository.MutableTimetableSnapshot;
+import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
 import org.opentripplanner.updater.spi.UpdateError;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.spi.UpdateResult;
@@ -42,13 +46,13 @@ class GtfsNewTripUpdateHandler implements GtfsTripUpdateHandler {
 
   private static final Logger LOG = LoggerFactory.getLogger(GtfsNewTripUpdateHandler.class);
 
-  private final GtfsRtTripUpdateParser parser;
+  private final TripUpdateParser<GtfsRealtime.TripUpdate> parser;
   private final TripUpdateDispatcher dispatcher;
   private final MutableTimetableSnapshot buffer;
   private final Map<FeedScopedId, Route> realtimeRouteCache;
 
   GtfsNewTripUpdateHandler(
-    GtfsRtTripUpdateParser parser,
+    TripUpdateParser<GtfsRealtime.TripUpdate> parser,
     TripUpdateDispatcher dispatcher,
     MutableTimetableSnapshot buffer,
     Map<FeedScopedId, Route> realtimeRouteCache
@@ -86,6 +90,15 @@ class GtfsNewTripUpdateHandler implements GtfsTripUpdateHandler {
         successes.add(apply(update, updateIncrementality));
       } catch (UpdateException e) {
         errors.add(e.toError());
+      } catch (DataValidationException e) {
+        errors.add(DataValidationExceptionMapper.map(e).toError());
+      } catch (Exception e) {
+        // A trip update the unified path cannot even reject cleanly is a defect in this adapter,
+        // but it has to cost that update alone. Letting it escape discards every update after it,
+        // and for a full dataset the buffer has already been cleared - so the feed would lose all
+        // of its real-time data until the next message arrives.
+        LOG.warn("TripUpdate for trip {} failed.", update.getTrip().getTripId(), e);
+        errors.add(UpdateException.noTripId(UNKNOWN).toError());
       }
     }
 
