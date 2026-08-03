@@ -10,6 +10,8 @@ import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -109,7 +111,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       tripId,
       tripUpdate.stopTimeUpdates(),
       serviceDate,
-      updateType == TripUpdateType.ADD_NEW_TRIP
+      updateType == TripUpdateType.ADD_NEW_TRIP || updateType == TripUpdateType.MODIFY_TRIP
     );
 
     var vehicle = VehicleDescription.of(
@@ -185,11 +187,17 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     return builder.build();
   }
 
+  /**
+   * @param reportsOwnSchedule whether the trip brings its own schedule with it, as NEW, ADDED and
+   *                           REPLACEMENT trips do. Such a trip gets a pattern of its own, built
+   *                           from the times its calls report, so a call that reports only a
+   *                           scheduled time still has to produce one.
+   */
   private List<ParsedStopTimeUpdate> parseStopTimeUpdates(
     FeedScopedId tripId,
     List<StopTimeUpdate> updates,
     LocalDate serviceDate,
-    boolean isNewTrip
+    boolean reportsOwnSchedule
   ) {
     var result = new ArrayList<ParsedStopTimeUpdate>();
 
@@ -215,11 +223,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       var status = mapStopTimeStatus(update);
       builder.withStatus(status);
 
-      if (isNewTrip) {
-        parseNewTripStopTimeUpdate(update, builder, serviceDate);
-      } else {
-        parseScheduledTripStopTimeUpdate(update, builder, serviceDate);
-      }
+      parseStopTimeUpdateTimes(update, builder, serviceDate, reportsOwnSchedule);
 
       update.stopHeadsign().ifPresent(builder::withStopHeadsign);
 
@@ -242,71 +246,76 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     return ParsedStopTimeUpdate.StopUpdateStatus.SCHEDULED;
   }
 
-  private void parseScheduledTripStopTimeUpdate(
+  private void parseStopTimeUpdateTimes(
     StopTimeUpdate update,
     ParsedStopTimeUpdate.Builder builder,
-    LocalDate serviceDate
+    LocalDate serviceDate,
+    boolean reportsOwnSchedule
   ) {
-    long midnightSecondsSinceEpoch = startOfServiceSecondsSinceEpoch(serviceDate);
+    long startOfService = startOfServiceSecondsSinceEpoch(serviceDate);
 
-    // Handle arrival time: prefer absolute time, fall back to delay
-    var arrivalTime = update.arrivalTime();
-    var arrivalDelay = update.arrivalDelay();
-    if (arrivalTime.isPresent()) {
-      int time = (int) (arrivalTime.getAsLong() - midnightSecondsSinceEpoch);
-      // Get scheduled time if available for proper TimeUpdate
-      var scheduledArrival = update.scheduledArrivalTimeWithRealTimeFallback().isPresent()
-        ? (int) (update.scheduledArrivalTimeWithRealTimeFallback().getAsLong() -
-            midnightSecondsSinceEpoch)
-        : null;
-      builder.withArrivalUpdate(TimeUpdate.ofAbsolute(time, scheduledArrival));
-    } else if (arrivalDelay.isPresent()) {
-      builder.withArrivalUpdate(TimeUpdate.ofDelay(arrivalDelay.getAsInt()));
+    var arrival = parseTimeUpdate(
+      update.arrivalTime(),
+      update.arrivalDelay(),
+      update.scheduledArrivalTimeWithRealTimeFallback(),
+      startOfService,
+      reportsOwnSchedule
+    );
+    if (arrival != null) {
+      builder.withArrivalUpdate(arrival);
     }
 
-    // Handle departure time: prefer absolute time, fall back to delay
-    var departureTime = update.departureTime();
-    var departureDelay = update.departureDelay();
-    if (departureTime.isPresent()) {
-      int time = (int) (departureTime.getAsLong() - midnightSecondsSinceEpoch);
-      // Get scheduled time if available for proper TimeUpdate
-      var scheduledDeparture = update.scheduledDepartureTimeWithRealTimeFallback().isPresent()
-        ? (int) (update.scheduledDepartureTimeWithRealTimeFallback().getAsLong() -
-            midnightSecondsSinceEpoch)
-        : null;
-      builder.withDepartureUpdate(TimeUpdate.ofAbsolute(time, scheduledDeparture));
-    } else if (departureDelay.isPresent()) {
-      builder.withDepartureUpdate(TimeUpdate.ofDelay(departureDelay.getAsInt()));
+    var departure = parseTimeUpdate(
+      update.departureTime(),
+      update.departureDelay(),
+      update.scheduledDepartureTimeWithRealTimeFallback(),
+      startOfService,
+      reportsOwnSchedule
+    );
+    if (departure != null) {
+      builder.withDepartureUpdate(departure);
     }
   }
 
-  private void parseNewTripStopTimeUpdate(
-    StopTimeUpdate update,
-    ParsedStopTimeUpdate.Builder builder,
-    LocalDate serviceDate
+  /**
+   * The update for one end of a call - its arrival or its departure - or {@code null} if the
+   * message states nothing about it.
+   * <p>
+   * A predicted time is taken as it is given, and the scheduled time the message reports alongside
+   * it is carried along as the aimed time. A call of a trip that reports its own schedule may state
+   * only that scheduled time, and then the call runs to the schedule it reported, offset by the
+   * delay if it stated one. Otherwise the only thing left to go by is the delay, which is
+   * meaningful just for a trip that already has a scheduled timetable to apply it to.
+   *
+   * @param time           the predicted time, as an absolute timestamp
+   * @param delay          the delay against the scheduled time
+   * @param aimedTime      the scheduled time as reported by the message, as an absolute timestamp -
+   *                       derived from {@code time - delay} where the message states no scheduled
+   *                       time
+   * @param startOfService the origin the absolute timestamps are measured from
+   * @param reportsOwnSchedule whether the trip brings its own schedule with it - see
+   *                           {@link #parseStopTimeUpdates}
+   */
+  @Nullable
+  private TimeUpdate parseTimeUpdate(
+    OptionalLong time,
+    OptionalInt delay,
+    OptionalLong aimedTime,
+    long startOfService,
+    boolean reportsOwnSchedule
   ) {
-    long midnightSecondsSinceEpoch = startOfServiceSecondsSinceEpoch(serviceDate);
+    Integer aimed = aimedTime.isPresent() ? (int) (aimedTime.getAsLong() - startOfService) : null;
 
-    var arrivalTimeOpt = update.arrivalTime();
-    var departureTimeOpt = update.departureTime();
-    var scheduledArrivalOpt = update.scheduledArrivalTimeWithRealTimeFallback();
-    var scheduledDepartureOpt = update.scheduledDepartureTimeWithRealTimeFallback();
-
-    if (arrivalTimeOpt.isPresent()) {
-      int arrivalTime = (int) (arrivalTimeOpt.getAsLong() - midnightSecondsSinceEpoch);
-      Integer scheduledArrival = scheduledArrivalOpt.isPresent()
-        ? (int) (scheduledArrivalOpt.getAsLong() - midnightSecondsSinceEpoch)
-        : null;
-      builder.withArrivalUpdate(TimeUpdate.ofAbsolute(arrivalTime, scheduledArrival));
+    if (time.isPresent()) {
+      return TimeUpdate.ofAbsolute((int) (time.getAsLong() - startOfService), aimed);
     }
-
-    if (departureTimeOpt.isPresent()) {
-      int departureTime = (int) (departureTimeOpt.getAsLong() - midnightSecondsSinceEpoch);
-      Integer scheduledDeparture = scheduledDepartureOpt.isPresent()
-        ? (int) (scheduledDepartureOpt.getAsLong() - midnightSecondsSinceEpoch)
-        : null;
-      builder.withDepartureUpdate(TimeUpdate.ofAbsolute(departureTime, scheduledDeparture));
+    if (reportsOwnSchedule && aimed != null) {
+      return TimeUpdate.ofAbsolute(aimed + delay.orElse(0), aimed);
     }
+    if (delay.isPresent()) {
+      return TimeUpdate.ofDelay(delay.getAsInt());
+    }
+    return null;
   }
 
   /**

@@ -173,6 +173,29 @@ public class TripUpdateBuilder {
     );
   }
 
+  /**
+   * A call that reports only its scheduled time and no prediction at all. The specification allows
+   * this for the trips that bring their own schedule with them - NEW, REPLACEMENT and DUPLICATED -
+   * since for those the feed is the only source of the scheduled times.
+   */
+  public TripUpdateBuilder addStopTimeWithOnlyScheduled(String stopId, String scheduledTime) {
+    return addStopTime(
+      stopId,
+      null,
+      null,
+      NO_STOP_SEQUENCE,
+      NO_DELAY,
+      NO_DELAY,
+      DEFAULT_SCHEDULE_RELATIONSHIP,
+      null,
+      null,
+      null,
+      scheduledTime,
+      scheduledTime,
+      null
+    );
+  }
+
   public TripUpdateBuilder addStopTime(String stopId, String time, DropOffPickupType pickDrop) {
     return addStopTime(
       stopId,
