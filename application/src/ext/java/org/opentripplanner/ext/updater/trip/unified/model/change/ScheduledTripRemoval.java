@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.Objects;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
+import org.opentripplanner.ext.updater.trip.unified.model.command.VehicleDescription;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
@@ -29,9 +30,15 @@ public final class ScheduledTripRemoval extends TripRemoval {
     Trip trip,
     TripPattern pattern,
     TripTimes tripTimes,
-    @Nullable String dataSource
+    @Nullable String dataSource,
+    VehicleDescription vehicleDescription
   ) {
-    super(serviceDate, Objects.requireNonNull(trip, "trip must not be null").getId(), dataSource);
+    super(
+      serviceDate,
+      Objects.requireNonNull(trip, "trip must not be null").getId(),
+      dataSource,
+      vehicleDescription
+    );
     this.pattern = Objects.requireNonNull(pattern, "pattern must not be null");
     this.tripTimes = Objects.requireNonNull(tripTimes, "tripTimes must not be null");
   }
@@ -39,6 +46,7 @@ public final class ScheduledTripRemoval extends TripRemoval {
   @Override
   public TripUpdateResult apply(Consumer<RealTimeTripTimesBuilder> removal) {
     var builder = tripTimes.createRealTimeFromScheduledTimes();
+    applyVehicleDescription(builder);
     removal.accept(builder);
 
     // Removing a scheduled trip always reverts previous real-time modifications (quay changes,

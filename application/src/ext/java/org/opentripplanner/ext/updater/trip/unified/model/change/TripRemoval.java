@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.ext.updater.trip.unified.model.command.VehicleDescription;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 
 /**
@@ -30,10 +31,30 @@ public abstract sealed class TripRemoval permits ScheduledTripRemoval, AddedTrip
   @Nullable
   private final String dataSource;
 
-  protected TripRemoval(LocalDate serviceDate, FeedScopedId tripId, @Nullable String dataSource) {
+  private final VehicleDescription vehicleDescription;
+
+  protected TripRemoval(
+    LocalDate serviceDate,
+    FeedScopedId tripId,
+    @Nullable String dataSource,
+    VehicleDescription vehicleDescription
+  ) {
     this.serviceDate = Objects.requireNonNull(serviceDate, "serviceDate must not be null");
     this.tripId = Objects.requireNonNull(tripId, "tripId must not be null");
     this.dataSource = dataSource;
+    this.vehicleDescription = Objects.requireNonNull(
+      vehicleDescription,
+      "vehicleDescription must not be null"
+    );
+  }
+
+  /**
+   * Apply what the message says about the vehicle serving the trip to the trip times being built. A
+   * cancellation still states the vehicle that was to serve the journey, and the removed trip keeps
+   * it.
+   */
+  protected void applyVehicleDescription(RealTimeTripTimesBuilder builder) {
+    vehicleDescription.applyTo(builder);
   }
 
   /**

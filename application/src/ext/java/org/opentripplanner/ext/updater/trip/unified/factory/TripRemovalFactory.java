@@ -8,6 +8,7 @@ import org.opentripplanner.ext.updater.trip.unified.model.change.AddedTripRemova
 import org.opentripplanner.ext.updater.trip.unified.model.change.ScheduledTripRemoval;
 import org.opentripplanner.ext.updater.trip.unified.model.change.TripRemoval;
 import org.opentripplanner.ext.updater.trip.unified.model.command.RemoveTripCommand;
+import org.opentripplanner.ext.updater.trip.unified.model.command.VehicleDescription;
 import org.opentripplanner.ext.updater.trip.unified.resolver.ServiceDateResolver;
 import org.opentripplanner.ext.updater.trip.unified.resolver.TripResolver;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -62,6 +63,7 @@ public class TripRemovalFactory {
     var tripReference = command.tripReference();
     FeedScopedId tripId = tripReference.tripId();
     String dataSource = command.dataSource();
+    var vehicleDescription = command.vehicleDescription();
 
     // Try to resolve as scheduled trip from static transit model
     Trip trip;
@@ -69,13 +71,13 @@ public class TripRemovalFactory {
       trip = tripResolver.resolveTrip(tripReference);
     } catch (UpdateException e) {
       // Trip not found in scheduled data - check for previously added trips
-      return resolveAddedTripOrNotFound(serviceDate, tripId, dataSource);
+      return resolveAddedTripOrNotFound(serviceDate, tripId, dataSource, vehicleDescription);
     }
 
     // Find pattern for the trip
     TripPattern pattern = transitService.findPattern(trip);
     if (pattern == null) {
-      return resolveAddedTripOrNotFound(serviceDate, trip.getId(), dataSource);
+      return resolveAddedTripOrNotFound(serviceDate, trip.getId(), dataSource, vehicleDescription);
     }
 
     // If the resolved pattern is itself a real-time added pattern (i.e., this trip was added via
@@ -85,19 +87,33 @@ public class TripRemovalFactory {
       var rtTimetable = transitService.findTimetable(pattern, serviceDate);
       var rtTripTimes = rtTimetable.getTripTimes(trip.getId());
       if (rtTripTimes != null && rtTripTimes.isAdded()) {
-        return new AddedTripRemoval(serviceDate, trip.getId(), pattern, rtTripTimes, dataSource);
+        return new AddedTripRemoval(
+          serviceDate,
+          trip.getId(),
+          pattern,
+          rtTripTimes,
+          dataSource,
+          vehicleDescription
+        );
       }
     }
 
     // Get trip times
     TripTimes tripTimes = pattern.getScheduledTimetable().getTripTimes(trip);
     if (tripTimes == null) {
-      return resolveAddedTripOrNotFound(serviceDate, trip.getId(), dataSource);
+      return resolveAddedTripOrNotFound(serviceDate, trip.getId(), dataSource, vehicleDescription);
     }
 
     // Note: extra call cancellations (SIRI Cancellation=true with extra call stops) are NOT
     // routed here — they go through TripModifier instead (see SiriTripUpdateParser).
-    return new ScheduledTripRemoval(serviceDate, trip, pattern, tripTimes, dataSource);
+    return new ScheduledTripRemoval(
+      serviceDate,
+      trip,
+      pattern,
+      tripTimes,
+      dataSource,
+      vehicleDescription
+    );
   }
 
   /**
@@ -106,8 +122,9 @@ public class TripRemovalFactory {
    */
   private TripRemoval resolveAddedTripOrNotFound(
     LocalDate serviceDate,
-    FeedScopedId tripId,
-    @Nullable String dataSource
+    @Nullable FeedScopedId tripId,
+    @Nullable String dataSource,
+    VehicleDescription vehicleDescription
   ) {
     if (tripId != null) {
       var pattern = transitService.findNewTripPatternForModifiedTrip(tripId, serviceDate);
@@ -115,7 +132,14 @@ public class TripRemovalFactory {
         var timetable = transitService.findTimetable(pattern, serviceDate);
         var tripTimes = timetable.getTripTimes(tripId);
         if (tripTimes != null && tripTimes.isAdded()) {
-          return new AddedTripRemoval(serviceDate, tripId, pattern, tripTimes, dataSource);
+          return new AddedTripRemoval(
+            serviceDate,
+            tripId,
+            pattern,
+            tripTimes,
+            dataSource,
+            vehicleDescription
+          );
         }
       }
     }

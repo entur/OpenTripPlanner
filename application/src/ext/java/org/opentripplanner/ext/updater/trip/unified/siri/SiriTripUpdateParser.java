@@ -83,6 +83,9 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
     var tripReference = buildTripReference(journey, updateType, psd);
 
+    // SIRI-ET says nothing about the accessibility of the vehicle.
+    var vehicle = VehicleDescription.of(journey.vehicleRef().orElse(null), null);
+
     // Handle plain cancellation (no stop times needed).
     // Exceptions where the cancellation flag is instead carried on the command:
     // - MODIFY_TRIP (extra call): carried into ModifyTrip so TripModifier can mark the
@@ -98,12 +101,10 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         tripReference,
         psd.serviceDate(),
         psd.aimedDepartureTime(),
-        journey.dataSource().orElse(null)
+        journey.dataSource().orElse(null),
+        vehicle
       );
     }
-
-    // SIRI-ET says nothing about the accessibility of the vehicle.
-    var vehicle = VehicleDescription.of(journey.vehicleRef().orElse(null), null);
 
     // Parse stop time updates
     var stopTimeUpdates = parseStopTimeUpdates(

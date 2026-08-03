@@ -5,6 +5,7 @@ import java.util.Objects;
 import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.ext.updater.trip.unified.model.command.VehicleDescription;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
 import org.opentripplanner.transit.model.timetable.RealTimeTripUpdate;
@@ -28,9 +29,10 @@ public final class AddedTripRemoval extends TripRemoval {
     FeedScopedId tripId,
     TripPattern pattern,
     TripTimes tripTimes,
-    @Nullable String dataSource
+    @Nullable String dataSource,
+    VehicleDescription vehicleDescription
   ) {
-    super(serviceDate, tripId, dataSource);
+    super(serviceDate, tripId, dataSource, vehicleDescription);
     this.pattern = Objects.requireNonNull(pattern, "pattern must not be null");
     this.tripTimes = Objects.requireNonNull(tripTimes, "tripTimes must not be null");
   }
@@ -38,6 +40,7 @@ public final class AddedTripRemoval extends TripRemoval {
   @Override
   public TripUpdateResult apply(Consumer<RealTimeTripTimesBuilder> removal) {
     var builder = tripTimes.createRealTimeFromScheduledTimes();
+    applyVehicleDescription(builder);
     removal.accept(builder);
 
     // An extra journey keeps the "added" flag when it is removed: it was never part of the static
