@@ -40,6 +40,7 @@ import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagat
 import org.opentripplanner.updater.trip.gtfs.model.AddedRoute;
 import org.opentripplanner.updater.trip.gtfs.model.StopTimeUpdate;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
+import org.opentripplanner.utils.time.ServiceDateUtils;
 import org.opentripplanner.utils.time.TimeUtils;
 
 /**
@@ -246,9 +247,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     ParsedStopTimeUpdate.Builder builder,
     LocalDate serviceDate
   ) {
-    // Calculate midnight seconds for absolute time conversion
-    var midnight = serviceDate.atStartOfDay(timeZone);
-    long midnightSecondsSinceEpoch = midnight.toEpochSecond();
+    long midnightSecondsSinceEpoch = startOfServiceSecondsSinceEpoch(serviceDate);
 
     // Handle arrival time: prefer absolute time, fall back to delay
     var arrivalTime = update.arrivalTime();
@@ -286,9 +285,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     ParsedStopTimeUpdate.Builder builder,
     LocalDate serviceDate
   ) {
-    // Calculate midnight seconds for absolute time conversion
-    var midnight = serviceDate.atStartOfDay(timeZone);
-    long midnightSecondsSinceEpoch = midnight.toEpochSecond();
+    long midnightSecondsSinceEpoch = startOfServiceSecondsSinceEpoch(serviceDate);
 
     var arrivalTimeOpt = update.arrivalTime();
     var departureTimeOpt = update.departureTime();
@@ -310,6 +307,15 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
         : null;
       builder.withDepartureUpdate(TimeUpdate.ofAbsolute(departureTime, scheduledDeparture));
     }
+  }
+
+  /**
+   * The origin absolute {@code StopTimeEvent} timestamps are measured from: the start of the GTFS
+   * service day, which is noon minus twelve hours and not calendar midnight. The two differ by the
+   * offset shift on a service date containing a daylight-saving transition.
+   */
+  private long startOfServiceSecondsSinceEpoch(LocalDate serviceDate) {
+    return ServiceDateUtils.asStartOfService(serviceDate, timeZone).toEpochSecond();
   }
 
   private TripCreationInfo buildTripCreationInfo(FeedScopedId tripId, TripUpdate tripUpdate) {
