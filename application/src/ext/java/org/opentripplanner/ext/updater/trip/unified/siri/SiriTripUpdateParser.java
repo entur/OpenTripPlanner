@@ -77,7 +77,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
     ServiceDateParser.ParsedServiceDate psd = new ServiceDateParser(journey, feedId).parse();
 
-    if (psd.isEmpty()) {
+    if (!psd.isResolvableFor(updateType)) {
       throw UpdateException.noTripId(NO_START_DATE);
     }
 
