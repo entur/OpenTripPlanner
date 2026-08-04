@@ -8,6 +8,8 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.ext.updater.trip.unified.policy.FormatPolicy;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 
 /**
  * A command to modify the stop pattern of an existing trip, rerouting it on one service date.
@@ -63,6 +65,20 @@ public final class ModifyTrip implements ExistingTripCommand {
     this.tripHeadsign = tripHeadsign;
     this.cancellation = cancellation;
     this.extraJourney = extraJourney;
+    validate();
+  }
+
+  /**
+   * A modification reroutes the trip onto a new stop pattern, and a pattern needs at least two
+   * calls. The calls are known as soon as the message is parsed, so a message that cannot
+   * describe a pattern is rejected here rather than after resolving the trip.
+   *
+   * @throws UpdateException if the message calls fewer than two times
+   */
+  private void validate() {
+    if (stopTimeUpdates.size() < 2) {
+      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.TOO_FEW_STOPS);
+    }
   }
 
   public boolean isCancellation() {

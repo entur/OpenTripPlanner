@@ -81,22 +81,6 @@ class TripModificationValidationTest {
     }
 
     @Test
-    void rejectsTooFewStops() {
-      var tripRef = TripReference.ofTripId(new FeedScopedId(FEED_ID, TRIP_ID));
-
-      // Only 1 stop — need at least 2
-      var command = ModifyTrip.builder(tripRef, env.defaultServiceDate())
-        .withFormatPolicy(
-          FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
-        )
-        .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
-        .build();
-
-      var ex = assertThrows(UpdateException.class, () -> resolve(command));
-      assertEquals(UpdateErrorType.TOO_FEW_STOPS, ex.errorType());
-    }
-
-    @Test
     void acceptsTwoOrMoreStops() {
       var tripRef = TripReference.ofTripId(new FeedScopedId(FEED_ID, TRIP_ID));
 

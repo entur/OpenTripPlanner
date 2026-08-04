@@ -53,11 +53,14 @@ public class TripUpdaterArchitectureTest {
 
   @Test
   void enforceCommandModelPackageDependencies() {
+    // UPDATER_SPI: the command constructors reject a message that violates their invariants with
+    // a typed UpdateException, just like the change model does.
     MODEL_COMMAND.dependsOn(
       FRAMEWORK_UTILS,
       LEGACY_MODEL,
       TRANSIT_MODEL_BASIC,
       TRANSIT_MODEL_TIMETABLE,
+      UPDATER_SPI,
       POLICY
     ).verify();
   }

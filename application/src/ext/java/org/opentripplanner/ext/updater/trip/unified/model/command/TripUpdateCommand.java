@@ -4,6 +4,8 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.i18n.I18NString;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 
 /**
  * A command asking for one change to the real-time transit data, parsed from either SIRI-ET or
@@ -51,8 +53,12 @@ public sealed interface TripUpdateCommand
   }
 
   /**
-   * Validate that a service date can be resolved from the available fields.
-   * Call from constructors to fail fast when no resolution strategy is available.
+   * Validate that a service date can still be arrived at: stated outright, borrowed from the
+   * dated trip the reference names, or implied by an aimed departure time. Called from the
+   * constructors, so a message that cannot be placed on a day is rejected as soon as it is parsed.
+   *
+   * @throws UpdateException with {@link UpdateErrorType#NO_START_DATE} when all three ways are
+   *                         closed
    */
   static void validateServiceDateAvailable(
     TripReference tripReference,
@@ -62,9 +68,7 @@ public sealed interface TripUpdateCommand
     if (
       serviceDate == null && !tripReference.hasTripOnServiceDateId() && aimedDepartureTime == null
     ) {
-      throw new IllegalArgumentException(
-        "serviceDate must not be null when neither tripOnServiceDateId nor aimedDepartureTime is provided for deferred resolution"
-      );
+      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_START_DATE);
     }
   }
 }

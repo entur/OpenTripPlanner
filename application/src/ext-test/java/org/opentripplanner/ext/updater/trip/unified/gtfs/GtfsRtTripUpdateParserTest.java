@@ -25,6 +25,7 @@ import org.opentripplanner.ext.updater.trip.unified.model.command.ParsedTimeUpda
 import org.opentripplanner.ext.updater.trip.unified.model.command.RemoveTripCommand;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ReviseTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.TimeUpdate;
+import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
@@ -197,9 +198,39 @@ class GtfsRtTripUpdateParserTest {
           .setStopSequence(0)
           .setArrival(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setDelay(60))
       )
+      .addStopTimeUpdate(
+        GtfsRealtime.TripUpdate.StopTimeUpdate.newBuilder()
+          .setStopId("stop2")
+          .setStopSequence(1)
+          .setArrival(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setDelay(60))
+      )
       .build();
 
     assertInstanceOf(ModifyTrip.class, parser.parse(tripUpdate));
+  }
+
+  /**
+   * A replacement describes the full new stop pattern of the trip, and a pattern needs at least
+   * two calls - the command's constructor rejects the message at the parse boundary.
+   */
+  @Test
+  void replacementTripCallingOnceIsRejected() {
+    var tripUpdate = GtfsRealtime.TripUpdate.newBuilder()
+      .setTrip(
+        GtfsRealtime.TripDescriptor.newBuilder()
+          .setTripId("trip1")
+          .setScheduleRelationship(GtfsRealtime.TripDescriptor.ScheduleRelationship.REPLACEMENT)
+      )
+      .addStopTimeUpdate(
+        GtfsRealtime.TripUpdate.StopTimeUpdate.newBuilder()
+          .setStopId("stop1")
+          .setStopSequence(0)
+          .setArrival(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setDelay(60))
+      )
+      .build();
+
+    var ex = assertThrows(UpdateException.class, () -> parser.parse(tripUpdate));
+    assertEquals(UpdateErrorType.TOO_FEW_STOPS, ex.errorType());
   }
 
   @Test

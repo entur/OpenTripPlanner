@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.time.ZonedDateTime;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.ext.updater.trip.unified.TripUpdateType;
 import org.opentripplanner.updater.trip.siri.CallWrapper;
 import org.opentripplanner.updater.trip.siri.EstimatedVehicleJourneyWrapper;
 import org.opentripplanner.updater.trip.siri.VehicleJourneyIdAndServiceDate;
@@ -83,21 +82,5 @@ public class ServiceDateParser {
     @Nullable LocalDate serviceDate,
     @Nullable FeedScopedId tripOnServiceDateId,
     @Nullable ZonedDateTime aimedDepartureTime
-  ) {
-    /**
-     * Whether any of the three ways above is open to an update of the given type, so that a service
-     * date can still be arrived at.
-     * <p>
-     * Way (2) is not open to an extra journey: its {@code DatedVehicleJourneyRef} names the dated
-     * service journey being created rather than an existing one, so the lookup has nothing to find.
-     * An extra journey therefore has to state its day outright or imply it through an aimed
-     * departure time.
-     */
-    public boolean isResolvableFor(TripUpdateType updateType) {
-      if (serviceDate != null || aimedDepartureTime != null) {
-        return true;
-      }
-      return tripOnServiceDateId != null && updateType != TripUpdateType.ADD_NEW_TRIP;
-    }
-  }
+  ) {}
 }

@@ -8,6 +8,8 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.ext.updater.trip.unified.policy.FormatPolicy;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 
 /**
  * A command to revise an existing trip without changing its stop pattern: delays, changed times
@@ -55,6 +57,20 @@ public final class ReviseTrip implements ExistingTripCommand {
     this.dataSource = dataSource;
     this.vehicleDescription = Objects.requireNonNull(vehicleDescription);
     this.tripHeadsign = tripHeadsign;
+    validate();
+  }
+
+  /**
+   * A format that matches calls by position must not number them: a stop sequence contradicts
+   * positional matching. The two fields come from the same parser, so a violation is a
+   * mis-assembled command rather than bad feed data.
+   *
+   * @throws UpdateException if the calls are numbered under a position-matched format
+   */
+  private void validate() {
+    if (formatPolicy.stopMatching().requiresExactStopCount() && hasStopSequences()) {
+      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.INVALID_STOP_SEQUENCE);
+    }
   }
 
   public static Builder builder(TripReference tripReference, @Nullable LocalDate serviceDate) {

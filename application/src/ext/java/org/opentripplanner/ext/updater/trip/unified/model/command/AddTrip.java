@@ -8,6 +8,8 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.ext.updater.trip.unified.policy.FormatPolicy;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 
 /**
  * A command to add a new trip that does not exist in the scheduled data.
@@ -54,7 +56,6 @@ public final class AddTrip implements TripUpdateCommand {
     boolean cancellation
   ) {
     this.tripReference = Objects.requireNonNull(tripReference);
-    TripUpdateCommand.validateServiceDateAvailable(tripReference, serviceDate, aimedDepartureTime);
     this.serviceDate = serviceDate;
     this.aimedDepartureTime = aimedDepartureTime;
     this.stopTimeUpdates = stopTimeUpdates != null ? List.copyOf(stopTimeUpdates) : List.of();
@@ -67,6 +68,21 @@ public final class AddTrip implements TripUpdateCommand {
     this.vehicleDescription = Objects.requireNonNull(vehicleDescription);
     this.tripHeadsign = tripHeadsign;
     this.cancellation = cancellation;
+    validate();
+  }
+
+  /**
+   * An added trip cannot borrow its service date from an existing dated trip - a dated service
+   * journey reference on an addition names the dated trip being created, not one to look up. The
+   * message has to state its day outright or imply it through an aimed departure time, a stricter
+   * rule than {@link TripUpdateCommand#validateServiceDateAvailable} applies to the other commands.
+   *
+   * @throws UpdateException if the message says nothing about its service date
+   */
+  private void validate() {
+    if (serviceDate == null && aimedDepartureTime == null) {
+      throw UpdateException.of(tripCreationInfo.tripId(), UpdateErrorType.NO_START_DATE);
+    }
   }
 
   public static Builder builder(

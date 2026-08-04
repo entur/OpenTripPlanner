@@ -63,17 +63,14 @@ public final class TripModification extends ExistingTripChange {
   }
 
   /**
-   * The preconditions of a modification of the stop pattern of an existing trip: at least two
-   * calls, and - when the message carries SIRI extra calls - a non-extra call sequence that still
-   * matches the original pattern.
+   * The precondition of a modification of the stop pattern of an existing trip: when the message
+   * carries SIRI extra calls, a non-extra call sequence that still matches the original pattern.
+   * That the message calls at least twice is an invariant of the {@link ModifyTrip} command
+   * itself.
    *
    * @throws UpdateException if the message cannot reroute the trip
    */
   private void validate() {
-    if (stopTimeUpdates().size() < 2) {
-      throw UpdateException.of(trip().getId(), UpdateErrorType.TOO_FEW_STOPS);
-    }
-
     if (hasSiriExtraCalls()) {
       validateSiriExtraCalls();
     }

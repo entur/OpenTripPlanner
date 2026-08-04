@@ -99,28 +99,6 @@ class TripRevisionValidationTest {
   }
 
   @Test
-  void fullUpdate_rejectsStopSequence() {
-    var tripRef = TripReference.ofTripId(new FeedScopedId(FEED_ID, TRIP_ID));
-
-    var stopUpdate = ParsedStopTimeUpdate.builder(
-      StopReference.ofStopId(new FeedScopedId(FEED_ID, "A"))
-    )
-      .withStopSequence(0)
-      .withArrivalUpdate(TimeUpdate.ofDelay(60))
-      .build();
-
-    var options = FormatPolicy.builder().withStopMatching(StopMatchingPolicy.POSITIONAL).build();
-
-    var command = ReviseTrip.builder(tripRef, env.defaultServiceDate())
-      .withFormatPolicy(options)
-      .addStopTimeUpdate(stopUpdate)
-      .build();
-
-    var ex = assertThrows(UpdateException.class, () -> resolve(command));
-    assertEquals(UpdateErrorType.INVALID_STOP_SEQUENCE, ex.errorType());
-  }
-
-  @Test
   void fullUpdate_rejectsTooFewStops() {
     var tripRef = TripReference.ofTripId(new FeedScopedId(FEED_ID, TRIP_ID));
 

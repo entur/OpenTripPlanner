@@ -5,13 +5,18 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.updater.trip.unified.policy.FormatPolicy;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 
 class TripUpdateCommandTest {
 
@@ -118,7 +123,10 @@ class TripUpdateCommandTest {
   @Test
   void sealedHierarchyTypeCheck() {
     TripUpdateCommand updateExisting = ReviseTrip.builder(TRIP_REF, SERVICE_DATE).build();
-    TripUpdateCommand modifyTrip = ModifyTrip.builder(TRIP_REF, SERVICE_DATE).build();
+    TripUpdateCommand modifyTrip = ModifyTrip.builder(TRIP_REF, SERVICE_DATE)
+      .addStopTimeUpdate(delayedCall(60))
+      .addStopTimeUpdate(delayedCall(120))
+      .build();
     var tripCreationInfo = TripCreationInfo.builder(TRIP_ID).build();
     TripUpdateCommand addNewTrip = AddTrip.builder(
       TRIP_REF,
@@ -133,5 +141,65 @@ class TripUpdateCommandTest {
     assertFalse(addNewTrip instanceof ExistingTripCommand);
     assertInstanceOf(RemoveTripCommand.class, cancelTrip);
     assertInstanceOf(RemoveTripCommand.class, deleteTrip);
+  }
+
+  @Test
+  void modifyTripRejectsFewerThanTwoCalls() {
+    var builder = ModifyTrip.builder(TRIP_REF, SERVICE_DATE).addStopTimeUpdate(delayedCall(60));
+
+    var ex = assertThrows(UpdateException.class, builder::build);
+    assertEquals(UpdateErrorType.TOO_FEW_STOPS, ex.errorType());
+  }
+
+  @Test
+  void reviseTripRejectsNumberedCallsUnderPositionalMatching() {
+    var numberedCall = ParsedStopTimeUpdate.builder(STOP_REF)
+      .withStopSequence(0)
+      .withArrivalUpdate(TimeUpdate.ofDelay(60))
+      .build();
+    var builder = ReviseTrip.builder(TRIP_REF, SERVICE_DATE)
+      .withFormatPolicy(FormatPolicy.siri())
+      .addStopTimeUpdate(numberedCall);
+
+    var ex = assertThrows(UpdateException.class, builder::build);
+    assertEquals(UpdateErrorType.INVALID_STOP_SEQUENCE, ex.errorType());
+  }
+
+  /**
+   * A dated service journey id on an addition names the trip being created, not one whose day
+   * can be looked up - so unlike for the other commands it does not count as a service date
+   * source.
+   */
+  @Test
+  void addTripRejectsDatedServiceJourneyIdAsOnlyServiceDateSource() {
+    var reference = TripReference.builder()
+      .withTripId(TRIP_ID)
+      .withTripOnServiceDateId(new FeedScopedId(FEED_ID, "dsj1"))
+      .build();
+    var builder = AddTrip.builder(reference, null, TripCreationInfo.builder(TRIP_ID).build());
+
+    var ex = assertThrows(UpdateException.class, builder::build);
+    assertEquals(UpdateErrorType.NO_START_DATE, ex.errorType());
+  }
+
+  @Test
+  void addTripAcceptsAimedDepartureTimeAsServiceDateSource() {
+    var command = AddTrip.builder(TRIP_REF, null, TripCreationInfo.builder(TRIP_ID).build())
+      .withAimedDepartureTime(ZonedDateTime.of(2024, 1, 15, 8, 30, 0, 0, ZoneId.of("Z")))
+      .build();
+
+    assertNull(command.serviceDate());
+  }
+
+  @Test
+  void commandSayingNothingAboutItsServiceDateIsRejected() {
+    var ex = assertThrows(UpdateException.class, () -> new CancelTrip(TRIP_REF, null, null, null));
+    assertEquals(UpdateErrorType.NO_START_DATE, ex.errorType());
+  }
+
+  private static ParsedStopTimeUpdate delayedCall(int delaySeconds) {
+    return ParsedStopTimeUpdate.builder(STOP_REF)
+      .withArrivalUpdate(TimeUpdate.ofDelay(delaySeconds))
+      .build();
   }
 }

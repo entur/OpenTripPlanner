@@ -1,7 +1,6 @@
 package org.opentripplanner.ext.updater.trip.unified.siri;
 
 import static java.lang.Boolean.TRUE;
-import static org.opentripplanner.updater.spi.UpdateErrorType.NO_START_DATE;
 import static org.opentripplanner.updater.spi.UpdateErrorType.UNKNOWN;
 
 import java.time.LocalDate;
@@ -75,11 +74,9 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       throw UpdateException.noTripId(UNKNOWN);
     }
 
+    // A journey that says nothing about its service date is rejected with NO_START_DATE by the
+    // command constructors below.
     ServiceDateParser.ParsedServiceDate psd = new ServiceDateParser(journey, feedId).parse();
-
-    if (!psd.isResolvableFor(updateType)) {
-      throw UpdateException.noTripId(NO_START_DATE);
-    }
 
     var tripReference = buildTripReference(journey, updateType, psd);
 

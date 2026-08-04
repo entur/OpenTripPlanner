@@ -29,12 +29,6 @@ public final class TripRevision extends ExistingTripChange {
   /** The scheduled times of the trip, the baseline the real-time times are built from. */
   private final TripTimes scheduledTripTimes;
 
-  /**
-   * Whether the calls of the message are numbered. A format that matches calls by position must not
-   * number them.
-   */
-  private final boolean hasStopSequences;
-
   public TripRevision(
     ReviseTrip command,
     LocalDate serviceDate,
@@ -50,14 +44,14 @@ public final class TripRevision extends ExistingTripChange {
       scheduledTripTimes,
       "scheduledTripTimes must not be null"
     );
-    this.hasStopSequences = command.hasStopSequences();
     validate();
   }
 
   /**
-   * The preconditions of an update to the times of an existing trip: a format that matches calls by
-   * position (FULL_UPDATE) must send every call of the trip, and must not number them. Matching by
-   * stop sequence or id (PARTIAL_UPDATE) puts no constraint on the calls.
+   * The precondition of an update to the times of an existing trip: a format that matches calls by
+   * position (FULL_UPDATE) must send every call of the trip. Matching by stop sequence or id
+   * (PARTIAL_UPDATE) puts no constraint on the calls. That a position-matched format must not
+   * number its calls is an invariant of the {@link ReviseTrip} command itself.
    *
    * @throws UpdateException if the message cannot update the trip
    */
@@ -68,10 +62,6 @@ public final class TripRevision extends ExistingTripChange {
     }
 
     var tripId = trip().getId();
-
-    if (hasStopSequences) {
-      throw UpdateException.of(tripId, UpdateErrorType.INVALID_STOP_SEQUENCE);
-    }
 
     // The count is compared against the scheduled pattern, not the current real-time pattern,
     // because a revert update may send fewer stops than a previously modified pattern (e.g. after
