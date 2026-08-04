@@ -57,6 +57,12 @@ gbfsGeofencing:
     - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/boltlillehammer/gbfs"
       network: "boltlillehammer"
       applyBusinessArea: false
+    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/boltlillestrom/gbfs"
+      network: "boltlillestrom"
+      applyBusinessArea: true
+    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/boltsarpsborg/gbfs"
+      network: "boltsarpsborg"
+      applyBusinessArea: true
     - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydeoslo/gbfs"
       network: "rydeoslo"
       applyBusinessArea: false
@@ -66,9 +72,15 @@ gbfsGeofencing:
     - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydefredrikstad/gbfs"
       network: "rydefredrikstad"
       applyBusinessArea: false
+    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydeporsgrunn/gbfs"
+      network: "rydeporsgrunn"
+      applyBusinessArea: true
     - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydesandefjord/gbfs"
       network: "rydesandefjord"
       applyBusinessArea: false
+    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydesarpsborg/gbfs"
+      network: "rydesarpsborg"
+      applyBusinessArea: true
     - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydeskien/gbfs"
       network: "rydeskien"
       applyBusinessArea: false
@@ -81,6 +93,27 @@ gbfsGeofencing:
     - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydetrondheim/gbfs"
       network: "rydetrondheim"
       applyBusinessArea: false
+    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/dottmalvik/gbfs"
+      network: "dottmalvik"
+      applyBusinessArea: true
+    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/dottmelhus/gbfs"
+      network: "dottmelhus"
+      applyBusinessArea: true
+    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/dottorkanger/gbfs"
+      network: "dottorkanger"
+      applyBusinessArea: true
+    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/dottskaun/gbfs"
+      network: "dottskaun"
+      applyBusinessArea: true
+    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/dottstjordal/gbfs"
+      network: "dottstjordal"
+      applyBusinessArea: true
+    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/dotttrondheim/gbfs"
+      network: "dotttrondheim"
+      applyBusinessArea: true
+    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/altairtrondheim/gbfs"
+      network: "altairtrondheim"
+      applyBusinessArea: true
     - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/evietrondheim/gbfs"
       network: "evietrondheim"
       applyBusinessArea: false
