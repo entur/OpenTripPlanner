@@ -14,7 +14,10 @@ gbfsGeofencing:
   feeds:
     - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/voioslo/gbfs"
       network: "voioslo"
+      applyBusinessArea: false
     - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/boltoslo/gbfs"
       network: "boltoslo"
+      applyBusinessArea: true
     - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydeoslo/gbfs"
       network: "rydeoslo"
+      applyBusinessArea: false
