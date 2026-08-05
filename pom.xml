@@ -95,6 +95,7 @@
     </properties>
 
     <modules>
+        <module>entur</module>
         <module>utils</module>
         <module>domain-core</module>
         <module>raptor</module>
