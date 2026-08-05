@@ -92,6 +92,7 @@ public class ConstructApplication {
     EmissionRepository emissionRepository,
     @Nullable EmpiricalDelayRepository empiricalDelayRepository,
     VehicleParkingRepository vehicleParkingRepository,
+    VehicleRentalRepository vehicleRentalRepository,
     @Nullable StopConsolidationRepository stopConsolidationRepository,
     StreetRepository streetRepository,
     FareServiceFactory fareServiceFactory
@@ -127,6 +128,7 @@ public class ConstructApplication {
       .transferRepository(transferRepository)
       .worldEnvelopeRepository(worldEnvelopeRepository)
       .vehicleParkingRepository(vehicleParkingRepository)
+      .vehicleRentalRepository(vehicleRentalRepository)
       .emissionRepository(emissionRepository)
       .empiricalDelayRepository(empiricalDelayRepository)
       .dataImportIssueSummary(issueSummary)
@@ -172,6 +174,7 @@ public class ConstructApplication {
       factory.transferRepository(),
       factory.worldEnvelopeRepository(),
       factory.vehicleParkingRepository(),
+      factory.vehicleRentalRepository(),
       factory.emissionRepository(),
       factory.empiricalDelayRepository(),
       factory.stopConsolidationRepository(),
