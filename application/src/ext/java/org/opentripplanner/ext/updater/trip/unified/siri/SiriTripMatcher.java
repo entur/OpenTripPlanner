@@ -85,9 +85,9 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
       case ExistingTripCommand existingTripCommand -> Optional.of(
         matchByCalls(tripReference, existingTripCommand, serviceDate)
       );
-      case RemoveTripCommand ignored -> Optional.empty();
-      case AddTrip ignored -> Optional.empty();
-      case DuplicateTrip ignored -> Optional.empty();
+      case RemoveTripCommand _ -> Optional.empty();
+      case AddTrip _ -> Optional.empty();
+      case DuplicateTrip _ -> Optional.empty();
     };
   }
 
