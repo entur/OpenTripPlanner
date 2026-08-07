@@ -776,6 +776,47 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     );
   }
 
+  /**
+   * An extra journey announces a trip the schedule does not have, so one whose reference names an
+   * existing scheduled trip contradicts itself and is rejected, leaving the scheduled trip alone.
+   * This is the SIRI face of the same question as the GTFS-RT ADDED trip with an
+   * unknown-but-fuzzy-matchable id: what to do with an addition that identifies an existing trip.
+   */
+  @Test
+  @UnifiedUpdaterOnly(
+    "The legacy implementation applies the message as an in-place update of the scheduled trip " +
+      "and flips its real-time state to ADDED - the timetable shows 'A U' on the scheduled " +
+      "pattern, so a scheduled trip reports itself as an extra journey."
+  )
+  void testRejectExtraJourneyReusingAScheduledTripId() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withEstimatedVehicleJourneyCode(TRIP_1_ID)
+      .withIsExtraJourney(true)
+      .withOperatorRef(OPERATOR_ID)
+      .withLineRef(ROUTE_ID)
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_A)
+          .departAimedExpected("00:01", "00:02")
+          .call(STOP_B)
+          .arriveAimedExpected("00:03", "00:04")
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    var result = siri.applyEstimatedTimetable(updates);
+
+    assertFailure(UpdateErrorType.TRIP_ALREADY_EXISTS, result);
+    assertFalse(
+      env.tripData(TRIP_1_ID).tripTimes().hasAnyUpdates(),
+      "The scheduled trip the extra journey names must be left alone"
+    );
+    assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1[S]");
+  }
+
   private SiriEtBuilder createValidAddedJourney(SiriTestHelper siri) {
     return siri
       .etBuilder()
