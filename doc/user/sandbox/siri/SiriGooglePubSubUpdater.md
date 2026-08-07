@@ -37,12 +37,12 @@ To enable the SIRI-ET Google PubSub updater you need to add it to the updaters s
 | [initialGetDataTimeout](#u__12__initialGetDataTimeout)             | `duration` | Timeout for retrieving the recent history of SIRI-ET messages.                               | *Optional* | `"PT30S"`     |  2.1  |
 | producerMetrics                                                    |  `boolean` | If failure, success, and warning metrics should be collected per producer.                   | *Optional* | `false`       |  2.7  |
 | [reconnectPeriod](#u__12__reconnectPeriod)                         | `duration` | Wait this amount of time before trying to reconnect to the PubSub subscription.              | *Optional* | `"PT30S"`     |  2.1  |
-| [shadowComparison](#u__12__shadowComparison)                       |  `boolean` | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`       |  2.9  |
-| shadowComparisonReportDirectory                                    |  `string`  | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |               |  2.9  |
+| [shadowComparison](#u__12__shadowComparison)                       |  `boolean` | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`       |  2.10 |
+| shadowComparisonReportDirectory                                    |  `string`  | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |               |  2.10 |
 | [subscriptionProjectName](#u__12__subscriptionProjectName)         |  `string`  | The Google Cloud project that hosts the PubSub subscription.                                 | *Required* |               |  2.1  |
 | topicName                                                          |  `string`  | The name of the PubSub topic that publishes the updates.                                     | *Required* |               |  2.1  |
 | topicProjectName                                                   |  `string`  | The Google Cloud project that hosts the PubSub topic that publishes the updates.             | *Required* |               |  2.1  |
-| [useNewUpdaterImplementation](#u__12__useNewUpdaterImplementation) |  `boolean` | Use the new unified trip update implementation.                                              | *Optional* | `false`       |  2.9  |
+| [useNewUpdaterImplementation](#u__12__useNewUpdaterImplementation) |  `boolean` | Use the new unified trip update implementation.                                              | *Optional* | `false`       |  2.10 |
 
 
 ##### Parameter details
@@ -84,7 +84,7 @@ Google PubSub subscription.
 
 <h4 id="u__12__shadowComparison">shadowComparison</h4>
 
-**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
 **Path:** /updaters/[12] 
 
 Run the legacy and unified trip update implementations in parallel, comparing their outputs.
@@ -110,7 +110,7 @@ The topic and the subscription can be hosted in two different projects.
 
 <h4 id="u__12__useNewUpdaterImplementation">useNewUpdaterImplementation</h4>
 
-**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
 **Path:** /updaters/[12] 
 
 Use the new unified trip update implementation.

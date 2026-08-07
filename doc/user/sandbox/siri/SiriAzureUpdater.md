@@ -33,10 +33,10 @@ To enable the SIRI updater you need to add it to the updaters section of the `ro
 | fuzzyTripMatching                                                  |  `boolean` | Whether to apply fuzzyTripMatching on the updates                                            | *Optional* | `false`             |  2.2  |
 | prefetchCount                                                      |  `integer` | The number of messages to fetch from the subscription at a time.                             | *Optional* | `10`                |  2.5  |
 | [servicebus-url](#u__11__servicebus_url)                           |  `string`  | Service Bus connection used for authentication.                                              | *Optional* |                     |  2.2  |
-| [shadowComparison](#u__11__shadowComparison)                       |  `boolean` | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`             |  2.9  |
-| shadowComparisonReportDirectory                                    |  `string`  | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |                     |  2.9  |
+| [shadowComparison](#u__11__shadowComparison)                       |  `boolean` | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`             |  2.10 |
+| shadowComparisonReportDirectory                                    |  `string`  | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |                     |  2.10 |
 | topic                                                              |  `string`  | Service Bus topic to connect to.                                                             | *Required* |                     |  2.2  |
-| [useNewUpdaterImplementation](#u__11__useNewUpdaterImplementation) |  `boolean` | Use the new unified trip update implementation.                                              | *Optional* | `false`             |  2.9  |
+| [useNewUpdaterImplementation](#u__11__useNewUpdaterImplementation) |  `boolean` | Use the new unified trip update implementation.                                              | *Optional* | `false`             |  2.10 |
 | history                                                            |  `object`  | Configuration for fetching historical data on startup                                        | *Optional* |                     |  2.2  |
 |    fromDateTime                                                    |  `string`  | Datetime boundary for historical data                                                        | *Optional* | `"-P1D"`            |  2.2  |
 |    timeout                                                         |  `integer` | Timeout in milliseconds                                                                      | *Optional* | `300000`            |   na  |
@@ -82,7 +82,7 @@ Has to be present for authenticationMethod SharedAccessKey. This should be Prima
 
 <h4 id="u__11__shadowComparison">shadowComparison</h4>
 
-**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
 **Path:** /updaters/[11] 
 
 Run the legacy and unified trip update implementations in parallel, comparing their outputs.
@@ -95,7 +95,7 @@ comparison always serves the legacy implementation.
 
 <h4 id="u__11__useNewUpdaterImplementation">useNewUpdaterImplementation</h4>
 
-**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
 **Path:** /updaters/[11] 
 
 Use the new unified trip update implementation.
@@ -150,10 +150,10 @@ Mutually exclusive with `shadowComparison`.
 | fuzzyTripMatching                                                  |  `boolean` | Whether to apply fuzzyTripMatching on the updates                                            | *Optional* | `false`             |  2.2  |
 | prefetchCount                                                      |  `integer` | The number of messages to fetch from the subscription at a time.                             | *Optional* | `10`                |  2.5  |
 | [servicebus-url](#u__10__servicebus_url)                           |  `string`  | Service Bus connection used for authentication.                                              | *Optional* |                     |  2.2  |
-| [shadowComparison](#u__10__shadowComparison)                       |  `boolean` | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`             |  2.9  |
-| shadowComparisonReportDirectory                                    |  `string`  | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |                     |  2.9  |
+| [shadowComparison](#u__10__shadowComparison)                       |  `boolean` | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`             |  2.10 |
+| shadowComparisonReportDirectory                                    |  `string`  | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |                     |  2.10 |
 | topic                                                              |  `string`  | Service Bus topic to connect to.                                                             | *Required* |                     |  2.2  |
-| [useNewUpdaterImplementation](#u__10__useNewUpdaterImplementation) |  `boolean` | Use the new unified trip update implementation.                                              | *Optional* | `false`             |  2.9  |
+| [useNewUpdaterImplementation](#u__10__useNewUpdaterImplementation) |  `boolean` | Use the new unified trip update implementation.                                              | *Optional* | `false`             |  2.10 |
 | history                                                            |  `object`  | Configuration for fetching historical data on startup                                        | *Optional* |                     |  2.2  |
 |    fromDateTime                                                    |  `string`  | Datetime boundary for historical data.                                                       | *Optional* | `"-P1D"`            |  2.2  |
 |    timeout                                                         |  `integer` | Timeout in milliseconds                                                                      | *Optional* | `300000`            |   na  |
@@ -200,7 +200,7 @@ Has to be present for authenticationMethod SharedAccessKey. This should be Prima
 
 <h4 id="u__10__shadowComparison">shadowComparison</h4>
 
-**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
 **Path:** /updaters/[10] 
 
 Run the legacy and unified trip update implementations in parallel, comparing their outputs.
@@ -213,7 +213,7 @@ comparison always serves the legacy implementation.
 
 <h4 id="u__10__useNewUpdaterImplementation">useNewUpdaterImplementation</h4>
 
-**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
 **Path:** /updaters/[10] 
 
 Use the new unified trip update implementation.

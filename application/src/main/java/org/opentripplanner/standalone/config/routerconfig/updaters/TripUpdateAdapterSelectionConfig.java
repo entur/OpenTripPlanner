@@ -1,6 +1,6 @@
 package org.opentripplanner.standalone.config.routerconfig.updaters;
 
-import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
+import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_10;
 
 import java.nio.file.Path;
 import javax.annotation.Nullable;
@@ -18,7 +18,7 @@ public class TripUpdateAdapterSelectionConfig {
     var selection = new Selection(
       c
         .of("useNewUpdaterImplementation")
-        .since(V2_9)
+        .since(V2_10)
         .summary("Use the new unified trip update implementation.")
         .description(
           """
@@ -31,7 +31,7 @@ public class TripUpdateAdapterSelectionConfig {
         .asBoolean(false),
       c
         .of("shadowComparison")
-        .since(V2_9)
+        .since(V2_10)
         .summary(
           "Run the legacy and unified trip update implementations in parallel, comparing their outputs."
         )
@@ -47,7 +47,7 @@ public class TripUpdateAdapterSelectionConfig {
       optionalPath(
         c
           .of("shadowComparisonReportDirectory")
-          .since(V2_9)
+          .since(V2_10)
           .summary("Directory to write detailed shadow comparison mismatch reports to.")
           .asString(null)
       )

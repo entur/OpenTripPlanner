@@ -39,10 +39,10 @@ To enable the SIRI-ET MQTT updater you need to add it to the updaters section of
 | [password](#u__17__password)                                       |  `string`  | The password for authorization at the MQTT broker                                            | *Optional* |               |  2.9  |
 | port                                                               |  `integer` | The port of the MQTT broker                                                                  | *Required* |               |  2.9  |
 | qos                                                                |  `integer` | The qos used for the MQTT subscription                                                       | *Required* |               |  2.9  |
-| [shadowComparison](#u__17__shadowComparison)                       |  `boolean` | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`       |  2.9  |
-| shadowComparisonReportDirectory                                    |  `string`  | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |               |  2.9  |
+| [shadowComparison](#u__17__shadowComparison)                       |  `boolean` | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`       |  2.10 |
+| shadowComparisonReportDirectory                                    |  `string`  | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |               |  2.10 |
 | topic                                                              |  `string`  | The topic the updater should subscribe to                                                    | *Required* |               |  2.9  |
-| [useNewUpdaterImplementation](#u__17__useNewUpdaterImplementation) |  `boolean` | Use the new unified trip update implementation.                                              | *Optional* | `false`       |  2.9  |
+| [useNewUpdaterImplementation](#u__17__useNewUpdaterImplementation) |  `boolean` | Use the new unified trip update implementation.                                              | *Optional* | `false`       |  2.10 |
 | [user](#u__17__user)                                               |  `string`  | The user for authorization at the MQTT broker                                                | *Optional* |               |  2.9  |
 
 
@@ -102,7 +102,7 @@ If no authorization is required, the password does not need to be supplied.
 
 <h4 id="u__17__shadowComparison">shadowComparison</h4>
 
-**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
 **Path:** /updaters/[17] 
 
 Run the legacy and unified trip update implementations in parallel, comparing their outputs.
@@ -115,7 +115,7 @@ comparison always serves the legacy implementation.
 
 <h4 id="u__17__useNewUpdaterImplementation">useNewUpdaterImplementation</h4>
 
-**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
 **Path:** /updaters/[17] 
 
 Use the new unified trip update implementation.

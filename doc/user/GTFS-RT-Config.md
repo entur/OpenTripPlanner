@@ -82,10 +82,10 @@ HTTP request and polled regularly.
 | [forwardsDelayPropagationType](#u__5__forwardsDelayPropagationType)   |      `enum`     | How forwards propagation should be handled.                                                  | *Optional* | `"default"`          |  2.8  |
 | frequency                                                             |    `duration`   | How often the data should be downloaded.                                                     | *Optional* | `"PT1M"`             |  1.5  |
 | fuzzyTripMatching                                                     |    `boolean`    | If the trips should be matched fuzzily.                                                      | *Optional* | `false`              |  1.5  |
-| [shadowComparison](#u__5__shadowComparison)                           |    `boolean`    | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`              |  2.9  |
-| shadowComparisonReportDirectory                                       |     `string`    | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |                      |  2.9  |
+| [shadowComparison](#u__5__shadowComparison)                           |    `boolean`    | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`              |  2.10 |
+| shadowComparisonReportDirectory                                       |     `string`    | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |                      |  2.10 |
 | [url](#u__5__url)                                                     |     `string`    | The URL of the GTFS-RT resource.                                                             | *Required* |                      |  1.5  |
-| [useNewUpdaterImplementation](#u__5__useNewUpdaterImplementation)     |    `boolean`    | Use the new unified trip update implementation.                                              | *Optional* | `false`              |  2.9  |
+| [useNewUpdaterImplementation](#u__5__useNewUpdaterImplementation)     |    `boolean`    | Use the new unified trip update implementation.                                              | *Optional* | `false`              |  2.10 |
 | [headers](#u__5__headers)                                             | `map of string` | HTTP headers to add to the request. Any header key, value can be inserted.                   | *Optional* |                      |  2.3  |
 
 
@@ -134,7 +134,7 @@ How forwards propagation should be handled.
 
 <h4 id="u__5__shadowComparison">shadowComparison</h4>
 
-**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
 **Path:** /updaters/[5] 
 
 Run the legacy and unified trip update implementations in parallel, comparing their outputs.
@@ -156,7 +156,7 @@ The URL of the GTFS-RT resource.
 
 <h4 id="u__5__useNewUpdaterImplementation">useNewUpdaterImplementation</h4>
 
-**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
 **Path:** /updaters/[5] 
 
 Use the new unified trip update implementation.
@@ -218,11 +218,11 @@ This system powers the real-time updates in Helsinki and more information can be
 | [forwardsDelayPropagationType](#u__6__forwardsDelayPropagationType)   |   `enum`  | How forwards propagation should be handled.                                                  | *Optional* | `"default"`          |  2.8  |
 | fuzzyTripMatching                                                     | `boolean` | Whether to match trips fuzzily.                                                              | *Optional* | `false`              |  2.0  |
 | qos                                                                   | `integer` | QOS level.                                                                                   | *Optional* | `0`                  |  2.0  |
-| [shadowComparison](#u__6__shadowComparison)                           | `boolean` | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`              |  2.9  |
-| shadowComparisonReportDirectory                                       |  `string` | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |                      |  2.9  |
+| [shadowComparison](#u__6__shadowComparison)                           | `boolean` | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`              |  2.10 |
+| shadowComparisonReportDirectory                                       |  `string` | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |                      |  2.10 |
 | topic                                                                 |  `string` | The topic to subscribe to.                                                                   | *Required* |                      |  2.0  |
 | url                                                                   |  `string` | URL of the MQTT broker.                                                                      | *Required* |                      |  2.0  |
-| [useNewUpdaterImplementation](#u__6__useNewUpdaterImplementation)     | `boolean` | Use the new unified trip update implementation.                                              | *Optional* | `false`              |  2.9  |
+| [useNewUpdaterImplementation](#u__6__useNewUpdaterImplementation)     | `boolean` | Use the new unified trip update implementation.                                              | *Optional* | `false`              |  2.10 |
 
 
 ##### Parameter details
@@ -270,7 +270,7 @@ How forwards propagation should be handled.
 
 <h4 id="u__6__shadowComparison">shadowComparison</h4>
 
-**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
 **Path:** /updaters/[6] 
 
 Run the legacy and unified trip update implementations in parallel, comparing their outputs.
@@ -283,7 +283,7 @@ comparison always serves the legacy implementation.
 
 <h4 id="u__6__useNewUpdaterImplementation">useNewUpdaterImplementation</h4>
 
-**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
 **Path:** /updaters/[6] 
 
 Use the new unified trip update implementation.

@@ -27,11 +27,11 @@ responds only with the newest data.
 | previewInterval                                                   |    `duration`   | TODO                                                                                                   | *Optional* |               |  2.0  |
 | producerMetrics                                                   |    `boolean`    | If failure, success, and warning metrics should be collected per producer.                             | *Optional* | `false`       |  2.7  |
 | requestorRef                                                      |     `string`    | The requester reference.                                                                               | *Optional* |               |  2.0  |
-| [shadowComparison](#u__8__shadowComparison)                       |    `boolean`    | Run the legacy and unified trip update implementations in parallel, comparing their outputs.           | *Optional* | `false`       |  2.9  |
-| shadowComparisonReportDirectory                                   |     `string`    | Directory to write detailed shadow comparison mismatch reports to.                                     | *Optional* |               |  2.9  |
+| [shadowComparison](#u__8__shadowComparison)                       |    `boolean`    | Run the legacy and unified trip update implementations in parallel, comparing their outputs.           | *Optional* | `false`       |  2.10 |
+| shadowComparisonReportDirectory                                   |     `string`    | Directory to write detailed shadow comparison mismatch reports to.                                     | *Optional* |               |  2.10 |
 | timeout                                                           |    `duration`   | The HTTP timeout to download the updates.                                                              | *Optional* | `"PT15S"`     |  2.0  |
 | [url](#u__8__url)                                                 |     `string`    | The URL to send the HTTP requests to.                                                                  | *Required* |               |  2.0  |
-| [useNewUpdaterImplementation](#u__8__useNewUpdaterImplementation) |    `boolean`    | Use the new unified trip update implementation.                                                        | *Optional* | `false`       |  2.9  |
+| [useNewUpdaterImplementation](#u__8__useNewUpdaterImplementation) |    `boolean`    | Use the new unified trip update implementation.                                                        | *Optional* | `false`       |  2.10 |
 | [headers](#u__8__headers)                                         | `map of string` | HTTP headers to add to the request. Any header key, value can be inserted.                             | *Optional* |               |  2.3  |
 
 
@@ -39,7 +39,7 @@ responds only with the newest data.
 
 <h4 id="u__8__shadowComparison">shadowComparison</h4>
 
-**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
 **Path:** /updaters/[8] 
 
 Run the legacy and unified trip update implementations in parallel, comparing their outputs.
@@ -67,7 +67,7 @@ renamed by the loader when processed:
 
 <h4 id="u__8__useNewUpdaterImplementation">useNewUpdaterImplementation</h4>
 
-**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
 **Path:** /updaters/[8] 
 
 Use the new unified trip update implementation.
@@ -206,11 +206,11 @@ GTFS-RT TripUpdates.
 | feedId                                                             |     `string`    | The ID of the feed to apply the updates to.                                                  | *Required* |               |  2.7  |
 | frequency                                                          |    `duration`   | How often the updates should be retrieved.                                                   | *Optional* | `"PT1M"`      |  2.7  |
 | fuzzyTripMatching                                                  |    `boolean`    | If the fuzzy trip matcher should be used to match trips.                                     | *Optional* | `false`       |  2.7  |
-| [shadowComparison](#u__15__shadowComparison)                       |    `boolean`    | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`       |  2.9  |
-| shadowComparisonReportDirectory                                    |     `string`    | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |               |  2.9  |
+| [shadowComparison](#u__15__shadowComparison)                       |    `boolean`    | Run the legacy and unified trip update implementations in parallel, comparing their outputs. | *Optional* | `false`       |  2.10 |
+| shadowComparisonReportDirectory                                    |     `string`    | Directory to write detailed shadow comparison mismatch reports to.                           | *Optional* |               |  2.10 |
 | timeout                                                            |    `duration`   | The HTTP timeout to download the updates.                                                    | *Optional* | `"PT15S"`     |  2.7  |
 | [url](#u__15__url)                                                 |      `uri`      | The URL to send the HTTP requests to.                                                        | *Required* |               |  2.7  |
-| [useNewUpdaterImplementation](#u__15__useNewUpdaterImplementation) |    `boolean`    | Use the new unified trip update implementation.                                              | *Optional* | `false`       |  2.9  |
+| [useNewUpdaterImplementation](#u__15__useNewUpdaterImplementation) |    `boolean`    | Use the new unified trip update implementation.                                              | *Optional* | `false`       |  2.10 |
 | [headers](#u__15__headers)                                         | `map of string` | HTTP headers to add to the request. Any header key, value can be inserted.                   | *Optional* |               |  2.7  |
 
 
@@ -218,7 +218,7 @@ GTFS-RT TripUpdates.
 
 <h4 id="u__15__shadowComparison">shadowComparison</h4>
 
-**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
 **Path:** /updaters/[15] 
 
 Run the legacy and unified trip update implementations in parallel, comparing their outputs.
@@ -246,7 +246,7 @@ renamed by the loader when processed:
 
 <h4 id="u__15__useNewUpdaterImplementation">useNewUpdaterImplementation</h4>
 
-**Since version:** `2.9` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
+**Since version:** `2.10` ∙ **Type:** `boolean` ∙ **Cardinality:** `Optional` ∙ **Default value:** `false`   
 **Path:** /updaters/[15] 
 
 Use the new unified trip update implementation.
