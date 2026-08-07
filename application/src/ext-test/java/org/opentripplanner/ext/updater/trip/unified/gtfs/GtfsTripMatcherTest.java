@@ -4,6 +4,7 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.time.LocalDate;
+import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
@@ -21,6 +22,12 @@ import org.opentripplanner.updater.spi.UpdateException;
 
 /**
  * The matcher identifies a trip by route, direction and start time, all of which are required.
+ * <p>
+ * A failed match is a non-answer, not a verdict: the matcher declines with an empty Optional and
+ * the caller rejects the update for whatever its exact lookup found - the legacy GTFS-RT path
+ * never emits a fuzzy error code of its own. The one exception is a reference that names no trip
+ * id at all: once the match fails, that message has identified its trip by nothing whatsoever,
+ * and only the matcher can see it.
  */
 class GtfsTripMatcherTest {
 
@@ -150,7 +157,38 @@ class GtfsTripMatcherTest {
       SERVICE_DATE.plusYears(1)
     );
 
+    assertThat(match.orElseThrow().trip().getId()).isEqualTo(id(OUTBOUND_TRIP_ID));
+  }
+
+  /** A reference without a trip id is matched by the same tuple as one with an unknown id. */
+  @Test
+  void matchesAReferenceThatNamesNoTripId() {
+    var match = match(
+      TripReference.builder()
+        .withRouteId(route.getId())
+        .withStartTime(START_TIME)
+        .withStartDate(SERVICE_DATE)
+        .withDirection(Direction.OUTBOUND)
+    );
     assertThat(match.trip().getId()).isEqualTo(id(OUTBOUND_TRIP_ID));
+  }
+
+  /**
+   * Once the match fails, a message that named no trip id has identified its trip by nothing at
+   * all, and only the matcher can see that - no caller knows whether the tuple named a trip. So
+   * this is the one verdict the matcher owns, and it is the same answer legacy reaches through its
+   * post-match validation: structurally invalid.
+   */
+  @Test
+  void rejectsAReferenceThatNamesNoTripAtAll() {
+    var reference = TripReference.builder()
+      .withRouteId(route.getId())
+      .withStartTime("11:11:11")
+      .withStartDate(SERVICE_DATE)
+      .withDirection(Direction.OUTBOUND);
+
+    var exception = assertThrows(UpdateException.class, () -> match(reference));
+    assertThat(exception.errorType()).isEqualTo(UpdateErrorType.INVALID_INPUT_STRUCTURE);
   }
 
   @Test
@@ -179,6 +217,10 @@ class GtfsTripMatcherTest {
   }
 
   private TripAndPattern match(TripReference.Builder reference) {
+    return tryMatch(reference).orElseThrow();
+  }
+
+  private Optional<TripAndPattern> tryMatch(TripReference.Builder reference) {
     var tripReference = reference.build();
     var matcher = new GtfsTripMatcher(env.transitService());
     return matcher.match(
@@ -188,9 +230,12 @@ class GtfsTripMatcherTest {
     );
   }
 
+  /**
+   * The references here all carry a trip id, so a failed match is a decline: the caller keeps the
+   * error of its own exact lookup and the matcher claims nothing.
+   */
   private void assertNoMatch(TripReference.Builder reference) {
-    var exception = assertThrows(UpdateException.class, () -> match(reference));
-    assertThat(exception.errorType()).isEqualTo(UpdateErrorType.NO_FUZZY_TRIP_MATCH);
+    assertThat(tryMatch(reference)).isEmpty();
   }
 
   private static FeedScopedId id(String id) {

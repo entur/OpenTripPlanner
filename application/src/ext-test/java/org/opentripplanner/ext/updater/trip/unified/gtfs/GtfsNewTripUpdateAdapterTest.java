@@ -156,6 +156,7 @@ class GtfsNewTripUpdateAdapterTest implements RealtimeTestConstants {
           var realParser = new GtfsRtTripUpdateParser(
             ForwardsDelayPropagationType.DEFAULT,
             BackwardsDelayPropagationType.REQUIRED_NO_DATA,
+            false,
             feedId,
             env.timeZone(),
             env::defaultServiceDate

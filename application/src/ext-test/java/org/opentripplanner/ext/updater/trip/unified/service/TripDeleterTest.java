@@ -16,6 +16,7 @@ import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.ext.updater.trip.unified.factory.TripRemovalFactory;
 import org.opentripplanner.ext.updater.trip.unified.model.command.DeleteTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.TripReference;
+import org.opentripplanner.ext.updater.trip.unified.resolver.NoOpFuzzyTripMatcher;
 import org.opentripplanner.ext.updater.trip.unified.resolver.ServiceDateResolver;
 import org.opentripplanner.ext.updater.trip.unified.resolver.TripResolver;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
@@ -62,7 +63,12 @@ class TripDeleterTest {
     transitService = (TransitEditorService) env.transitService();
     var tripResolver = new TripResolver(env.transitService());
     var serviceDateResolver = new ServiceDateResolver(tripResolver, env.transitService());
-    factory = new TripRemovalFactory(transitService, tripResolver, serviceDateResolver);
+    factory = new TripRemovalFactory(
+      transitService,
+      tripResolver,
+      serviceDateResolver,
+      NoOpFuzzyTripMatcher.INSTANCE
+    );
     deleter = new TripDeleter();
   }
 

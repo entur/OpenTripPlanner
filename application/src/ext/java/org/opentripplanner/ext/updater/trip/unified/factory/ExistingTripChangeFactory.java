@@ -36,7 +36,7 @@ import org.slf4j.LoggerFactory;
  * Resolution includes:
  * <ul>
  *   <li>Service date (from explicit date, TripOnServiceDate, or aimed departure)</li>
- *   <li>Trip (from trip ID or TripOnServiceDate)</li>
+ *   <li>Trip (from trip ID or TripOnServiceDate, falling back on fuzzy trip matching)</li>
  *   <li>Pattern (the pattern containing the trip)</li>
  *   <li>Scheduled pattern (original if pattern is modified)</li>
  *   <li>Trip times (from scheduled timetable)</li>
@@ -194,7 +194,7 @@ public class ExistingTripChangeFactory {
 
   /**
    * Resolve a Trip and its TripPattern from a TripUpdateCommand.
-   * Supports both exact matching and fuzzy matching (if configured).
+   * Resolves by the trip id the message names or, failing that, by fuzzy trip matching.
    */
   private TripAndPattern resolveTripWithPattern(
     ExistingTripCommand command,
@@ -215,14 +215,11 @@ public class ExistingTripChangeFactory {
       LOG.warn("Trip {} found but no pattern available", trip.getId());
       throw UpdateException.of(reference.tripId(), UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN);
     } catch (UpdateException exactMatchException) {
-      // Exact match failed - try fuzzy matching if enabled
-      if (fuzzyTripMatcher.isEnabled()) {
-        LOG.debug("Exact match failed for {}, trying fuzzy matching", reference);
-        return fuzzyTripMatcher.match(reference, command, serviceDate);
-      }
-
-      // Return the original exact match error
-      throw exactMatchException;
+      // Exact match failed - a matcher with no verdict of its own leaves the exact-match error
+      // standing, exactly as if no matcher had run.
+      return fuzzyTripMatcher
+        .match(reference, command, serviceDate)
+        .orElseThrow(() -> exactMatchException);
     }
   }
 

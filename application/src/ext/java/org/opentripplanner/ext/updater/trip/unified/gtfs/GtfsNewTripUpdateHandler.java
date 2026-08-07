@@ -108,6 +108,8 @@ class GtfsNewTripUpdateHandler implements GtfsTripUpdateHandler {
     // it's not clear what the semantics of this would be and particular how cancellation of a
     // duplicated trip would work.
     // please get in touch with the dev team if you need this functionality.
+    // This veto runs before resolution, so a trip-id-less DUPLICATED whose fuzzy tuple would have
+    // matched nothing is refused here where legacy calls it structurally invalid - both reject.
     if (command instanceof DuplicateTrip && incrementality == DIFFERENTIAL) {
       throw UpdateException.of(
         command.tripReference().tripId(),

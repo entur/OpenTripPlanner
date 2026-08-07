@@ -2,6 +2,8 @@ package org.opentripplanner.updater.trip.gtfs.moduletests.fuzzymatching;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.opentripplanner.updater.spi.UpdateErrorType.TRIP_NOT_FOUND;
+import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
 import com.google.transit.realtime.GtfsRealtime.TripUpdate;
@@ -91,7 +93,9 @@ class FuzzyDirectionMatchingTest implements RealtimeTestConstants {
       fuzzyUpdate(rt).addDelayedStopTime(LAST_STOP_SEQUENCE, DELAY).build()
     );
 
-    assertEquals(1, result.failed());
+    // The failed match has no verdict of its own: the update is rejected for what it said, a trip
+    // id no schedule has.
+    assertFailure(TRIP_NOT_FOUND, result);
     assertTrue(env.timetableSnapshot().isEmpty());
     assertEquals(SCHEDULED_OUTBOUND, env.tripData(TRIP_1_ID).showTimetable());
     assertEquals(SCHEDULED_INBOUND, env.tripData(TRIP_2_ID).showTimetable());
@@ -108,7 +112,7 @@ class FuzzyDirectionMatchingTest implements RealtimeTestConstants {
 
     var result = rt.applyTripUpdate(delayedUpdate(rt, INBOUND_DIRECTION_ID));
 
-    assertEquals(1, result.failed());
+    assertFailure(TRIP_NOT_FOUND, result);
     assertTrue(env.timetableSnapshot().isEmpty());
     assertEquals(SCHEDULED_OUTBOUND, env.tripData(TRIP_1_ID).showTimetable());
   }

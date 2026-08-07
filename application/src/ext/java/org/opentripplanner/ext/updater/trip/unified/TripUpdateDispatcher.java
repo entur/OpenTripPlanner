@@ -140,9 +140,10 @@ public class TripUpdateDispatcher {
     var tripRemovalFactory = new TripRemovalFactory(
       transitService,
       tripResolver,
-      serviceDateResolver
+      serviceDateResolver,
+      fuzzyTripMatcher
     );
-    var tripDuplicationFactory = new TripDuplicationFactory(transitService);
+    var tripDuplicationFactory = new TripDuplicationFactory(transitService, fuzzyTripMatcher);
 
     return new TripUpdateDispatcher(
       existingTripChangeFactory,

@@ -1,14 +1,14 @@
 package org.opentripplanner.ext.updater.trip.unified.resolver;
 
 import java.time.LocalDate;
-import org.opentripplanner.ext.updater.trip.unified.model.command.ExistingTripCommand;
+import java.util.Optional;
 import org.opentripplanner.ext.updater.trip.unified.model.command.TripReference;
-import org.opentripplanner.updater.spi.UpdateErrorType;
-import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.ext.updater.trip.unified.model.command.TripUpdateCommand;
 
 /**
- * A no-op fuzzy trip matcher that always throws UpdateException.
- * Used when fuzzy matching is disabled or not configured.
+ * The matcher of a deployment that identifies trips only by the ids the feed sends - fuzzy
+ * matching disabled or not configured. It never has a verdict, so every caller keeps the error of
+ * the exact lookup it was doing.
  */
 public class NoOpFuzzyTripMatcher implements FuzzyTripMatcher {
 
@@ -17,16 +17,11 @@ public class NoOpFuzzyTripMatcher implements FuzzyTripMatcher {
   private NoOpFuzzyTripMatcher() {}
 
   @Override
-  public TripAndPattern match(
+  public Optional<TripAndPattern> match(
     TripReference tripReference,
-    ExistingTripCommand command,
+    TripUpdateCommand command,
     LocalDate serviceDate
   ) {
-    throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
-  }
-
-  @Override
-  public boolean isEnabled() {
-    return false;
+    return Optional.empty();
   }
 }

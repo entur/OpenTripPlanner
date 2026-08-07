@@ -3,8 +3,9 @@ package org.opentripplanner.ext.updater.trip.unified.gtfs;
 import gnu.trove.set.TIntSet;
 import java.time.LocalDate;
 import java.util.Objects;
-import org.opentripplanner.ext.updater.trip.unified.model.command.ExistingTripCommand;
+import java.util.Optional;
 import org.opentripplanner.ext.updater.trip.unified.model.command.TripReference;
+import org.opentripplanner.ext.updater.trip.unified.model.command.TripUpdateCommand;
 import org.opentripplanner.ext.updater.trip.unified.resolver.FuzzyTripMatcher;
 import org.opentripplanner.ext.updater.trip.unified.resolver.TripAndPattern;
 import org.opentripplanner.transit.model.network.Route;
@@ -30,6 +31,14 @@ import org.slf4j.LoggerFactory;
  * write the update onto a trip running the other way, which is worse than reporting no match at all.
  * The date has to be one the feed reported for the same reason: a date guessed on its behalf would
  * pick out whichever trip runs today.
+ * <p>
+ * A failed match is a non-answer, never a verdict: the legacy matcher hands the descriptor back
+ * unchanged ({@code GtfsRealtimeFuzzyTripMatcher}) and the message is then judged exactly as it
+ * arrived. One carrying an unknown trip id is rejected for that trip being unknown - what the
+ * caller was about to report anyway - so this matcher declines with {@code Optional.empty()} and
+ * never manufactures an error of its own for it. One carrying no trip id at all has, at this
+ * point, identified its trip by nothing whatsoever, and that verdict is this matcher's to give:
+ * structurally invalid, the same answer legacy's post-match validation gives it.
  * <p>
  * Matching algorithm:
  * <ol>
@@ -58,37 +67,37 @@ public class GtfsTripMatcher implements FuzzyTripMatcher {
    *                    and only a reported date identifies a trip.
    */
   @Override
-  public TripAndPattern match(
+  public Optional<TripAndPattern> match(
     TripReference tripReference,
-    ExistingTripCommand command,
+    TripUpdateCommand command,
     LocalDate serviceDate
   ) {
     // Validate required fields
     if (!tripReference.hasRouteId()) {
       LOG.debug("Cannot fuzzy match without route ID");
-      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
+      return declineOrReject(tripReference);
     }
 
     if (!tripReference.hasStartTime()) {
       LOG.debug("Cannot fuzzy match without start time");
-      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
+      return declineOrReject(tripReference);
     }
 
     if (!tripReference.hasDirection()) {
       LOG.debug("Cannot fuzzy match without direction");
-      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
+      return declineOrReject(tripReference);
     }
 
     if (!tripReference.hasStartDate()) {
       LOG.debug("Cannot fuzzy match without start date");
-      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
+      return declineOrReject(tripReference);
     }
 
     // Look up the route
     Route route = transitService.getRoute(tripReference.routeId());
     if (route == null) {
       LOG.debug("Route not found: {}", tripReference.routeId());
-      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
+      return declineOrReject(tripReference);
     }
 
     // Parse start time
@@ -116,7 +125,7 @@ public class GtfsTripMatcher implements FuzzyTripMatcher {
         tripReference.startTime(),
         reportedDate
       );
-      throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
+      return declineOrReject(tripReference);
     }
 
     LOG.debug(
@@ -124,7 +133,22 @@ public class GtfsTripMatcher implements FuzzyTripMatcher {
       match.trip().getId(),
       match.tripPattern().getId()
     );
-    return match;
+    return Optional.of(match);
+  }
+
+  /**
+   * No verdict for a message that named a trip, an own verdict for one that named none. A message
+   * carrying a trip id is rejected by the caller for that id being unknown, exactly as if no
+   * matcher had run. One carrying no trip id has identified its trip by nothing at all once the
+   * match fails, and no caller can know that - only the matcher saw whether the tuple named a
+   * trip - so the structurally-invalid verdict legacy reaches through its post-match validation
+   * ({@code TripUpdate.validate()}) is produced here.
+   */
+  private Optional<TripAndPattern> declineOrReject(TripReference tripReference) {
+    if (!tripReference.hasTripId()) {
+      throw UpdateException.noTripId(UpdateErrorType.INVALID_INPUT_STRUCTURE);
+    }
+    return Optional.empty();
   }
 
   private TripAndPattern findTrip(

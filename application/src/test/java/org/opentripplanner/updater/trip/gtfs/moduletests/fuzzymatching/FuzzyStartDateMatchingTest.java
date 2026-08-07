@@ -2,6 +2,8 @@ package org.opentripplanner.updater.trip.gtfs.moduletests.fuzzymatching;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.opentripplanner.updater.spi.UpdateErrorType.TRIP_NOT_FOUND;
+import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
 import java.time.LocalTime;
@@ -67,7 +69,9 @@ class FuzzyStartDateMatchingTest implements RealtimeTestConstants {
 
     var result = rt.applyTripUpdate(fuzzyUpdate(rt).withoutStartDate().build());
 
-    assertEquals(1, result.failed());
+    // The failed match has no verdict of its own: the update is rejected for what it said, a trip
+    // id no schedule has.
+    assertFailure(TRIP_NOT_FOUND, result);
     assertTrue(env.timetableSnapshot().isEmpty());
     assertEquals(SCHEDULED, env.tripData(TRIP_1_ID).showTimetable());
   }
@@ -81,7 +85,7 @@ class FuzzyStartDateMatchingTest implements RealtimeTestConstants {
       fuzzyUpdate(rt).withStartDate(env.defaultServiceDate().plusDays(1)).build()
     );
 
-    assertEquals(1, result.failed());
+    assertFailure(TRIP_NOT_FOUND, result);
     assertTrue(env.timetableSnapshot().isEmpty());
     assertEquals(SCHEDULED, env.tripData(TRIP_1_ID).showTimetable());
   }

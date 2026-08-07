@@ -5,11 +5,16 @@ import java.time.ZoneId;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import org.opentripplanner.ext.updater.trip.unified.model.command.AddTrip;
+import org.opentripplanner.ext.updater.trip.unified.model.command.DuplicateTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ExistingTripCommand;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ParsedStopTimeUpdate;
+import org.opentripplanner.ext.updater.trip.unified.model.command.RemoveTripCommand;
 import org.opentripplanner.ext.updater.trip.unified.model.command.StopReference;
 import org.opentripplanner.ext.updater.trip.unified.model.command.TripReference;
+import org.opentripplanner.ext.updater.trip.unified.model.command.TripUpdateCommand;
 import org.opentripplanner.ext.updater.trip.unified.resolver.FuzzyTripMatcher;
 import org.opentripplanner.ext.updater.trip.unified.resolver.StopResolver;
 import org.opentripplanner.ext.updater.trip.unified.resolver.TripAndPattern;
@@ -65,7 +70,28 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
   }
 
   @Override
-  public TripAndPattern match(
+  public Optional<TripAndPattern> match(
+    TripReference tripReference,
+    TripUpdateCommand command,
+    LocalDate serviceDate
+  ) {
+    // A SIRI-ET journey is identified by the stops and times of its calls, so only a command that
+    // carries calls can be matched; one that carries none is declined, there being nothing to
+    // match on and so nothing to have a verdict about. Legacy SIRI can fuzzy-match a cancellation,
+    // because the cancellation message still carries its calls - the unified CancelTrip drops
+    // them, a known modelling gap of RemoveTripCommand. If that gap is closed, extending this
+    // switch is a deliberate SIRI behaviour change and needs its own tests.
+    return switch (command) {
+      case ExistingTripCommand existingTripCommand -> Optional.of(
+        matchByCalls(tripReference, existingTripCommand, serviceDate)
+      );
+      case RemoveTripCommand ignored -> Optional.empty();
+      case AddTrip ignored -> Optional.empty();
+      case DuplicateTrip ignored -> Optional.empty();
+    };
+  }
+
+  private TripAndPattern matchByCalls(
     TripReference tripReference,
     ExistingTripCommand command,
     LocalDate serviceDate

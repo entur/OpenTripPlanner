@@ -47,6 +47,7 @@ class GtfsRtTripUpdateParserTest {
     parser = new GtfsRtTripUpdateParser(
       ForwardsDelayPropagationType.DEFAULT,
       BackwardsDelayPropagationType.ALWAYS,
+      false,
       FEED_ID,
       TIME_ZONE,
       () -> TEST_DATE

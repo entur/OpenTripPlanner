@@ -9,6 +9,7 @@ import org.opentripplanner.ext.updater.trip.unified.model.change.ScheduledTripRe
 import org.opentripplanner.ext.updater.trip.unified.model.change.TripRemoval;
 import org.opentripplanner.ext.updater.trip.unified.model.command.RemoveTripCommand;
 import org.opentripplanner.ext.updater.trip.unified.model.command.VehicleDescription;
+import org.opentripplanner.ext.updater.trip.unified.resolver.FuzzyTripMatcher;
 import org.opentripplanner.ext.updater.trip.unified.resolver.ServiceDateResolver;
 import org.opentripplanner.ext.updater.trip.unified.resolver.TripResolver;
 import org.opentripplanner.transit.model.network.TripPattern;
@@ -25,27 +26,34 @@ import org.opentripplanner.updater.spi.UpdateException;
  * Used for CANCEL_TRIP ({@link org.opentripplanner.ext.updater.trip.unified.model.command.CancelTrip})
  * and DELETE_TRIP ({@link org.opentripplanner.ext.updater.trip.unified.model.command.DeleteTrip}).
  * <p>
- * The factory looks up scheduled trips first, then checks for previously added (real-time)
- * trips via the transit service, which sees all in-progress real-time updates in the
- * timetable snapshot buffer of the current update task. Which of the two it finds decides whether
- * the removal is a {@link ScheduledTripRemoval} or a {@link AddedTripRemoval}.
+ * The factory looks up scheduled trips first - by the trip id the message names or, failing that,
+ * by fuzzy trip matching - then checks for previously added (real-time) trips via the transit
+ * service, which sees all in-progress real-time updates in the timetable snapshot buffer of the
+ * current update task. Which of the two it finds decides whether the removal is a
+ * {@link ScheduledTripRemoval} or a {@link AddedTripRemoval}.
  */
 public class TripRemovalFactory {
 
   private final TransitEditorService transitService;
   private final TripResolver tripResolver;
   private final ServiceDateResolver serviceDateResolver;
+  private final FuzzyTripMatcher fuzzyTripMatcher;
 
   public TripRemovalFactory(
     TransitEditorService transitService,
     TripResolver tripResolver,
-    ServiceDateResolver serviceDateResolver
+    ServiceDateResolver serviceDateResolver,
+    FuzzyTripMatcher fuzzyTripMatcher
   ) {
     this.transitService = Objects.requireNonNull(transitService, "transitService must not be null");
     this.tripResolver = Objects.requireNonNull(tripResolver, "tripResolver must not be null");
     this.serviceDateResolver = Objects.requireNonNull(
       serviceDateResolver,
       "serviceDateResolver must not be null"
+    );
+    this.fuzzyTripMatcher = Objects.requireNonNull(
+      fuzzyTripMatcher,
+      "fuzzyTripMatcher must not be null"
     );
   }
 
@@ -70,8 +78,14 @@ public class TripRemovalFactory {
     try {
       trip = tripResolver.resolveTrip(tripReference);
     } catch (UpdateException e) {
-      // Trip not found in scheduled data - check for previously added trips
-      return resolveAddedTripOrNotFound(serviceDate, tripId, dataSource, vehicleDescription);
+      // A removal identifies its trip like every other update, so a failed exact resolve asks the
+      // fuzzy matcher next. A matcher with no verdict is not the last word here: the message may
+      // still name a trip an earlier message added, which is what the caller looks for after.
+      var match = fuzzyTripMatcher.match(tripReference, command, serviceDate);
+      if (match.isEmpty()) {
+        return resolveAddedTripOrNotFound(serviceDate, tripId, dataSource, vehicleDescription);
+      }
+      trip = match.get().trip();
     }
 
     // Find pattern for the trip

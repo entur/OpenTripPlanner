@@ -496,6 +496,16 @@ public class TripUpdateBuilder {
     return this;
   }
 
+  /**
+   * Drop the {@code trip_id} the builder sets by default, as a feed whose producer cannot supply
+   * trip ids does. Such an update names its trip by route, direction, start time and start date
+   * instead, which only fuzzy trip matching can resolve.
+   */
+  public TripUpdateBuilder withoutTripId() {
+    tripDescriptorBuilder.clearTripId();
+    return this;
+  }
+
   public TripUpdateBuilder withRouteId(String routeId) {
     tripDescriptorBuilder.setRouteId(routeId);
     return this;

@@ -52,6 +52,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
   private final ForwardsDelayPropagationType forwardsDelayPropagationType;
   private final BackwardsDelayPropagationType backwardsDelayPropagationType;
+  private final boolean fuzzyMatchingEnabled;
   private final String feedId;
   private final ZoneId timeZone;
   private final Supplier<LocalDate> localDateNow;
@@ -60,12 +61,14 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
   public GtfsRtTripUpdateParser(
     ForwardsDelayPropagationType forwardsDelayPropagationType,
     BackwardsDelayPropagationType backwardsDelayPropagationType,
+    boolean fuzzyMatchingEnabled,
     String feedId,
     ZoneId timeZone,
     Supplier<LocalDate> localDateNow
   ) {
     this.forwardsDelayPropagationType = forwardsDelayPropagationType;
     this.backwardsDelayPropagationType = backwardsDelayPropagationType;
+    this.fuzzyMatchingEnabled = fuzzyMatchingEnabled;
     this.feedId = Objects.requireNonNull(feedId);
     this.timeZone = Objects.requireNonNull(timeZone);
     this.localDateNow = Objects.requireNonNull(localDateNow);
@@ -74,10 +77,22 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
   @Override
   public TripUpdateCommand parse(GtfsRealtime.TripUpdate update) {
     var tripUpdate = new TripUpdate(feedId, update, localDateNow);
+    var tripId = tripUpdate.tripIdOrNull();
 
-    tripUpdate.validate();
+    // GTFS-RT names a trip by its trip_id. A feed whose producer cannot supply one names it by its
+    // schedule instead - route, direction, start time and start date, all four - and the
+    // deployment declares that with the fuzzyTripMatching config parameter. A message that names
+    // its trip neither way names no trip. Whether the schedule tuple names a trip that exists is
+    // not knowable here; the fuzzy matcher gives that verdict at resolution.
+    if (tripId == null) {
+      if (!fuzzyMatchingEnabled || !identifiesTripBySchedule(tripUpdate)) {
+        throw UpdateException.noTripId(INVALID_INPUT_STRUCTURE);
+      }
+      tripUpdate.validateWithoutTripId();
+    } else {
+      tripUpdate.validate();
+    }
 
-    var tripId = tripUpdate.tripId();
     var scheduleRelationship = tripUpdate.scheduleRelationship();
     LocalDate serviceDate = tripUpdate.startDate();
 
@@ -89,6 +104,17 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
         case UNSCHEDULED -> UpdateException.of(tripId, NOT_IMPLEMENTED_UNSCHEDULED);
         default -> UpdateException.of(tripId, INVALID_INPUT_STRUCTURE);
       };
+    }
+
+    // An added trip is created under the id the message gives it, so no match can supply one and
+    // a message adding a trip without naming it is invalid. Legacy instead binds such a message to
+    // the id of whatever scheduled trip its tuple happens to match and then rejects it as
+    // TRIP_ALREADY_EXISTS - the same rejection, reached through a model lookup whose only possible
+    // product is that rejection. An added trip that does name itself is taken at its word: the
+    // matcher is never consulted for an addition, where legacy's blanket pre-parse rewrite fires
+    // for it too.
+    if (updateType == TripUpdateType.ADD_NEW_TRIP && tripId == null) {
+      throw UpdateException.noTripId(INVALID_INPUT_STRUCTURE);
     }
 
     var gtfsPolicy = FormatPolicy.gtfsRt(
@@ -166,10 +192,28 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     };
   }
 
-  private TripReference buildTripReference(FeedScopedId tripId, TripUpdate tripUpdate) {
+  /**
+   * Whether the message names its trip by the schedule: route, direction, start time and start
+   * date, all four - the same fields the fuzzy matcher requires, because no subset of them
+   * identifies one trip.
+   */
+  private boolean identifiesTripBySchedule(TripUpdate tripUpdate) {
+    return (
+      tripUpdate.routeId().isPresent() &&
+      tripUpdate.descriptor().directionId().isPresent() &&
+      tripUpdate.startTime().isPresent() &&
+      tripUpdate.reportedStartDate().isPresent()
+    );
+  }
+
+  private TripReference buildTripReference(@Nullable FeedScopedId tripId, TripUpdate tripUpdate) {
     // Only the date the feed reported, not the service date resolved from it: the reference says what
     // the feed said about the trip, and a fuzzy match may only identify a trip by a reported date.
-    var builder = TripReference.builder().withTripId(tripId);
+    var builder = TripReference.builder();
+
+    if (tripId != null) {
+      builder.withTripId(tripId);
+    }
 
     tripUpdate.reportedStartDate().ifPresent(builder::withStartDate);
 
@@ -194,7 +238,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
    *                           scheduled time still has to produce one.
    */
   private List<ParsedStopTimeUpdate> parseStopTimeUpdates(
-    FeedScopedId tripId,
+    @Nullable FeedScopedId tripId,
     List<StopTimeUpdate> updates,
     LocalDate serviceDate,
     boolean reportsOwnSchedule
