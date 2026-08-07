@@ -4,9 +4,7 @@ import static org.opentripplanner.standalone.config.framework.json.EnumMapper.do
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_0;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_2;
 import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_8;
-import static org.opentripplanner.standalone.config.framework.json.OtpVersion.V2_9;
 
-import java.nio.file.Path;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
@@ -15,6 +13,7 @@ import org.opentripplanner.updater.trip.gtfs.updater.mqtt.MqttGtfsRealtimeUpdate
 public class MqttGtfsRealtimeUpdaterConfig {
 
   public static MqttGtfsRealtimeUpdaterParameters create(String configRef, NodeAdapter c) {
+    var adapterSelection = TripUpdateAdapterSelectionConfig.create(c);
     return new MqttGtfsRealtimeUpdaterParameters(
       configRef,
       c.of("feedId").since(V2_0).summary("The feed id to apply the updates to.").asString(),
@@ -38,31 +37,9 @@ public class MqttGtfsRealtimeUpdaterConfig {
         .summary(BackwardsDelayPropagationType.REQUIRED_NO_DATA.typeDescription())
         .description(docEnumValueList(BackwardsDelayPropagationType.values()))
         .asEnum(BackwardsDelayPropagationType.REQUIRED_NO_DATA),
-      c
-        .of("useNewUpdaterImplementation")
-        .since(V2_9)
-        .summary(
-          "Use the new unified trip update implementation. " +
-            "When true, uses the new format-independent implementation shared by SIRI-ET and GTFS-RT. " +
-            "When false (default), uses the legacy GtfsRealTimeTripUpdateAdapter."
-        )
-        .asBoolean(false),
-      c
-        .of("shadowComparison")
-        .since(V2_9)
-        .summary("Run the legacy and unified adapters in parallel, comparing their outputs.")
-        .asBoolean(false),
-      optionalPath(
-        c
-          .of("shadowComparisonReportDirectory")
-          .since(V2_9)
-          .summary("Directory to write detailed shadow comparison mismatch reports to.")
-          .asString(null)
-      )
+      adapterSelection.useNewUpdaterImplementation(),
+      adapterSelection.shadowComparison(),
+      adapterSelection.shadowComparisonReportDirectory()
     );
-  }
-
-  private static Path optionalPath(String value) {
-    return value != null ? Path.of(value) : null;
   }
 }

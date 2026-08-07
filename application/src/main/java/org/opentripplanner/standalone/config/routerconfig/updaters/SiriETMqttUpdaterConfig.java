@@ -1,6 +1,5 @@
 package org.opentripplanner.standalone.config.routerconfig.updaters;
 
-import java.nio.file.Path;
 import java.time.Duration;
 import org.opentripplanner.ext.siri.updater.mqtt.MqttSiriETUpdaterParameters;
 import org.opentripplanner.standalone.config.framework.json.NodeAdapter;
@@ -102,30 +101,7 @@ public class SiriETMqttUpdaterConfig {
       )
       .asDuration(Duration.ofSeconds(30));
 
-    boolean useNewUpdaterImplementation = siriMqttRoot
-      .of("useNewUpdaterImplementation")
-      .since(OtpVersion.V2_9)
-      .summary("Use the new trip updater implementation.")
-      .description(
-        """
-        When enabled, uses the new modular trip updater implementation shared by
-        SIRI-ET and GTFS-RT. This is experimental and should be used with caution.
-        The default value is `false`, which uses the legacy implementation.
-        """
-      )
-      .asBoolean(false);
-
-    boolean shadowComparison = siriMqttRoot
-      .of("shadowComparison")
-      .since(OtpVersion.V2_9)
-      .summary("Run the legacy and unified adapters in parallel, comparing their outputs.")
-      .asBoolean(false);
-
-    String reportDir = siriMqttRoot
-      .of("shadowComparisonReportDirectory")
-      .since(OtpVersion.V2_9)
-      .summary("Directory to write detailed shadow comparison mismatch reports to.")
-      .asString(null);
+    var adapterSelection = TripUpdateAdapterSelectionConfig.create(siriMqttRoot);
 
     return new MqttSiriETUpdaterParameters(
       configRef,
@@ -140,9 +116,9 @@ public class SiriETMqttUpdaterConfig {
       numberOfPrimingWorkers,
       maxPrimingIdleTime,
       connectionStartupTimeout,
-      useNewUpdaterImplementation,
-      shadowComparison,
-      reportDir != null ? Path.of(reportDir) : null
+      adapterSelection.useNewUpdaterImplementation(),
+      adapterSelection.shadowComparison(),
+      adapterSelection.shadowComparisonReportDirectory()
     );
   }
 }

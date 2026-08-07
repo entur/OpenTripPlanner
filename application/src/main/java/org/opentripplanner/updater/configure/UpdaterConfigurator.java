@@ -382,7 +382,8 @@ public class UpdaterConfigurator {
   /**
    * Create the SIRI-ET trip update adapter selected by the configuration: the shadow-comparison
    * adapter (running legacy and unified side by side), the new unified adapter, or the legacy
-   * adapter.
+   * adapter. The two flags are mutually exclusive - config parsing rejects setting both, see
+   * {@code TripUpdateAdapterSelectionConfig}.
    */
   private SiriTripUpdateAdapter createSiriAdapter(
     boolean shadowComparison,
@@ -439,7 +440,8 @@ public class UpdaterConfigurator {
   /**
    * Create the GTFS-RT trip update adapter selected by the configuration: the shadow-comparison
    * adapter (running legacy and unified side by side), the new unified adapter, or the legacy
-   * adapter.
+   * adapter. The two flags are mutually exclusive - config parsing rejects setting both, see
+   * {@code TripUpdateAdapterSelectionConfig}.
    */
   private GtfsTripUpdateAdapter createGtfsAdapter(
     boolean shadowComparison,
