@@ -21,9 +21,9 @@ data:
             // "IncludeStopsUsedRealTimeInTransfers" has been is production for a week
             "IncludeEmptyRailStopsInTransfers" : true,
             // Will be used when PR 7042 Missing transfers is merged
-            "IncludeStopsUsedRealTimeInTransfers" : true,
-            "GbfsGeofencingBuildTime": {{ .Values.otpFeatures.gbfsGeofencingBuildTime | default false }}
-        }
+            "IncludeStopsUsedRealTimeInTransfers" : true
+        },
+        {{ include "otp2.gbfsConfig" . | indent 8 | trim }}
       }
   build-config.json: |+
       {
@@ -113,21 +113,14 @@ data:
             }
           ]
         },
-        {{- if and .Values.gbfsGeofencing .Values.gbfsGeofencing.feeds }}
-        "gbfsGeofencing": {
-          "feeds": [
-            {{- range $index, $feed := .Values.gbfsGeofencing.feeds }}
-            {{- if $index }},{{ end }}
-            {
-              "url": "{{ $feed.url }}",
-              "network": "{{ $feed.network }}",
-              "applyBusinessAreas": "{{ $feed.applyBusinessArea }}",
-              "headers":{
-                "ET-Client-Name": "entur-otp2"
-              }
-            }
-            {{- end }}
-          ]
+        {{- if .Values.vehicleRentalGraphBuilder }}
+        // Networks are discovered from the manifest; which of them are built here is decided by
+        // "geofencingZones": "permanent" in the shared gbfs section of otp-config.json.
+        "vehicleRentalGraphBuilder": {
+          "url": "{{ .Values.vehicleRentalGraphBuilder.url }}",
+          "headers": {
+            "ET-Client-Name": "entur-otp2"
+          }
         },
         {{- end }}
         "streetGraph": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukInternalBucket }}/${OTP_GCS_BASE_GRAPH_PATH}/streetGraph-otp2-${otp.serialization.version.id}.obj",

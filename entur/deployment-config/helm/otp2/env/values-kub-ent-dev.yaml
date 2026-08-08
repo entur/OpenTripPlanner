@@ -2,7 +2,6 @@ otpFeatures:
   costlyAssertions: true
   emission: true
   empiricalDelay: true
-  gbfsGeofencingBuildTime: true
 journeyPlanner:
   enabled: false
 cronjobRedeployGraphBuilder:
@@ -10,113 +9,93 @@ cronjobRedeployGraphBuilder:
     mardukBucket: marduk-dev
     mardukInternalBucket: ror-marduk-internal-dev
     ignoreFareFrame: false
-gbfsGeofencing:
-  feeds:
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/voioslo/gbfs"
-      network: "voioslo"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/voiarendal/gbfs"
-      network: "voiarendal"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/voibergen/gbfs"
-      network: "voibergen"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/voifredrikstad/gbfs"
-      network: "voifredrikstad"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/voikristiansand/gbfs"
-      network: "voikristiansand"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/voilillestrom/gbfs"
-      network: "voilillestrom"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/voistavanger/gbfs"
-      network: "voistavanger"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/voitrondheim/gbfs"
-      network: "voitrondheim"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/boltoslo/gbfs"
-      network: "boltoslo"
-      applyBusinessArea: true
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/boltdrammen/gbfs"
-      network: "boltdrammen"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/boltfredrikstad/gbfs"
-      network: "boltfredrikstad"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/boltgjovik/gbfs"
-      network: "boltgjovik"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/bolthamar/gbfs"
-      network: "bolthamar"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/boltkristiansand/gbfs"
-      network: "boltkristiansand"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/boltlillehammer/gbfs"
-      network: "boltlillehammer"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/boltlillestrom/gbfs"
-      network: "boltlillestrom"
-      applyBusinessArea: true
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/boltsarpsborg/gbfs"
-      network: "boltsarpsborg"
-      applyBusinessArea: true
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydeoslo/gbfs"
-      network: "rydeoslo"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydeaalesund/gbfs"
-      network: "rydeaalesund"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydefredrikstad/gbfs"
-      network: "rydefredrikstad"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydeporsgrunn/gbfs"
-      network: "rydeporsgrunn"
-      applyBusinessArea: true
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydesandefjord/gbfs"
-      network: "rydesandefjord"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydesarpsborg/gbfs"
-      network: "rydesarpsborg"
-      applyBusinessArea: true
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydeskien/gbfs"
-      network: "rydeskien"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydetonsberg/gbfs"
-      network: "rydetonsberg"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydetromso/gbfs"
-      network: "rydetromso"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/rydetrondheim/gbfs"
-      network: "rydetrondheim"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/dottmalvik/gbfs"
-      network: "dottmalvik"
-      applyBusinessArea: true
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/dottmelhus/gbfs"
-      network: "dottmelhus"
-      applyBusinessArea: true
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/dottorkanger/gbfs"
-      network: "dottorkanger"
-      applyBusinessArea: true
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/dottskaun/gbfs"
-      network: "dottskaun"
-      applyBusinessArea: true
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/dottstjordal/gbfs"
-      network: "dottstjordal"
-      applyBusinessArea: true
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/dotttrondheim/gbfs"
-      network: "dotttrondheim"
-      applyBusinessArea: true
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/altairtrondheim/gbfs"
-      network: "altairtrondheim"
-      applyBusinessArea: true
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/evietrondheim/gbfs"
-      network: "evietrondheim"
-      applyBusinessArea: false
-    - url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/eziotrondheim/gbfs"
-      network: "eziotrondheim"
-      applyBusinessArea: false
+vehicleRentalGraphBuilder:
+  url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/manifest.json"
+
+# Overrides the chart default: this environment builds zones for more networks.
+gbfs:
+  networks:
+  - network: voioslo
+    geofencingZones: permanent
+  - network: voiarendal
+    geofencingZones: permanent
+  - network: voibergen
+    geofencingZones: permanent
+  - network: voifredrikstad
+    geofencingZones: permanent
+  - network: voikristiansand
+    geofencingZones: permanent
+  - network: voilillestrom
+    geofencingZones: permanent
+  - network: voistavanger
+    geofencingZones: permanent
+  - network: voitrondheim
+    geofencingZones: permanent
+  - network: boltoslo
+    geofencingZones: permanent
+    requireDropOffInsideBusinessArea: true
+  - network: boltdrammen
+    geofencingZones: permanent
+  - network: boltfredrikstad
+    geofencingZones: permanent
+  - network: boltgjovik
+    geofencingZones: permanent
+  - network: bolthamar
+    geofencingZones: permanent
+  - network: boltkristiansand
+    geofencingZones: permanent
+  - network: boltlillehammer
+    geofencingZones: permanent
+  - network: boltlillestrom
+    geofencingZones: permanent
+    requireDropOffInsideBusinessArea: true
+  - network: boltsarpsborg
+    geofencingZones: permanent
+    requireDropOffInsideBusinessArea: true
+  - network: rydeoslo
+    geofencingZones: permanent
+  - network: rydeaalesund
+    geofencingZones: permanent
+  - network: rydefredrikstad
+    geofencingZones: permanent
+  - network: rydeporsgrunn
+    geofencingZones: permanent
+    requireDropOffInsideBusinessArea: true
+  - network: rydesandefjord
+    geofencingZones: permanent
+  - network: rydesarpsborg
+    geofencingZones: permanent
+    requireDropOffInsideBusinessArea: true
+  - network: rydeskien
+    geofencingZones: permanent
+  - network: rydetonsberg
+    geofencingZones: permanent
+  - network: rydetromso
+    geofencingZones: permanent
+  - network: rydetrondheim
+    geofencingZones: permanent
+  - network: dottmalvik
+    geofencingZones: permanent
+    requireDropOffInsideBusinessArea: true
+  - network: dottmelhus
+    geofencingZones: permanent
+    requireDropOffInsideBusinessArea: true
+  - network: dottorkanger
+    geofencingZones: permanent
+    requireDropOffInsideBusinessArea: true
+  - network: dottskaun
+    geofencingZones: permanent
+    requireDropOffInsideBusinessArea: true
+  - network: dottstjordal
+    geofencingZones: permanent
+    requireDropOffInsideBusinessArea: true
+  - network: dotttrondheim
+    geofencingZones: permanent
+    requireDropOffInsideBusinessArea: true
+  - network: altairtrondheim
+    geofencingZones: permanent
+    requireDropOffInsideBusinessArea: true
+  - network: evietrondheim
+    geofencingZones: permanent
+  - network: eziotrondheim
+    geofencingZones: permanent
