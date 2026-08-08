@@ -87,3 +87,18 @@ cronjobRedeployOtp2:
 secrets:
   otp2-secrets:
    - SLACK_URL
+
+# Per-network GBFS configuration shared by the graph builder (build phase) and the vehicle
+# rental service directory (serve phase). Both otp-config.json templates render this.
+# "geofencingZones" names the phase that computes a network's zones, so they cannot be
+# applied twice. Unlisted networks are still loaded, with zones off.
+gbfs:
+  includeUnlistedNetworks: true
+  networks:
+  - network: voioslo
+    geofencingZones: permanent
+  - network: boltoslo
+    geofencingZones: permanent
+    requireDropOffInsideBusinessArea: true
+  - network: rydeoslo
+    geofencingZones: permanent

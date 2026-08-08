@@ -21,7 +21,8 @@ data:
         "CarPooling": {{ .Values.configuration.carpooling }},
         "HttpResponseTimeMetrics": true,
         "GoogleCloudStorage": true
-      }
+      },
+      {{ include "otp2.gbfsConfig" . | indent 6 | trim }}
    }
 kind: ConfigMap
 metadata:

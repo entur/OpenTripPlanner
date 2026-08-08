@@ -65,3 +65,26 @@ slack: talk-ror
 type: api
 namespace: {{ .Release.Namespace }}
 {{- end }}
+
+{{/*
+Shared GBFS per-network configuration for otp-config.json.
+
+Read by both phases: the vehicle rental graph builder (build) and the vehicle rental service
+directory (serve). "geofencingZones" names the phase that computes a network's zones, so a
+network cannot have its zones applied twice.
+*/}}
+{{- define "otp2.gbfsConfig" -}}
+"gbfs": {
+  "includeUnlistedNetworks": {{ .Values.gbfs.includeUnlistedNetworks }},
+  "networks": [
+    {{- range $index, $network := .Values.gbfs.networks }}
+    {{- if $index }},{{ end }}
+    {
+      "network": "{{ $network.network }}",
+      "geofencingZones": "{{ $network.geofencingZones | default "off" }}",
+      "requireDropOffInsideBusinessArea": {{ $network.requireDropOffInsideBusinessArea | default false }}
+    }
+    {{- end }}
+  ]
+}
+{{- end }}
