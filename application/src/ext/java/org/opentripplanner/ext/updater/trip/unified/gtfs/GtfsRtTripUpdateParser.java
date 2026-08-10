@@ -53,6 +53,14 @@ import org.opentripplanner.utils.time.ServiceDateUtils;
  */
 public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.TripUpdate> {
 
+  /**
+   * How far past the start of its service day a call of a trip that brings its own schedule may
+   * lie. GTFS bounds a service day at 48 hours, and a time outside the day the message names is a
+   * producer error - typically a timestamp on the wrong day - that would publish the trip on the
+   * wrong service day.
+   */
+  private static final long MAX_ARRIVAL_DEPARTURE_TIME = 48 * 60 * 60;
+
   private final ForwardsDelayPropagationType forwardsDelayPropagationType;
   private final BackwardsDelayPropagationType backwardsDelayPropagationType;
   private final boolean fuzzyMatchingEnabled;
@@ -278,6 +286,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     boolean reportsOwnSchedule
   ) {
     var result = new ArrayList<ParsedStopTimeUpdate>();
+    long startOfService = startOfServiceSecondsSinceEpoch(serviceDate);
 
     for (var i = 0; i < updates.size(); i++) {
       var update = updates.get(i);
@@ -317,7 +326,24 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
         }
       }
 
-      parseStopTimeUpdateTimes(update, builder, serviceDate, reportsOwnSchedule);
+      // A trip that brings its own schedule places its calls by the scheduled times it reports,
+      // so each of them must lie within the service day the message names - from its start to
+      // the 48-hour limit. A time outside it is a producer error, typically a timestamp on the
+      // wrong day, that would publish the trip on the wrong service day.
+      if (reportsOwnSchedule) {
+        if (
+          !isWithinServiceDay(update.scheduledArrivalTimeWithRealTimeFallback(), startOfService)
+        ) {
+          throw UpdateException.of(tripId, INVALID_ARRIVAL_TIME, i);
+        }
+        if (
+          !isWithinServiceDay(update.scheduledDepartureTimeWithRealTimeFallback(), startOfService)
+        ) {
+          throw UpdateException.of(tripId, INVALID_DEPARTURE_TIME, i);
+        }
+      }
+
+      parseStopTimeUpdateTimes(update, builder, startOfService, reportsOwnSchedule);
 
       update.stopHeadsign().ifPresent(builder::withStopHeadsign);
 
@@ -342,6 +368,19 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     return stopSequence.isPresent() ? StopSequence.of(stopSequence.getAsInt()) : null;
   }
 
+  /**
+   * Whether the scheduled time the call reports lies within its service day - from the start of
+   * service to the 48-hour limit. A call that reports no scheduled time has nothing to hold
+   * against the day.
+   */
+  private static boolean isWithinServiceDay(OptionalLong scheduledTime, long startOfService) {
+    if (scheduledTime.isEmpty()) {
+      return true;
+    }
+    long secondsPastMidnight = scheduledTime.getAsLong() - startOfService;
+    return 0 <= secondsPastMidnight && secondsPastMidnight <= MAX_ARRIVAL_DEPARTURE_TIME;
+  }
+
   private ParsedStopTimeUpdate.StopUpdateStatus mapStopTimeStatus(StopTimeUpdate update) {
     if (update.isSkipped()) {
       return ParsedStopTimeUpdate.StopUpdateStatus.SKIPPED;
@@ -355,11 +394,9 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
   private void parseStopTimeUpdateTimes(
     StopTimeUpdate update,
     ParsedStopTimeUpdate.Builder builder,
-    LocalDate serviceDate,
+    long startOfService,
     boolean reportsOwnSchedule
   ) {
-    long startOfService = startOfServiceSecondsSinceEpoch(serviceDate);
-
     var arrival = parseTimeUpdate(
       update.arrivalTime(),
       update.arrivalDelay(),
