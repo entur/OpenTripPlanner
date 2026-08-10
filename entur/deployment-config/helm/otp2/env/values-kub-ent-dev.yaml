@@ -9,7 +9,7 @@ cronjobRedeployGraphBuilder:
     mardukBucket: marduk-dev
     mardukInternalBucket: ror-marduk-internal-dev
     ignoreFareFrame: false
-vehicleRentalGraphBuilder:
+vehicleRentalGeofencing:
   url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/manifest.json"
 
 # Build zones for every system in the manifest that publishes them; systems that do not

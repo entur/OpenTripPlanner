@@ -113,11 +113,11 @@ data:
             }
           ]
         },
-        {{- if .Values.vehicleRentalGraphBuilder }}
+        {{- if .Values.vehicleRentalGeofencing }}
         // Networks are discovered from the manifest; which of them are built here is decided by
         // "geofencingZones": "permanent" in the shared gbfs section of otp-config.json.
-        "vehicleRentalGraphBuilder": {
-          "url": "{{ .Values.vehicleRentalGraphBuilder.url }}",
+        "vehicleRentalGeofencing": {
+          "url": "{{ .Values.vehicleRentalGeofencing.url }}",
           "headers": {
             "ET-Client-Name": "entur-otp2"
           }

@@ -9,5 +9,5 @@ cronjobRedeployGraphBuilder:
     mardukBucket: marduk-production
     mardukInternalBucket: ror-marduk-internal-production
     ignoreFareFrame: false
-vehicleRentalGraphBuilder:
+vehicleRentalGeofencing:
   url: "https://api.entur.io/mobility/v2/gbfs/v3/manifest.json"
