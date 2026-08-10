@@ -275,6 +275,15 @@ class AddedTest implements RealtimeTestConstants {
     var pattern = assertAddedTrip(ADDED_TRIP_ID, env);
     var staticRoute = env.transitService().getRoute(id("Route1"));
     assertSame(staticRoute, pattern.getRoute());
+
+    // the static route must not also be registered as real-time-added, or it would be listed twice
+    var listedCount = env
+      .transitService()
+      .listRoutes()
+      .stream()
+      .filter(route -> route.getId().equals(id("Route1")))
+      .count();
+    assertEquals(1, listedCount);
   }
 
   @Test

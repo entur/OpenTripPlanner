@@ -49,10 +49,7 @@ public class GtfsRtRouteCreationStrategy implements RouteCreationStrategy {
       Route existingRoute = transitService.getRoute(routeId);
       if (existingRoute != null) {
         LOG.debug("ADD_TRIP: Using existing route {}", routeId);
-        // Always mark isNewRoute=true for GTFS-RT. In FULL_DATASET mode the snapshot
-        // buffer is cleared each batch, so routes always need re-registration even if
-        // they were found in the transit service.
-        return new RouteResolution(existingRoute, true, null);
+        return new RouteResolution(existingRoute, false, null);
       }
 
       // Route not found - create using routeCreationInfo if available

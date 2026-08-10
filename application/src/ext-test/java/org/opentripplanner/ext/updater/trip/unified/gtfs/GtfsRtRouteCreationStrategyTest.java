@@ -1,6 +1,7 @@
 package org.opentripplanner.ext.updater.trip.unified.gtfs;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -52,9 +53,9 @@ class GtfsRtRouteCreationStrategyTest {
 
     var resolution = strategy.resolveOrCreateRoute(info, null, transitService);
 
-    // A route found in the transit service is still marked as new, to ensure re-registration in
-    // FULL update mode snapshots
-    assertTrue(resolution.isNewRoute());
+    // A route found in the transit service must not be registered as real-time-added, or it
+    // would be listed twice
+    assertFalse(resolution.isNewRoute());
     assertEquals(ROUTE_ID, resolution.route().getId());
   }
 
