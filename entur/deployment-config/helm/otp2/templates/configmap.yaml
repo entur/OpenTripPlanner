@@ -207,9 +207,6 @@ data:
           "headers": {
             "ET-Client-Name": "entur-otp2"
           }
-          // Per-network settings live in the shared "gbfs" section of otp-config.json, which is
-          // also read by the graph builder. "includeUnlistedNetworks" there replaces what the
-          // "default-network" entry used to do here.
         },
         "transmodelApi": {
           "hideFeedId": true,
