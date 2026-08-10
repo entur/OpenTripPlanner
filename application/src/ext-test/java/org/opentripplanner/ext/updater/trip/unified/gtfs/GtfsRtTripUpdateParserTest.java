@@ -113,6 +113,78 @@ class GtfsRtTripUpdateParserTest {
     assertEquals(UpdateErrorType.INVALID_STOP_SEQUENCE, ex.errorType());
   }
 
+  /**
+   * An arrival or departure of a SCHEDULED trip update must state a time or a delay - an event
+   * stating neither is a producer error that rejects the entity, not an unreported call for the
+   * interpolator to fill in. A scheduled time alone is no prediction either; only a trip that
+   * brings its own schedule may report just that.
+   */
+  @Test
+  void rejectEmptyArrivalEvent() {
+    var tripUpdate = scheduledTripUpdateWithEventOnSecondStop(
+      GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder()
+    );
+
+    var ex = assertThrows(UpdateException.class, () -> parser.parse(tripUpdate));
+    assertEquals(UpdateErrorType.INVALID_ARRIVAL_TIME, ex.errorType());
+    assertEquals(1, ex.stopPosition());
+  }
+
+  @Test
+  void rejectScheduledTimeOnlyArrivalEvent() {
+    var tripUpdate = scheduledTripUpdateWithEventOnSecondStop(
+      GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setScheduledTime(TIME_0830)
+    );
+
+    var ex = assertThrows(UpdateException.class, () -> parser.parse(tripUpdate));
+    assertEquals(UpdateErrorType.INVALID_ARRIVAL_TIME, ex.errorType());
+  }
+
+  @Test
+  void rejectEmptyDepartureEvent() {
+    var tripUpdate = GtfsRealtime.TripUpdate.newBuilder()
+      .setTrip(
+        GtfsRealtime.TripDescriptor.newBuilder()
+          .setTripId("trip1")
+          .setScheduleRelationship(GtfsRealtime.TripDescriptor.ScheduleRelationship.SCHEDULED)
+      )
+      .addStopTimeUpdate(
+        GtfsRealtime.TripUpdate.StopTimeUpdate.newBuilder()
+          .setStopId("stop1")
+          .setStopSequence(0)
+          .setDeparture(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder())
+      )
+      .build();
+
+    var ex = assertThrows(UpdateException.class, () -> parser.parse(tripUpdate));
+    assertEquals(UpdateErrorType.INVALID_DEPARTURE_TIME, ex.errorType());
+    assertEquals(0, ex.stopPosition());
+  }
+
+  private static GtfsRealtime.TripUpdate scheduledTripUpdateWithEventOnSecondStop(
+    GtfsRealtime.TripUpdate.StopTimeEvent.Builder arrivalEvent
+  ) {
+    return GtfsRealtime.TripUpdate.newBuilder()
+      .setTrip(
+        GtfsRealtime.TripDescriptor.newBuilder()
+          .setTripId("trip1")
+          .setScheduleRelationship(GtfsRealtime.TripDescriptor.ScheduleRelationship.SCHEDULED)
+      )
+      .addStopTimeUpdate(
+        GtfsRealtime.TripUpdate.StopTimeUpdate.newBuilder()
+          .setStopId("stop1")
+          .setStopSequence(0)
+          .setArrival(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setDelay(60))
+      )
+      .addStopTimeUpdate(
+        GtfsRealtime.TripUpdate.StopTimeUpdate.newBuilder()
+          .setStopId("stop2")
+          .setStopSequence(1)
+          .setArrival(arrivalEvent)
+      )
+      .build();
+  }
+
   @Test
   void parseCancelledTrip() {
     var tripUpdate = GtfsRealtime.TripUpdate.newBuilder()

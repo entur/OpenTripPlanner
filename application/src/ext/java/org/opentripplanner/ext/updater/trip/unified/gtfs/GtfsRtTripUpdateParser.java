@@ -1,5 +1,7 @@
 package org.opentripplanner.ext.updater.trip.unified.gtfs;
 
+import static org.opentripplanner.updater.spi.UpdateErrorType.INVALID_ARRIVAL_TIME;
+import static org.opentripplanner.updater.spi.UpdateErrorType.INVALID_DEPARTURE_TIME;
 import static org.opentripplanner.updater.spi.UpdateErrorType.INVALID_INPUT_STRUCTURE;
 import static org.opentripplanner.updater.spi.UpdateErrorType.NOT_IMPLEMENTED_UNSCHEDULED;
 
@@ -277,7 +279,8 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
   ) {
     var result = new ArrayList<ParsedStopTimeUpdate>();
 
-    for (var update : updates) {
+    for (var i = 0; i < updates.size(); i++) {
+      var update = updates.get(i);
       var stopId = update.stopId().map(this::createId);
       var assignedStopId = update.assignedStopId().map(this::createId).orElse(null);
       var stopSequence = parseStopSequence(update);
@@ -300,6 +303,19 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
       var status = mapStopTimeStatus(update);
       builder.withStatus(status);
+
+      // An arrival or departure of a trip running to an existing schedule must state a time or a
+      // delay - an event stating neither is a producer error, not an unreported call, so the
+      // whole entity is rejected rather than letting the interpolator fill the call in. A trip
+      // that brings its own schedule is exempt: its calls may state only a scheduled time.
+      if (!reportsOwnSchedule && status == ParsedStopTimeUpdate.StopUpdateStatus.SCHEDULED) {
+        if (!update.isArrivalValid()) {
+          throw UpdateException.of(tripId, INVALID_ARRIVAL_TIME, i);
+        }
+        if (!update.isDepartureValid()) {
+          throw UpdateException.of(tripId, INVALID_DEPARTURE_TIME, i);
+        }
+      }
 
       parseStopTimeUpdateTimes(update, builder, serviceDate, reportsOwnSchedule);
 
