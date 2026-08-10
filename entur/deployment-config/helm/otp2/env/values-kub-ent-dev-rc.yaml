@@ -12,90 +12,35 @@ cronjobRedeployGraphBuilder:
 vehicleRentalGraphBuilder:
   url: "https://api.dev.entur.io/mobility/v2/gbfs/v3/manifest.json"
 
-# Overrides the chart default: this environment builds zones for more networks.
+# Build zones for every system in the manifest that publishes them; systems that do not
+# are skipped after their gbfs.json feed list is checked. Only the exceptions to the
+# business-area default are listed.
 gbfs:
+  defaults:
+    geofencingZones: permanent
+    requireDropOffInsideBusinessArea: false
   networks:
-  - network: voioslo
-    geofencingZones: permanent
-  - network: voiarendal
-    geofencingZones: permanent
-  - network: voibergen
-    geofencingZones: permanent
-  - network: voifredrikstad
-    geofencingZones: permanent
-  - network: voikristiansand
-    geofencingZones: permanent
-  - network: voilillestrom
-    geofencingZones: permanent
-  - network: voistavanger
-    geofencingZones: permanent
-  - network: voitrondheim
-    geofencingZones: permanent
   - network: boltoslo
-    geofencingZones: permanent
     requireDropOffInsideBusinessArea: true
-  - network: boltdrammen
-    geofencingZones: permanent
-  - network: boltfredrikstad
-    geofencingZones: permanent
-  - network: boltgjovik
-    geofencingZones: permanent
-  - network: bolthamar
-    geofencingZones: permanent
-  - network: boltkristiansand
-    geofencingZones: permanent
-  - network: boltlillehammer
-    geofencingZones: permanent
   - network: boltlillestrom
-    geofencingZones: permanent
     requireDropOffInsideBusinessArea: true
   - network: boltsarpsborg
-    geofencingZones: permanent
     requireDropOffInsideBusinessArea: true
-  - network: rydeoslo
-    geofencingZones: permanent
-  - network: rydeaalesund
-    geofencingZones: permanent
-  - network: rydefredrikstad
-    geofencingZones: permanent
   - network: rydeporsgrunn
-    geofencingZones: permanent
     requireDropOffInsideBusinessArea: true
-  - network: rydesandefjord
-    geofencingZones: permanent
   - network: rydesarpsborg
-    geofencingZones: permanent
     requireDropOffInsideBusinessArea: true
-  - network: rydeskien
-    geofencingZones: permanent
-  - network: rydetonsberg
-    geofencingZones: permanent
-  - network: rydetromso
-    geofencingZones: permanent
-  - network: rydetrondheim
-    geofencingZones: permanent
   - network: dottmalvik
-    geofencingZones: permanent
     requireDropOffInsideBusinessArea: true
   - network: dottmelhus
-    geofencingZones: permanent
     requireDropOffInsideBusinessArea: true
   - network: dottorkanger
-    geofencingZones: permanent
     requireDropOffInsideBusinessArea: true
   - network: dottskaun
-    geofencingZones: permanent
     requireDropOffInsideBusinessArea: true
   - network: dottstjordal
-    geofencingZones: permanent
     requireDropOffInsideBusinessArea: true
   - network: dotttrondheim
-    geofencingZones: permanent
     requireDropOffInsideBusinessArea: true
   - network: altairtrondheim
-    geofencingZones: permanent
     requireDropOffInsideBusinessArea: true
-  - network: evietrondheim
-    geofencingZones: permanent
-  - network: eziotrondheim
-    geofencingZones: permanent
