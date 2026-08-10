@@ -22,7 +22,7 @@ data:
         "HttpResponseTimeMetrics": true,
         "GoogleCloudStorage": true
       },
-      {{ include "otp2.gbfsConfig" . | indent 6 | trim }}
+      "gbfs": {{ .Values.gbfs | toPrettyJson | indent 6 | trim }}
    }
 kind: ConfigMap
 metadata:

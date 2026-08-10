@@ -23,7 +23,7 @@ data:
             // Will be used when PR 7042 Missing transfers is merged
             "IncludeStopsUsedRealTimeInTransfers" : true
         },
-        {{ include "otp2.gbfsConfig" . | indent 8 | trim }}
+        "gbfs": {{ .Values.gbfs | toPrettyJson | indent 8 | trim }}
       }
   build-config.json: |+
       {

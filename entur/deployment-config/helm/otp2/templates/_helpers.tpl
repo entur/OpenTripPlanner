@@ -65,17 +65,3 @@ slack: talk-ror
 type: api
 namespace: {{ .Release.Namespace }}
 {{- end }}
-
-{{/*
-Shared GBFS per-network configuration for otp-config.json.
-
-Read by both phases: the vehicle rental graph builder (build) and the vehicle rental service
-directory (serve). "geofencingZones" names the phase that computes a network's zones, so a
-network cannot have its zones applied twice.
-
-The values keys match the OTP config schema, so the subtree is rendered as-is. Field inheritance
-from "defaults" is applied by OTP, not here.
-*/}}
-{{- define "otp2.gbfsConfig" -}}
-"gbfs": {{ .Values.gbfs | toPrettyJson }}
-{{- end }}

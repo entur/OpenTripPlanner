@@ -89,9 +89,13 @@ secrets:
    - SLACK_URL
 
 # Per-network GBFS configuration shared by the graph builder (build phase) and the vehicle
-# rental service directory (serve phase). Both otp-config.json templates render this.
-# "geofencingZones" names the phase that computes a network's zones, so they cannot be
-# applied twice. Unlisted networks are still loaded, with zones off.
+# rental service directory (serve phase). Both otp-config.json templates render this subtree
+# verbatim with toPrettyJson, so these keys are the OTP config schema - a typo surfaces as an
+# unknown-parameter warning from OTP rather than being silently dropped, and field inheritance
+# from "defaults" is applied by OTP, not by the templates.
+#
+# "geofencingZones" names the phase that computes a network's zones, so they cannot be applied
+# twice. Unlisted networks are still loaded, with zones off.
 gbfs:
   includeUnlistedNetworks: true
   networks:
