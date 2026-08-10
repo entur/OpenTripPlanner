@@ -385,15 +385,20 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     var tripId = createId(code.asServiceJourneyId());
     var builder = TripCreationInfo.builder(tripId);
 
-    var lineRef = journey.lineRef().orElse(null);
-    if (lineRef != null) {
-      builder.withRouteId(createId(lineRef));
+    // LineRef is required for extra journeys (SIRI Profile requirement). Without it there is no
+    // line to run the journey on, and a route made up for it would be published with the trip.
+    var lineRef = journey
+      .lineRef()
+      .orElseThrow(() -> {
+        LOG.debug("ADD_NEW_TRIP requires LineRef");
+        return UpdateException.noTripId(UNKNOWN);
+      });
+    builder.withRouteId(createId(lineRef));
 
-      // Set replacedRouteId from ExternalLineRef (only if it differs from LineRef)
-      var externalLineRef = journey.externalLineRef().orElse(null);
-      if (externalLineRef != null && !externalLineRef.equals(lineRef)) {
-        builder.withReplacedRouteId(createId(externalLineRef));
-      }
+    // Set replacedRouteId from ExternalLineRef (only if it differs from LineRef)
+    var externalLineRef = journey.externalLineRef().orElse(null);
+    if (externalLineRef != null && !externalLineRef.equals(lineRef)) {
+      builder.withReplacedRouteId(createId(externalLineRef));
     }
 
     // The added trip on service date is identified by the DatedServiceJourney form of the code,
@@ -411,7 +416,16 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     // and the line the journey is classified against, which only the transit model knows.
     builder.withMode(journey.transitMode());
 
-    journey.operatorRef().ifPresent(operatorRef -> builder.withOperatorId(createId(operatorRef)));
+    // OperatorRef is required for extra journeys (SIRI Profile requirement). Only the reference
+    // itself is required here: an operator the transit model does not know is later dropped by
+    // TripAdditionFactory, and the trip falls back to the operator of the line it runs on.
+    var operatorRef = journey
+      .operatorRef()
+      .orElseThrow(() -> {
+        LOG.debug("ADD_NEW_TRIP requires OperatorRef");
+        return UpdateException.noTripId(UNKNOWN);
+      });
+    builder.withOperatorId(createId(operatorRef));
 
     // Extract replacement trip references
     // The replaced dated vehicle journey ref indicates which trip this extra journey replaces

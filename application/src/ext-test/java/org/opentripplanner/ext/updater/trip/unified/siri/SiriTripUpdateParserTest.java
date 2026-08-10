@@ -23,6 +23,7 @@ import org.opentripplanner.ext.updater.trip.unified.model.command.ParsedStopTime
 import org.opentripplanner.ext.updater.trip.unified.model.command.ParsedTimeUpdate;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ReviseTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.StopResolutionStrategy;
+import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.siri.SiriEtBuilder;
@@ -125,6 +126,58 @@ class SiriTripUpdateParserTest {
     assertEquals("L1", command.tripCreationInfo().publishedLineName());
     assertNull(command.tripCreationInfo().tripShortName());
     assertEquals(2, command.stopTimeUpdates().size());
+  }
+
+  /**
+   * LineRef is required for an extra journey (SIRI Profile requirement). Legacy rejects it the
+   * same way, with UNKNOWN and no trip id.
+   */
+  @Test
+  void parseExtraJourneyWithoutLineRefIsRejected() {
+    var journey = new SiriEtBuilder(timeParser)
+      .withIsExtraJourney(true)
+      .withEstimatedVehicleJourneyCode("NSB:ServiceJourney:newtrip1-2024-01-15")
+      .withOperatorRef("operator1")
+      .withEstimatedCalls(calls ->
+        calls
+          .call("stop1")
+          .withAimedDepartureTime("08:00")
+          .withExpectedDepartureTime("08:00")
+          .next()
+          .call("stop2")
+          .withAimedArrivalTime("08:30")
+          .withExpectedArrivalTime("08:30")
+      )
+      .buildEstimatedVehicleJourney();
+
+    var ex = assertThrows(UpdateException.class, () -> parser.parse(journey));
+    assertEquals(UpdateErrorType.UNKNOWN, ex.errorType());
+  }
+
+  /**
+   * OperatorRef is required for an extra journey (SIRI Profile requirement). Legacy rejects it
+   * the same way, with UNKNOWN and no trip id.
+   */
+  @Test
+  void parseExtraJourneyWithoutOperatorRefIsRejected() {
+    var journey = new SiriEtBuilder(timeParser)
+      .withIsExtraJourney(true)
+      .withEstimatedVehicleJourneyCode("NSB:ServiceJourney:newtrip1-2024-01-15")
+      .withLineRef("route1")
+      .withEstimatedCalls(calls ->
+        calls
+          .call("stop1")
+          .withAimedDepartureTime("08:00")
+          .withExpectedDepartureTime("08:00")
+          .next()
+          .call("stop2")
+          .withAimedArrivalTime("08:30")
+          .withExpectedArrivalTime("08:30")
+      )
+      .buildEstimatedVehicleJourney();
+
+    var ex = assertThrows(UpdateException.class, () -> parser.parse(journey));
+    assertEquals(UpdateErrorType.UNKNOWN, ex.errorType());
   }
 
   @Test

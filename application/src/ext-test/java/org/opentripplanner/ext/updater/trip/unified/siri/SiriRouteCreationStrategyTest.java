@@ -242,16 +242,18 @@ class SiriRouteCreationStrategyTest {
     );
   }
 
+  /**
+   * The SIRI parser rejects an extra journey without LineRef, so a SIRI trip creation always
+   * names its route. The strategy never makes a route id up - in particular not one keyed by the
+   * trip id, which would publish a phantom route named after the ServiceJourney.
+   */
   @Test
-  void usesTripIdAsRouteIdWhenNoRouteId() {
+  void rejectsTripCreationWithoutRouteId() {
     var info = TripCreationInfo.builder(TRIP_ID)
       .withOperatorId(OPERATOR_ID)
       .withMode(TransitMode.BUS)
       .build();
 
-    var resolution = resolveRoute(info);
-
-    assertTrue(resolution.isNewRoute());
-    assertEquals(TRIP_ID, resolution.route().getId());
+    assertThrows(NullPointerException.class, () -> resolveRoute(info));
   }
 }

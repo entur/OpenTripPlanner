@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.updater.trip.unified.siri;
 
+import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -32,18 +33,21 @@ public class SiriRouteCreationStrategy implements RouteCreationStrategy {
     @Nullable Operator operator,
     TransitEditorService transitService
   ) {
-    FeedScopedId routeId = tripCreationInfo.routeId();
+    // The SIRI parser rejects an extra journey without LineRef, so the line the journey runs on
+    // is always named.
+    FeedScopedId routeId = Objects.requireNonNull(
+      tripCreationInfo.routeId(),
+      "a SIRI trip creation always names its route"
+    );
 
     // The submode is derived whether or not a route has to be created: it classifies the trip.
     String submode = resolveTransitSubMode(tripCreationInfo, transitService);
 
     // Try to find existing route
-    if (routeId != null) {
-      Route existingRoute = transitService.getRoute(routeId);
-      if (existingRoute != null) {
-        LOG.debug("ADD_TRIP: Using existing route {}", routeId);
-        return new RouteResolution(existingRoute, false, submode);
-      }
+    Route existingRoute = transitService.getRoute(routeId);
+    if (existingRoute != null) {
+      LOG.debug("ADD_TRIP: Using existing route {}", routeId);
+      return new RouteResolution(existingRoute, false, submode);
     }
 
     // Resolve agency using SIRI algorithm:
@@ -54,11 +58,8 @@ public class SiriRouteCreationStrategy implements RouteCreationStrategy {
       throw UpdateException.of(tripCreationInfo.tripId(), UpdateErrorType.CANNOT_RESOLVE_AGENCY);
     }
 
-    // Create route ID (use routeId from tripCreationInfo, or tripId as fallback)
-    FeedScopedId effectiveRouteId = routeId != null ? routeId : tripCreationInfo.tripId();
-
     // Create the route
-    var builder = Route.of(effectiveRouteId);
+    var builder = Route.of(routeId);
     builder.withAgency(agency);
 
     // The line the created trip runs on is named by the name the message publishes for it.
@@ -66,7 +67,7 @@ public class SiriRouteCreationStrategy implements RouteCreationStrategy {
       builder.withShortName(tripCreationInfo.publishedLineName());
     }
     // longName is required as fallback when shortName is null
-    builder.withLongName(NonLocalizedString.ofNullable(effectiveRouteId.getId()));
+    builder.withLongName(NonLocalizedString.ofNullable(routeId.getId()));
 
     TransitMode mode = tripCreationInfo.mode() != null ? tripCreationInfo.mode() : TransitMode.BUS;
     builder.withMode(mode);
@@ -80,7 +81,7 @@ public class SiriRouteCreationStrategy implements RouteCreationStrategy {
     }
 
     Route route = builder.build();
-    LOG.debug("ADD_TRIP: Created new SIRI route {}", effectiveRouteId);
+    LOG.debug("ADD_TRIP: Created new SIRI route {}", routeId);
     return new RouteResolution(route, true, submode);
   }
 

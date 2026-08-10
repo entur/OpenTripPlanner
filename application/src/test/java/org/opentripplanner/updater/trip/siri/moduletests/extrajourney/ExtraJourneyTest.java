@@ -336,6 +336,70 @@ class ExtraJourneyTest implements RealtimeTestConstants {
   }
 
   /**
+   * LineRef is mandatory for an extra journey in the SIRI profile. Without it there is no line to
+   * run the journey on, so the update is rejected - in particular, no route keyed by the trip id
+   * is made up for the journey.
+   */
+  @Test
+  void testRejectExtraJourneyWithoutLineRef() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withEstimatedVehicleJourneyCode(ADDED_TRIP_ID)
+      .withIsExtraJourney(true)
+      .withOperatorRef(OPERATOR_ID)
+      .withRecordedCalls(builder -> builder.call(STOP_C).departAimedActual("00:01", "00:02"))
+      .withEstimatedCalls(builder -> builder.call(STOP_D).arriveAimedExpected("00:03", "00:04"))
+      .buildEstimatedTimetableDeliveries();
+
+    int numRoutes = env.transitService().listRoutes().size();
+    var result = siri.applyEstimatedTimetable(updates);
+
+    assertFailure(UpdateErrorType.UNKNOWN, result);
+    TransitService transitService = env.transitService();
+    assertNull(
+      transitService.getTrip(id(ADDED_TRIP_ID)),
+      "An extra journey without LineRef must not be added"
+    );
+    assertNull(
+      transitService.getRoute(id(ADDED_TRIP_ID)),
+      "No route keyed by the trip id may be made up for the journey"
+    );
+    assertEquals(numRoutes, transitService.listRoutes().size());
+  }
+
+  /**
+   * OperatorRef is mandatory for an extra journey in the SIRI profile. Without it the journey
+   * states no operator at all and is rejected. Only the reference is required: a reference the
+   * transit model cannot resolve is dropped instead, see
+   * {@link #testAddJourneyWithUnknownOperatorRefKeepsTheOperatorOfItsRoute()}.
+   */
+  @Test
+  void testRejectExtraJourneyWithoutOperatorRef() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withEstimatedVehicleJourneyCode(ADDED_TRIP_ID)
+      .withIsExtraJourney(true)
+      .withLineRef(ROUTE_ID)
+      .withRecordedCalls(builder -> builder.call(STOP_C).departAimedActual("00:01", "00:02"))
+      .withEstimatedCalls(builder -> builder.call(STOP_D).arriveAimedExpected("00:03", "00:04"))
+      .buildEstimatedTimetableDeliveries();
+
+    var result = siri.applyEstimatedTimetable(updates);
+
+    assertFailure(UpdateErrorType.UNKNOWN, result);
+    assertNull(
+      env.transitService().getTrip(id(ADDED_TRIP_ID)),
+      "An extra journey without OperatorRef must not be added"
+    );
+  }
+
+  /**
    * The not-monitored validation is overridden for cancellations: an extra journey reported as not
    * monitored but cancelled is still processed, so the trip is added (in cancelled state) rather
    * than rejected. This is the counterpart to {@link #testRejectUnmonitoredExtraJourney()}.
