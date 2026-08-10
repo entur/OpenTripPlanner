@@ -1,9 +1,11 @@
 package org.opentripplanner.ext.updater.trip.unified.service;
 
+import java.util.Objects;
 import org.opentripplanner.ext.updater.trip.unified.model.change.AddedTripRevision;
 import org.opentripplanner.ext.updater.trip.unified.model.change.TripUpdateResult;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.updater.spi.DataValidationExceptionMapper;
+import org.opentripplanner.updater.trip.patterncache.TripPatternCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,12 +14,18 @@ import org.slf4j.LoggerFactory;
  * ADD_NEW_TRIP after it has already been integrated in the transit model (subsequent updates
  * to an extra journey). The {@link org.opentripplanner.ext.updater.trip.unified.factory.TripAdditionFactory TripAdditionFactory} recognises them as such.
  * <p>
- * The revision applies itself through {@link AddedTripRevision#apply()} - it needs nothing but
- * its own resolved state. This class only translates invalid real-time data into an update error.
+ * The revision applies itself through {@link AddedTripRevision#apply} - this class supplies the
+ * pattern lookup it needs and translates invalid real-time data into an update error.
  */
 public class AddedTripReviser {
 
   private static final Logger LOG = LoggerFactory.getLogger(AddedTripReviser.class);
+
+  private final TripPatternCache tripPatternCache;
+
+  public AddedTripReviser(TripPatternCache tripPatternCache) {
+    this.tripPatternCache = Objects.requireNonNull(tripPatternCache);
+  }
 
   public TripUpdateResult revise(AddedTripRevision revision) {
     var tripId = revision.tripId();
@@ -25,7 +33,7 @@ public class AddedTripReviser {
 
     LOG.debug("Revising added trip {} on {}", tripId, serviceDate);
     try {
-      var result = revision.apply();
+      var result = revision.apply(tripPatternCache::getOrCreateTripPattern);
       LOG.debug("Revised added trip {} on {}", tripId, serviceDate);
       return result;
     } catch (DataValidationException e) {

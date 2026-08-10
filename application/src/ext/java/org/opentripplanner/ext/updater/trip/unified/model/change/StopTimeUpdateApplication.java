@@ -1,52 +1,66 @@
 package org.opentripplanner.ext.updater.trip.unified.model.change;
 
+import java.util.List;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ParsedStopTimeUpdate;
+import org.opentripplanner.ext.updater.trip.unified.policy.FormatPolicy;
 import org.opentripplanner.ext.updater.trip.unified.policy.PickDropPolicy;
 import org.opentripplanner.ext.updater.trip.unified.policy.StopReplacementPolicy;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.model.timetable.RealTimeTripTimesBuilder;
-import org.opentripplanner.transit.model.timetable.Trip;
+import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
 
 /**
- * Applies the stop time updates of one {@link TripRevision} to a {@link
- * RealTimeTripTimesBuilder}, accumulating the resulting changes into an immutable {@link
- * PatternModification}. Run by {@link TripRevision#apply}.
+ * Applies the stop time updates of one trip update to a {@link RealTimeTripTimesBuilder},
+ * accumulating the resulting changes into an immutable {@link PatternModification}. Run by
+ * {@link TripRevision#apply} against the scheduled pattern of an existing trip, and by
+ * {@link AddedTripRevision#apply} against the pattern a real-time added trip was added to.
  * <p>
- * Format divergence is handled through the {@code FormatPolicy} carried by the revision:
+ * Format divergence is handled through the {@code FormatPolicy} carried by the update:
  * stop matching, stop replacement, pick/drop and delay propagation are all asked of the policy
  * rather than branched on a format flag.
  */
 final class StopTimeUpdateApplication {
 
-  private final TripRevision revision;
   private final RealTimeTripTimesBuilder builder;
-  private final TripPattern scheduledPattern;
+
+  /** The pattern the calls are applied against: the trip's scheduled or added pattern. */
+  private final TripPattern baselinePattern;
+
+  /** The baseline times, which know the {@code stop_sequence} numbering of the trip's calls. */
+  private final TripTimes baselineTripTimes;
+
+  private final List<ResolvedStopTimeUpdate> stopTimeUpdates;
+  private final FormatPolicy policy;
+  private final FeedScopedId tripId;
 
   StopTimeUpdateApplication(
-    TripRevision revision,
     RealTimeTripTimesBuilder builder,
-    TripPattern scheduledPattern
+    TripPattern baselinePattern,
+    TripTimes baselineTripTimes,
+    List<ResolvedStopTimeUpdate> stopTimeUpdates,
+    FormatPolicy policy,
+    FeedScopedId tripId
   ) {
-    this.revision = revision;
     this.builder = builder;
-    this.scheduledPattern = scheduledPattern;
+    this.baselinePattern = baselinePattern;
+    this.baselineTripTimes = baselineTripTimes;
+    this.stopTimeUpdates = stopTimeUpdates;
+    this.policy = policy;
+    this.tripId = tripId;
   }
 
   PatternModification run() {
-    Trip trip = revision.trip();
-    var policy = revision.formatPolicy();
-    var cursor = policy
-      .stopMatching()
-      .newCursor(scheduledPattern, revision.scheduledTripTimes(), trip.getId());
+    var cursor = policy.stopMatching().newCursor(baselinePattern, baselineTripTimes, tripId);
     var stopReplacement = policy.stopReplacement();
     var pickDrop = policy.pickDrop();
     var mod = PatternModification.builder();
 
-    for (ResolvedStopTimeUpdate stopUpdate : revision.stopTimeUpdates()) {
+    for (ResolvedStopTimeUpdate stopUpdate : stopTimeUpdates) {
       var match = cursor.resolveIndex(stopUpdate);
       int stopIndex = match.index();
       // Absent when the update leaves the scheduled stop alone - which includes a stop assignment
@@ -55,7 +69,7 @@ final class StopTimeUpdateApplication {
       StopLocation replacementStop = match.replacementStop();
 
       // Get the scheduled stop from the pattern
-      StopLocation scheduledStop = scheduledPattern.getStop(stopIndex);
+      StopLocation scheduledStop = baselinePattern.getStop(stopIndex);
 
       // Track stop replacements
       boolean hasStopReplacement =
@@ -67,7 +81,7 @@ final class StopTimeUpdateApplication {
           stopReplacement.check(scheduledStop, replacementStop) !=
           StopReplacementPolicy.Result.VALID
         ) {
-          throw UpdateException.of(trip.getId(), UpdateErrorType.STOP_MISMATCH, stopIndex);
+          throw UpdateException.of(tripId, UpdateErrorType.STOP_MISMATCH, stopIndex);
         }
 
         // Valid replacement - track it
@@ -162,7 +176,7 @@ final class StopTimeUpdateApplication {
     ResolvedStopTimeUpdate stopUpdate,
     PickDropPolicy pickDrop
   ) {
-    PickDrop scheduled = scheduledPattern.getBoardType(stopIndex);
+    PickDrop scheduled = baselinePattern.getBoardType(stopIndex);
     PickDrop effective;
     if (stopUpdate.isPickupCancelled()) {
       effective = pickDrop.effectiveWhenCancelled(scheduled);
@@ -183,7 +197,7 @@ final class StopTimeUpdateApplication {
     ResolvedStopTimeUpdate stopUpdate,
     PickDropPolicy pickDrop
   ) {
-    PickDrop scheduled = scheduledPattern.getAlightType(stopIndex);
+    PickDrop scheduled = baselinePattern.getAlightType(stopIndex);
     PickDrop effective;
     if (stopUpdate.isDropoffCancelled()) {
       effective = pickDrop.effectiveWhenCancelled(scheduled);

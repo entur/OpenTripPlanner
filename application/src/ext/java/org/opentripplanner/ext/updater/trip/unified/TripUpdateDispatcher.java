@@ -74,9 +74,9 @@ public class TripUpdateDispatcher {
   private final TripModifier tripModifier;
   private final TripCreator tripCreator;
   private final TripDuplicator tripDuplicator;
+  private final AddedTripReviser addedTripReviser;
 
   // These services need nothing but the change they are given.
-  private final AddedTripReviser addedTripReviser = new AddedTripReviser();
   private final TripCanceller tripCanceller = new TripCanceller();
   private final TripDeleter tripDeleter = new TripDeleter();
 
@@ -92,7 +92,8 @@ public class TripUpdateDispatcher {
     TripReviser tripReviser,
     TripModifier tripModifier,
     TripCreator tripCreator,
-    TripDuplicator tripDuplicator
+    TripDuplicator tripDuplicator,
+    AddedTripReviser addedTripReviser
   ) {
     this.existingTripChangeFactory = Objects.requireNonNull(existingTripChangeFactory);
     this.tripAdditionFactory = Objects.requireNonNull(tripAdditionFactory);
@@ -102,6 +103,7 @@ public class TripUpdateDispatcher {
     this.tripModifier = Objects.requireNonNull(tripModifier);
     this.tripCreator = Objects.requireNonNull(tripCreator);
     this.tripDuplicator = Objects.requireNonNull(tripDuplicator);
+    this.addedTripReviser = Objects.requireNonNull(addedTripReviser);
   }
 
   /**
@@ -153,7 +155,8 @@ public class TripUpdateDispatcher {
       new TripReviser(tripPatternCache),
       new TripModifier(deduplicator, tripPatternCache),
       new TripCreator(deduplicator, tripPatternCache),
-      new TripDuplicator(deduplicator)
+      new TripDuplicator(deduplicator),
+      new AddedTripReviser(tripPatternCache)
     );
   }
 

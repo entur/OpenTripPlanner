@@ -100,9 +100,12 @@ public final class TripRevision extends ExistingTripChange {
 
     // Apply the stop time updates, accumulating the resulting pattern changes.
     PatternModification modification = new StopTimeUpdateApplication(
-      this,
       builder,
-      scheduledPattern
+      scheduledPattern,
+      scheduledTripTimes,
+      stopTimeUpdates(),
+      policy,
+      trip.getId()
     ).run();
 
     StopPattern updatedStopPattern = modification.hasPatternChanges()
@@ -167,14 +170,6 @@ public final class TripRevision extends ExistingTripChange {
 
   public TripPattern pattern() {
     return pattern;
-  }
-
-  /**
-   * The scheduled times of the trip. They are the baseline the real-time times are built from, and
-   * they know which {@code stop_sequence} the static feed numbered each call with.
-   */
-  TripTimes scheduledTripTimes() {
-    return scheduledTripTimes;
   }
 
   @Override

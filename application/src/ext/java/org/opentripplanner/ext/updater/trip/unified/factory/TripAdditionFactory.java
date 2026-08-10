@@ -171,7 +171,11 @@ public class TripAdditionFactory {
   }
 
   /**
-   * Resolve the pattern and baseline trip times for an update to a previously added trip.
+   * Resolve the pattern and baseline trip times for an update to a previously added trip: the
+   * pattern the trip was <em>added</em> to and the aimed times it was added with. The pattern is
+   * deliberately not looked up by service date - that lookup prefers a pattern a later message
+   * modified, and a revision measured against that pattern could never revert the modification.
+   * Legacy resolves the same way, in {@code SiriRealTimeUpdateHandler.handleModifiedTrip}.
    */
   private AddedTripRevision createAddedTripRevision(
     AddTrip command,
@@ -181,25 +185,16 @@ public class TripAdditionFactory {
   ) {
     var tripId = trip.getId();
 
-    // Find the existing pattern
-    TripPattern pattern = transitService.findPattern(trip, serviceDate);
-    if (pattern == null) {
-      pattern = transitService.findPattern(trip);
-    }
+    TripPattern pattern = transitService.findPattern(trip);
     if (pattern == null) {
       LOG.warn("UPDATE_ADDED_TRIP: Could not find pattern for existing trip {}", tripId);
       throw UpdateException.of(tripId, UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN);
     }
 
-    // Get trip times - check scheduled timetable first, then real-time timetable
+    // The aimed times of the addition. Only a format that revises an added trip in place gets
+    // here, and such a format holds the aimed times in the scheduled timetable of the added
+    // pattern - see ScheduledDataPolicy.
     TripTimes tripTimes = pattern.getScheduledTimetable().getTripTimes(trip);
-
-    if (tripTimes == null) {
-      // For GTFS-RT added trips, the scheduled timetable may be empty.
-      // Fall back to the real-time timetable.
-      tripTimes = transitService.findTimetable(pattern, serviceDate).getTripTimes(trip);
-    }
-
     if (tripTimes == null) {
       LOG.warn("UPDATE_ADDED_TRIP: Could not find trip times for trip {}", tripId);
       throw UpdateException.of(tripId, UpdateErrorType.TRIP_NOT_FOUND_IN_PATTERN);
