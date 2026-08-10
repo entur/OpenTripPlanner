@@ -156,7 +156,6 @@ public final class TripModification extends ExistingTripChange {
     var stopTimesAndPattern = NewStopPatternFactory.buildNewStopPattern(
       trip,
       stopTimeUpdates(),
-      formatPolicy().firstLastStopTime(),
       formatPolicy().pickDrop()
     );
 

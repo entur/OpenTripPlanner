@@ -13,7 +13,6 @@ import org.opentripplanner.ext.updater.trip.unified.model.ServiceTime;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ParsedStopTimeUpdate;
 import org.opentripplanner.ext.updater.trip.unified.model.command.StopReference;
 import org.opentripplanner.ext.updater.trip.unified.model.command.TimeUpdate;
-import org.opentripplanner.ext.updater.trip.unified.policy.FirstLastStopTimePolicy;
 import org.opentripplanner.ext.updater.trip.unified.policy.PickDropPolicy;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
 import org.opentripplanner.transit.model.TripInput;
@@ -86,7 +85,6 @@ class NewStopPatternFactoryTest {
     var stopTimesAndPattern = NewStopPatternFactory.buildNewStopPattern(
       trip,
       stopUpdates,
-      FirstLastStopTimePolicy.ADJUST,
       PickDropPolicy.ROUTABILITY_CHANGE_ONLY
     );
 
@@ -102,7 +100,7 @@ class NewStopPatternFactoryTest {
     );
     assertEquals(dep1Seconds, firstStop.getDepartureTime(), "First stop departure should be set");
 
-    // Second stop (last): arrival = departure (fallback), and departure = arrival (last stop rule)
+    // Second stop (last): arrival = departure (fallback from departure when no arrival)
     var secondStop = stopTimes.get(1);
     assertEquals(
       dep2Seconds,
@@ -157,7 +155,6 @@ class NewStopPatternFactoryTest {
     var stopTimesAndPattern = NewStopPatternFactory.buildNewStopPattern(
       trip,
       stopUpdates,
-      FirstLastStopTimePolicy.ADJUST,
       PickDropPolicy.ROUTABILITY_CHANGE_ONLY
     );
 

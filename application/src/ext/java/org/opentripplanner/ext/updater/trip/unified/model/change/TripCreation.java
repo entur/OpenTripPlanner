@@ -140,7 +140,6 @@ public final class TripCreation extends TripAddition {
     var stopTimesAndPattern = NewStopPatternFactory.buildNewStopPattern(
       trip,
       filteredUpdates.updates(),
-      formatPolicy().firstLastStopTime(),
       formatPolicy().pickDrop()
     );
 

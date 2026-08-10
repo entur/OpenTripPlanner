@@ -23,7 +23,6 @@ class FormatPolicyTest {
     assertSame(RealTimeStatePolicy.MODIFIED_ON_PATTERN_CHANGE, siri.realTimeState());
     assertSame(StopMatchingPolicy.POSITIONAL, siri.stopMatching());
     assertSame(StopReplacementPolicy.SAME_PARENT_STATION, siri.stopReplacement());
-    assertSame(FirstLastStopTimePolicy.ADJUST, siri.firstLastStopTime());
     assertSame(ScheduledDataPolicy.INCLUDE, siri.scheduledData());
     assertSame(UnknownStopPolicy.FAIL, siri.unknownStop());
     assertSame(UnreportedTimePolicy.AIMED_TIME, siri.unreportedTime());
@@ -46,7 +45,6 @@ class FormatPolicyTest {
     assertSame(RealTimeStatePolicy.ALWAYS_UPDATED, gtfs.realTimeState());
     assertSame(StopMatchingPolicy.BY_SEQUENCE_OR_ID, gtfs.stopMatching());
     assertSame(StopReplacementPolicy.ANY_STOP, gtfs.stopReplacement());
-    assertSame(FirstLastStopTimePolicy.PRESERVE, gtfs.firstLastStopTime());
     assertSame(ScheduledDataPolicy.EXCLUDE, gtfs.scheduledData());
     assertSame(UnknownStopPolicy.IGNORE, gtfs.unknownStop());
     assertEquals(DelayPropagationPolicy.of(f, b), gtfs.delayPropagation());

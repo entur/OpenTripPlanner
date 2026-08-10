@@ -16,7 +16,6 @@ public record FormatPolicy(
   StopReplacementPolicy stopReplacement,
   DelayPropagationPolicy delayPropagation,
   UnreportedTimePolicy unreportedTime,
-  FirstLastStopTimePolicy firstLastStopTime,
   ScheduledDataPolicy scheduledData,
   UnknownStopPolicy unknownStop,
   ImplicitCancellationPolicy implicitCancellation,
@@ -34,7 +33,6 @@ public record FormatPolicy(
         BackwardsDelayPropagationType.NONE
       ),
       UnreportedTimePolicy.AIMED_TIME,
-      FirstLastStopTimePolicy.ADJUST,
       ScheduledDataPolicy.INCLUDE,
       UnknownStopPolicy.FAIL,
       ImplicitCancellationPolicy.NOTHING_ROUTABLE,
@@ -54,7 +52,6 @@ public record FormatPolicy(
       StopReplacementPolicy.ANY_STOP,
       DelayPropagationPolicy.of(forwardsPropagation, backwardsPropagation),
       UnreportedTimePolicy.NO_TIME,
-      FirstLastStopTimePolicy.PRESERVE,
       ScheduledDataPolicy.EXCLUDE,
       UnknownStopPolicy.IGNORE,
       ImplicitCancellationPolicy.NEVER,
@@ -82,7 +79,6 @@ public record FormatPolicy(
       BackwardsDelayPropagationType.NONE
     );
     private UnreportedTimePolicy unreportedTime = UnreportedTimePolicy.NO_TIME;
-    private FirstLastStopTimePolicy firstLastStopTime = FirstLastStopTimePolicy.PRESERVE;
     private ScheduledDataPolicy scheduledData = ScheduledDataPolicy.EXCLUDE;
     private UnknownStopPolicy unknownStop = UnknownStopPolicy.IGNORE;
     private ImplicitCancellationPolicy implicitCancellation = ImplicitCancellationPolicy.NEVER;
@@ -116,7 +112,6 @@ public record FormatPolicy(
         stopReplacement,
         delayPropagation,
         unreportedTime,
-        firstLastStopTime,
         scheduledData,
         unknownStop,
         implicitCancellation,

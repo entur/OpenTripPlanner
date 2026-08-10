@@ -6,7 +6,6 @@ import javax.annotation.Nullable;
 import org.opentripplanner.ext.updater.trip.unified.model.ServiceTime;
 import org.opentripplanner.ext.updater.trip.unified.model.command.AbsoluteTimeUpdate;
 import org.opentripplanner.ext.updater.trip.unified.model.command.TimeUpdate;
-import org.opentripplanner.ext.updater.trip.unified.policy.FirstLastStopTimePolicy;
 import org.opentripplanner.ext.updater.trip.unified.policy.PickDropPolicy;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
@@ -20,8 +19,7 @@ import org.slf4j.LoggerFactory;
 
 /**
  * Builds a new {@link StopPattern} and the matching {@link StopTime}s from resolved stop time
- * updates, for added and modified trips. The first/last stop time adjustment is delegated to the
- * format's {@link FirstLastStopTimePolicy}.
+ * updates, for added and modified trips.
  */
 public final class NewStopPatternFactory {
 
@@ -38,7 +36,6 @@ public final class NewStopPatternFactory {
    *
    * @param trip The trip being modified or created
    * @param stopTimeUpdates The resolved stop time updates (with pre-resolved stops)
-   * @param firstLastStopTime Policy for adjusting first/last stop times
    * @param pickDrop Policy deciding what a cancelled call does to boarding at its stop
    * @return stop times and pattern
    * @throws UpdateException if stops cannot be resolved
@@ -46,7 +43,6 @@ public final class NewStopPatternFactory {
   public static StopTimesAndPattern buildNewStopPattern(
     Trip trip,
     List<ResolvedStopTimeUpdate> stopTimeUpdates,
-    FirstLastStopTimePolicy firstLastStopTime,
     PickDropPolicy pickDrop
   ) {
     var stopTimes = new ArrayList<StopTime>();
@@ -98,10 +94,6 @@ public final class NewStopPatternFactory {
         // Fallback: use arrival time as departure (matches old StopTimesMapper logic)
         stopTime.setDepartureTime(stopTime.getArrivalTime());
       }
-
-      // Use departure time for first stop, and arrival time for last stop, to avoid negative dwell
-      // times. This matches StopTimesMapper lines 68-70 - only applied for the ADJUST policy.
-      firstLastStopTime.adjust(stopTime, isFirstStop, isLastStop);
 
       // Handle pickup/dropoff
       if (stopUpdate.pickup() != null) {
