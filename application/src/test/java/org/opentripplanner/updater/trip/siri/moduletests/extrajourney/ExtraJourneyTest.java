@@ -27,6 +27,7 @@ import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
+import org.opentripplanner.updater.trip.TripUpdateAdapterUnderTest;
 import org.opentripplanner.updater.trip.UnifiedUpdaterOnly;
 import org.opentripplanner.updater.trip.siri.SiriEtBuilder;
 import org.opentripplanner.updater.trip.siri.SiriTestHelper;
@@ -301,8 +302,19 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     assertSuccess(siri.applyEstimatedTimetable(cancellation));
 
     assertTrue(env.tripData(ADDED_TRIP_ID).tripTimes().isCanceled());
+    // The unified implementation keeps the added flag on cancellation: the trip was never part of
+    // the static schedule, so the cancelled trip is still an added one. The legacy implementation
+    // loses the flag on a plain cancellation, yet keeps it when the cancellation arrives as an
+    // extra journey (see ExtraThenCanceledJourneyTest).
+    var expectedState = switch (TripUpdateAdapterUnderTest.current()) {
+      case LEGACY -> "C U";
+      case UNIFIED -> "A C U";
+    };
     // the cancelled trip falls back to the aimed times, terminal times included
-    assertEquals("C U | C 0:01 0:02 | D 0:04 0:05", env.tripData(ADDED_TRIP_ID).showTimetable());
+    assertEquals(
+      expectedState + " | C 0:01 0:02 | D 0:04 0:05",
+      env.tripData(ADDED_TRIP_ID).showTimetable()
+    );
   }
 
   @Test
