@@ -48,30 +48,33 @@ public final class TripRevision extends ExistingTripChange {
   }
 
   /**
-   * The precondition of an update to the times of an existing trip: a format that matches calls by
-   * position (FULL_UPDATE) must send every call of the trip. Matching by stop sequence or id
-   * (PARTIAL_UPDATE) puts no constraint on the calls. That a position-matched format must not
-   * number its calls is an invariant of the {@link ReviseTrip} command itself.
+   * The preconditions of an update to the times of an existing trip: a format that matches calls
+   * by position (FULL_UPDATE) must send every call of the trip. Matching by stop sequence or id
+   * (PARTIAL_UPDATE) puts no constraint on which calls are sent, but there must be at least one -
+   * a message without any revises nothing, and publishing it would replace real-time data already
+   * applied to the trip with its schedule. That a position-matched format must not number its
+   * calls is an invariant of the {@link ReviseTrip} command itself.
    *
    * @throws UpdateException if the message cannot update the trip
    */
   private void validate() {
-    // The exact-stop-count precondition only applies to position-based (FULL_UPDATE) matching.
-    if (!formatPolicy().stopMatching().requiresExactStopCount()) {
-      return;
-    }
-
     var tripId = trip().getId();
 
-    // The count is compared against the scheduled pattern, not the current real-time pattern,
-    // because a revert update may send fewer stops than a previously modified pattern (e.g. after
-    // removing an extra call).
-    int scheduledStops = scheduledPattern().numberOfStops();
-    if (stopTimeUpdates().size() < scheduledStops) {
-      throw UpdateException.of(tripId, UpdateErrorType.TOO_FEW_STOPS);
-    }
-    if (stopTimeUpdates().size() > scheduledStops) {
-      throw UpdateException.of(tripId, UpdateErrorType.TOO_MANY_STOPS);
+    if (formatPolicy().stopMatching().requiresExactStopCount()) {
+      // The count is compared against the scheduled pattern, not the current real-time pattern,
+      // because a revert update may send fewer stops than a previously modified pattern (e.g.
+      // after removing an extra call).
+      int scheduledStops = scheduledPattern().numberOfStops();
+      if (stopTimeUpdates().size() < scheduledStops) {
+        throw UpdateException.of(tripId, UpdateErrorType.TOO_FEW_STOPS);
+      }
+      if (stopTimeUpdates().size() > scheduledStops) {
+        throw UpdateException.of(tripId, UpdateErrorType.TOO_MANY_STOPS);
+      }
+    } else if (stopTimeUpdates().isEmpty()) {
+      // A position-matched format rejects an empty message above, in its own vocabulary: zero
+      // calls cannot cover the scheduled stops.
+      throw UpdateException.of(tripId, UpdateErrorType.NO_UPDATES);
     }
   }
 
