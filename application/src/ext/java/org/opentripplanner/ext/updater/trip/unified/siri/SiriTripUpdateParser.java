@@ -328,8 +328,8 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       if (resolvedTimes.arrivalTime() != null) {
         builder.withArrivalUpdate(
           TimeUpdate.ofAbsolute(
-            toServiceTime(startOfService, resolvedTimes.arrivalTime()),
-            toServiceTimeOrNull(startOfService, resolvedAimedTimes.arrivalTime())
+            ServiceTime.of(startOfService, resolvedTimes.arrivalTime()),
+            ServiceTime.ofNullable(startOfService, resolvedAimedTimes.arrivalTime())
           )
         );
       }
@@ -338,8 +338,8 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       if (resolvedTimes.departureTime() != null) {
         builder.withDepartureUpdate(
           TimeUpdate.ofAbsolute(
-            toServiceTime(startOfService, resolvedTimes.departureTime()),
-            toServiceTimeOrNull(startOfService, resolvedAimedTimes.departureTime())
+            ServiceTime.of(startOfService, resolvedTimes.departureTime()),
+            ServiceTime.ofNullable(startOfService, resolvedAimedTimes.departureTime())
           )
         );
       }
@@ -357,21 +357,6 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         );
       }
     }
-  }
-
-  /** The time a call reports, measured from the start of the service day. */
-  private static ServiceTime toServiceTime(ZonedDateTime startOfService, ZonedDateTime time) {
-    return ServiceTime.ofSecondsPastMidnight(
-      ServiceDateUtils.secondsSinceStartOfService(startOfService, time)
-    );
-  }
-
-  @Nullable
-  private static ServiceTime toServiceTimeOrNull(
-    ZonedDateTime startOfService,
-    @Nullable ZonedDateTime time
-  ) {
-    return time != null ? toServiceTime(startOfService, time) : null;
   }
 
   // Capture the pick/drop intent of each call end. The parser has no scheduled pattern, so it

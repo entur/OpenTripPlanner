@@ -45,15 +45,10 @@ public final class DeferredTimeUpdate implements ParsedTimeUpdate {
   @Override
   public AbsoluteTimeUpdate resolve(LocalDate serviceDate, ZoneId timeZone) {
     ZonedDateTime startOfService = ServiceDateUtils.asStartOfService(serviceDate, timeZone);
-    var actual = ServiceTime.ofSecondsPastMidnight(
-      ServiceDateUtils.secondsSinceStartOfService(startOfService, actualTime)
+    return TimeUpdate.ofAbsolute(
+      ServiceTime.of(startOfService, actualTime),
+      ServiceTime.ofNullable(startOfService, scheduledTime)
     );
-    var scheduled = scheduledTime != null
-      ? ServiceTime.ofSecondsPastMidnight(
-          ServiceDateUtils.secondsSinceStartOfService(startOfService, scheduledTime)
-        )
-      : null;
-    return TimeUpdate.ofAbsolute(actual, scheduled);
   }
 
   @Override

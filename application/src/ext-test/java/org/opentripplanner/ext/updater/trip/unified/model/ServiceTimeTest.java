@@ -2,13 +2,19 @@ package org.opentripplanner.ext.updater.trip.unified.model;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.opentripplanner.utils.time.ServiceDateUtils;
 
 class ServiceTimeTest {
 
@@ -47,6 +53,33 @@ class ServiceTimeTest {
   void acceptsNegativeSeconds() {
     assertEquals(-1800, ServiceTime.ofSecondsPastMidnight(-1800).secondsPastMidnight());
     assertEquals("23:30-1d", ServiceTime.ofSecondsPastMidnight(-1800).toString());
+  }
+
+  @Test
+  void measuresAZonedTimeFromTheStartOfService() {
+    var zone = ZoneId.of("Europe/Oslo");
+    var date = LocalDate.of(2025, 6, 15);
+    var startOfService = ServiceDateUtils.asStartOfService(date, zone);
+    var halfPastEight = ZonedDateTime.of(date, LocalTime.of(8, 30), zone);
+    assertEquals(ServiceTime.parse("8:30"), ServiceTime.of(startOfService, halfPastEight));
+    assertEquals(ServiceTime.parse("8:30"), ServiceTime.ofNullable(startOfService, halfPastEight));
+    assertNull(ServiceTime.ofNullable(startOfService, null));
+  }
+
+  /**
+   * On the day the clock is set back, the start of service (noon minus twelve hours) falls at
+   * 01:00 local time, so a time of day before that measures negative - and a nominal time of day
+   * after the transition still maps to its GTFS reading, not to the elapsed duration.
+   */
+  @Test
+  void measuresFromNoonMinusTwelveHoursOnADstChangeDate() {
+    var zone = ZoneId.of("Europe/Oslo");
+    var setBackDate = LocalDate.of(2025, 10, 26);
+    var startOfService = ServiceDateUtils.asStartOfService(setBackDate, zone);
+    var halfPastMidnight = ZonedDateTime.of(setBackDate, LocalTime.of(0, 30), zone);
+    assertEquals(-1800, ServiceTime.of(startOfService, halfPastMidnight).secondsPastMidnight());
+    var halfPastEight = ZonedDateTime.of(setBackDate, LocalTime.of(8, 30), zone);
+    assertEquals(ServiceTime.parse("8:30"), ServiceTime.of(startOfService, halfPastEight));
   }
 
   @Test

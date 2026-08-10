@@ -1,6 +1,9 @@
 package org.opentripplanner.ext.updater.trip.unified.model;
 
+import java.time.ZonedDateTime;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
+import org.opentripplanner.utils.time.ServiceDateUtils;
 import org.opentripplanner.utils.time.TimeUtils;
 
 /**
@@ -48,6 +51,17 @@ public final class ServiceTime implements Comparable<ServiceTime> {
    */
   public static ServiceTime ofSecondsPastMidnight(int secondsPastMidnight) {
     return new ServiceTime(secondsPastMidnight);
+  }
+
+  /** The given time measured from the given start of service. */
+  public static ServiceTime of(ZonedDateTime startOfService, ZonedDateTime time) {
+    return new ServiceTime(ServiceDateUtils.secondsSinceStartOfService(startOfService, time));
+  }
+
+  /** Like {@link #of(ZonedDateTime, ZonedDateTime)}, mapping a missing time to {@code null}. */
+  @Nullable
+  public static ServiceTime ofNullable(ZonedDateTime startOfService, @Nullable ZonedDateTime time) {
+    return time != null ? of(startOfService, time) : null;
   }
 
   public int secondsPastMidnight() {
