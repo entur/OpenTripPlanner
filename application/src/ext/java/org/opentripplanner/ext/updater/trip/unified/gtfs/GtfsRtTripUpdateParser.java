@@ -20,18 +20,12 @@ import org.opentripplanner.ext.updater.trip.unified.model.command.DeleteTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.DuplicateTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ModifyTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ReviseTrip;
-import org.opentripplanner.ext.updater.trip.unified.model.command.RouteCreationInfo;
-import org.opentripplanner.ext.updater.trip.unified.model.command.TripCreationInfo;
-import org.opentripplanner.ext.updater.trip.unified.model.command.TripReference;
 import org.opentripplanner.ext.updater.trip.unified.model.command.TripUpdateCommand;
 import org.opentripplanner.ext.updater.trip.unified.model.command.VehicleDescription;
 import org.opentripplanner.ext.updater.trip.unified.policy.FormatPolicy;
-import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
-import org.opentripplanner.gtfs.mapping.DirectionMapper;
 import org.opentripplanner.updater.spi.UpdateException;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
-import org.opentripplanner.updater.trip.gtfs.model.AddedRoute;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
 
 /**
@@ -45,7 +39,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
   private final String feedId;
   private final ZoneId timeZone;
   private final Supplier<LocalDate> localDateNow;
-  private final DirectionMapper directionMapper = new DirectionMapper(DataImportIssueStore.NOOP);
+  private final TripReferenceParser tripReferenceParser = new TripReferenceParser();
 
   public GtfsRtTripUpdateParser(
     ForwardsDelayPropagationType forwardsDelayPropagationType,
@@ -100,7 +94,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     var scheduleRelationship = tripUpdate.scheduleRelationship();
     LocalDate serviceDate = tripUpdate.startDate();
 
-    var tripReference = buildTripReference(tripId, tripUpdate, startTime);
+    var tripReference = tripReferenceParser.parse(tripId, tripUpdate, startTime);
     var updateType = mapScheduleRelationship(scheduleRelationship);
 
     // An added trip is created under the id the message gives it, so no match can supply one and
@@ -164,7 +158,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       case ADD_NEW_TRIP -> AddTrip.builder(
         tripReference,
         serviceDate,
-        buildTripCreationInfo(tripId, tripUpdate)
+        TripCreationInfoParser.parse(tripId, tripUpdate)
       )
         .withFormatPolicy(gtfsPolicy)
         .withVehicleDescription(vehicle)
@@ -219,68 +213,5 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       startTime != null &&
       tripUpdate.reportedStartDate().isPresent()
     );
-  }
-
-  private TripReference buildTripReference(
-    @Nullable FeedScopedId tripId,
-    TripUpdate tripUpdate,
-    @Nullable ServiceTime startTime
-  ) {
-    // Only the date the feed reported, not the service date resolved from it: the reference says what
-    // the feed said about the trip, and a fuzzy match may only identify a trip by a reported date.
-    var builder = TripReference.builder();
-
-    if (tripId != null) {
-      builder.withTripId(tripId);
-    }
-
-    tripUpdate.reportedStartDate().ifPresent(builder::withStartDate);
-
-    tripUpdate.routeId().ifPresent(builder::withRouteId);
-
-    if (startTime != null) {
-      builder.withStartTime(startTime);
-    }
-
-    tripUpdate
-      .descriptor()
-      .directionId()
-      .ifPresent(dirId -> builder.withDirection(directionMapper.map(dirId)));
-
-    return builder.build();
-  }
-
-  private TripCreationInfo buildTripCreationInfo(FeedScopedId tripId, TripUpdate tripUpdate) {
-    var builder = TripCreationInfo.builder(tripId);
-
-    // Get route ID from trip update
-    var routeId = tripUpdate.routeId().orElse(null);
-
-    if (routeId != null) {
-      builder.withRouteId(routeId);
-    }
-
-    tripUpdate.tripShortName().ifPresent(builder::withTripShortName);
-
-    // Extract route creation info from MFDZ extensions
-    var addedRoute = AddedRoute.ofTripDescriptor(tripUpdate);
-    if (routeId != null && (addedRoute.routeUrl() != null || addedRoute.routeLongName() != null)) {
-      var agencyId = addedRoute.agencyId() != null
-        ? new FeedScopedId(tripId.getFeedId(), addedRoute.agencyId())
-        : null;
-      var mode = org.opentripplanner.gtfs.mapping.TransitModeMapper.mapMode(addedRoute.routeType());
-      var routeCreationInfo = new RouteCreationInfo(
-        addedRoute.routeLongName(),
-        mode,
-        null,
-        null,
-        addedRoute.routeUrl(),
-        agencyId,
-        addedRoute.routeType()
-      );
-      builder.withRouteCreationInfo(routeCreationInfo);
-    }
-
-    return builder.build();
   }
 }
