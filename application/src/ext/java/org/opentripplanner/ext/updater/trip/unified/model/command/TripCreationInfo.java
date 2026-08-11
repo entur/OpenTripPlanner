@@ -36,7 +36,7 @@ public final class TripCreationInfo {
   @Nullable
   private final FeedScopedId operatorId;
 
-  private final List<FeedScopedId> replacedTrips;
+  private final List<ReplacedTripReference> replacedTrips;
 
   @Nullable
   private final FeedScopedId replacedRouteId;
@@ -52,7 +52,8 @@ public final class TripCreationInfo {
    * @param publishedLineName The name the message publishes for the line the trip runs on
    * @param mode The transit mode
    * @param operatorId The operator ID
-   * @param replacedTrips IDs of trips that this new trip replaces
+   * @param replacedTrips References to the dated trips this new trip replaces, in message order
+   *                      (the primary reference first)
    * @param replacedRouteId The route ID of the route being replaced (from SIRI ExternalLineRef)
    */
   public TripCreationInfo(
@@ -64,7 +65,7 @@ public final class TripCreationInfo {
     @Nullable String publishedLineName,
     @Nullable TransitMode mode,
     @Nullable FeedScopedId operatorId,
-    List<FeedScopedId> replacedTrips,
+    List<ReplacedTripReference> replacedTrips,
     @Nullable FeedScopedId replacedRouteId
   ) {
     this.tripId = Objects.requireNonNull(tripId, "tripId must not be null");
@@ -141,7 +142,7 @@ public final class TripCreationInfo {
     return operatorId;
   }
 
-  public List<FeedScopedId> replacedTrips() {
+  public List<ReplacedTripReference> replacedTrips() {
     return replacedTrips;
   }
 
@@ -232,7 +233,7 @@ public final class TripCreationInfo {
     private String publishedLineName;
     private TransitMode mode;
     private FeedScopedId operatorId;
-    private List<FeedScopedId> replacedTrips = new ArrayList<>();
+    private List<ReplacedTripReference> replacedTrips = new ArrayList<>();
     private FeedScopedId replacedRouteId;
 
     private Builder(FeedScopedId tripId) {
@@ -274,13 +275,13 @@ public final class TripCreationInfo {
       return this;
     }
 
-    public Builder withReplacedTrips(List<FeedScopedId> replacedTrips) {
+    public Builder withReplacedTrips(List<ReplacedTripReference> replacedTrips) {
       this.replacedTrips = new ArrayList<>(replacedTrips);
       return this;
     }
 
-    public Builder addReplacedTrip(FeedScopedId tripId) {
-      this.replacedTrips.add(tripId);
+    public Builder addReplacedTrip(ReplacedTripReference replacedTrip) {
+      this.replacedTrips.add(replacedTrip);
       return this;
     }
 

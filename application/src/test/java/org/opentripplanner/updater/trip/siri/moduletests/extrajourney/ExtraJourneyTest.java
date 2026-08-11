@@ -748,6 +748,97 @@ class ExtraJourneyTest implements RealtimeTestConstants {
   }
 
   /**
+   * An AdditionalVehicleJourneyRef is a framed ref: it names a replaced dated vehicle journey by
+   * the pair (service journey id, service date), not by the DatedServiceJourney id the primary
+   * VehicleJourneyRef carries. The dated trip of TRIP_2 is registered under an id different from
+   * the trip id, so only the pair lookup can find it.
+   */
+  @Test
+  void testReplacingJourneyWithAdditionalRefLinksAllReplacedTrips() {
+    var trip1Input = TripInput.of(TRIP_1_ID)
+      .withRoute(ROUTE)
+      .withWithTripOnServiceDate(TRIP_1_ID)
+      .addStop(STOP_A, "0:00:10", "0:00:11")
+      .addStop(STOP_B, "0:00:20", "0:00:21");
+    var trip2Input = TripInput.of(TRIP_2_ID)
+      .withRoute(ROUTE)
+      .withWithTripOnServiceDate("TestTrip2:Dated")
+      .addStop(STOP_A, "0:01:10", "0:01:11")
+      .addStop(STOP_B, "0:01:20", "0:01:21");
+
+    var env = ENV_BUILDER.addTrip(trip1Input).addTrip(trip2Input).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withEstimatedVehicleJourneyCode(ADDED_TRIP_ID)
+      .withIsExtraJourney(true)
+      .withVehicleJourneyRef(TRIP_1_ID)
+      .withAdditionalVehicleJourneyRef(builder ->
+        builder.withVehicleJourneyRef(TRIP_2_ID).withServiceDate(env.defaultServiceDate())
+      )
+      .withOperatorRef(OPERATOR_ID)
+      .withLineRef(ROUTE_ID)
+      .withRecordedCalls(builder -> builder.call(STOP_A).departAimedActual("00:01", "00:02"))
+      .withEstimatedCalls(builder -> builder.call(STOP_C).arriveAimedExpected("00:03", "00:04"))
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    var addedTripOnDate = env.transitService().getTripOnServiceDate(id(ADDED_TRIP_ID));
+    assertNotNull(addedTripOnDate);
+    var replacedTripIds = addedTripOnDate
+      .getReplacementFor()
+      .stream()
+      .map(t -> t.getTrip().getId().getId())
+      .toList();
+    assertThat(replacedTripIds).containsExactly(TRIP_1_ID, TRIP_2_ID).inOrder();
+  }
+
+  /**
+   * An AdditionalVehicleJourneyRef without a service date in its DataFrameRef names no dated
+   * vehicle journey. It is dropped, keeping the replacement links the message does establish.
+   */
+  @Test
+  void testReplacingJourneyDropsAdditionalRefWithoutServiceDate() {
+    var trip1Input = TripInput.of(TRIP_1_ID)
+      .withRoute(ROUTE)
+      .withWithTripOnServiceDate(TRIP_1_ID)
+      .addStop(STOP_A, "0:00:10", "0:00:11")
+      .addStop(STOP_B, "0:00:20", "0:00:21");
+    var trip2Input = TripInput.of(TRIP_2_ID)
+      .withRoute(ROUTE)
+      .withWithTripOnServiceDate("TestTrip2:Dated")
+      .addStop(STOP_A, "0:01:10", "0:01:11")
+      .addStop(STOP_B, "0:01:20", "0:01:21");
+
+    var env = ENV_BUILDER.addTrip(trip1Input).addTrip(trip2Input).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withEstimatedVehicleJourneyCode(ADDED_TRIP_ID)
+      .withIsExtraJourney(true)
+      .withVehicleJourneyRef(TRIP_1_ID)
+      .withAdditionalVehicleJourneyRef(builder -> builder.withVehicleJourneyRef(TRIP_2_ID))
+      .withOperatorRef(OPERATOR_ID)
+      .withLineRef(ROUTE_ID)
+      .withRecordedCalls(builder -> builder.call(STOP_A).departAimedActual("00:01", "00:02"))
+      .withEstimatedCalls(builder -> builder.call(STOP_C).arriveAimedExpected("00:03", "00:04"))
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    var addedTripOnDate = env.transitService().getTripOnServiceDate(id(ADDED_TRIP_ID));
+    assertNotNull(addedTripOnDate);
+    assertThat(addedTripOnDate.getReplacementFor()).hasSize(1);
+    assertEquals(
+      TRIP_1_ID,
+      addedTripOnDate.getReplacementFor().getFirst().getTrip().getId().getId()
+    );
+  }
+
+  /**
    * First add a trip via extra journey, then send a regular update referencing the added trip.
    * The added trip should be updated with the new times.
    */

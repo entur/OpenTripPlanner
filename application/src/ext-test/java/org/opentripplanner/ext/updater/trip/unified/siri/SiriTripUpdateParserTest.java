@@ -21,6 +21,7 @@ import org.opentripplanner.ext.updater.trip.unified.model.command.CancelTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ModifyTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ParsedStopTimeUpdate;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ParsedTimeUpdate;
+import org.opentripplanner.ext.updater.trip.unified.model.command.ReplacedTripReference;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ReviseTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.StopResolutionStrategy;
 import org.opentripplanner.updater.spi.UpdateErrorType;
@@ -707,6 +708,52 @@ class SiriTripUpdateParserTest {
 
     var replacedTrips = command.tripCreationInfo().replacedTrips();
     assertEquals(1, replacedTrips.size(), "Should have one replaced trip from VehicleJourneyRef");
-    assertEquals(new FeedScopedId(FEED_ID, "replaced-trip-id"), replacedTrips.get(0));
+    assertEquals(
+      new ReplacedTripReference.DatedTripRef(new FeedScopedId(FEED_ID, "replaced-trip-id")),
+      replacedTrips.get(0)
+    );
+  }
+
+  @Test
+  void parseExtraJourneyWithAdditionalReplacedJourneys() {
+    var journey = new SiriEtBuilder(timeParser)
+      .withIsExtraJourney(true)
+      .withEstimatedVehicleJourneyCode("NSB:ServiceJourney:newtrip1-2024-01-15")
+      .withVehicleJourneyRef("replaced-trip-id")
+      .withAdditionalVehicleJourneyRef(builder ->
+        builder.withVehicleJourneyRef("additional-replaced-trip-id").withServiceDate(TEST_DATE)
+      )
+      .withAdditionalVehicleJourneyRef(builder -> builder.withVehicleJourneyRef("no-date-trip-id"))
+      .withOperatorRef("operator1")
+      .withLineRef("route1")
+      .withEstimatedCalls(calls ->
+        calls
+          .call("stop1")
+          .withAimedDepartureTime("08:00")
+          .withExpectedDepartureTime("08:00")
+          .next()
+          .call("stop2")
+          .withAimedArrivalTime("08:30")
+          .withExpectedArrivalTime("08:30")
+      )
+      .buildEstimatedVehicleJourney();
+
+    var command = assertInstanceOf(AddTrip.class, parser.parse(journey));
+
+    // The framed additional ref keeps its service date; the ref without a date names no dated
+    // trip and is dropped
+    var replacedTrips = command.tripCreationInfo().replacedTrips();
+    assertEquals(2, replacedTrips.size());
+    assertEquals(
+      new ReplacedTripReference.DatedTripRef(new FeedScopedId(FEED_ID, "replaced-trip-id")),
+      replacedTrips.get(0)
+    );
+    assertEquals(
+      new ReplacedTripReference.TripOnDateRef(
+        new FeedScopedId(FEED_ID, "additional-replaced-trip-id"),
+        TEST_DATE
+      ),
+      replacedTrips.get(1)
+    );
   }
 }

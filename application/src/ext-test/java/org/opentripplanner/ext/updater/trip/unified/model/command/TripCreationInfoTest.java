@@ -43,7 +43,9 @@ class TripCreationInfoTest {
       "localBus",
       OPERATOR_ID
     );
-    var replacedTripId = new FeedScopedId(FEED_ID, "replaced1");
+    var replacedTrip = new ReplacedTripReference.DatedTripRef(
+      new FeedScopedId(FEED_ID, "replaced1")
+    );
 
     var info = TripCreationInfo.builder(TRIP_ID)
       .withRouteId(ROUTE_ID)
@@ -53,7 +55,7 @@ class TripCreationInfoTest {
       .withPublishedLineName("L1")
       .withMode(TransitMode.BUS)
       .withOperatorId(OPERATOR_ID)
-      .withReplacedTrips(List.of(replacedTripId))
+      .withReplacedTrips(List.of(replacedTrip))
       .build();
 
     assertEquals(TRIP_ID, info.tripId());
@@ -65,6 +67,6 @@ class TripCreationInfoTest {
     assertEquals(TransitMode.BUS, info.mode());
     assertEquals(OPERATOR_ID, info.operatorId());
     assertEquals(1, info.replacedTrips().size());
-    assertEquals(replacedTripId, info.replacedTrips().get(0));
+    assertEquals(replacedTrip, info.replacedTrips().get(0));
   }
 }

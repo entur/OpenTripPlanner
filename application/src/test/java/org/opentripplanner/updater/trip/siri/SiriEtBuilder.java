@@ -205,6 +205,19 @@ public class SiriEtBuilder {
     return this;
   }
 
+  /**
+   * Add an AdditionalVehicleJourneyRef, naming a further dated vehicle journey this extra journey
+   * replaces (beyond the one named by the VehicleJourneyRef).
+   */
+  public SiriEtBuilder withAdditionalVehicleJourneyRef(
+    Function<FramedVehicleRefBuilder, FramedVehicleRefBuilder> producer
+  ) {
+    var builder = new FramedVehicleRefBuilder();
+    builder = producer.apply(builder);
+    evj.getAdditionalVehicleJourneyReves().add(builder.build());
+    return this;
+  }
+
   public static class FramedVehicleRefBuilder {
 
     private String dataFrameRef;

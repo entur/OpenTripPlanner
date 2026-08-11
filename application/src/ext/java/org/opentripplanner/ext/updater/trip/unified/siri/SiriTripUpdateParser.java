@@ -21,6 +21,7 @@ import org.opentripplanner.ext.updater.trip.unified.model.command.CancelTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.DeferredTimeUpdate;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ModifyTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ParsedStopTimeUpdate;
+import org.opentripplanner.ext.updater.trip.unified.model.command.ReplacedTripReference;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ReviseTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.StopReference;
 import org.opentripplanner.ext.updater.trip.unified.model.command.TimeUpdate;
@@ -427,16 +428,23 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       });
     builder.withOperatorId(createId(operatorRef));
 
-    // Extract replacement trip references
-    // The replaced dated vehicle journey ref indicates which trip this extra journey replaces
+    // The primary replaced-journey ref carries the DatedServiceJourney id of the replaced trip
     journey
       .replacedDatedVehicleJourneyRef()
-      .ifPresent(ref -> builder.addReplacedTrip(createId(ref)));
+      .ifPresent(ref ->
+        builder.addReplacedTrip(new ReplacedTripReference.DatedTripRef(createId(ref)))
+      );
 
-    // Additional refs contain further trips being replaced
+    // An additional ref is a framed ref, naming a further replaced trip by (ServiceJourney id,
+    // service date). A framed ref missing either part names no dated trip and is dropped.
     for (var ref : journey.additionalReplacedDatedVehicleJourneyRefs()) {
-      if (ref != null && ref.vehicleJourneyId() != null) {
-        builder.addReplacedTrip(createId(ref.vehicleJourneyId()));
+      if (ref != null && ref.vehicleJourneyId() != null && ref.serviceDate() != null) {
+        builder.addReplacedTrip(
+          new ReplacedTripReference.TripOnDateRef(
+            createId(ref.vehicleJourneyId()),
+            ref.serviceDate()
+          )
+        );
       }
     }
 

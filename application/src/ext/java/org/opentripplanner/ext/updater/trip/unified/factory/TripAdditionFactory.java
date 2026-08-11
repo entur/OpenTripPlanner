@@ -13,12 +13,14 @@ import org.opentripplanner.ext.updater.trip.unified.model.change.TripAddition;
 import org.opentripplanner.ext.updater.trip.unified.model.change.TripCreation;
 import org.opentripplanner.ext.updater.trip.unified.model.command.AddTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ParsedStopTimeUpdate;
+import org.opentripplanner.ext.updater.trip.unified.model.command.ReplacedTripReference;
 import org.opentripplanner.ext.updater.trip.unified.model.command.TripCreationInfo;
 import org.opentripplanner.ext.updater.trip.unified.resolver.ServiceDateResolver;
 import org.opentripplanner.ext.updater.trip.unified.resolver.StopResolver;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.timetable.Trip;
+import org.opentripplanner.transit.model.timetable.TripIdAndServiceDate;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
 import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.service.TransitEditorService;
@@ -165,9 +167,21 @@ public class TripAdditionFactory {
     return tripCreationInfo
       .replacedTrips()
       .stream()
-      .map(transitService::getTripOnServiceDate)
+      .map(this::resolveReplacedTrip)
       .filter(Objects::nonNull)
       .toList();
+  }
+
+  @Nullable
+  private TripOnServiceDate resolveReplacedTrip(ReplacedTripReference reference) {
+    return switch (reference) {
+      case ReplacedTripReference.DatedTripRef ref -> transitService.getTripOnServiceDate(
+        ref.tripOnServiceDateId()
+      );
+      case ReplacedTripReference.TripOnDateRef ref -> transitService.getTripOnServiceDate(
+        new TripIdAndServiceDate(ref.tripId(), ref.serviceDate())
+      );
+    };
   }
 
   /**
