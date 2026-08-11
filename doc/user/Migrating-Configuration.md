@@ -64,7 +64,7 @@ Three things to check when migrating:
   explicitly did not. Check listed networks that omit `requireDropOffInsideBusinessArea` or
   `allowKeepingVehicleAtDestination`.
 - `geofencingZones` is no longer a boolean. It names the phase that computes the zones -
-  `realtime` or `off`.
+  `permanent`, `realtime` or `off` - so a network cannot have its zones applied twice.
 
 `geofencingBusinessAreaBorders` is renamed `requireDropOffInsideBusinessArea` and is configurable
 per network rather than hardcoded to `true`. The default is unchanged.
