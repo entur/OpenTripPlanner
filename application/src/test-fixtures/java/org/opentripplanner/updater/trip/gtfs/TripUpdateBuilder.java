@@ -246,6 +246,28 @@ public class TripUpdateBuilder {
   }
 
   public TripUpdateBuilder addStopTimeWithArrivalAndDeparture(
+    String stopId,
+    @Nullable String arrivalTime,
+    @Nullable String departureTime
+  ) {
+    return addStopTime(
+      stopId,
+      arrivalTime,
+      departureTime,
+      NO_STOP_SEQUENCE,
+      NO_DELAY,
+      NO_DELAY,
+      DEFAULT_SCHEDULE_RELATIONSHIP,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    );
+  }
+
+  public TripUpdateBuilder addStopTimeWithArrivalAndDeparture(
     int stopSequence,
     @Nullable String arrivalTime,
     @Nullable String departureTime
