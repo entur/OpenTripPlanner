@@ -89,7 +89,21 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
   public TripUpdateCommand parse(GtfsRealtime.TripUpdate update) {
     var tripUpdate = new TripUpdate(feedId, update, localDateNow);
     var tripId = tripUpdate.tripIdOrNull();
-    var startTime = parseStartTime(update.getTrip(), tripId);
+    try {
+      return parseCommand(update, tripUpdate, tripId);
+    } catch (UpdateException e) {
+      // Only one trip identity is in play within a message, so rejections are thrown below
+      // without one and the id is attached in this single place.
+      throw tripId == null ? e : e.withTripId(tripId);
+    }
+  }
+
+  private TripUpdateCommand parseCommand(
+    GtfsRealtime.TripUpdate update,
+    TripUpdate tripUpdate,
+    @Nullable FeedScopedId tripId
+  ) {
+    var startTime = parseStartTime(update.getTrip());
 
     // GTFS-RT names a trip by its trip_id. A feed whose producer cannot supply one names it by its
     // schedule instead - route, direction, start time and start date, all four - and the
@@ -110,13 +124,6 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
     var tripReference = buildTripReference(tripId, tripUpdate, startTime);
     var updateType = mapScheduleRelationship(scheduleRelationship);
-
-    if (updateType == null) {
-      throw switch (scheduleRelationship) {
-        case UNSCHEDULED -> UpdateException.of(tripId, NOT_IMPLEMENTED_UNSCHEDULED);
-        default -> UpdateException.of(tripId, INVALID_INPUT_STRUCTURE);
-      };
-    }
 
     // An added trip is created under the id the message gives it, so no match can supply one and
     // a message adding a trip without naming it is invalid. Legacy instead binds such a message to
@@ -145,13 +152,12 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       // incomplete without them. Not the shared wrapper's validateDuplicated(), whose LocalTime
       // reading of the start time cannot express a duplicate departing after midnight.
       if (startTime == null || tripUpdate.reportedStartDate().isEmpty()) {
-        throw UpdateException.of(tripId, INVALID_INPUT_STRUCTURE);
+        throw UpdateException.of(INVALID_INPUT_STRUCTURE);
       }
       return new DuplicateTrip(tripReference, serviceDate, startTime);
     }
 
     var stopTimeUpdates = parseStopTimeUpdates(
-      tripId,
       tripUpdate.stopTimeUpdates(),
       serviceDate,
       updateType == TripUpdateType.ADD_NEW_TRIP || updateType == TripUpdateType.MODIFY_TRIP
@@ -196,7 +202,6 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
     return new FeedScopedId(feedId, entityId);
   }
 
-  @Nullable
   private TripUpdateType mapScheduleRelationship(ScheduleRelationship relationship) {
     return switch (relationship) {
       case SCHEDULED -> TripUpdateType.UPDATE_EXISTING;
@@ -205,7 +210,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       case NEW, ADDED -> TripUpdateType.ADD_NEW_TRIP;
       case REPLACEMENT -> TripUpdateType.MODIFY_TRIP;
       case DUPLICATED -> TripUpdateType.DUPLICATE_TRIP;
-      case UNSCHEDULED -> null;
+      case UNSCHEDULED -> throw UpdateException.of(NOT_IMPLEMENTED_UNSCHEDULED);
     };
   }
 
@@ -216,17 +221,14 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
    * wrapper's {@link java.time.LocalTime} reading cannot express.
    */
   @Nullable
-  private ServiceTime parseStartTime(
-    GtfsRealtime.TripDescriptor tripDescriptor,
-    @Nullable FeedScopedId tripId
-  ) {
+  private ServiceTime parseStartTime(GtfsRealtime.TripDescriptor tripDescriptor) {
     if (!tripDescriptor.hasStartTime()) {
       return null;
     }
     try {
       return ServiceTime.parse(tripDescriptor.getStartTime());
     } catch (IllegalArgumentException e) {
-      throw UpdateException.of(tripId, INVALID_INPUT_STRUCTURE);
+      throw UpdateException.of(INVALID_INPUT_STRUCTURE);
     }
   }
 
@@ -280,7 +282,6 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
    *                           scheduled time still has to produce one.
    */
   private List<ParsedStopTimeUpdate> parseStopTimeUpdates(
-    @Nullable FeedScopedId tripId,
     List<StopTimeUpdate> updates,
     LocalDate serviceDate,
     boolean reportsOwnSchedule
@@ -296,7 +297,7 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
 
       // Both stop_id and stop_sequence are missing — invalid stop time update
       if (stopId.isEmpty() && stopSequence == null) {
-        throw UpdateException.of(tripId, UpdateErrorType.INVALID_STOP_REFERENCE);
+        throw UpdateException.of(UpdateErrorType.INVALID_STOP_REFERENCE);
       }
 
       // Create StopReference - may have null stopId if only stopSequence is provided
@@ -319,10 +320,10 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
       // that brings its own schedule is exempt: its calls may state only a scheduled time.
       if (!reportsOwnSchedule && status == ParsedStopTimeUpdate.StopUpdateStatus.SCHEDULED) {
         if (!update.isArrivalValid()) {
-          throw UpdateException.of(tripId, INVALID_ARRIVAL_TIME, i);
+          throw UpdateException.ofStopPosition(INVALID_ARRIVAL_TIME, i);
         }
         if (!update.isDepartureValid()) {
-          throw UpdateException.of(tripId, INVALID_DEPARTURE_TIME, i);
+          throw UpdateException.ofStopPosition(INVALID_DEPARTURE_TIME, i);
         }
       }
 
@@ -334,12 +335,12 @@ public class GtfsRtTripUpdateParser implements TripUpdateParser<GtfsRealtime.Tri
         if (
           !isWithinServiceDay(update.scheduledArrivalTimeWithRealTimeFallback(), startOfService)
         ) {
-          throw UpdateException.of(tripId, INVALID_ARRIVAL_TIME, i);
+          throw UpdateException.ofStopPosition(INVALID_ARRIVAL_TIME, i);
         }
         if (
           !isWithinServiceDay(update.scheduledDepartureTimeWithRealTimeFallback(), startOfService)
         ) {
-          throw UpdateException.of(tripId, INVALID_DEPARTURE_TIME, i);
+          throw UpdateException.ofStopPosition(INVALID_DEPARTURE_TIME, i);
         }
       }
 
