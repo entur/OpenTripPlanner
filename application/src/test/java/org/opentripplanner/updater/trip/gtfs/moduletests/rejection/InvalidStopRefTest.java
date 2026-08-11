@@ -32,6 +32,23 @@ class InvalidStopRefTest implements RealtimeTestConstants {
     assertFailure(INVALID_STOP_REFERENCE, rt.applyTripUpdate(update));
   }
 
+  /**
+   * A flex stop id identifies no call of a fixed-stop trip: it is as unknown as an id the model
+   * has never seen.
+   */
+  @Test
+  void flexStopId() {
+    var areaStop = builder.areaStop("FlexArea");
+    var env = builder.addTrip(tripInput).build();
+    var rt = GtfsRtTestHelper.of(env);
+    var update = rt
+      .tripUpdateScheduled(TRIP_1_ID)
+      .addStopTime(areaStop.getId().getId(), "10:00")
+      .build();
+
+    assertFailure(INVALID_STOP_REFERENCE, rt.applyTripUpdate(update));
+  }
+
   @Test
   void knownAndUnknownStopId() {
     var env = builder.addTrip(tripInput).build();

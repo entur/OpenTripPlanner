@@ -23,6 +23,7 @@ import org.opentripplanner.transit.model.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model.TripInput;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.TripPattern;
+import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.updater.spi.UpdateSuccess;
@@ -40,6 +41,7 @@ class AddedTest implements RealtimeTestConstants {
   private final RegularStop STOP_A = envBuilder.stop(STOP_A_ID);
   private final RegularStop STOP_B = envBuilder.stop(STOP_B_ID);
   private final RegularStop STOP_C = envBuilder.stop(STOP_C_ID);
+  private final AreaStop AREA_STOP = envBuilder.areaStop("FlexArea");
 
   private final TransitTestEnvironment env = envBuilder
     .addTrip(
@@ -127,6 +129,34 @@ class AddedTest implements RealtimeTestConstants {
     var pattern = assertAddedTrip(ADDED_TRIP_ID, env);
 
     assertEquals(2, pattern.getStops().size());
+  }
+
+  /**
+   * An added trip calls at fixed stops: a call at a flex stop is a call at an unknown stop and is
+   * dropped, it must not put the flex stop into the new trip pattern.
+   */
+  @Test
+  void addedWithFlexStop() {
+    var tripUpdate = gtfsRt
+      .tripUpdate(ADDED_TRIP_ID, ADDED)
+      // add extension to set route name, url, mode
+      .addTripExtension()
+      .addStopTime(STOP_A_ID, "00:30", DropOffPickupType.PHONE_AGENCY)
+      .addStopTime(AREA_STOP.getId().getId(), "00:40", DropOffPickupType.COORDINATE_WITH_DRIVER)
+      .addStopTime(STOP_C_ID, "00:55", DropOffPickupType.NONE)
+      .build();
+
+    var result = gtfsRt.applyTripUpdate(tripUpdate);
+    assertSuccess(result);
+
+    assertEquals(
+      List.of(UpdateSuccess.WarningType.UNKNOWN_STOPS_REMOVED_FROM_ADDED_TRIP),
+      result.warnings()
+    );
+
+    var pattern = assertAddedTrip(ADDED_TRIP_ID, env);
+
+    assertEquals(List.of(STOP_A, STOP_C), pattern.getStops());
   }
 
   @Test

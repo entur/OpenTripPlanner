@@ -12,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
 import org.opentripplanner.transit.model.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model.TripInput;
+import org.opentripplanner.transit.model.site.AreaStop;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
 import org.opentripplanner.updater.trip.gtfs.GtfsRtTestHelper;
@@ -35,6 +36,7 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
   // these stops need to be created for use in assigned stops
   private final RegularStop STOP_D = ENV_BUILDER.stop(STOP_D_ID);
   private final RegularStop STOP_E = ENV_BUILDER.stop(STOP_E_ID);
+  private final AreaStop AREA_STOP = ENV_BUILDER.areaStop("FlexArea");
 
   private final TripInput TRIP_1_INPUT = TripInput.of(TRIP_1_ID)
     .withServiceDates(SERVICE_DATE, SERVICE_DATE_PLUS)
@@ -174,6 +176,29 @@ class AssignedStopIdsTest implements RealtimeTestConstants {
     var tripUpdate = rt
       .tripUpdateScheduled(TRIP_1_ID)
       .addAssignedStopTime(0, "10:05:00", "no-such-stop")
+      .build();
+
+    assertSuccess(rt.applyTripUpdate(tripUpdate));
+    assertEquals(
+      "U | A 10:05 10:05 | B 10:06 10:06 | C 10:07 10:07",
+      env.tripData(TRIP_1_ID).showTimetable()
+    );
+    assertFalse(env.tripData(TRIP_1_ID).tripPattern().isStopPatternModifiedInRealTime());
+  }
+
+  /**
+   * A stop replacement replaces one fixed stop with another: an assignment to a flex stop is
+   * unresolvable and is dropped like an unknown one, it must not put the flex stop into the
+   * pattern.
+   */
+  @Test
+  void flexAssignedStopIdKeepsTheTimesAndDropsThePatternChange() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+
+    var rt = GtfsRtTestHelper.of(env);
+    var tripUpdate = rt
+      .tripUpdateScheduled(TRIP_1_ID)
+      .addAssignedStopTime(0, "10:05:00", AREA_STOP.getId().getId())
       .build();
 
     assertSuccess(rt.applyTripUpdate(tripUpdate));

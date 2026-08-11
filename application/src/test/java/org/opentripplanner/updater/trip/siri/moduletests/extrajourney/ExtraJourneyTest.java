@@ -317,6 +317,41 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     );
   }
 
+  /**
+   * An extra journey calls at fixed stops: a call whose reference only resolves to a flex stop is
+   * a call at an unknown stop, so the journey is rejected rather than given a trip pattern
+   * containing a flex stop.
+   */
+  @Test
+  void testRejectExtraJourneyCallingAtFlexStop() {
+    var areaStop = ENV_BUILDER.areaStop("FlexArea");
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withEstimatedVehicleJourneyCode(ADDED_TRIP_ID)
+      .withIsExtraJourney(true)
+      .withOperatorRef(OPERATOR_ID)
+      .withLineRef(ROUTE_ID)
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_C)
+          .departAimedExpected("00:01", "00:02")
+          .call(areaStop)
+          .arriveAimedExpected("00:03", "00:04")
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    var result = siri.applyEstimatedTimetable(updates);
+
+    assertFailure(UpdateErrorType.UNKNOWN_STOP, result);
+    assertNull(
+      env.transitService().getTrip(id(ADDED_TRIP_ID)),
+      "An extra journey calling at a flex stop must not be added"
+    );
+  }
+
   @Test
   void testRejectUnmonitoredExtraJourney() {
     var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();

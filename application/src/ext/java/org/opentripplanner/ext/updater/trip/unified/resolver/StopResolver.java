@@ -4,7 +4,7 @@ import java.util.Objects;
 import javax.annotation.Nullable;
 import org.opentripplanner.ext.updater.trip.unified.model.command.StopReference;
 import org.opentripplanner.ext.updater.trip.unified.model.command.StopResolutionStrategy;
-import org.opentripplanner.transit.model.site.StopLocation;
+import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.service.TransitService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +23,10 @@ import org.slf4j.LoggerFactory;
  * {@code StopPointRef} is a scheduled stop point that may map to a quay, so
  * {@link StopResolutionStrategy#SCHEDULED_STOP_POINT_FIRST} tries that mapping before the direct
  * lookup a GTFS-RT {@code stop_id} needs.
+ * <p>
+ * Only regular stops resolve: an id that names a flex stop is treated as unknown, like the legacy
+ * updaters treat it. A trip update describes a call at a fixed stop, so accepting anything else
+ * would insert a flex stop into a fixed-stop trip pattern.
  * <p>
  * This follows the pattern established in {@link TripResolver} but operates
  * on the parsed {@link StopReference} rather than raw message objects.
@@ -46,7 +50,7 @@ public class StopResolver {
    *         transit model does not know
    */
   @Nullable
-  public StopLocation resolveReferencedStop(StopReference reference) {
+  public RegularStop resolveReferencedStop(StopReference reference) {
     Objects.requireNonNull(reference, "reference must not be null");
 
     if (!reference.hasStopId()) {
@@ -59,7 +63,7 @@ public class StopResolver {
         return stop;
       }
     }
-    return transitService.getStopLocation(reference.stopId());
+    return transitService.getRegularStop(reference.stopId());
   }
 
   /**
@@ -71,13 +75,13 @@ public class StopResolver {
    *         than losing its real-time times.
    */
   @Nullable
-  public StopLocation resolveAssignedStop(StopReference reference) {
+  public RegularStop resolveAssignedStop(StopReference reference) {
     Objects.requireNonNull(reference, "reference must not be null");
 
     if (!reference.hasAssignedStopId()) {
       return null;
     }
-    var stop = transitService.getStopLocation(reference.assignedStopId());
+    var stop = transitService.getRegularStop(reference.assignedStopId());
     if (stop == null) {
       LOG.debug(
         "Stop {} assigned to a call is not known, keeping the scheduled stop",

@@ -21,13 +21,16 @@ class StopResolverTest {
   private static final String FEED_ID = FeedScopedIdForTestFactory.FEED_ID;
   private static final String STOP_A = "stopA";
   private static final String STOP_B = "stopB";
+  private static final String AREA_STOP = "areaStop";
 
   private TransitService transitService;
   private StopResolver resolver;
 
   @BeforeEach
   void setUp() {
-    var env = TransitTestEnvironment.of().addStops(STOP_A, STOP_B).build();
+    var envBuilder = TransitTestEnvironment.of().addStops(STOP_A, STOP_B);
+    envBuilder.areaStop(AREA_STOP);
+    var env = envBuilder.build();
     transitService = env.transitService();
     resolver = new StopResolver(transitService);
   }
@@ -116,6 +119,35 @@ class StopResolverTest {
     var stop = resolver.resolveReferencedStop(reference);
 
     assertNull(stop);
+  }
+
+  @Test
+  void resolveFlexStopId_returnsNull() {
+    var areaStopId = new FeedScopedId(FEED_ID, AREA_STOP);
+    var reference = StopReference.ofStopId(areaStopId);
+
+    // A trip update describes a call at a fixed stop: an id naming a flex stop is unknown, like
+    // the legacy updaters treat it.
+    assertNull(resolver.resolveReferencedStop(reference));
+  }
+
+  @Test
+  void resolveFlexScheduledStopPointOrStopId_returnsNull() {
+    var areaStopId = new FeedScopedId(FEED_ID, AREA_STOP);
+    var reference = StopReference.ofScheduledStopPointOrStopId(areaStopId);
+
+    assertNull(resolver.resolveReferencedStop(reference));
+  }
+
+  @Test
+  void resolveFlexAssignedStopId_returnsNull() {
+    var reference = StopReference.ofStopId(
+      new FeedScopedId(FEED_ID, STOP_A),
+      new FeedScopedId(FEED_ID, AREA_STOP)
+    );
+
+    // An assignment to a flex stop is unresolvable: the scheduled stop is kept.
+    assertNull(resolver.resolveAssignedStop(reference));
   }
 
   @Test
