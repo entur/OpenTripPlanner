@@ -7,12 +7,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import javax.annotation.Nullable;
 import org.opentripplanner.ext.updater.trip.unified.model.ServiceTime;
 import org.opentripplanner.ext.updater.trip.unified.model.command.AddTrip;
+import org.opentripplanner.ext.updater.trip.unified.model.command.CancelTrip;
+import org.opentripplanner.ext.updater.trip.unified.model.command.DeleteTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.DuplicateTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ExistingTripCommand;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ParsedStopTimeUpdate;
-import org.opentripplanner.ext.updater.trip.unified.model.command.RemoveTripCommand;
 import org.opentripplanner.ext.updater.trip.unified.model.command.StopReference;
 import org.opentripplanner.ext.updater.trip.unified.model.command.TripReference;
 import org.opentripplanner.ext.updater.trip.unified.model.command.TripUpdateCommand;
@@ -40,13 +42,15 @@ import org.slf4j.LoggerFactory;
  * Matching algorithm:
  * <ol>
  *   <li>Build cache: (lastStopId, arrivalTimeSeconds) → Set&lt;Trip&gt;</li>
- *   <li>Get aimed arrival time at last stop from ParsedStopTimeUpdate</li>
+ *   <li>Get the aimed arrival time at the journey's last stop</li>
  *   <li>Look up candidate trips from cache</li>
  *   <li>Filter by route if routeId provided</li>
  *   <li>Match first/last stops (including sibling stops in same station)</li>
  *   <li>Validate departure time at first stop</li>
  *   <li>Validate service date</li>
  * </ol>
+ * A revision states those endpoints among its calls, a cancellation states them on their own; both
+ * are matched the same way.
  */
 public class SiriTripMatcher implements FuzzyTripMatcher {
 
@@ -75,17 +79,16 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
     TripUpdateCommand command,
     LocalDate serviceDate
   ) {
-    // A SIRI-ET journey is identified by the stops and times of its calls, so only a command that
-    // carries calls can be matched; one that carries none is declined, there being nothing to
-    // match on and so nothing to have a verdict about. Legacy SIRI can fuzzy-match a cancellation,
-    // because the cancellation message still carries its calls - the unified CancelTrip drops
-    // them, a known modelling gap of RemoveTripCommand. If that gap is closed, extending this
-    // switch is a deliberate SIRI behaviour change and needs its own tests.
+    // A SIRI-ET journey is identified by the stops and times of its first and last call, so only a
+    // command that describes them can be matched; one that describes none is declined, there being
+    // nothing to match on and so nothing to have a verdict about. A cancellation describes its
+    // journey with those two calls alone, which it carries as its JourneyEndpoints.
     return switch (command) {
       case ExistingTripCommand existingTripCommand -> Optional.of(
         matchByCalls(tripReference, existingTripCommand, serviceDate)
       );
-      case RemoveTripCommand _ -> Optional.empty();
+      case CancelTrip cancelTrip -> matchCancellation(tripReference, cancelTrip, serviceDate);
+      case DeleteTrip _ -> Optional.empty();
       case AddTrip _ -> Optional.empty();
       case DuplicateTrip _ -> Optional.empty();
     };
@@ -106,27 +109,70 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
     ParsedStopTimeUpdate firstStopUpdate = stopTimeUpdates.getFirst();
     ParsedStopTimeUpdate lastStopUpdate = stopTimeUpdates.getLast();
 
-    // Get the aimed departure time at first stop (for matching)
-    ServiceTime aimedDepartureTime = aimedDepartureTime(firstStopUpdate, serviceDate);
+    // The arrival at the last stop falls back on its departure, which a journey ending in a
+    // departure-only call is timed by.
+    ServiceTime lastStopArrival = aimedArrivalTime(lastStopUpdate, serviceDate);
+    ServiceTime aimedArrivalTime = lastStopArrival != null
+      ? lastStopArrival
+      : aimedDepartureTime(lastStopUpdate, serviceDate);
+
+    return matchByEndpoints(
+      tripReference,
+      firstStopUpdate.stopReference(),
+      aimedDepartureTime(firstStopUpdate, serviceDate),
+      lastStopUpdate.stopReference(),
+      aimedArrivalTime,
+      serviceDate
+    );
+  }
+
+  /**
+   * A cancellation names its journey by the endpoints it states, when it states them at all: one
+   * that lists no call - as every GTFS-RT cancellation and a bare SIRI one do - is declined,
+   * leaving the caller to go on looking the way it would without a matcher.
+   */
+  private Optional<TripAndPattern> matchCancellation(
+    TripReference tripReference,
+    CancelTrip command,
+    LocalDate serviceDate
+  ) {
+    var endpoints = command.journeyEndpoints();
+    if (endpoints == null) {
+      return Optional.empty();
+    }
+    return Optional.of(
+      matchByEndpoints(
+        tripReference,
+        endpoints.origin(),
+        endpoints.aimedDeparture(serviceDate, timeZone),
+        endpoints.destination(),
+        endpoints.aimedArrival(serviceDate, timeZone),
+        serviceDate
+      )
+    );
+  }
+
+  private TripAndPattern matchByEndpoints(
+    TripReference tripReference,
+    StopReference originReference,
+    @Nullable ServiceTime aimedDepartureTime,
+    StopReference destinationReference,
+    @Nullable ServiceTime aimedArrivalTime,
+    LocalDate serviceDate
+  ) {
     if (aimedDepartureTime == null) {
       LOG.debug("Cannot fuzzy match without aimed departure time at first stop");
       throw UpdateException.of(tripReference.tripId(), UpdateErrorType.INVALID_DEPARTURE_TIME);
     }
 
-    // Get the aimed arrival time at last stop (for cache lookup)
-    ServiceTime aimedArrivalTime = aimedArrivalTime(lastStopUpdate, serviceDate);
-    if (aimedArrivalTime == null) {
-      // Fall back to departure time if arrival not available
-      aimedArrivalTime = aimedDepartureTime(lastStopUpdate, serviceDate);
-    }
     if (aimedArrivalTime == null) {
       LOG.debug("Cannot fuzzy match without aimed arrival time at last stop");
       throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_FUZZY_TRIP_MATCH);
     }
 
     // Resolve first and last stops
-    StopLocation firstStop = resolveStop(firstStopUpdate.stopReference());
-    StopLocation lastStop = resolveStop(lastStopUpdate.stopReference());
+    StopLocation firstStop = resolveStop(originReference);
+    StopLocation lastStop = resolveStop(destinationReference);
     if (firstStop == null || lastStop == null) {
       LOG.debug("Cannot resolve first or last stop for fuzzy matching");
       throw UpdateException.of(tripReference.tripId(), UpdateErrorType.NO_VALID_STOPS);

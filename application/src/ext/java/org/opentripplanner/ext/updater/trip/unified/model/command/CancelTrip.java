@@ -25,6 +25,9 @@ public final class CancelTrip implements RemoveTripCommand {
 
   private final VehicleDescription vehicleDescription;
 
+  @Nullable
+  private final JourneyEndpoints journeyEndpoints;
+
   /** A cancellation that says nothing about the vehicle that was to serve the trip. */
   public CancelTrip(
     TripReference tripReference,
@@ -42,12 +45,24 @@ public final class CancelTrip implements RemoveTripCommand {
     @Nullable String dataSource,
     VehicleDescription vehicleDescription
   ) {
+    this(tripReference, serviceDate, aimedDepartureTime, dataSource, vehicleDescription, null);
+  }
+
+  public CancelTrip(
+    TripReference tripReference,
+    @Nullable LocalDate serviceDate,
+    @Nullable ZonedDateTime aimedDepartureTime,
+    @Nullable String dataSource,
+    VehicleDescription vehicleDescription,
+    @Nullable JourneyEndpoints journeyEndpoints
+  ) {
     this.tripReference = Objects.requireNonNull(tripReference);
     TripUpdateCommand.validateServiceDateAvailable(tripReference, serviceDate, aimedDepartureTime);
     this.serviceDate = serviceDate;
     this.aimedDepartureTime = aimedDepartureTime;
     this.dataSource = dataSource;
     this.vehicleDescription = Objects.requireNonNull(vehicleDescription);
+    this.journeyEndpoints = journeyEndpoints;
   }
 
   @Override
@@ -80,6 +95,17 @@ public final class CancelTrip implements RemoveTripCommand {
   @Override
   public VehicleDescription vehicleDescription() {
     return vehicleDescription;
+  }
+
+  /**
+   * Where the cancelled journey starts and ends, when the message describes its calls. This is what
+   * identifies the journey to the SIRI fuzzy trip matcher, for the producers whose journey ids name
+   * no trip; a cancellation that lists no calls, and every GTFS-RT cancellation, carries nothing
+   * here.
+   */
+  @Nullable
+  public JourneyEndpoints journeyEndpoints() {
+    return journeyEndpoints;
   }
 
   @Override

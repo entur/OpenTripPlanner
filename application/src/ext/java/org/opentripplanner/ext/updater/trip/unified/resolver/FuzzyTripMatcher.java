@@ -19,11 +19,12 @@ import org.opentripplanner.updater.spi.UpdateException;
  *   matcher. The one verdict it owns is that a message naming its trip neither by id nor by a
  *   tuple that matches anything has identified nothing at all.</li>
  *   <li>{@link org.opentripplanner.ext.updater.trip.unified.siri.SiriTripMatcher SiriTripMatcher}
- *   matches by the stops and times of the journey's calls. A command that carries calls gets a
- *   verdict when the match fails - it throws NO_VALID_STOPS, INVALID_DEPARTURE_TIME,
- *   NO_FUZZY_TRIP_MATCH or MULTIPLE_FUZZY_TRIP_MATCHES, which the caller propagates - but a
- *   command shape that carries none (a removal, a duplication) is declined with empty, since
- *   there is nothing to match on and so nothing to have a verdict about.</li>
+ *   matches by the stops and times where the journey begins and ends - stated among the calls of a
+ *   revision, and on their own by a cancellation. A command that states them gets a verdict when
+ *   the match fails - it throws NO_VALID_STOPS, INVALID_DEPARTURE_TIME, NO_FUZZY_TRIP_MATCH or
+ *   MULTIPLE_FUZZY_TRIP_MATCHES, which the caller propagates - but a command that states none (a
+ *   deletion, a duplication, a cancellation listing no call) is declined with empty, since there
+ *   is nothing to match on and so nothing to have a verdict about.</li>
  * </ul>
  * {@link NoOpFuzzyTripMatcher} - matching disabled - always returns empty, so "disabled" and
  * "found nothing" read the same to a caller: report the failure of the lookup you were doing.

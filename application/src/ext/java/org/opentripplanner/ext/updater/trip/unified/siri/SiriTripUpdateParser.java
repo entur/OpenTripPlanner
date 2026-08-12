@@ -19,6 +19,7 @@ import org.opentripplanner.ext.updater.trip.unified.model.ServiceTime;
 import org.opentripplanner.ext.updater.trip.unified.model.command.AddTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.CancelTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.DeferredTimeUpdate;
+import org.opentripplanner.ext.updater.trip.unified.model.command.JourneyEndpoints;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ModifyTrip;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ParsedStopTimeUpdate;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ReplacedTripReference;
@@ -98,7 +99,8 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         psd.serviceDate(),
         psd.aimedDepartureTime(),
         journey.dataSource().orElse(null),
-        vehicle
+        vehicle,
+        parseJourneyEndpoints(calls)
       );
     }
 
@@ -167,6 +169,45 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
   private FeedScopedId createId(String entityId) {
     return new FeedScopedId(feedId, entityId);
+  }
+
+  /**
+   * The origin and destination of the journey, read off its first and last call. A cancellation
+   * describes its journey with these alone, and a producer whose journey ids name no trip is
+   * identified by them; the times are the aimed ones only, and are taken as the message states them
+   * - the Nordic profile rules the calls of a served journey must keep do not apply to a cancelled
+   * one, which announces a journey that will not run.
+   *
+   * @return the endpoints, or null if the message lists no call naming a stop
+   */
+  @Nullable
+  private JourneyEndpoints parseJourneyEndpoints(List<CallWrapper> calls) {
+    var callsNamingAStop = calls
+      .stream()
+      .filter(call -> !StringUtils.hasNoValueOrNullAsString(call.getStopPointRef()))
+      .toList();
+    if (callsNamingAStop.isEmpty()) {
+      return null;
+    }
+    var origin = callsNamingAStop.getFirst();
+    var destination = callsNamingAStop.getLast();
+
+    // A last call that reports only a departure is still the end of the journey; the departure it
+    // aims for stands in for the arrival, the way legacy SIRI fuzzy matching reads it.
+    var aimedArrival = destination.getAimedArrivalTime() != null
+      ? destination.getAimedArrivalTime()
+      : destination.getAimedDepartureTime();
+
+    return new JourneyEndpoints(
+      stopReference(origin),
+      origin.getAimedDepartureTime(),
+      stopReference(destination),
+      aimedArrival
+    );
+  }
+
+  private StopReference stopReference(CallWrapper call) {
+    return StopReference.ofScheduledStopPointOrStopId(createId(call.getStopPointRef()));
   }
 
   private TripUpdateType determineUpdateType(EstimatedVehicleJourneyWrapper journey) {
@@ -259,9 +300,7 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
         continue;
       }
 
-      var stopId = createId(call.getStopPointRef());
-      var stopReference = StopReference.ofScheduledStopPointOrStopId(stopId);
-      var builder = ParsedStopTimeUpdate.builder(stopReference);
+      var builder = ParsedStopTimeUpdate.builder(stopReference(call));
 
       var resolvedTimes = SiriTimeResolver.resolveTimes(call, stopIndex, totalStops);
       builder.withStatus(determineStopStatus(call, resolvedTimes));

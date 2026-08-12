@@ -26,10 +26,10 @@ import org.opentripplanner.updater.spi.UpdateException;
  * Used for CANCEL_TRIP ({@link org.opentripplanner.ext.updater.trip.unified.model.command.CancelTrip})
  * and DELETE_TRIP ({@link org.opentripplanner.ext.updater.trip.unified.model.command.DeleteTrip}).
  * <p>
- * The factory looks up scheduled trips first - by the trip id the message names or, failing that,
- * by fuzzy trip matching - then checks for previously added (real-time) trips via the transit
- * service, which sees all in-progress real-time updates in the timetable snapshot buffer of the
- * current update task. Which of the two it finds decides whether the removal is a
+ * The factory looks for the trip the message names in three places, in this order: the static
+ * schedule, the trips previously added by real-time messages - via the transit service, which sees
+ * all in-progress real-time updates in the timetable snapshot buffer of the current update task -
+ * and finally fuzzy trip matching. Which one finds the trip decides whether the removal is a
  * {@link ScheduledTripRemoval} or a {@link AddedTripRemoval}.
  */
 public class TripRemovalFactory {
@@ -78,12 +78,18 @@ public class TripRemovalFactory {
     try {
       trip = tripResolver.resolveTrip(tripReference);
     } catch (UpdateException e) {
+      // The message may name a trip an earlier message added, and that is asked before any
+      // fuzzying: an added journey usually repeats the calls of the journey it replaces, so a
+      // matcher let loose first could answer with the replaced trip and remove the wrong one.
+      var addedTrip = findAddedTrip(serviceDate, tripId, dataSource, vehicleDescription);
+      if (addedTrip != null) {
+        return addedTrip;
+      }
       // A removal identifies its trip like every other update, so a failed exact resolve asks the
-      // fuzzy matcher next. A matcher with no verdict is not the last word here: the message may
-      // still name a trip an earlier message added, which is what the caller looks for after.
+      // fuzzy matcher next; a matcher with no verdict leaves the removal with no trip to remove.
       var match = fuzzyTripMatcher.match(tripReference, command, serviceDate);
       if (match.isEmpty()) {
-        return resolveAddedTripOrNotFound(serviceDate, tripId, dataSource, vehicleDescription);
+        throw UpdateException.of(tripId, UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND);
       }
       trip = match.get().trip();
     }
@@ -140,23 +146,43 @@ public class TripRemovalFactory {
     @Nullable String dataSource,
     VehicleDescription vehicleDescription
   ) {
-    if (tripId != null) {
-      var pattern = transitService.findNewTripPatternForModifiedTrip(tripId, serviceDate);
-      if (pattern != null) {
-        var timetable = transitService.findTimetable(pattern, serviceDate);
-        var tripTimes = timetable.getTripTimes(tripId);
-        if (tripTimes != null && tripTimes.isAdded()) {
-          return new AddedTripRemoval(
-            serviceDate,
-            tripId,
-            pattern,
-            tripTimes,
-            dataSource,
-            vehicleDescription
-          );
-        }
-      }
+    var removal = findAddedTrip(serviceDate, tripId, dataSource, vehicleDescription);
+    if (removal == null) {
+      throw UpdateException.of(tripId, UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND);
     }
-    throw UpdateException.of(tripId, UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND);
+    return removal;
+  }
+
+  /**
+   * The removal of a trip an earlier real-time message added, looked up in the timetable snapshot,
+   * or {@code null} if no added trip runs under this id on this date.
+   */
+  @Nullable
+  private TripRemoval findAddedTrip(
+    LocalDate serviceDate,
+    @Nullable FeedScopedId tripId,
+    @Nullable String dataSource,
+    VehicleDescription vehicleDescription
+  ) {
+    if (tripId == null) {
+      return null;
+    }
+    var pattern = transitService.findNewTripPatternForModifiedTrip(tripId, serviceDate);
+    if (pattern == null) {
+      return null;
+    }
+    var timetable = transitService.findTimetable(pattern, serviceDate);
+    var tripTimes = timetable.getTripTimes(tripId);
+    if (tripTimes == null || !tripTimes.isAdded()) {
+      return null;
+    }
+    return new AddedTripRemoval(
+      serviceDate,
+      tripId,
+      pattern,
+      tripTimes,
+      dataSource,
+      vehicleDescription
+    );
   }
 }
