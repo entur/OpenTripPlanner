@@ -102,8 +102,7 @@ public class DefaultTransitService implements TransitEditorService {
 
   /**
    * Create a service without a real-time snapshot (and therefore without any real-time data).
-   * This is the constructor used by Dagger injection. Use the {@link TransitService} via the
-   * {@link org.opentripplanner.standalone.api.OtpServerRequestContext} if real-time data is needed.
+   * This is the constructor used by Dagger injection.
    */
   @Inject
   public DefaultTransitService(TransitRepository transitRepository) {
