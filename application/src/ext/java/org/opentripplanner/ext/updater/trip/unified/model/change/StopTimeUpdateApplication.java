@@ -101,14 +101,6 @@ final class StopTimeUpdateApplication {
       applyPickup(mod, stopIndex, stopUpdate, pickDrop);
       applyDropoff(mod, stopIndex, stopUpdate, pickDrop);
 
-      // For GTFS-RT SKIPPED stops, don't apply time updates - the forward delay
-      // interpolator will interpolate times from surrounding stops.
-      // For SIRI CANCELLED stops, fall through to apply explicit time updates
-      // to avoid NEGATIVE_HOP_TIME errors on delayed trips.
-      if (stopUpdate.status() == ParsedStopTimeUpdate.StopUpdateStatus.SKIPPED) {
-        continue;
-      }
-
       // Flag NO_DATA stops. Their (absent) real-time times are skipped below, but pick/drop,
       // occupancy, headsign and prediction flags are still applied, matching the legacy SIRI path
       // where these flags follow withNoData so they take precedence.
@@ -117,15 +109,22 @@ final class StopTimeUpdateApplication {
         builder.withNoData(stopIndex);
       }
 
+      // A GTFS-RT SKIPPED call reports no times of its own: the forward delay interpolator fills it
+      // in from the calls around it. A SIRI-ET cancelled call does carry explicit times, which are
+      // applied to avoid NEGATIVE_HOP_TIME errors on a delayed trip. Only the times are at stake
+      // here - what the call says about itself otherwise is applied below either way, the way the
+      // legacy updaters apply it before deciding what a cancellation does to the times.
+      boolean timesReported = stopUpdate.status() != ParsedStopTimeUpdate.StopUpdateStatus.SKIPPED;
+
       // Apply time updates (NO_DATA stops carry no real-time times, so skip them)
-      if (!noData && stopUpdate.hasArrivalUpdate()) {
+      if (timesReported && !noData && stopUpdate.hasArrivalUpdate()) {
         var arrivalUpdate = stopUpdate.arrivalUpdate();
         int scheduledArrival = builder.getScheduledArrivalTime(stopIndex);
         int newArrivalTime = arrivalUpdate.resolveTime(scheduledArrival);
         builder.withArrivalTime(stopIndex, newArrivalTime);
       }
 
-      if (!noData && stopUpdate.hasDepartureUpdate()) {
+      if (timesReported && !noData && stopUpdate.hasDepartureUpdate()) {
         var departureUpdate = stopUpdate.departureUpdate();
         int scheduledDeparture = builder.getScheduledDepartureTime(stopIndex);
         int newDepartureTime = departureUpdate.resolveTime(scheduledDeparture);

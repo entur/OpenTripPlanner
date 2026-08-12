@@ -410,6 +410,28 @@ public class TripUpdateBuilder {
     );
   }
 
+  /**
+   * Add a skipped stop that displays a headsign of its own, as a feed announcing what a passed
+   * call shows does.
+   */
+  public TripUpdateBuilder addSkippedStopWithHeadsign(int stopSequence, String headsign) {
+    return addStopTime(
+      null,
+      null,
+      null,
+      stopSequence,
+      NO_DELAY,
+      NO_DELAY,
+      StopTimeUpdate.ScheduleRelationship.SKIPPED,
+      null,
+      null,
+      headsign,
+      null,
+      null,
+      null
+    );
+  }
+
   public TripUpdateBuilder addSkippedStop(String stopId, String time) {
     return addStopTime(
       stopId,
