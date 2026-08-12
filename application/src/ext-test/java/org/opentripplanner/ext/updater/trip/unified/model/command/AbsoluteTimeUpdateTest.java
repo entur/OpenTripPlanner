@@ -48,12 +48,22 @@ class AbsoluteTimeUpdateTest {
     assertThat(update.aimedTimeOrActual()).isEqualTo(ACTUAL_TIME);
   }
 
+  /** A trip can be aimed at exactly midnight of its service date. */
   @Test
-  void aimedTimeOrActualFallsBackOnMidnight() {
-    // An aimed time of exactly midnight is treated as missing
-    var update = TimeUpdate.ofAbsolute(ACTUAL_TIME, ServiceTime.ofSecondsPastMidnight(0));
+  void aimedTimeOrActualKeepsMidnight() {
+    var midnight = ServiceTime.ofSecondsPastMidnight(0);
+    var update = TimeUpdate.ofAbsolute(ACTUAL_TIME, midnight);
 
-    assertThat(update.aimedTimeOrActual()).isEqualTo(ACTUAL_TIME);
+    assertThat(update.aimedTimeOrActual()).isEqualTo(midnight);
+  }
+
+  /** A time before the start of service is negative, and just as reported as any other. */
+  @Test
+  void aimedTimeOrActualKeepsATimeBeforeTheStartOfService() {
+    var beforeStartOfService = ServiceTime.ofSecondsPastMidnight(-3600);
+    var update = TimeUpdate.ofAbsolute(ACTUAL_TIME, beforeStartOfService);
+
+    assertThat(update.aimedTimeOrActual()).isEqualTo(beforeStartOfService);
   }
 
   @Test

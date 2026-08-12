@@ -21,11 +21,13 @@ public record AbsoluteTimeUpdate(ServiceTime time, @Nullable ServiceTime aimedTi
 
   /**
    * The aimed time reported by the feed, falling back to the real-time value when the feed
-   * reported none. An aimed time of exactly midnight counts as unreported - it is the value a
-   * producer emits for a field it left unset. Used when building the stop pattern of an added or
-   * modified trip, where there is no scheduled timetable to fall back to.
+   * reported none. Whether a time was reported is decided by the field being present, never by the
+   * value it carries: midnight of the service date is a time a trip can legitimately be aimed at,
+   * and so is a value before it, since the origin these are measured from is noon minus twelve
+   * hours. Used when building the stop pattern of an added or modified trip, where there is no
+   * scheduled timetable to fall back to.
    */
   public ServiceTime aimedTimeOrActual() {
-    return aimedTime != null && aimedTime.secondsPastMidnight() > 0 ? aimedTime : time;
+    return aimedTime != null ? aimedTime : time;
   }
 }

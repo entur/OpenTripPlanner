@@ -40,6 +40,13 @@ class ExtraCallTest implements RealtimeTestConstants {
     .addStop(STOP_A, "0:00:10", "0:00:11")
     .addStop(STOP_B, "0:00:20", "0:00:21");
 
+  /** A trip whose first call is aimed at exactly midnight of the service date. */
+  private final TripInput MIDNIGHT_TRIP_INPUT = TripInput.of(TRIP_2_ID)
+    .withWithTripOnServiceDate(TRIP_2_ID)
+    .withRoute(ROUTE)
+    .addStop(STOP_A, "0:00:00", "0:00:00")
+    .addStop(STOP_B, "0:00:20", "0:00:21");
+
   @Test
   void testExtraCall() {
     var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
@@ -204,6 +211,43 @@ class ExtraCallTest implements RealtimeTestConstants {
     var aimedTimes = tripData.tripPattern().getScheduledTimetable().getTripTimes(tripData.trip());
     assertNotNull(aimedTimes, "The modified pattern must carry the aimed times of the extra call");
     assertEquals(TimeUtils.time("0:00:19"), aimedTimes.getScheduledDepartureTime(1));
+  }
+
+  /**
+   * Midnight of the service date is a time a call can be aimed at, so the pattern created for the
+   * extra call keeps it rather than falling back to the recorded time.
+   */
+  @Test
+  void testExtraCallPatternCarriesAMidnightAimedTime() {
+    var env = ENV_BUILDER.addTrip(MIDNIGHT_TRIP_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = siri
+      .etBuilder()
+      .withDatedVehicleJourneyRef(TRIP_2_ID)
+      .withLineRef(ROUTE_ID)
+      .withRecordedCalls(builder -> builder.call(STOP_A).departAimedActual("00:00:00", "00:00:05"))
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_D)
+          .withIsExtraCall(true)
+          .arriveAimedExpected("00:00:10", "00:00:15")
+          .departAimedExpected("00:00:11", "00:00:16")
+          .call(STOP_B)
+          .arriveAimedExpected("00:00:20", "00:00:25")
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    var tripData = env.tripData(TRIP_2_ID);
+    var aimedTimes = tripData.tripPattern().getScheduledTimetable().getTripTimes(tripData.trip());
+    assertNotNull(aimedTimes, "The modified pattern must carry the aimed times of the calls");
+    assertEquals(0, aimedTimes.getScheduledDepartureTime(0));
+    assertEquals(
+      "P U | A [R] 0:00:05 0:00:05 | D [EC] 0:00:15 0:00:16 | B 0:00:25 0:00:25",
+      tripData.showTimetable()
+    );
   }
 
   @Test
