@@ -62,12 +62,13 @@ public class SiriRouteCreationStrategy implements RouteCreationStrategy {
     var builder = Route.of(routeId);
     builder.withAgency(agency);
 
-    // The line the created trip runs on is named by the name the message publishes for it.
+    // The line the created trip runs on is named by the name the message publishes for it. A line
+    // that publishes no name is named after its id instead, because a route has to carry a name.
     if (tripCreationInfo.publishedLineName() != null) {
       builder.withShortName(tripCreationInfo.publishedLineName());
+    } else {
+      builder.withLongName(new NonLocalizedString(routeId.getId()));
     }
-    // longName is required as fallback when shortName is null
-    builder.withLongName(NonLocalizedString.ofNullable(routeId.getId()));
 
     TransitMode mode = tripCreationInfo.mode() != null ? tripCreationInfo.mode() : TransitMode.BUS;
     builder.withMode(mode);

@@ -110,6 +110,24 @@ class SiriRouteCreationStrategyTest {
     assertEquals(OPERATOR_ID, route.getOperator().getId());
   }
 
+  /** A published line name names the created route on its own; nothing is invented on top of it. */
+  @Test
+  void addsNoLongNameToANamedRoute() {
+    var newRouteId = new FeedScopedId(FEED_ID, "new-route");
+    var info = TripCreationInfo.builder(TRIP_ID)
+      .withRouteId(newRouteId)
+      .withOperatorId(OPERATOR_ID)
+      .withMode(TransitMode.BUS)
+      .withPublishedLineName("B1")
+      .build();
+
+    var route = resolveRoute(info).route();
+
+    assertEquals("B1", route.getShortName());
+    assertNull(route.getLongName());
+    assertEquals("B1", route.getName());
+  }
+
   @Test
   void namesTheRouteAfterThePublishedLineNameOnly() {
     var newRouteId = new FeedScopedId(FEED_ID, "new-route");
