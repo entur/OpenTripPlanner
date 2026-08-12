@@ -2,11 +2,13 @@ package org.opentripplanner.ext.updater.trip.unified.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -26,11 +28,13 @@ import org.opentripplanner.ext.updater.trip.unified.resolver.NoOpFuzzyTripMatche
 import org.opentripplanner.ext.updater.trip.unified.resolver.ServiceDateResolver;
 import org.opentripplanner.ext.updater.trip.unified.resolver.StopResolver;
 import org.opentripplanner.ext.updater.trip.unified.resolver.TripResolver;
+import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
 import org.opentripplanner.transit.model.TripInput;
 import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.spi.UpdateException;
+import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.SnapshotTestHelper;
 import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
 import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
@@ -264,7 +268,7 @@ class TripModifierTest {
     }
 
     @Test
-    void replacementTrip_unknownStop() {
+    void replacementTrip_unknownStopIsDropped() {
       var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
       var tripRef = TripReference.ofTripId(tripId);
 
@@ -277,12 +281,75 @@ class TripModifierTest {
         .addStopTimeUpdate(createStopUpdate("C", 2, 11 * 3600))
         .build();
 
-      var ex = assertThrows(UpdateException.class, () -> modifier.modify(factory.create(command)));
-      assertEquals(UpdateErrorType.UNKNOWN_STOP, ex.errorType());
+      var result = modifier.modify(factory.create(command));
+
+      assertEquals(
+        List.of(UpdateSuccess.WarningType.UNKNOWN_STOPS_REMOVED_FROM_ADDED_TRIP),
+        result.warnings()
+      );
+      assertEquals(2, result.pattern().numberOfStops());
+      assertEquals("A", result.pattern().getStop(0).getId().getId());
+      assertEquals("C", result.pattern().getStop(1).getId().getId());
     }
 
-    // replacementTrip_tooFewStops is now in TripModificationValidationTest since
-    // minimum stops validation was extracted to the validator.
+    @Test
+    void replacementTrip_tooFewKnownStops() {
+      var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
+      var tripRef = TripReference.ofTripId(tripId);
+
+      var command = ModifyTrip.builder(tripRef, env.defaultServiceDate())
+        .withFormatPolicy(
+          FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
+        )
+        .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
+        .addStopTimeUpdate(createStopUpdate("UNKNOWN_STOP", 1, 11 * 3600))
+        .build();
+
+      var modification = factory.create(command);
+      var ex = assertThrows(UpdateException.class, () -> modifier.modify(modification));
+      assertEquals(UpdateErrorType.TOO_FEW_STOPS, ex.errorType());
+    }
+
+    @Test
+    void replacementTrip_repeatReusesThePattern() {
+      var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
+      var tripRef = TripReference.ofTripId(tripId);
+
+      var command = ModifyTrip.builder(tripRef, env.defaultServiceDate())
+        .withFormatPolicy(
+          FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
+        )
+        .addStopTimeUpdate(createStopUpdate("A", 0, 10 * 3600))
+        .addStopTimeUpdate(createStopUpdate("D", 1, 10 * 3600 + 30 * 60))
+        .addStopTimeUpdate(createStopUpdate("C", 2, 11 * 3600))
+        .build();
+
+      var first = modifier.modify(factory.create(command));
+      var second = modifier.modify(factory.create(command));
+
+      assertSame(first.pattern(), second.pattern());
+    }
+
+    @Test
+    void replacementTrip_equalToScheduledStaysOnScheduledPattern() {
+      var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
+      var tripRef = TripReference.ofTripId(tripId);
+
+      // Explicit pick/drop on every call so the built stop pattern equals the scheduled one
+      var command = ModifyTrip.builder(tripRef, env.defaultServiceDate())
+        .withFormatPolicy(
+          FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
+        )
+        .addStopTimeUpdate(createScheduledPickDropStopUpdate("A", 0, 10 * 3600))
+        .addStopTimeUpdate(createScheduledPickDropStopUpdate("B", 1, 10 * 3600 + 30 * 60))
+        .addStopTimeUpdate(createScheduledPickDropStopUpdate("C", 2, 11 * 3600))
+        .build();
+
+      var result = modifier.modify(factory.create(command));
+
+      var trip = transitService.getTrip(tripId);
+      assertSame(transitService.findPattern(trip), result.pattern());
+    }
 
     private ParsedStopTimeUpdate createStopUpdate(String stopId, int sequence, int timeSeconds) {
       return ParsedStopTimeUpdate.builder(StopReference.ofStopId(new FeedScopedId(FEED_ID, stopId)))
@@ -293,6 +360,24 @@ class TripModifierTest {
         .withDepartureUpdate(
           TimeUpdate.ofAbsolute(ServiceTime.ofSecondsPastMidnight(timeSeconds), null)
         )
+        .build();
+    }
+
+    private ParsedStopTimeUpdate createScheduledPickDropStopUpdate(
+      String stopId,
+      int sequence,
+      int timeSeconds
+    ) {
+      return ParsedStopTimeUpdate.builder(StopReference.ofStopId(new FeedScopedId(FEED_ID, stopId)))
+        .withStopSequence(StopSequence.of(sequence))
+        .withArrivalUpdate(
+          TimeUpdate.ofAbsolute(ServiceTime.ofSecondsPastMidnight(timeSeconds), null)
+        )
+        .withDepartureUpdate(
+          TimeUpdate.ofAbsolute(ServiceTime.ofSecondsPastMidnight(timeSeconds), null)
+        )
+        .withPickup(PickDrop.SCHEDULED)
+        .withDropoff(PickDrop.SCHEDULED)
         .build();
     }
   }
@@ -409,6 +494,26 @@ class TripModifierTest {
       assertNotNull(result);
       // Verify A2 is in the pattern, not A
       assertEquals("A2", result.pattern().getStop(0).getId().getId());
+    }
+
+    @Test
+    void extraCall_patternCarriesAimedTimesInScheduledTimetable() {
+      var tripId = new FeedScopedId(FEED_ID, TRIP_ID);
+      var tripRef = TripReference.ofTripId(tripId);
+
+      var command = ModifyTrip.builder(tripRef, env.defaultServiceDate())
+        .withFormatPolicy(FormatPolicy.siri())
+        .addStopTimeUpdate(createSiriStopUpdate("A", 10 * 3600, false))
+        .addStopTimeUpdate(createSiriStopUpdate("D", 10 * 3600 + 15 * 60, true))
+        .addStopTimeUpdate(createSiriStopUpdate("B", 10 * 3600 + 30 * 60, false))
+        .build();
+
+      var result = modifier.modify(factory.create(command));
+
+      var trip = transitService.getTrip(tripId);
+      var aimedTimes = result.pattern().getScheduledTimetable().getTripTimes(trip);
+      assertNotNull(aimedTimes, "The modified pattern must carry the aimed times of the message");
+      assertEquals(10 * 3600 + 15 * 60, aimedTimes.getScheduledDepartureTime(1));
     }
 
     // extraCall_wrongNumberOfNonExtraStops and extraCall_nonExtraStopDoesNotMatch are now

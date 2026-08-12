@@ -3,6 +3,7 @@ package org.opentripplanner.updater.trip.siri.moduletests.extracall;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertInstanceOf;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
@@ -19,6 +20,7 @@ import org.opentripplanner.updater.spi.UpdateErrorType;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
 import org.opentripplanner.updater.trip.siri.SiriEtBuilder;
 import org.opentripplanner.updater.trip.siri.SiriTestHelper;
+import org.opentripplanner.utils.time.TimeUtils;
 import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 
 class ExtraCallTest implements RealtimeTestConstants {
@@ -185,6 +187,23 @@ class ExtraCallTest implements RealtimeTestConstants {
       env.tripData(TRIP_1_ID).showTimetable()
     );
     assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1[U]");
+  }
+
+  /**
+   * The pattern created for an extra call carries the aimed times in its scheduled timetable, so a
+   * trip cancellation can fall back to them.
+   */
+  @Test
+  void testExtraCallPatternCarriesAimedTimes() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    assertSuccess(siri.applyEstimatedTimetable(updateWithExtraCall(siri)));
+
+    var tripData = env.tripData(TRIP_1_ID);
+    var aimedTimes = tripData.tripPattern().getScheduledTimetable().getTripTimes(tripData.trip());
+    assertNotNull(aimedTimes, "The modified pattern must carry the aimed times of the extra call");
+    assertEquals(TimeUtils.time("0:00:19"), aimedTimes.getScheduledDepartureTime(1));
   }
 
   @Test

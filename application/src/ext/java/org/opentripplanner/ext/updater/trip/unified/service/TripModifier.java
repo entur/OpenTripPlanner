@@ -43,7 +43,11 @@ public class TripModifier {
 
     LOG.debug("Modifying trip {} on {}", tripId, serviceDate);
     try {
-      var result = modification.apply(deduplicator, tripPatternCache::generatePatternId);
+      var result = modification.apply(
+        deduplicator,
+        tripPatternCache::generatePatternId,
+        tripPatternCache::getOrCreateTripPattern
+      );
       LOG.debug("Modified trip {} on {}", tripId, serviceDate);
       return result;
     } catch (DataValidationException e) {

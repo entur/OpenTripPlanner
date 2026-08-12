@@ -8,11 +8,16 @@ import static org.junit.jupiter.api.Assertions.assertNotSame;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
+import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
+import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
 import org.opentripplanner.transit.model.TripInput;
+import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateSuccess;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
 import org.opentripplanner.updater.trip.gtfs.GtfsRtTestHelper;
 
@@ -122,5 +127,58 @@ public class ReplacementTest implements RealtimeTestConstants {
       assertEquals(I18NString.of("Changed Headsign"), tripTimes.getHeadsign(1));
       assertEquals(I18NString.of("New Headsign"), tripTimes.getHeadsign(2));
     }
+  }
+
+  /** A replacement call at an unknown stop is dropped with a warning, not rejected. */
+  @Test
+  void replacementWithUnknownStop() {
+    var builder = TransitTestEnvironment.of();
+    var STOP_A = builder.stop(STOP_A_ID);
+    var STOP_B = builder.stop(STOP_B_ID);
+    var STOP_C = builder.stop(STOP_C_ID);
+    var env = builder
+      .addTrip(
+        TripInput.of(TRIP_1_ID).addStop(STOP_A, "8:30:00", "8:30:00").addStop(STOP_B, "8:40:00")
+      )
+      .build();
+    var rt = GtfsRtTestHelper.of(env);
+
+    var tripUpdate = rt
+      .tripUpdate(TRIP_1_ID, REPLACEMENT)
+      .addStopTime(STOP_A_ID, "00:30")
+      .addStopTime("UNKNOWN_STOP_ID", "00:45")
+      .addStopTime(STOP_C_ID, "01:00")
+      .build();
+
+    var result = rt.applyTripUpdate(tripUpdate);
+
+    assertSuccess(result);
+    assertEquals(
+      List.of(UpdateSuccess.WarningType.UNKNOWN_STOPS_REMOVED_FROM_ADDED_TRIP),
+      result.warnings()
+    );
+    assertEquals(List.of(STOP_A, STOP_C), env.tripData(TRIP_1_ID).tripPattern().getStops());
+  }
+
+  /** A replacement with fewer than two calls at known stops cannot reroute the trip. */
+  @Test
+  void replacementWithTooFewKnownStops() {
+    var builder = TransitTestEnvironment.of();
+    var STOP_A = builder.stop(STOP_A_ID);
+    var STOP_B = builder.stop(STOP_B_ID);
+    var env = builder
+      .addTrip(
+        TripInput.of(TRIP_1_ID).addStop(STOP_A, "8:30:00", "8:30:00").addStop(STOP_B, "8:40:00")
+      )
+      .build();
+    var rt = GtfsRtTestHelper.of(env);
+
+    var tripUpdate = rt
+      .tripUpdate(TRIP_1_ID, REPLACEMENT)
+      .addStopTime(STOP_A_ID, "00:30")
+      .addStopTime("UNKNOWN_STOP_ID", "00:45")
+      .build();
+
+    assertFailure(UpdateErrorType.TOO_FEW_STOPS, rt.applyTripUpdate(tripUpdate));
   }
 }

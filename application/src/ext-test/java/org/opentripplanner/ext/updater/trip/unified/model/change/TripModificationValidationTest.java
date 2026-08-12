@@ -213,6 +213,22 @@ class TripModificationValidationTest {
     }
 
     @Test
+    void extraCallAtUnknownStop_fails() {
+      var tripRef = TripReference.ofTripId(new FeedScopedId(FEED_ID, TRIP_ID));
+
+      // Original: A -> B; update: A -> UNKNOWN(extra) -> B; SIRI fails on unknown stops
+      var command = ModifyTrip.builder(tripRef, env.defaultServiceDate())
+        .withFormatPolicy(FormatPolicy.siri())
+        .addStopTimeUpdate(createSiriStopUpdate("A", 10 * 3600, false))
+        .addStopTimeUpdate(createSiriStopUpdate("UNKNOWN_STOP", 10 * 3600 + 15 * 60, true))
+        .addStopTimeUpdate(createSiriStopUpdate("B", 10 * 3600 + 30 * 60, false))
+        .build();
+
+      var ex = assertThrows(UpdateException.class, () -> resolve(command));
+      assertEquals(UpdateErrorType.UNKNOWN_STOP, ex.errorType());
+    }
+
+    @Test
     void noExtraCalls_skipsValidation() {
       var tripRef = TripReference.ofTripId(new FeedScopedId(FEED_ID, TRIP_ID));
 
