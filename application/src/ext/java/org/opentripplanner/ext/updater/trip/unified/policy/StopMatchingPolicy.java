@@ -15,8 +15,8 @@ import org.opentripplanner.updater.spi.UpdateException;
  * format-divergent {@code StopUpdateStrategy} enum and the FULL/PARTIAL branch in the apply path.
  * <p>
  * Matching is stateful within one trip update: {@link #newCursor} returns a fresh {@link Cursor}
- * that advances as the updates are iterated, so a circular route (the same stop id appearing twice)
- * resolves to successive pattern positions.
+ * which is handed the updates in the order the message lists them, so a format that identifies its
+ * calls by their position can count them off.
  */
 public sealed interface StopMatchingPolicy
   permits StopMatchingPolicy.Positional, StopMatchingPolicy.BySequenceOrId {
@@ -99,7 +99,6 @@ public sealed interface StopMatchingPolicy
       FeedScopedId tripId
     ) {
       return new Cursor() {
-        private int nextStopSearchIndex = 0;
         private int nextUpdateIndex = 0;
 
         @Override
@@ -124,25 +123,52 @@ public sealed interface StopMatchingPolicy
               "the update identifies its stop neither by stop sequence nor by a known stop id"
             );
           }
-          int matchIndex = matchStopInPattern(
-            referencedStop,
-            scheduledPattern,
-            nextStopSearchIndex
-          );
-          // If not found from the current position, retry from the beginning (out-of-order updates).
-          if (matchIndex < 0 && nextStopSearchIndex > 0) {
-            matchIndex = matchStopInPattern(referencedStop, scheduledPattern, 0);
+          return new Match(stopPositionOfOnlyCallAt(referencedStop, updateIndex), assignedStop);
+        }
+
+        /**
+         * The position in the pattern of the one call the trip makes at {@code stop}.
+         * <p>
+         * A stop id identifies a call only as long as the trip calls at that stop once. GTFS-RT
+         * requires a trip that visits the same stop more than once to number its calls with their
+         * stop sequence, exactly so that an update can say which of the visits it is for. Without
+         * that number there is nothing in the message to pick a visit by, so rather than guess -
+         * and move a prediction onto a call the producer did not mean - the reference is rejected
+         * as the invalid data it is.
+         * <p>
+         * The match is on the stop id alone. A sibling quay of a scheduled stop is a different stop,
+         * and a call at one says nothing about which call of the trip it is - the format that names
+         * a replacement stop does so through its own field, not by naming a stop the trip does not
+         * call at.
+         *
+         * @param updateIndex the position of the update in the message, for diagnostics
+         */
+        private int stopPositionOfOnlyCallAt(StopLocation stop, int updateIndex) {
+          int position = -1;
+          for (int i = 0; i < scheduledPattern.numberOfStops(); i++) {
+            if (scheduledPattern.getStop(i).getId().equals(stop.getId())) {
+              if (position >= 0) {
+                throw UpdateException.of(
+                  tripId,
+                  UpdateErrorType.INVALID_STOP_REFERENCE,
+                  updateIndex,
+                  "the trip calls at stop %s more than once, so only a stop sequence can say which of the calls the update is for".formatted(
+                    stop.getId()
+                  )
+                );
+              }
+              position = i;
+            }
           }
-          if (matchIndex < 0) {
+          if (position < 0) {
             throw UpdateException.of(
               tripId,
               UpdateErrorType.INVALID_STOP_REFERENCE,
               updateIndex,
-              "stop %s is not served by the trip".formatted(referencedStop.getId())
+              "stop %s is not served by the trip".formatted(stop.getId())
             );
           }
-          nextStopSearchIndex = matchIndex + 1;
-          return new Match(matchIndex, assignedStop);
+          return position;
         }
 
         /**
@@ -166,27 +192,6 @@ public sealed interface StopMatchingPolicy
           return stopPosition.getAsInt();
         }
       };
-    }
-
-    /**
-     * Match a pre-resolved stop in the pattern by id lookup, starting from a given index. Supports
-     * circular routes where the same stop appears multiple times.
-     * <p>
-     * The match is on the stop id alone. A sibling quay of a scheduled stop is a different stop,
-     * and a call at one says nothing about which call of the trip it is - the format that names a
-     * replacement stop does so through its own field, not by naming a stop the trip does not call
-     * at.
-     *
-     * @return the matched stop index, or -1 if no match found
-     */
-    private static int matchStopInPattern(StopLocation stop, TripPattern pattern, int startFrom) {
-      for (int i = startFrom; i < pattern.numberOfStops(); i++) {
-        if (pattern.getStop(i).getId().equals(stop.getId())) {
-          return i;
-        }
-      }
-
-      return -1;
     }
   }
 }
