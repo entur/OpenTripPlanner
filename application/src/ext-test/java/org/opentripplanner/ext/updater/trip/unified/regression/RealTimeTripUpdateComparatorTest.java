@@ -15,6 +15,8 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model._data.TransitRepositoryForTest;
+import org.opentripplanner.transit.model.basic.TransitMode;
+import org.opentripplanner.transit.model.network.RouteBuilder;
 import org.opentripplanner.transit.model.network.StopPattern;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.organization.Operator;
@@ -151,6 +153,47 @@ class RealTimeTripUpdateComparatorTest {
   }
 
   /**
+   * The route a created trip runs on is invented by the adapter as well, and the two formats stamp
+   * it with different attributes: every one of them has to be visible, or a divergence in the ones
+   * only one format sets goes unreported.
+   */
+  @Test
+  void encodeDistinguishesTheAttributesOfACreatedRoute() {
+    assertNotEquals(
+      encodeCreationOnRoute(r -> r.withShortName("L1")),
+      encodeCreationOnRoute(r -> r.withShortName("L2"))
+    );
+    assertNotEquals(
+      encodeCreationOnRoute(r -> r.withLongName(new NonLocalizedString("Airport line"))),
+      encodeCreationOnRoute(r -> r)
+    );
+    assertNotEquals(
+      encodeCreationOnRoute(r -> r.withAgency(TransitRepositoryForTest.agency("A2"))),
+      encodeCreationOnRoute(r -> r.withAgency(TransitRepositoryForTest.agency("A3")))
+    );
+    assertNotEquals(
+      encodeCreationOnRoute(r -> r.withOperator(operator("op1"))),
+      encodeCreationOnRoute(r -> r.withOperator(operator("op2")))
+    );
+    assertNotEquals(
+      encodeCreationOnRoute(r -> r.withMode(TransitMode.BUS)),
+      encodeCreationOnRoute(r -> r.withMode(TransitMode.RAIL))
+    );
+    assertNotEquals(
+      encodeCreationOnRoute(r -> r.withNetexSubmode("localBus")),
+      encodeCreationOnRoute(r -> r.withNetexSubmode("expressBus"))
+    );
+    assertNotEquals(
+      encodeCreationOnRoute(r -> r.withGtfsType(3)),
+      encodeCreationOnRoute(r -> r.withGtfsType(2))
+    );
+    assertNotEquals(
+      encodeCreationOnRoute(r -> r.withUrl("https://example.org/l1")),
+      encodeCreationOnRoute(r -> r.withUrl("https://example.org/l2"))
+    );
+  }
+
+  /**
    * An update that is not a trip creation writes times onto a trip that already exists and that
    * neither adapter touches, so its attributes are left out of the encoding - they would add a
    * constant to every comparison.
@@ -160,6 +203,15 @@ class RealTimeTripUpdateComparatorTest {
     assertEquals(
       encodeUpdateOfExistingTrip(t -> t.withShortName("T1")),
       encodeUpdateOfExistingTrip(t -> t.withShortName("T2"))
+    );
+  }
+
+  /** The route of an existing trip is left out of the encoding for the same reason. */
+  @Test
+  void encodeIgnoresRouteAttributesOfAnUpdateThatCreatesNothing() {
+    assertEquals(
+      encodeUpdateOfExistingTripOnRoute(r -> r.withUrl("https://example.org/l1")),
+      encodeUpdateOfExistingTripOnRoute(r -> r.withUrl("https://example.org/l2"))
     );
   }
 
@@ -348,6 +400,24 @@ class RealTimeTripUpdateComparatorTest {
   /** Encode an update to a trip that already exists, otherwise as {@link #encodeCreation}. */
   private static String encodeUpdateOfExistingTrip(UnaryOperator<TripBuilder> customizer) {
     return encodeOverTrip(customizer, false);
+  }
+
+  /**
+   * Encode an update that creates the trip it describes, applying the given customization to the
+   * route the created trip runs on. The route the pattern carries is left untouched, so any
+   * difference in the encoding comes from the route of the trip.
+   */
+  private static String encodeCreationOnRoute(UnaryOperator<RouteBuilder> customizer) {
+    return encodeOverTrip(runningOn(customizer), true);
+  }
+
+  /** Encode an update to a trip that already exists, otherwise as {@link #encodeCreationOnRoute}. */
+  private static String encodeUpdateOfExistingTripOnRoute(UnaryOperator<RouteBuilder> customizer) {
+    return encodeOverTrip(runningOn(customizer), false);
+  }
+
+  private static UnaryOperator<TripBuilder> runningOn(UnaryOperator<RouteBuilder> customizer) {
+    return trip -> trip.withRoute(customizer.apply(TransitRepositoryForTest.route("r1")).build());
   }
 
   private static String encodeOverTrip(

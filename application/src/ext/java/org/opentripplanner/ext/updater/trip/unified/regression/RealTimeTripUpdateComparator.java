@@ -325,6 +325,10 @@ public class RealTimeTripUpdateComparator {
    * to the comparison of the ordinary updates. The route is taken from the trip rather than from the
    * pattern, because the trip's route is the one that was resolved or created for it - a pattern
    * shared with an earlier added trip carries that trip's route.
+   * <p>
+   * Every attribute a route-creation strategy stamps the route with is encoded, including the ones
+   * only one of the two formats sets: a created route is the entity the adapters have the most
+   * freedom over, and an attribute left out of the encoding is one a divergence can hide behind.
    */
   private static String encodeCreatedEntities(RealTimeTripUpdate update) {
     var trip = update.updatedTripTimes().getTrip();
@@ -342,12 +346,20 @@ public class RealTimeTripUpdateComparator {
       trip.getHeadsign() +
       "] routeAttrs=[shortName=" +
       route.getShortName() +
+      " longName=" +
+      route.getLongName() +
+      " agency=" +
+      route.getAgency().getId() +
       " operator=" +
       operatorId(route.getOperator()) +
       " mode=" +
       route.getMode() +
       " submode=" +
       route.getNetexSubmode() +
+      " gtfsType=" +
+      route.getGtfsType() +
+      " url=" +
+      route.getUrl() +
       "]"
     );
   }
