@@ -18,6 +18,11 @@ import org.opentripplanner.utils.time.ServiceDateUtils;
  * itinerary. Only the aimed times are kept: the real-time times a producer reports say when the
  * journey is running, not which journey it is, and the aimed times are the ones the scheduled
  * timetable can be searched by.
+ * <p>
+ * The two times are the ones a journey is timetabled by, so they are the departure at the origin
+ * and the arrival at the destination. The arrival stands for the end of the journey whichever way
+ * the last call reports it: a call stating only a departure is recorded here as arriving then, since
+ * that is the time the timetable is searched by.
  */
 public final class JourneyEndpoints {
 

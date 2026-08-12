@@ -156,8 +156,93 @@ class FuzzyCancellationTest implements RealtimeTestConstants {
   }
 
   /**
+   * A cancellation whose first call states no aimed departure cannot identify its journey, even
+   * when the message states its service date outright.
+   */
+  @Test
+  void cancellationWithoutAnAimedDepartureAtTheFirstCallIsRejected() {
+    var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
+    var siri = SiriTestHelper.ofFuzzyMatching(env);
+
+    var updates = siri
+      .etBuilder()
+      .withFramedVehicleJourneyRef(builder ->
+        builder.withServiceDate(env.defaultServiceDate()).withVehicleJourneyRef(UNKNOWN_JOURNEY_ID)
+      )
+      .withCancellation(true)
+      .withRecordedCalls(builder -> builder.call(STOP_A).arriveAimedActual("0:00:10", "0:00:10"))
+      .withEstimatedCalls(builder -> builder.call(STOP_B).arriveAimedExpected("0:00:20", "0:00:20"))
+      .buildEstimatedTimetableDeliveries();
+
+    assertFailure(UpdateErrorType.INVALID_DEPARTURE_TIME, siri.applyEstimatedTimetable(updates));
+    assertFalse(env.tripData(TRIP_1_ID).tripTimes().isCanceled());
+  }
+
+  /**
+   * Two scheduled journeys share the endpoints the cancellation states, so it names neither of
+   * them.
+   */
+  @Test
+  void cancellationMatchingTwoJourneysIsRejected() {
+    var twin = TripInput.of(TRIP_2_ID)
+      .withRoute(RAIL_ROUTE)
+      .addStop(STOP_A, "0:00:10", "0:00:11")
+      .addStop(STOP_B, "0:00:20", "0:00:21");
+    var env = ENV_BUILDER.addTrip(TRIP_INPUT).addTrip(twin).build();
+    var siri = SiriTestHelper.ofFuzzyMatching(env);
+
+    var result = siri.applyEstimatedTimetable(unknownJourneyCancellation(siri));
+
+    assertFailure(UpdateErrorType.MULTIPLE_FUZZY_TRIP_MATCHES, result);
+    assertFalse(env.tripData(TRIP_1_ID).tripTimes().isCanceled());
+    assertFalse(env.tripData(TRIP_2_ID).tripTimes().isCanceled());
+  }
+
+  /** With fuzzy matching switched off, an unresolvable cancellation names no trip at all. */
+  @Test
+  @UnifiedUpdaterOnly("Legacy reports the missing matcher as TRIP_NOT_FOUND.")
+  void cancellationIsRejectedAsNoTripForCancellationWithoutFuzzyMatching() {
+    assertFailure(
+      UpdateErrorType.NO_TRIP_FOR_CANCELLATION_FOUND,
+      applyCancellationWithoutFuzzyMatching()
+    );
+  }
+
+  /** Legacy reports the same cancellation as a trip it could not find. */
+  @Test
+  @LegacyUpdaterOnly(
+    "The unified updater reports the failed removal lookup rather than the missing matcher."
+  )
+  void cancellationIsRejectedAsTripNotFoundWithoutFuzzyMatching() {
+    assertFailure(UpdateErrorType.TRIP_NOT_FOUND, applyCancellationWithoutFuzzyMatching());
+  }
+
+  /**
+   * A cancellation whose last call names a quay the model does not know: both adapters reject, with
+   * different codes.
+   */
+  @Test
+  @UnifiedUpdaterOnly(
+    "Legacy resolves the last-call quay before reading its times and reports UNKNOWN_STOP."
+  )
+  void cancellationWithAnUnknownLastQuayIsRejectedAsNoValidStops() {
+    assertFailure(UpdateErrorType.NO_VALID_STOPS, applyCancellationWithUnknownLastQuay());
+  }
+
+  /** Legacy names the unknown quay of the last call as the reason. */
+  @Test
+  @LegacyUpdaterOnly(
+    "The unified matcher reads the call times before resolving the stops, and reports " +
+      "NO_VALID_STOPS for either end."
+  )
+  void cancellationWithAnUnknownLastQuayIsRejectedAsUnknownStop() {
+    assertFailure(UpdateErrorType.UNKNOWN_STOP, applyCancellationWithUnknownLastQuay());
+  }
+
+  /**
    * The cancellation of a journey an earlier message added is applied to that journey, not to the
-   * scheduled journey it repeats the calls of.
+   * scheduled journey it repeats the calls of. The added journey resolves by its id, so the matcher
+   * is never asked - which is what keeps the two apart.
    */
   @Test
   void cancellationOfAnAddedJourneyPrefersTheAddedTrip() {
@@ -293,6 +378,36 @@ class FuzzyCancellationTest implements RealtimeTestConstants {
 
     assertThat(env.tripData(TRIP_1_ID).tripTimes().isCanceled()).isTrue();
     return env;
+  }
+
+  private UpdateResult applyCancellationWithoutFuzzyMatching() {
+    var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+    var result = siri.applyEstimatedTimetable(unknownJourneyCancellation(siri));
+    assertEquals(0, result.successful());
+    assertFalse(env.tripData(TRIP_1_ID).tripTimes().isCanceled());
+    return result;
+  }
+
+  private UpdateResult applyCancellationWithUnknownLastQuay() {
+    var env = ENV_BUILDER.addTrip(TRIP_INPUT).build();
+    var siri = SiriTestHelper.ofFuzzyMatching(env);
+    var updates = siri
+      .etBuilder()
+      .withDatedVehicleJourneyRef(UNKNOWN_JOURNEY_ID)
+      .withCancellation(true)
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_A)
+          .departAimedExpected("0:00:11", "0:00:11")
+          .call("no-such-quay")
+          .arriveAimedExpected("0:00:20", "0:00:20")
+      )
+      .buildEstimatedTimetableDeliveries();
+    var result = siri.applyEstimatedTimetable(updates);
+    assertEquals(0, result.successful());
+    assertFalse(env.tripData(TRIP_1_ID).tripTimes().isCanceled());
+    return result;
   }
 
   private UpdateResult applyCallLessCancellation() {

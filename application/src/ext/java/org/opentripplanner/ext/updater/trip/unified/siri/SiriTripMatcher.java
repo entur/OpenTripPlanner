@@ -130,6 +130,11 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
    * A cancellation names its journey by the endpoints it states, when it states them at all: one
    * that lists no call - as every GTFS-RT cancellation and a bare SIRI one do - is declined,
    * leaving the caller to go on looking the way it would without a matcher.
+   * <p>
+   * The verdicts are this matcher's own, which are not everywhere legacy's: legacy resolves the last
+   * call's quay before reading any time, so it answers UNKNOWN_STOP where this matcher, reading the
+   * times first, answers NO_VALID_STOPS for either end. Both reject; the codes differ, as they
+   * already do for a revision.
    */
   private Optional<TripAndPattern> matchCancellation(
     TripReference tripReference,

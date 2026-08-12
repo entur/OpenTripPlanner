@@ -182,15 +182,13 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
    */
   @Nullable
   private JourneyEndpoints parseJourneyEndpoints(List<CallWrapper> calls) {
-    var callsNamingAStop = calls
-      .stream()
-      .filter(call -> !StringUtils.hasNoValueOrNullAsString(call.getStopPointRef()))
-      .toList();
-    if (callsNamingAStop.isEmpty()) {
+    if (calls.isEmpty()) {
       return null;
     }
-    var origin = callsNamingAStop.getFirst();
-    var destination = callsNamingAStop.getLast();
+    // Every call names a stop and carries an order: the wrapper rejects the journey otherwise, and
+    // sorts recorded before estimated calls, so the ends of the list are the ends of the journey.
+    var origin = calls.getFirst();
+    var destination = calls.getLast();
 
     // A last call that reports only a departure is still the end of the journey; the departure it
     // aims for stands in for the arrival, the way legacy SIRI fuzzy matching reads it.
