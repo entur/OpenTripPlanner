@@ -42,13 +42,9 @@ public class TripResolver {
       return statedTrip;
     }
 
-    if (reference.hasTripOnServiceDateId()) {
-      TripOnServiceDate tripOnServiceDate = transitService.getTripOnServiceDate(
-        reference.tripOnServiceDateId()
-      );
-      if (tripOnServiceDate != null) {
-        return tripOnServiceDate.getTrip();
-      }
+    var statedDatedTrip = findTripOnServiceDate(reference.statedTripOnServiceDateId());
+    if (statedDatedTrip != null) {
+      return statedDatedTrip.getTrip();
     }
 
     var previouslyAddedTrip = findTrip(reference.previouslyAddedTripId());
@@ -62,6 +58,13 @@ public class TripResolver {
   @Nullable
   private Trip findTrip(@Nullable FeedScopedId tripId) {
     return tripId != null ? transitService.getTrip(tripId) : null;
+  }
+
+  @Nullable
+  private TripOnServiceDate findTripOnServiceDate(@Nullable FeedScopedId tripOnServiceDateId) {
+    return tripOnServiceDateId != null
+      ? transitService.getTripOnServiceDate(tripOnServiceDateId)
+      : null;
   }
 
   /**
@@ -93,10 +96,13 @@ public class TripResolver {
   }
 
   /**
-   * Resolve a {@link TripOnServiceDate} from a {@link TripReference}.
+   * Resolve the {@link TripOnServiceDate} a reference names - the dated trip the feed states, or
+   * the one an earlier real-time message added under the journey code when the feed states none.
    * <p>
-   * This is useful when the caller needs both the Trip and the service date,
-   * which are both contained in TripOnServiceDate.
+   * This is useful when the caller needs both the Trip and the service date, which are both
+   * contained in TripOnServiceDate. Unlike {@link #resolveTrip}, a stated dated trip the transit
+   * model does not know is the last word: the feed named a dated journey, and no other name it
+   * carries speaks of a day.
    *
    * @param reference the trip reference containing tripOnServiceDateId
    * @return the resolved TripOnServiceDate
@@ -106,9 +112,7 @@ public class TripResolver {
     Objects.requireNonNull(reference, "reference must not be null");
 
     if (reference.hasTripOnServiceDateId()) {
-      TripOnServiceDate tripOnServiceDate = transitService.getTripOnServiceDate(
-        reference.tripOnServiceDateId()
-      );
+      var tripOnServiceDate = findTripOnServiceDate(reference.tripOnServiceDateId());
       if (tripOnServiceDate != null) {
         return tripOnServiceDate;
       }

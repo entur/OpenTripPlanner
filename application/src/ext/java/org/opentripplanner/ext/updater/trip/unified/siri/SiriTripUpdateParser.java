@@ -241,7 +241,12 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
 
     journey
       .code()
-      .ifPresent(code -> builder.withPreviouslyAddedTripId(createId(code.asServiceJourneyId())));
+      .ifPresent(code -> {
+        builder.withPreviouslyAddedTripId(createId(code.asServiceJourneyId()));
+        // An addition registers its dated trip under the DatedServiceJourney form of the code, so
+        // the code must be read the same way here for this read path to meet that write path.
+        builder.withPreviouslyAddedTripOnServiceDateId(createId(code.asDatedServiceJourneyId()));
+      });
 
     // For ADD_NEW_TRIP, the tripOnServiceDateId is the ID of the NEW trip being created,
     // not an existing TripOnServiceDate to resolve. Don't set it in the reference.

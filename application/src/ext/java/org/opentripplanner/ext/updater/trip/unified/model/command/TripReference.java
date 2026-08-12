@@ -20,7 +20,10 @@ public final class TripReference {
   private final FeedScopedId previouslyAddedTripId;
 
   @Nullable
-  private final FeedScopedId tripOnServiceDateId;
+  private final FeedScopedId statedTripOnServiceDateId;
+
+  @Nullable
+  private final FeedScopedId previouslyAddedTripOnServiceDateId;
 
   @Nullable
   private final FeedScopedId routeId;
@@ -41,7 +44,10 @@ public final class TripReference {
    * @param statedTripId The trip ID the feed states outright (may be null if fuzzy matching by
    *                     route/time is used)
    * @param previouslyAddedTripId The ID an earlier real-time message added the trip under
-   * @param tripOnServiceDateId The TripOnServiceDate ID (dated service journey ID)
+   * @param statedTripOnServiceDateId The TripOnServiceDate ID (dated service journey ID) the feed
+   *                                  states outright
+   * @param previouslyAddedTripOnServiceDateId The TripOnServiceDate ID an earlier real-time
+   *                                           message added the dated trip under
    * @param routeId The route ID (used for fuzzy matching when trip ID is ambiguous)
    * @param startTime The scheduled start time of the trip, relative to the service date's midnight
    * @param startDate The service date for the trip
@@ -51,7 +57,8 @@ public final class TripReference {
   private TripReference(
     @Nullable FeedScopedId statedTripId,
     @Nullable FeedScopedId previouslyAddedTripId,
-    @Nullable FeedScopedId tripOnServiceDateId,
+    @Nullable FeedScopedId statedTripOnServiceDateId,
+    @Nullable FeedScopedId previouslyAddedTripOnServiceDateId,
     @Nullable FeedScopedId routeId,
     @Nullable ServiceTime startTime,
     @Nullable LocalDate startDate,
@@ -60,7 +67,8 @@ public final class TripReference {
   ) {
     this.statedTripId = statedTripId;
     this.previouslyAddedTripId = previouslyAddedTripId;
-    this.tripOnServiceDateId = tripOnServiceDateId;
+    this.statedTripOnServiceDateId = statedTripOnServiceDateId;
+    this.previouslyAddedTripOnServiceDateId = previouslyAddedTripOnServiceDateId;
     this.routeId = routeId;
     this.startTime = startTime;
     this.startDate = startDate;
@@ -72,7 +80,7 @@ public final class TripReference {
    * Create a trip reference with just a trip ID.
    */
   public static TripReference ofTripId(FeedScopedId tripId) {
-    return new TripReference(tripId, null, null, null, null, null, null, null);
+    return new TripReference(tripId, null, null, null, null, null, null, null, null);
   }
 
   /**
@@ -110,9 +118,32 @@ public final class TripReference {
     return statedTripId != null ? statedTripId : previouslyAddedTripId;
   }
 
+  /**
+   * The dated trip id the feed states outright, taken from the SIRI DatedVehicleJourneyRef.
+   */
+  @Nullable
+  public FeedScopedId statedTripOnServiceDateId() {
+    return statedTripOnServiceDateId;
+  }
+
+  /**
+   * The dated trip id an earlier real-time message added this journey under. It is the SIRI
+   * EstimatedVehicleJourneyCode read as a dated journey, the form the addition registered it in.
+   */
+  @Nullable
+  public FeedScopedId previouslyAddedTripOnServiceDateId() {
+    return previouslyAddedTripOnServiceDateId;
+  }
+
+  /**
+   * The dated trip id this reference names: the stated one, or the id of a previously added dated
+   * journey when the feed states none.
+   */
   @Nullable
   public FeedScopedId tripOnServiceDateId() {
-    return tripOnServiceDateId;
+    return statedTripOnServiceDateId != null
+      ? statedTripOnServiceDateId
+      : previouslyAddedTripOnServiceDateId;
   }
 
   @Nullable
@@ -153,7 +184,7 @@ public final class TripReference {
    * Returns true if this reference has a TripOnServiceDate ID.
    */
   public boolean hasTripOnServiceDateId() {
-    return tripOnServiceDateId != null;
+    return tripOnServiceDateId() != null;
   }
 
   /**
@@ -213,7 +244,8 @@ public final class TripReference {
     return (
       Objects.equals(statedTripId, that.statedTripId) &&
       Objects.equals(previouslyAddedTripId, that.previouslyAddedTripId) &&
-      Objects.equals(tripOnServiceDateId, that.tripOnServiceDateId) &&
+      Objects.equals(statedTripOnServiceDateId, that.statedTripOnServiceDateId) &&
+      Objects.equals(previouslyAddedTripOnServiceDateId, that.previouslyAddedTripOnServiceDateId) &&
       Objects.equals(routeId, that.routeId) &&
       Objects.equals(startTime, that.startTime) &&
       Objects.equals(startDate, that.startDate) &&
@@ -227,7 +259,8 @@ public final class TripReference {
     return Objects.hash(
       statedTripId,
       previouslyAddedTripId,
-      tripOnServiceDateId,
+      statedTripOnServiceDateId,
+      previouslyAddedTripOnServiceDateId,
       routeId,
       startTime,
       startDate,
@@ -244,8 +277,10 @@ public final class TripReference {
       statedTripId +
       ", previouslyAddedTripId=" +
       previouslyAddedTripId +
-      ", tripOnServiceDateId=" +
-      tripOnServiceDateId +
+      ", statedTripOnServiceDateId=" +
+      statedTripOnServiceDateId +
+      ", previouslyAddedTripOnServiceDateId=" +
+      previouslyAddedTripOnServiceDateId +
       ", routeId=" +
       routeId +
       ", startTime=" +
@@ -268,7 +303,8 @@ public final class TripReference {
 
     private FeedScopedId statedTripId;
     private FeedScopedId previouslyAddedTripId;
-    private FeedScopedId tripOnServiceDateId;
+    private FeedScopedId statedTripOnServiceDateId;
+    private FeedScopedId previouslyAddedTripOnServiceDateId;
     private FeedScopedId routeId;
     private ServiceTime startTime;
     private LocalDate startDate;
@@ -286,7 +322,14 @@ public final class TripReference {
     }
 
     public Builder withTripOnServiceDateId(FeedScopedId tripOnServiceDateId) {
-      this.tripOnServiceDateId = tripOnServiceDateId;
+      this.statedTripOnServiceDateId = tripOnServiceDateId;
+      return this;
+    }
+
+    public Builder withPreviouslyAddedTripOnServiceDateId(
+      FeedScopedId previouslyAddedTripOnServiceDateId
+    ) {
+      this.previouslyAddedTripOnServiceDateId = previouslyAddedTripOnServiceDateId;
       return this;
     }
 
@@ -319,7 +362,8 @@ public final class TripReference {
       return new TripReference(
         statedTripId,
         previouslyAddedTripId,
-        tripOnServiceDateId,
+        statedTripOnServiceDateId,
+        previouslyAddedTripOnServiceDateId,
         routeId,
         startTime,
         startDate,
