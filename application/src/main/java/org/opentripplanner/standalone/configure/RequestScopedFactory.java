@@ -19,7 +19,6 @@ import org.opentripplanner.service.vehicleparking.VehicleParkingService;
 import org.opentripplanner.service.vehiclerental.VehicleRentalService;
 import org.opentripplanner.service.worldenvelope.WorldEnvelopeService;
 import org.opentripplanner.standalone.api.HttpRequestScoped;
-import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.standalone.config.DebugUiConfig;
 import org.opentripplanner.standalone.config.routerconfig.VectorTileConfig;
 import org.opentripplanner.street.graph.Graph;
@@ -41,8 +40,6 @@ public interface RequestScopedFactory {
   TransactionScope transactionScope();
 
   TransitService transitService();
-
-  OtpServerRequestContext createServerContext();
 
   Graph graph();
 
