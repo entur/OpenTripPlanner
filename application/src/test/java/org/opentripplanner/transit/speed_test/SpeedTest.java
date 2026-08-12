@@ -17,6 +17,7 @@ import org.opentripplanner.framework.application.OtpAppException;
 import org.opentripplanner.framework.transaction.TimetableSnapshotParameters;
 import org.opentripplanner.framework.transaction.api.RepositoryHandle;
 import org.opentripplanner.framework.transaction.internal.TransactionFactory;
+import org.opentripplanner.gbfs.network.GbfsNetworkOverrides;
 import org.opentripplanner.model.plan.Itinerary;
 import org.opentripplanner.raptor.configure.RaptorConfig;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
@@ -29,7 +30,7 @@ import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleRepository;
 import org.opentripplanner.service.realtimevehicles.internal.RealtimeVehicleRepositoryLifecycle;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
-import org.opentripplanner.service.vehiclerental.internal.DefaultVehicleRentalService;
+import org.opentripplanner.service.vehiclerental.internal.DefaultVehicleRentalRepository;
 import org.opentripplanner.standalone.OtpStartupInfo;
 import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.standalone.api.TestServerContext;
@@ -157,7 +158,7 @@ public class SpeedTest {
       DeduplicatorService.NOOP,
       VertexLinkerTestFactory.of(graph),
       realtimeVehicleHandle,
-      new DefaultVehicleRentalService(),
+      new DefaultVehicleRentalRepository(),
       new DefaultVehicleParkingRepository(),
       transitRepository,
       // The speed test does not enable the CarPooling feature, so it supplies neither a carpooling
@@ -167,7 +168,9 @@ public class SpeedTest {
       transitUpdateManager,
       streetUpdateManager,
       timetableHandle,
-      routerConfig.updaterConfig()
+      routerConfig.updaterConfig(),
+      // The speed test does not use GBFS vehicle rental.
+      GbfsNetworkOverrides.none()
     );
     if (transitRepository.getUpdaterManager() != null) {
       transitRepository.getUpdaterManager().startUpdaters();

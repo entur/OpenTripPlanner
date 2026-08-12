@@ -94,6 +94,7 @@ public class ConstructApplication {
     EmissionRepository emissionRepository,
     @Nullable EmpiricalDelayRepository empiricalDelayRepository,
     VehicleParkingRepository vehicleParkingRepository,
+    VehicleRentalRepository vehicleRentalRepository,
     @Nullable StopConsolidationRepository stopConsolidationRepository,
     StreetRepository streetRepository,
     FareServiceFactory fareServiceFactory
@@ -129,6 +130,7 @@ public class ConstructApplication {
       .transferRepository(transferRepository)
       .worldEnvelopeRepository(worldEnvelopeRepository)
       .vehicleParkingRepository(vehicleParkingRepository)
+      .vehicleRentalRepository(vehicleRentalRepository)
       .emissionRepository(emissionRepository)
       .empiricalDelayRepository(empiricalDelayRepository)
       .dataImportIssueSummary(issueSummary)
@@ -164,6 +166,7 @@ public class ConstructApplication {
     LOG.info("Wiring up and configuring graph builder task.");
     return GraphBuilder.create(
       buildConfig(),
+      otpConfig().gbfsNetworks,
       graphBuilderDataSources,
       graph(),
       osmInfoGraphBuildRepository,
@@ -174,6 +177,7 @@ public class ConstructApplication {
       factory.transferRepository(),
       factory.worldEnvelopeRepository(),
       factory.vehicleParkingRepository(),
+      factory.vehicleRentalRepository(),
       factory.emissionRepository(),
       factory.empiricalDelayRepository(),
       factory.stopConsolidationRepository(),
@@ -221,7 +225,8 @@ public class ConstructApplication {
       factory.transitUpdateManager(),
       factory.streetUpdateManager(),
       factory.timetableRepositoryHandle(),
-      routerConfig().updaterConfig()
+      routerConfig().updaterConfig(),
+      otpConfig().gbfsNetworks
     );
 
     // Start application warmup — runs routing queries to warm up the application

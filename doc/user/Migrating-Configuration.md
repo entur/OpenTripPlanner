@@ -37,3 +37,32 @@ This should of course be used wisely as it can also accidentally make your produ
 refuse to start up. For some deployments this is a good solution - especially if the config
 substitution feature is used to inject environment specific information. Using this feature in the
 graph-build phase is less risky, than in the OTP serve phase.
+
+### 2.10: shared GBFS network configuration
+
+Per-network GBFS settings moved out of `vehicleRentalServiceDirectory` in `router-config.json` and
+into a shared `gbfs` section in `otp-config.json`, where both the service directory and the new
+`vehicleRentalGeofencing` read them. See [GBFS configuration](GBFS-Config.md).
+
+```
+router-config.json                            otp-config.json
+  vehicleRentalServiceDirectory                 gbfs
+    networks[]
+      network: "default-network"      ------>     defaults { ... }
+                                                  includeUnlistedNetworks: true
+      network: "<other>"              ------>     networks[].network
+      geofencingZones: true           ------>     geofencingZones: "realtime"
+      geofencingZones: false          ------>     geofencingZones: "off"
+      allowKeepingVehicleAtDestination ----->     allowKeepingVehicleAtDestination
+```
+
+Three things to check when migrating:
+
+- A `default-network` entry becomes the `defaults` block **and** `includeUnlistedNetworks: true`.
+  The sentinel entry used to do both jobs at once; they are now separate switches, so setting only
+  `defaults` will drop every network that is not listed.
+- `defaults` now fills in missing fields on listed networks, which the `default-network` sentinel
+  explicitly did not. Check listed networks that omit `requireDropOffInsideBusinessArea` or
+  `allowKeepingVehicleAtDestination`.
+- `geofencingZones` is no longer a boolean. It names the phase that computes the zones -
+  `permanent`, `realtime` or `off` - so a network cannot have its zones applied twice.
