@@ -75,6 +75,30 @@ public final class EstimatedVehicleJourneyWrapper {
   }
 
   /**
+   * Validate the call times against the Nordic SIRI profile: every call states an aimed and an
+   * expected - or, on a recorded call, actual - time on both of its ends, except the arrival side
+   * of the first call and the departure side of the last. A single call is therefore exempt on
+   * both ends. The rule is strict, cancelled and extra calls included.
+   * <p>
+   * TODO: validate at construction time in {@link #of} instead, once the legacy adapter - which
+   *  tolerates incomplete call times and shares this wrapper - has been retired.
+   *
+   * @throws UpdateException if a call falls short, identifying the call by its position
+   */
+  public void validateCallTimes() {
+    int last = calls.size() - 1;
+    for (int i = 0; i <= last; i++) {
+      var call = calls.get(i);
+      if (i > 0 && !call.hasCompleteArrivalTimes()) {
+        throw UpdateException.ofStopPosition(UpdateErrorType.INVALID_ARRIVAL_TIME, i);
+      }
+      if (i < last && !call.hasCompleteDepartureTimes()) {
+        throw UpdateException.ofStopPosition(UpdateErrorType.INVALID_DEPARTURE_TIME, i);
+      }
+    }
+  }
+
+  /**
    * Whether at least one call of this journey is an extra (unplanned) call.
    */
   public boolean hasExtraCall() {

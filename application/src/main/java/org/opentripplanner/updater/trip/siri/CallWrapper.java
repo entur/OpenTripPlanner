@@ -127,6 +127,30 @@ public interface CallWrapper {
   ZonedDateTime getActualDepartureTime();
 
   /**
+   * Whether this call states its arrival time completely: an aimed and an expected or actual
+   * arrival time, as the Nordic SIRI profile requires of every call except the first of a
+   * journey.
+   */
+  default boolean hasCompleteArrivalTimes() {
+    return (
+      getAimedArrivalTime() != null &&
+      (getExpectedArrivalTime() != null || getActualArrivalTime() != null)
+    );
+  }
+
+  /**
+   * Whether this call states its departure time completely: an aimed and an expected or actual
+   * departure time, as the Nordic SIRI profile requires of every call except the last of a
+   * journey.
+   */
+  default boolean hasCompleteDepartureTimes() {
+    return (
+      getAimedDepartureTime() != null &&
+      (getExpectedDepartureTime() != null || getActualDepartureTime() != null)
+    );
+  }
+
+  /**
    * The drop-off (arrival) change of this call, to be resolved against the scheduled value.
    */
   PickDropChange dropOff();

@@ -2,6 +2,7 @@ package org.opentripplanner.updater.trip.siri.moduletests.extrajourney;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.opentripplanner.updater.spi.UpdateErrorType.INVALID_ARRIVAL_TIME;
 import static org.opentripplanner.updater.spi.UpdateErrorType.STOP_MISMATCH;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
@@ -15,6 +16,7 @@ import org.opentripplanner.transit.model.TripInput;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.organization.Operator;
 import org.opentripplanner.transit.model.site.RegularStop;
+import org.opentripplanner.updater.trip.LegacyUpdaterOnly;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
 import org.opentripplanner.updater.trip.UnifiedUpdaterOnly;
 import org.opentripplanner.updater.trip.siri.SiriEtBuilder;
@@ -218,10 +220,37 @@ class ExtraJourneyRevisionTest implements RealtimeTestConstants {
    * the stop is flagged NO_DATA and keeps the times the trip was added with.
    */
   @Test
+  @LegacyUpdaterOnly(
+    "The unified implementation rejects incomplete call times at parse - see the companion test."
+  )
   void revisionWithACallCarryingNoRealTimeTimesFlagsItNoData() {
     addTheExtraJourney();
 
-    var revision = extraJourney()
+    var result = siri.applyEstimatedTimetable(revisionWithAimedOnlyLastCall());
+
+    assertSuccess(result);
+    assertEquals(
+      "A U | A 0:02 0:02 | B [ND] 0:03 0:03",
+      env.tripData(ADDED_TRIP_ID).showTimetable()
+    );
+  }
+
+  /** The profile requires an expected arrival on the last call - the rejected revision changes nothing. */
+  @UnifiedUpdaterOnly(
+    "The legacy implementation tolerates incomplete call times - see the companion test."
+  )
+  @Test
+  void revisionWithACallCarryingNoRealTimeTimesIsRejected() {
+    addTheExtraJourney();
+
+    var result = siri.applyEstimatedTimetable(revisionWithAimedOnlyLastCall());
+
+    assertFailure(INVALID_ARRIVAL_TIME, result);
+    assertEquals(ADDED_JOURNEY_TIMETABLE, env.tripData(ADDED_TRIP_ID).showTimetable());
+  }
+
+  private List<EstimatedTimetableDeliveryStructure> revisionWithAimedOnlyLastCall() {
+    return extraJourney()
       .withEstimatedCalls(builder ->
         builder
           .call(STOP_A)
@@ -230,12 +259,6 @@ class ExtraJourneyRevisionTest implements RealtimeTestConstants {
           .arriveAimedExpected("00:03", null)
       )
       .buildEstimatedTimetableDeliveries();
-
-    assertSuccess(siri.applyEstimatedTimetable(revision));
-    assertEquals(
-      "A U | A 0:02 0:02 | B [ND] 0:03 0:03",
-      env.tripData(ADDED_TRIP_ID).showTimetable()
-    );
   }
 
   /**

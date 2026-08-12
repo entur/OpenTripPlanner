@@ -1,15 +1,22 @@
 package org.opentripplanner.updater.trip.siri.moduletests.update;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.opentripplanner.updater.spi.UpdateErrorType.INVALID_ARRIVAL_TIME;
+import static org.opentripplanner.updater.spi.UpdateErrorType.INVALID_DEPARTURE_TIME;
+import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
 import org.opentripplanner.transit.model.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model.TripInput;
 import org.opentripplanner.transit.model.site.RegularStop;
+import org.opentripplanner.updater.trip.LegacyUpdaterOnly;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
+import org.opentripplanner.updater.trip.UnifiedUpdaterOnly;
 import org.opentripplanner.updater.trip.siri.SiriTestHelper;
+import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 
 /**
  * Tests for the handling of SIRI ET updates where real-time times are partially or fully absent
@@ -22,8 +29,17 @@ import org.opentripplanner.updater.trip.siri.SiriTestHelper;
  *   <li>A trip where every stop is NO_DATA must have {@code timesModified = false}, so
  *       {@code hasAnyUpdates()} returns {@code false} and the trip prefix is "S" (scheduled).</li>
  * </ul>
+ *
+ * <p>These fallback and NO_DATA semantics are legacy's - the unified implementation rejects such
+ * messages at parse, pinned by the companion tests here and in {@code IncompleteCallTimesTest}.
+ * Only the first-stop/last-stop cases at the end of this class are valid input for both.</p>
  */
 class MissingRealtimeTest implements RealtimeTestConstants {
+
+  private static final String LEGACY_TOLERATES =
+    "The legacy implementation tolerates incomplete call times - see the companion test.";
+  private static final String UNIFIED_REJECTS =
+    "The unified implementation rejects incomplete call times at parse - see the companion test.";
 
   private final TransitTestEnvironmentBuilder ENV_BUILDER = TransitTestEnvironment.of();
   private final RegularStop STOP_A = ENV_BUILDER.stop(STOP_A_ID);
@@ -42,31 +58,17 @@ class MissingRealtimeTest implements RealtimeTestConstants {
     .addStop(STOP_C, "0:00:30", "0:00:31");
 
   /**
-   * An intermediate stop that provides only a departure time (no arrival) must be treated as a
+   * An intermediate stop that provides only a departure time (no arrival) is treated as a
    * real-time update, not NO_DATA. The missing arrival falls back to the scheduled arrival
    * (delay = 0), while the departure carries the provided delay.
    */
+  @LegacyUpdaterOnly(UNIFIED_REJECTS)
   @Test
   void intermediateStop_withOnlyDepartureTime_isNotNoData() {
     var env = ENV_BUILDER.addTrip(THREE_STOP_TRIP).build();
     var siri = SiriTestHelper.of(env);
 
-    var updates = siri
-      .etBuilder()
-      .withDatedVehicleJourneyRef(TRIP_1_ID)
-      .withEstimatedCalls(builder ->
-        builder
-          .call(STOP_A)
-          .departAimedExpected("00:00:11", "00:00:15")
-          .call(STOP_B)
-          // departure only – arrival falls back to scheduled
-          .departAimedExpected("00:00:21", "00:00:26")
-          .call(STOP_C)
-          .arriveAimedExpected("00:00:30", "00:00:35")
-      )
-      .buildEstimatedTimetableDeliveries();
-
-    var result = siri.applyEstimatedTimetable(updates);
+    var result = siri.applyEstimatedTimetable(intermediateStopWithOnlyDepartureTime(siri));
     assertSuccess(result);
 
     // Stop B: arrival = scheduled (0:00:20, delay 0), departure = real-time (0:00:26, +5s)
@@ -76,32 +78,27 @@ class MissingRealtimeTest implements RealtimeTestConstants {
     );
   }
 
+  @UnifiedUpdaterOnly(LEGACY_TOLERATES)
+  @Test
+  void intermediateStop_withOnlyDepartureTime_isRejected() {
+    var env = ENV_BUILDER.addTrip(THREE_STOP_TRIP).build();
+    var siri = SiriTestHelper.of(env);
+
+    var result = siri.applyEstimatedTimetable(intermediateStopWithOnlyDepartureTime(siri));
+    assertFailure(INVALID_ARRIVAL_TIME, result);
+  }
+
   /**
-   * An intermediate stop that provides only an arrival time (no departure) must be treated as a
+   * An intermediate stop that provides only an arrival time (no departure) is treated as a
    * real-time update. The missing departure falls back to the scheduled departure (delay = 0).
-   * The real-time arrival must not exceed the scheduled departure to avoid a negative dwell time.
    */
+  @LegacyUpdaterOnly(UNIFIED_REJECTS)
   @Test
   void intermediateStop_withOnlyArrivalTime_isNotNoData() {
     var env = ENV_BUILDER.addTrip(THREE_STOP_TRIP).build();
     var siri = SiriTestHelper.of(env);
 
-    var updates = siri
-      .etBuilder()
-      .withDatedVehicleJourneyRef(TRIP_1_ID)
-      .withEstimatedCalls(builder ->
-        builder
-          .call(STOP_A)
-          .departAimedExpected("00:00:11", "00:00:15")
-          .call(STOP_B)
-          // arrival only – departure falls back to scheduled
-          .arriveAimedExpected("00:00:20", "00:00:20")
-          .call(STOP_C)
-          .arriveAimedExpected("00:00:30", "00:00:35")
-      )
-      .buildEstimatedTimetableDeliveries();
-
-    var result = siri.applyEstimatedTimetable(updates);
+    var result = siri.applyEstimatedTimetable(intermediateStopWithOnlyArrivalTime(siri));
     assertSuccess(result);
 
     // Stop B: arrival = real-time (0:00:20, delay 0), departure = scheduled (0:00:21, delay 0)
@@ -111,30 +108,27 @@ class MissingRealtimeTest implements RealtimeTestConstants {
     );
   }
 
+  @UnifiedUpdaterOnly(LEGACY_TOLERATES)
+  @Test
+  void intermediateStop_withOnlyArrivalTime_isRejected() {
+    var env = ENV_BUILDER.addTrip(THREE_STOP_TRIP).build();
+    var siri = SiriTestHelper.of(env);
+
+    var result = siri.applyEstimatedTimetable(intermediateStopWithOnlyArrivalTime(siri));
+    assertFailure(INVALID_DEPARTURE_TIME, result);
+  }
+
   /**
-   * A stop with no real-time times at all must be marked NO_DATA and display the scheduled times.
+   * A stop with no real-time times at all is marked NO_DATA and displays the scheduled times.
    * The other stops in the same trip have valid updates, so the trip prefix is "U" (updated).
    */
+  @LegacyUpdaterOnly(UNIFIED_REJECTS)
   @Test
   void oneStopWithNoTimes_isMarkedNoData_tripStillUpdated() {
     var env = ENV_BUILDER.addTrip(THREE_STOP_TRIP).build();
     var siri = SiriTestHelper.of(env);
 
-    var updates = siri
-      .etBuilder()
-      .withDatedVehicleJourneyRef(TRIP_1_ID)
-      .withEstimatedCalls(builder ->
-        builder
-          .call(STOP_A)
-          .departAimedExpected("00:00:11", "00:00:15")
-          // no times → NO_DATA, scheduled times shown
-          .call(STOP_B)
-          .call(STOP_C)
-          .arriveAimedExpected("00:00:30", "00:00:35")
-      )
-      .buildEstimatedTimetableDeliveries();
-
-    var result = siri.applyEstimatedTimetable(updates);
+    var result = siri.applyEstimatedTimetable(oneStopWithNoTimes(siri));
     assertSuccess(result);
 
     assertEquals(
@@ -143,23 +137,28 @@ class MissingRealtimeTest implements RealtimeTestConstants {
     );
   }
 
+  @UnifiedUpdaterOnly(LEGACY_TOLERATES)
+  @Test
+  void oneStopWithNoTimes_isRejected() {
+    var env = ENV_BUILDER.addTrip(THREE_STOP_TRIP).build();
+    var siri = SiriTestHelper.of(env);
+
+    var result = siri.applyEstimatedTimetable(oneStopWithNoTimes(siri));
+    assertFailure(INVALID_ARRIVAL_TIME, result);
+  }
+
   /**
    * When every stop in the update has no real-time times, all stops are marked NO_DATA and
    * {@code timesModified} remains {@code false}. The trip prefix must be "S" (scheduled), not "U"
    * (updated), because no times were actually modified.
    */
+  @LegacyUpdaterOnly(UNIFIED_REJECTS)
   @Test
   void allStopsWithNoTimes_timesModifiedIsFalse_tripAppearsScheduled() {
     var env = ENV_BUILDER.addTrip(TWO_STOP_TRIP).build();
     var siri = SiriTestHelper.of(env);
 
-    var updates = siri
-      .etBuilder()
-      .withDatedVehicleJourneyRef(TRIP_1_ID)
-      .withEstimatedCalls(builder -> builder.call(STOP_A).call(STOP_B))
-      .buildEstimatedTimetableDeliveries();
-
-    var result = siri.applyEstimatedTimetable(updates);
+    var result = siri.applyEstimatedTimetable(allStopsWithNoTimes(siri));
     assertSuccess(result);
 
     // "S" prefix: hasAnyUpdates() = false (timesModified = false, no cancellation/added/etc.)
@@ -167,6 +166,16 @@ class MissingRealtimeTest implements RealtimeTestConstants {
       "S | A [ND] 0:00:10 0:00:11 | B [ND] 0:00:20 0:00:21",
       env.tripData(TRIP_1_ID).showTimetable()
     );
+  }
+
+  @UnifiedUpdaterOnly(LEGACY_TOLERATES)
+  @Test
+  void allStopsWithNoTimes_isRejected() {
+    var env = ENV_BUILDER.addTrip(TWO_STOP_TRIP).build();
+    var siri = SiriTestHelper.of(env);
+
+    var result = siri.applyEstimatedTimetable(allStopsWithNoTimes(siri));
+    assertFailure(INVALID_DEPARTURE_TIME, result);
   }
 
   /**
@@ -262,5 +271,69 @@ class MissingRealtimeTest implements RealtimeTestConstants {
       "C U | A 0:00:10 0:00:11 | B 0:00:20 0:00:21",
       env.tripData(TRIP_1_ID).showTimetable()
     );
+  }
+
+  /* Message fixtures, shared by each pair of tests */
+
+  private List<EstimatedTimetableDeliveryStructure> intermediateStopWithOnlyDepartureTime(
+    SiriTestHelper siri
+  ) {
+    return siri
+      .etBuilder()
+      .withDatedVehicleJourneyRef(TRIP_1_ID)
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_A)
+          .departAimedExpected("00:00:11", "00:00:15")
+          .call(STOP_B)
+          // departure only - no arrival
+          .departAimedExpected("00:00:21", "00:00:26")
+          .call(STOP_C)
+          .arriveAimedExpected("00:00:30", "00:00:35")
+      )
+      .buildEstimatedTimetableDeliveries();
+  }
+
+  private List<EstimatedTimetableDeliveryStructure> intermediateStopWithOnlyArrivalTime(
+    SiriTestHelper siri
+  ) {
+    return siri
+      .etBuilder()
+      .withDatedVehicleJourneyRef(TRIP_1_ID)
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_A)
+          .departAimedExpected("00:00:11", "00:00:15")
+          .call(STOP_B)
+          // arrival only - no departure
+          .arriveAimedExpected("00:00:20", "00:00:20")
+          .call(STOP_C)
+          .arriveAimedExpected("00:00:30", "00:00:35")
+      )
+      .buildEstimatedTimetableDeliveries();
+  }
+
+  private List<EstimatedTimetableDeliveryStructure> oneStopWithNoTimes(SiriTestHelper siri) {
+    return siri
+      .etBuilder()
+      .withDatedVehicleJourneyRef(TRIP_1_ID)
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_A)
+          .departAimedExpected("00:00:11", "00:00:15")
+          // no times at all
+          .call(STOP_B)
+          .call(STOP_C)
+          .arriveAimedExpected("00:00:30", "00:00:35")
+      )
+      .buildEstimatedTimetableDeliveries();
+  }
+
+  private List<EstimatedTimetableDeliveryStructure> allStopsWithNoTimes(SiriTestHelper siri) {
+    return siri
+      .etBuilder()
+      .withDatedVehicleJourneyRef(TRIP_1_ID)
+      .withEstimatedCalls(builder -> builder.call(STOP_A).call(STOP_B))
+      .buildEstimatedTimetableDeliveries();
   }
 }

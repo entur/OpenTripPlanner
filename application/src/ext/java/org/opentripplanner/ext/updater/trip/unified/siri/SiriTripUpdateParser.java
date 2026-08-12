@@ -102,6 +102,13 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
       );
     }
 
+    // Any command that is not a plain cancellation is built from the calls, so they must first
+    // describe the journey the way the Nordic profile requires. Legacy instead tolerates the
+    // holes - NO_DATA flags, scheduled-time fallbacks, created trips built from aimed times
+    // alone - so rejecting here is an accepted divergence: profile-invalid input is rejected
+    // loudly rather than compensated for.
+    journey.validateCallTimes();
+
     // Parse stop time updates
     var stopTimeUpdates = parseStopTimeUpdates(
       calls,

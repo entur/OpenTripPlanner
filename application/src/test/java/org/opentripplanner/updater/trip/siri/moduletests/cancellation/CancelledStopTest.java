@@ -2,16 +2,22 @@ package org.opentripplanner.updater.trip.siri.moduletests.cancellation;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.opentripplanner.updater.spi.UpdateErrorType.INVALID_DEPARTURE_TIME;
+import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertSuccess;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
 import org.opentripplanner.transit.model.TransitTestEnvironmentBuilder;
 import org.opentripplanner.transit.model.TripInput;
 import org.opentripplanner.transit.model.site.RegularStop;
+import org.opentripplanner.updater.trip.LegacyUpdaterOnly;
 import org.opentripplanner.updater.trip.RealtimeTestConstants;
+import org.opentripplanner.updater.trip.UnifiedUpdaterOnly;
 import org.opentripplanner.updater.trip.siri.SiriTestHelper;
+import uk.org.siri.siri21.EstimatedTimetableDeliveryStructure;
 
 class CancelledStopTest implements RealtimeTestConstants {
 
@@ -142,38 +148,61 @@ class CancelledStopTest implements RealtimeTestConstants {
    * in neither direction - nothing about the trip has been updated, so it stays SCHEDULED. SIRI-ET
    * states the pattern it runs and the times it predicts; it never declares itself updated.
    */
+  @LegacyUpdaterOnly(
+    "The unified implementation rejects incomplete call times at parse - see the companion test."
+  )
   @Test
   void timelessJourneyWithACancelledNonRoutableCallStaysScheduled() {
-    var tripInput = TripInput.of(TRIP_1_ID)
-      .withWithTripOnServiceDate(TRIP_1_ID)
-      .addStop(STOP_A, "0:01:00", "0:01:01")
-      .addStop(STOP_B, "0:01:10", "0:01:11", PickDrop.NONE, PickDrop.NONE)
-      .addStop(STOP_D, "0:01:20", "0:01:21");
-
-    var env = ENV_BUILDER.addTrip(tripInput).build();
+    var env = ENV_BUILDER.addTrip(nonRoutableStopBTripInput()).build();
     var siri = SiriTestHelper.of(env);
 
-    var updates = siri
-      .etBuilder()
-      .withDatedVehicleJourneyRef(TRIP_1_ID)
-      .withEstimatedCalls(builder ->
-        builder.call(STOP_A).call(STOP_B).withIsCancellation(true).call(STOP_D)
-      )
-      .buildEstimatedTimetableDeliveries();
+    var result = siri.applyEstimatedTimetable(timelessJourneyWithCancelledCall(siri));
 
-    assertSuccess(siri.applyEstimatedTimetable(updates));
-
+    assertSuccess(result);
     assertEquals(
       "S | A [ND] 0:01 0:01:01 | B [C] 0:01:10 0:01:11 | D [ND] 0:01:20 0:01:21",
       env.tripData(TRIP_1_ID).showTimetable()
     );
-
     var tripData = env.tripData(TRIP_1_ID);
     assertSame(
       tripData.scheduledTripPattern(),
       tripData.tripPattern(),
       "no real-time pattern should have been created"
     );
+  }
+
+  /** The profile requires times on every served call end, cancelled calls included. */
+  @UnifiedUpdaterOnly(
+    "The legacy implementation tolerates incomplete call times - see the companion test."
+  )
+  @Test
+  void timelessJourneyWithACancelledNonRoutableCallIsRejected() {
+    var env = ENV_BUILDER.addTrip(nonRoutableStopBTripInput()).build();
+    var siri = SiriTestHelper.of(env);
+
+    var result = siri.applyEstimatedTimetable(timelessJourneyWithCancelledCall(siri));
+
+    assertFailure(INVALID_DEPARTURE_TIME, result);
+  }
+
+  private TripInput nonRoutableStopBTripInput() {
+    return TripInput.of(TRIP_1_ID)
+      .withWithTripOnServiceDate(TRIP_1_ID)
+      .addStop(STOP_A, "0:01:00", "0:01:01")
+      .addStop(STOP_B, "0:01:10", "0:01:11", PickDrop.NONE, PickDrop.NONE)
+      .addStop(STOP_D, "0:01:20", "0:01:21");
+  }
+
+  private List<EstimatedTimetableDeliveryStructure> timelessJourneyWithCancelledCall(
+    SiriTestHelper siri
+  ) {
+    return siri
+      .etBuilder()
+      .withDatedVehicleJourneyRef(TRIP_1_ID)
+      .withEstimatedCalls(builder ->
+        builder.call(STOP_A).call(STOP_B).withIsCancellation(true).call(STOP_D)
+      )
+      .buildEstimatedTimetableDeliveries();
   }
 
   /**

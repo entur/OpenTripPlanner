@@ -597,8 +597,9 @@ class SiriTripUpdateParserTest {
     );
   }
 
+  /** A middle call without a departure pair violates the Nordic profile. */
   @Test
-  void parseMiddleStopMissingTimes_NoFallback() {
+  void parseMiddleStopMissingDepartureTimesIsRejected() {
     var journey = new SiriEtBuilder(timeParser)
       .withFramedVehicleJourneyRef(ref ->
         ref.withDatedVehicleJourneyRef("trip1").withDataFrameRef(TEST_DATE.toString())
@@ -619,16 +620,8 @@ class SiriTripUpdateParserTest {
       )
       .buildEstimatedVehicleJourney();
 
-    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
-
-    assertEquals(3, command.stopTimeUpdates().size());
-
-    var middleStop = command.stopTimeUpdates().get(1);
-    assertNotNull(middleStop.arrivalUpdate());
-    assertNull(
-      middleStop.departureUpdate(),
-      "Middle stop should not fallback departure to arrival"
-    );
+    var exception = assertThrows(UpdateException.class, () -> parser.parse(journey));
+    assertEquals(UpdateErrorType.INVALID_DEPARTURE_TIME, exception.errorType());
   }
 
   @Test
@@ -760,5 +753,99 @@ class SiriTripUpdateParserTest {
       ),
       replacedTrips.get(1)
     );
+  }
+
+  /* Nordic-profile time validation */
+
+  /** A recorded call satisfies the real-time half of the requirement with an actual time. */
+  @Test
+  void profileValidationAcceptsRecordedCallWithActualTimesOnly() {
+    var journey = new SiriEtBuilder(timeParser)
+      .withDatedVehicleJourneyRef("trip1")
+      .withRecordedCalls(calls ->
+        calls
+          .call("stop1")
+          .departAimedActual("08:00", "08:01")
+          .call("stop2")
+          .arriveAimedActual("08:10", "08:12")
+          .departAimedActual("08:11", "08:13")
+      )
+      .withEstimatedCalls(calls ->
+        calls.call("stop3").withAimedArrivalTime("08:30").withExpectedArrivalTime("08:32")
+      )
+      .buildEstimatedVehicleJourney();
+
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
+    assertEquals(3, command.stopTimeUpdates().size());
+  }
+
+  @Test
+  void profileValidationRejectsMiddleCallMissingArrivalTimes() {
+    var journey = new SiriEtBuilder(timeParser)
+      .withDatedVehicleJourneyRef("trip1")
+      .withEstimatedCalls(calls ->
+        calls
+          .call("stop1")
+          .withAimedDepartureTime("08:00")
+          .withExpectedDepartureTime("08:00")
+          .next()
+          .call("stop2")
+          .withAimedDepartureTime("08:11")
+          .withExpectedDepartureTime("08:13")
+          .next()
+          .call("stop3")
+          .withAimedArrivalTime("08:30")
+          .withExpectedArrivalTime("08:32")
+      )
+      .buildEstimatedVehicleJourney();
+
+    var exception = assertThrows(UpdateException.class, () -> parser.parse(journey));
+    assertEquals(UpdateErrorType.INVALID_ARRIVAL_TIME, exception.errorType());
+    assertEquals(1, exception.stopPosition(), "the violating call is reported by position");
+  }
+
+  /** The aimed time is required alongside the real-time value. */
+  @Test
+  void profileValidationRejectsCallEndWithoutAimedTime() {
+    var journey = new SiriEtBuilder(timeParser)
+      .withDatedVehicleJourneyRef("trip1")
+      .withEstimatedCalls(calls ->
+        calls
+          .call("stop1")
+          .withExpectedDepartureTime("08:00")
+          .next()
+          .call("stop2")
+          .withAimedArrivalTime("08:30")
+          .withExpectedArrivalTime("08:32")
+      )
+      .buildEstimatedVehicleJourney();
+
+    var exception = assertThrows(UpdateException.class, () -> parser.parse(journey));
+    assertEquals(UpdateErrorType.INVALID_DEPARTURE_TIME, exception.errorType());
+    assertEquals(0, exception.stopPosition());
+  }
+
+  /** A single-call journey is exempt on both ends. */
+  @Test
+  void profileValidationExemptsSingleCallJourney() {
+    var journey = new SiriEtBuilder(timeParser)
+      .withDatedVehicleJourneyRef("trip1")
+      .withEstimatedCalls(calls -> calls.call("stop1"))
+      .buildEstimatedVehicleJourney();
+
+    var command = assertInstanceOf(ReviseTrip.class, parser.parse(journey));
+    assertEquals(1, command.stopTimeUpdates().size());
+  }
+
+  /** A plain cancellation becomes a CancelTrip before the calls are validated. */
+  @Test
+  void profileValidationExemptsPlainCancellation() {
+    var journey = new SiriEtBuilder(timeParser)
+      .withDatedVehicleJourneyRef("trip1")
+      .withCancellation(true)
+      .withEstimatedCalls(calls -> calls.call("stop1").next().call("stop2"))
+      .buildEstimatedVehicleJourney();
+
+    assertInstanceOf(CancelTrip.class, parser.parse(journey));
   }
 }

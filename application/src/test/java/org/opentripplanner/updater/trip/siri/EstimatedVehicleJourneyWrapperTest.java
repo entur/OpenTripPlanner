@@ -3,6 +3,7 @@ package org.opentripplanner.updater.trip.siri;
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.updater.spi.UpdateResultAssertions.assertFailure;
 
@@ -15,6 +16,7 @@ import org.opentripplanner.LocalTimeParser;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.timetable.OccupancyStatus;
 import org.opentripplanner.updater.spi.UpdateErrorType;
+import org.opentripplanner.updater.spi.UpdateException;
 import uk.org.siri.siri21.OccupancyEnumeration;
 import uk.org.siri.siri21.VehicleModesEnumeration;
 
@@ -56,6 +58,55 @@ class EstimatedVehicleJourneyWrapperTest {
     assertFailure(UpdateErrorType.MISSING_CALL_ORDER, () ->
       EstimatedVehicleJourneyWrapper.of(journey)
     );
+  }
+
+  /** Every call states an aimed and an expected/actual time on both of its served ends. */
+  @Test
+  void validateCallTimesAcceptsACompleteJourney() {
+    var journey = builder()
+      .withEstimatedCalls(calls ->
+        calls
+          .call("A")
+          .departAimedExpected("10:00", "10:01")
+          .call("B")
+          .arriveAimedExpected("10:10", "10:11")
+          .departAimedExpected("10:12", "10:13")
+          .call("C")
+          .arriveAimedExpected("10:20", "10:21")
+      )
+      .buildEstimatedVehicleJourney();
+
+    EstimatedVehicleJourneyWrapper.of(journey).validateCallTimes();
+  }
+
+  /** A middle call without an arrival time pair violates the profile. */
+  @Test
+  void validateCallTimesRejectsAnIncompleteCall() {
+    var journey = builder()
+      .withEstimatedCalls(calls ->
+        calls
+          .call("A")
+          .departAimedExpected("10:00", "10:01")
+          .call("B")
+          .departAimedExpected("10:12", "10:13")
+          .call("C")
+          .arriveAimedExpected("10:20", "10:21")
+      )
+      .buildEstimatedVehicleJourney();
+    var wrapper = EstimatedVehicleJourneyWrapper.of(journey);
+
+    var exception = assertThrows(UpdateException.class, wrapper::validateCallTimes);
+    assertEquals(UpdateErrorType.INVALID_ARRIVAL_TIME, exception.errorType());
+  }
+
+  /** The first call's arrival and the last call's departure are exempt - a single call entirely. */
+  @Test
+  void validateCallTimesExemptsASingleCall() {
+    var journey = builder()
+      .withEstimatedCalls(calls -> calls.call("A"))
+      .buildEstimatedVehicleJourney();
+
+    EstimatedVehicleJourneyWrapper.of(journey).validateCallTimes();
   }
 
   /* Calls */
