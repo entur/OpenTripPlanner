@@ -8,8 +8,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.google.transit.realtime.GtfsRealtime;
+import de.mfdz.MfdzRealtimeExtensions;
 import java.time.LocalDate;
 import java.time.ZoneId;
+import java.util.function.UnaryOperator;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -289,6 +291,68 @@ class GtfsRtTripUpdateParserTest {
     var command = assertInstanceOf(AddTrip.class, parser.parse(tripUpdate));
 
     assertNull(command.vehicleDescription().wheelchairAccessibility());
+  }
+
+  /** The route the extension describes is read from it, agency included. */
+  @Test
+  void parseNewTripWithRouteExtension() {
+    var command = assertInstanceOf(
+      AddTrip.class,
+      parser.parse(newTripWithRouteExtension(b -> b.setAgencyId("agency1")))
+    );
+
+    var routeCreationInfo = command.tripCreationInfo().routeCreationInfo();
+    assertNotNull(routeCreationInfo);
+    assertEquals(new FeedScopedId(FEED_ID, "agency1"), routeCreationInfo.agencyId());
+    assertEquals("A dynamically added route", routeCreationInfo.routeName());
+    assertEquals(2, routeCreationInfo.gtfsType());
+    assertEquals("https://example.com/route", routeCreationInfo.url());
+  }
+
+  /**
+   * An extension that leaves the agency out names none: the route falls back to the agency added for
+   * real-time routes rather than the trip being rejected over an empty id.
+   */
+  @Test
+  void parseNewTripWithRouteExtensionWithoutAgency() {
+    var command = assertInstanceOf(AddTrip.class, parser.parse(newTripWithRouteExtension(b -> b)));
+
+    var routeCreationInfo = command.tripCreationInfo().routeCreationInfo();
+    assertNotNull(routeCreationInfo);
+    assertNull(routeCreationInfo.agencyId());
+    assertEquals(2, routeCreationInfo.gtfsType());
+  }
+
+  /**
+   * An added trip whose route is described by the MFDZ trip-descriptor extension, customized by the
+   * given operator.
+   */
+  private GtfsRealtime.TripUpdate newTripWithRouteExtension(
+    UnaryOperator<MfdzRealtimeExtensions.TripDescriptorExtension.Builder> customizer
+  ) {
+    var extension = customizer.apply(
+      MfdzRealtimeExtensions.TripDescriptorExtension.newBuilder()
+        .setRouteType(2)
+        .setRouteUrl("https://example.com/route")
+        .setRouteLongName("A dynamically added route")
+    );
+    return GtfsRealtime.TripUpdate.newBuilder()
+      .setTrip(
+        GtfsRealtime.TripDescriptor.newBuilder()
+          .setTripId("trip1")
+          .setRouteId("route1")
+          .setStartTime("08:30:00")
+          .setScheduleRelationship(GtfsRealtime.TripDescriptor.ScheduleRelationship.ADDED)
+          .setExtension(MfdzRealtimeExtensions.tripDescriptor, extension.build())
+      )
+      .addStopTimeUpdate(
+        GtfsRealtime.TripUpdate.StopTimeUpdate.newBuilder()
+          .setStopId("stop1")
+          .setStopSequence(0)
+          .setArrival(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setTime(TIME_0830))
+          .setDeparture(GtfsRealtime.TripUpdate.StopTimeEvent.newBuilder().setTime(TIME_0831))
+      )
+      .build();
   }
 
   @Test

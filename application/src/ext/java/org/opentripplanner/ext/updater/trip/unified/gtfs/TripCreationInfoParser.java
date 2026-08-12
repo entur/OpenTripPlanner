@@ -6,6 +6,7 @@ import org.opentripplanner.ext.updater.trip.unified.model.command.TripCreationIn
 import org.opentripplanner.gtfs.mapping.TransitModeMapper;
 import org.opentripplanner.updater.trip.gtfs.model.AddedRoute;
 import org.opentripplanner.updater.trip.gtfs.model.TripUpdate;
+import org.opentripplanner.utils.lang.StringUtils;
 
 /**
  * Parses the descriptive fields a GTFS-RT added trip is created with - the trip itself and,
@@ -30,7 +31,10 @@ final class TripCreationInfoParser {
     // Extract route creation info from MFDZ extensions
     var addedRoute = AddedRoute.ofTripDescriptor(tripUpdate);
     if (routeId != null && (addedRoute.routeUrl() != null || addedRoute.routeLongName() != null)) {
-      var agencyId = addedRoute.agencyId() != null
+      // An extension that leaves the agency out names no agency at all: the empty string a protobuf
+      // reports for an unset field is not an id, and turning it into one would reject the trip
+      // instead of letting the route fall back to the agency added for real-time routes.
+      var agencyId = StringUtils.hasValue(addedRoute.agencyId())
         ? new FeedScopedId(tripId.getFeedId(), addedRoute.agencyId())
         : null;
       var mode = TransitModeMapper.mapMode(addedRoute.routeType());
