@@ -1,0 +1,14 @@
+{{- if .Values.journeyPlanner.enabled }}
+apiVersion: v1
+data:
+  build-config.json: |+
+   {
+      "graph": "${GRAPH_URI}"
+   }
+kind: ConfigMap
+metadata:
+  name: otp2-build-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels" . | indent 4 }}
+{{- end }}
