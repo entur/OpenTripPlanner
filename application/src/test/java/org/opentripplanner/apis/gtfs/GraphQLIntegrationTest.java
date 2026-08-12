@@ -550,7 +550,7 @@ class GraphQLIntegrationTest {
     defaultVehicleRentalService.addVehicleRentalStation(RENTAL_VEHICLE_2);
 
     var routeRequest = RouteRequest.defaultValue();
-    context = new GtfsGraphQLRequestContext(
+    context = new TestGtfsGraphQLRequestContext(
       new TestRoutingService(List.of(i1)),
       transitService,
       transitAlertService,
