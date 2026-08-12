@@ -11,7 +11,7 @@ import java.util.Map;
  * accessor was called, without pulling in a mocking framework. Unstubbed accessors return
  * {@code null}; stub one with {@link #stub}.
  */
-final class RecordingRequestScopedFactory implements InvocationHandler {
+public final class RecordingRequestScopedFactory implements InvocationHandler {
 
   private final Map<String, Integer> callCounts = new HashMap<>();
   private final Map<String, Object> stubs = new HashMap<>();
@@ -21,20 +21,20 @@ final class RecordingRequestScopedFactory implements InvocationHandler {
     this
   );
 
-  RequestScopedFactory factory() {
+  public RequestScopedFactory factory() {
     return proxy;
   }
 
-  void stub(String methodName, Object value) {
+  public void stub(String methodName, Object value) {
     stubs.put(methodName, value);
   }
 
-  int callCount(String methodName) {
+  public int callCount(String methodName) {
     return callCounts.getOrDefault(methodName, 0);
   }
 
   /** The full set of accessors touched so far, each with its call count. */
-  Map<String, Integer> callCounts() {
+  public Map<String, Integer> callCounts() {
     return Map.copyOf(callCounts);
   }
 
