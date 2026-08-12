@@ -27,6 +27,8 @@ import org.opentripplanner.transit.service.TransitService;
 final class DaggerTransmodelGraphQLRequestContext implements TransmodelGraphQLRequestContext {
 
   private final RequestScopedFactory factory;
+  private NearbyPlaceFinder nearbyPlaceFinder;
+  private NearbyStopFinder nearbyStopFinder;
 
   DaggerTransmodelGraphQLRequestContext(RequestScopedFactory factory) {
     this.factory = factory;
@@ -94,14 +96,20 @@ final class DaggerTransmodelGraphQLRequestContext implements TransmodelGraphQLRe
   }
 
   @Override
-  public NearbyPlaceFinder getNearbyPlaceFinder() {
-    return new StreetNearbyPlaceFinder(factory.linkingContextFactory());
+  public synchronized NearbyPlaceFinder getNearbyPlaceFinder() {
+    if (nearbyPlaceFinder == null) {
+      nearbyPlaceFinder = new StreetNearbyPlaceFinder(factory.linkingContextFactory());
+    }
+    return nearbyPlaceFinder;
   }
 
   @Override
-  public NearbyStopFinder getNearbyStopFinder() {
-    return factory.graph().hasStreets
-      ? StreetNearbyStopFinder.of(factory.linkingContextFactory()).build()
-      : new StraightLineNearbyStopFinder(factory.transitService()::findRegularStopsByBoundingBox);
+  public synchronized NearbyStopFinder getNearbyStopFinder() {
+    if (nearbyStopFinder == null) {
+      nearbyStopFinder = factory.graph().hasStreets
+        ? StreetNearbyStopFinder.of(factory.linkingContextFactory()).build()
+        : new StraightLineNearbyStopFinder(factory.transitService()::findRegularStopsByBoundingBox);
+    }
+    return nearbyStopFinder;
   }
 }

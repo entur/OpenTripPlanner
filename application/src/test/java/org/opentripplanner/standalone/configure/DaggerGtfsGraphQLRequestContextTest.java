@@ -1,6 +1,8 @@
 package org.opentripplanner.standalone.configure;
 
+import static com.google.common.truth.Truth.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -102,6 +104,15 @@ class DaggerGtfsGraphQLRequestContextTest {
   }
 
   @Test
+  void nearbyPlaceFinderIsMemoized() {
+    var first = context.nearbyPlaceFinder();
+    var second = context.nearbyPlaceFinder();
+
+    assertThat(second).isSameInstanceAs(first);
+    verify(factory, times(1)).linkingContextFactory();
+  }
+
+  @Test
   void nearbyStopFinderOnAGraphWithoutStreetsOnlyTouchesGraphAndTransitService() {
     when(factory.graph()).thenReturn(new Graph());
     when(factory.transitService()).thenReturn(mock(TransitService.class));
@@ -111,5 +122,18 @@ class DaggerGtfsGraphQLRequestContextTest {
     verify(factory).graph();
     verify(factory).transitService();
     verifyNoMoreInteractions(factory);
+  }
+
+  @Test
+  void nearbyStopFinderIsMemoized() {
+    when(factory.graph()).thenReturn(new Graph());
+    when(factory.transitService()).thenReturn(mock(TransitService.class));
+
+    var first = context.nearbyStopFinder();
+    var second = context.nearbyStopFinder();
+
+    assertThat(second).isSameInstanceAs(first);
+    verify(factory, times(1)).graph();
+    verify(factory, times(1)).transitService();
   }
 }
