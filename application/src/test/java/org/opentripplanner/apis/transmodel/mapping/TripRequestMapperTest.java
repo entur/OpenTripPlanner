@@ -27,6 +27,7 @@ import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.api.model.transit.DefaultFeedIdMapper;
 import org.opentripplanner.apis.support.InvalidInputException;
 import org.opentripplanner.apis.support.graphql.DataFetchingSupport;
+import org.opentripplanner.apis.transmodel.TestTransmodelRequestContext;
 import org.opentripplanner.apis.transmodel.TransmodelRequestContext;
 import org.opentripplanner.model.calendar.CalendarServiceData;
 import org.opentripplanner.model.plan.Itinerary;
@@ -134,7 +135,7 @@ public class TripRequestMapperTest implements PlanTestConstants {
     );
     var vertexLinker = VertexLinkerTestFactory.of(GRAPH);
 
-    context = new TransmodelRequestContext(
+    context = new TestTransmodelRequestContext(
       TestServerContext.createRoutingService(GRAPH, transitService, TRANSFER_REPOSITORY),
       transitService,
       null,
