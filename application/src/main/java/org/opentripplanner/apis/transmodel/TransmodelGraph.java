@@ -23,7 +23,6 @@ import org.opentripplanner.ext.actuator.MicrometerGraphQLInstrumentation;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.framework.application.OTPRequestTimeoutException;
 import org.opentripplanner.framework.concurrent.OtpRequestThreadFactory;
-import org.opentripplanner.standalone.api.OtpServerRequestContext;
 import org.opentripplanner.transit.model.framework.EntityNotFoundException;
 import org.opentripplanner.utils.lang.ObjectUtils;
 import org.slf4j.Logger;
@@ -47,7 +46,7 @@ class TransmodelGraph {
 
   Response executeGraphQL(
     String query,
-    OtpServerRequestContext serverContext,
+    TransmodelRequestContext transmodelRequestContext,
     Map<String, Object> variables,
     String operationName,
     int maxNumberOfResultFields,
@@ -56,10 +55,8 @@ class TransmodelGraph {
     try (var executionStrategy = new AbortOnUnprocessableRequestExecutionStrategy()) {
       variables = ObjectUtils.ifNotNull(variables, new HashMap<>());
       var instrumentation = createInstrumentation(maxNumberOfResultFields, tracingTags);
-      var transmodelRequestContext = createRequestContext(serverContext);
       var executionInput = createExecutionInput(
         query,
-        serverContext,
         variables,
         operationName,
         transmodelRequestContext
@@ -97,20 +94,8 @@ class TransmodelGraph {
     return instrumentation;
   }
 
-  private static TransmodelRequestContext createRequestContext(
-    OtpServerRequestContext serverContext
-  ) {
-    return new TransmodelRequestContext(
-      serverContext,
-      serverContext.routingService(),
-      serverContext.transitService(),
-      serverContext.empiricalDelayService()
-    );
-  }
-
   private static ExecutionInput createExecutionInput(
     String query,
-    OtpServerRequestContext serverContext,
     Map<String, Object> variables,
     String operationName,
     TransmodelRequestContext transmodelRequestContext
@@ -119,7 +104,6 @@ class TransmodelGraph {
       .query(query)
       .operationName(operationName)
       .context(transmodelRequestContext)
-      .root(serverContext)
       .variables(variables)
       .build();
   }
