@@ -202,6 +202,116 @@ class FuzzyTripMatchingTest implements RealtimeTestConstants {
   }
 
   /**
+   * A journey names the quay it ends at, so a twin service at a sibling quay is not a candidate.
+   */
+  @Test
+  void aSiblingQuayDoesNotMakeTheNamedQuayAmbiguous() {
+    var namedQuay = ENV_BUILDER.stopAtStation("B1", "Central");
+    var siblingQuay = ENV_BUILDER.stopAtStation("B2", "Central");
+
+    var tripToNamedQuay = TripInput.of("TripToNamedQuay")
+      .addStop(STOP_A, "0:00:10", "0:00:11")
+      .addStop(namedQuay, "0:00:20", "0:00:21");
+    var tripToSiblingQuay = TripInput.of("TripToSiblingQuay")
+      .addStop(STOP_A, "0:00:10", "0:00:11")
+      .addStop(siblingQuay, "0:00:20", "0:00:21");
+
+    var env = ENV_BUILDER.addTrip(tripToNamedQuay).addTrip(tripToSiblingQuay).build();
+    var siri = SiriTestHelper.ofFuzzyMatching(env);
+
+    var updates = siri
+      .etBuilder()
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_A)
+          .departAimedExpected("00:00:11", "00:00:15")
+          .call(namedQuay)
+          .arriveAimedExpected("00:00:20", "00:00:25")
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+    assertEquals(
+      "U | A 0:00:15 0:00:15 | B1 0:00:25 0:00:25",
+      env.tripData("TripToNamedQuay").showTimetable()
+    );
+    assertEquals(
+      "S | A 0:00:10 0:00:11 | B2 0:00:20 0:00:21",
+      env.tripData("TripToSiblingQuay").showTimetable()
+    );
+  }
+
+  /**
+   * A trip arriving at the same quay a service day later is not a candidate either.
+   */
+  @Test
+  void aTripArrivingADayLaterDoesNotMakeTheNamedQuayAmbiguous() {
+    var sameDayTrip = TripInput.of("SameDayTrip")
+      .addStop(STOP_A, "0:00:10", "0:00:11")
+      .addStop(STOP_B, "0:00:20", "0:00:21");
+    var nextDayTrip = TripInput.of("NextDayTrip")
+      .addStop(STOP_A, "0:00:10", "0:00:11")
+      .addStop(STOP_B, "24:00:20", "24:00:21");
+
+    var env = ENV_BUILDER.addTrip(sameDayTrip).addTrip(nextDayTrip).build();
+    var siri = SiriTestHelper.ofFuzzyMatching(env);
+
+    var updates = siri
+      .etBuilder()
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_A)
+          .departAimedExpected("00:00:11", "00:00:15")
+          .call(STOP_B)
+          .arriveAimedExpected("00:00:20", "00:00:25")
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+    assertEquals(
+      "U | A 0:00:15 0:00:15 | B 0:00:25 0:00:25",
+      env.tripData("SameDayTrip").showTimetable()
+    );
+    assertEquals(
+      "S | A 0:00:10 0:00:11 | B 0:00:20+1d 0:00:21+1d",
+      env.tripData("NextDayTrip").showTimetable()
+    );
+  }
+
+  /**
+   * When no trip ends at the quay a journey names, its sibling quays are searched.
+   */
+  @Test
+  void aJourneyNamingASiblingQuayStillMatches() {
+    var scheduledQuay = ENV_BUILDER.stopAtStation("B1", "Central");
+    var reportedQuay = ENV_BUILDER.stopAtStation("B2", "Central");
+
+    var trip = TripInput.of("TripToNamedQuay")
+      .addStop(STOP_A, "0:00:10", "0:00:11")
+      .addStop(scheduledQuay, "0:00:20", "0:00:21");
+
+    var env = ENV_BUILDER.addTrip(trip).build();
+    var siri = SiriTestHelper.ofFuzzyMatching(env);
+
+    var updates = siri
+      .etBuilder()
+      .withEstimatedCalls(builder ->
+        builder
+          .call(STOP_A)
+          .departAimedExpected("00:00:11", "00:00:15")
+          .call(reportedQuay)
+          .arriveAimedExpected("00:00:20", "00:00:25")
+      )
+      .buildEstimatedTimetableDeliveries();
+
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+    assertEquals(
+      "P U | A 0:00:15 0:00:15 | B2 0:00:25 0:00:25",
+      env.tripData("TripToNamedQuay").showTimetable()
+    );
+  }
+
+  /**
    * Re-processing a fuzzy-matched trip with a routability change should produce MODIFIED
    * on both the first and second update, because the pattern differs from the scheduled
    * pattern regardless of how many times the update is applied.

@@ -1,5 +1,6 @@
 package org.opentripplanner.ext.updater.trip.unified.siri;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -39,20 +40,29 @@ public class SiriTripMatcherCache {
 
   /**
    * Return the scheduled trips arriving at the given stop at the given arrival time, or an empty
-   * set if there are none.
+   * set if there are none. The set is a read-only view of this shared cache.
    */
   Set<Trip> tripsByLastStopArrival(StopLocation stop, int arrivalTimeSeconds) {
     ensureInitialized();
-    return lastStopArrivalCache.getOrDefault(createCacheKey(stop, arrivalTimeSeconds), Set.of());
+    return read(lastStopArrivalCache, createCacheKey(stop, arrivalTimeSeconds));
   }
 
   /**
    * Return the scheduled RAIL trips with the given NeTEx internal planning code, or an empty set
-   * if there are none.
+   * if there are none. The set is a read-only view of this shared cache.
    */
   Set<Trip> tripsByInternalPlanningCode(String internalPlanningCode) {
     ensureInitialized();
-    return internalPlanningCodeCache.getOrDefault(internalPlanningCode, Set.of());
+    return read(internalPlanningCodeCache, internalPlanningCode);
+  }
+
+  /**
+   * The entry under the given key as a read-only view: the cache is shared by every update task,
+   * so no caller may narrow the set it is handed in place.
+   */
+  private static Set<Trip> read(Map<String, Set<Trip>> cache, String key) {
+    var trips = cache.get(key);
+    return trips == null ? Set.of() : Collections.unmodifiableSet(trips);
   }
 
   private void ensureInitialized() {

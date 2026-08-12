@@ -51,6 +51,10 @@ import org.slf4j.LoggerFactory;
  * </ol>
  * A revision states those endpoints among its calls, a cancellation states them on their own; both
  * are matched the same way.
+ * <p>
+ * The candidate lookup honours what the journey states: only where no trip ends at the quay it
+ * names does the search widen, so a wider lookup can never make a stated quay ambiguous - see
+ * {@link #findCandidateTrips(StopLocation, ServiceTime)}.
  */
 public class SiriTripMatcher implements FuzzyTripMatcher {
 
@@ -260,31 +264,42 @@ public class SiriTripMatcher implements FuzzyTripMatcher {
     return stopResolver.resolveReferencedStop(stopReference);
   }
 
+  /**
+   * The trips a journey ending at the given quay at the given aimed time can be, searched in the
+   * order the journey's own statement deserves: the quay it names first, and a wider lookup only
+   * where that finds nothing. Merging the three would let a trip the journey did not describe
+   * compete with one it did, and turn a single match into a rejected ambiguity.
+   */
   private Set<Trip> findCandidateTrips(StopLocation lastStop, ServiceTime aimedArrivalTime) {
-    Set<Trip> trips = new HashSet<>();
-
-    // Try exact match
-    trips.addAll(cache.tripsByLastStopArrival(lastStop, aimedArrivalTime.secondsPastMidnight()));
-
-    // Try yesterday (for trips that span midnight): a trip timed past 24:00:00 on the previous
-    // service date arrives at this wall-clock time one service day later in its own numbering.
-    trips.addAll(
-      cache.tripsByLastStopArrival(lastStop, aimedArrivalTime.plusDays(1).secondsPastMidnight())
+    var atNamedQuay = cache.tripsByLastStopArrival(
+      lastStop,
+      aimedArrivalTime.secondsPastMidnight()
     );
-
-    // Try sibling stops (same parent station)
-    if (lastStop instanceof RegularStop regularStop && regularStop.isPartOfStation()) {
-      var allQuays = regularStop.getParentStation().getChildStops();
-      for (var quay : allQuays) {
-        // Skip the stop we already checked
-        if (quay.equals(lastStop)) {
-          continue;
-        }
-        trips.addAll(cache.tripsByLastStopArrival(quay, aimedArrivalTime.secondsPastMidnight()));
-      }
+    if (!atNamedQuay.isEmpty()) {
+      return atNamedQuay;
     }
 
-    return trips;
+    // A trip timed past 24:00:00 on the previous service date arrives at this wall-clock time one
+    // service day later in its own numbering.
+    var arrivingADayLater = cache.tripsByLastStopArrival(
+      lastStop,
+      aimedArrivalTime.plusDays(1).secondsPastMidnight()
+    );
+    if (!arrivingADayLater.isEmpty()) {
+      return arrivingADayLater;
+    }
+
+    // SIRI may report another platform of the station the trip actually ends at.
+    if (!(lastStop instanceof RegularStop namedQuay) || !namedQuay.isPartOfStation()) {
+      return Set.of();
+    }
+    Set<Trip> atSiblingQuays = new HashSet<>();
+    for (var quay : namedQuay.getParentStation().getChildStops()) {
+      atSiblingQuays.addAll(
+        cache.tripsByLastStopArrival(quay, aimedArrivalTime.secondsPastMidnight())
+      );
+    }
+    return atSiblingQuays;
   }
 
   private Set<Trip> filterByRoute(Set<Trip> trips, Route route) {
