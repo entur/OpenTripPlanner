@@ -34,8 +34,8 @@ public class DataOverlayContext implements ExtensionRequestContext {
 
   /**
    * Builds the {@link ExtensionRequestContext} list for a request, given the app-singleton
-   * {@link DataOverlayParameterBindings} (independently bindable, unlike the whole
-   * {@code OtpServerRequestContext} this replaces the need for at several router call sites).
+   * {@link DataOverlayParameterBindings} (independently bindable, so callers can pass it directly
+   * rather than reaching for a wider grab-bag context).
    */
   public static List<ExtensionRequestContext> listExtensionRequestContexts(
     RouteRequest request,
