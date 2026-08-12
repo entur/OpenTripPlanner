@@ -70,30 +70,31 @@ public final class NewStopPatternFactory {
       boolean isFirstStop = (i == 0);
       boolean isLastStop = (i == stopTimeUpdates.size() - 1);
 
-      // Get departure time first (needed for arrival fallback)
+      // Resolve the times of each end, falling back to the other end of the same call the way
+      // the legacy StopTimesMapper does: arrival ?? departure and departure ?? arrival
       ServiceTime departureTime = aimedTime(stopUpdate.departureUpdate());
-
-      // Get arrival time - use scheduled time if available, otherwise fallback to departure
-      // This matches StopTimesMapper: aimedArrivalTime ?? aimedDepartureTime
       ServiceTime arrivalTime = aimedTime(stopUpdate.arrivalUpdate());
-      if (arrivalTime != null) {
-        stopTime.setArrivalTime(arrivalTime.secondsPastMidnight());
-      } else if (departureTime != null) {
-        // Fallback: use departure time as arrival (matches old StopTimesMapper logic)
-        stopTime.setArrivalTime(departureTime.secondsPastMidnight());
-      } else if (!isFirstStop) {
-        // Last resort: propagate from previous stop
-        var prevStopTime = stopTimes.get(i - 1);
-        stopTime.setArrivalTime(prevStopTime.getDepartureTime());
+      if (arrivalTime == null) {
+        arrivalTime = departureTime;
+      }
+      if (departureTime == null) {
+        departureTime = arrivalTime;
       }
 
-      // Set departure time
-      if (departureTime != null) {
-        stopTime.setDepartureTime(departureTime.secondsPastMidnight());
-      } else if (stopTime.isArrivalTimeSet()) {
-        // Fallback: use arrival time as departure (matches old StopTimesMapper logic)
-        stopTime.setDepartureTime(stopTime.getArrivalTime());
+      // A call carrying no usable time on either end cannot take part in a timetable that has no
+      // scheduled fallback - a value taken from the neighbouring stops would be a fabrication
+      if (arrivalTime == null) {
+        LOG.debug("Call {} of new pattern carries no usable time on either end", i);
+        throw UpdateException.of(
+          trip.getId(),
+          isFirstStop
+            ? UpdateErrorType.INVALID_DEPARTURE_TIME
+            : UpdateErrorType.INVALID_ARRIVAL_TIME,
+          i
+        );
       }
+      stopTime.setArrivalTime(arrivalTime.secondsPastMidnight());
+      stopTime.setDepartureTime(departureTime.secondsPastMidnight());
 
       // Handle pickup/dropoff
       if (stopUpdate.pickup() != null) {
@@ -142,7 +143,7 @@ public final class NewStopPatternFactory {
    * The time to place a stop of a new pattern at, or {@code null} if the update does not carry
    * one. A new pattern has no scheduled timetable, so a delay-based update - which is only
    * meaningful relative to such a timetable - contributes nothing here and the caller falls back
-   * to the neighbouring times.
+   * to the other end of the same call, or rejects the update.
    */
   @Nullable
   private static ServiceTime aimedTime(@Nullable TimeUpdate update) {
