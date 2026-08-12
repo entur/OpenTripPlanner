@@ -257,6 +257,7 @@ class UpdatedTimesTest implements RealtimeTestConstants {
           .call(STOP_A)
           .departAimedActual("00:00:11", "00:00:15")
           .call(STOP_B)
+          .arriveAimedActual("00:00:20", "00:00:20")
           .departAimedActual("00:00:21", "00:00:25")
           .call(STOP_D)
           .arriveAimedActual("00:00:40", "00:00:48")

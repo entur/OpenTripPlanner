@@ -62,6 +62,7 @@ class ExtraJourneyStopCountTest implements RealtimeTestConstants {
           .departAimedExpected("00:01", "00:06")
           .call(STOP_B)
           .arriveAimedExpected("00:03", "00:08")
+          .departAimedExpected("00:03", "00:08")
           .call(STOP_C)
           .arriveAimedExpected("00:05", "00:10")
       )

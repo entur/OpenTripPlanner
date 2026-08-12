@@ -113,6 +113,7 @@ class ArrivalStatusTest implements RealtimeTestConstants {
       .withEstimatedCalls(builder ->
         builder
           .call(STOP_B)
+          .arriveAimedExpected("00:20", "00:20")
           .departAimedExpected("00:20", "00:20")
           .withArrivalStatus(CallStatusEnumeration.ARRIVED)
           .call(STOP_C)

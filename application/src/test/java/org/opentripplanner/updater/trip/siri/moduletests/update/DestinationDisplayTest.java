@@ -39,12 +39,14 @@ class DestinationDisplayTest implements RealtimeTestConstants {
           .departAimedActual("00:10", "00:10")
           .addDestinationDisplay("Updated A")
           .call(STOP_B)
+          .arriveAimedActual("00:20", "00:20")
           .departAimedActual("00:20", "00:20")
       )
       .withEstimatedCalls(builder ->
         builder
           .call(STOP_C)
           .addDestinationDisplay("Updated C")
+          .arriveAimedExpected("00:30", "00:30")
           .departAimedExpected("00:30", "00:30")
           .call(STOP_D)
           .arriveAimedExpected("00:40", "00:40")

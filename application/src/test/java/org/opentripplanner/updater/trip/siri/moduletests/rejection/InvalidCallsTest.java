@@ -45,6 +45,7 @@ class InvalidCallsTest implements RealtimeTestConstants {
           .call(STOP_A)
           .departAimedExpected("00:00:10", "00:00:11")
           .call(STOP_B)
+          .arriveAimedExpected("00:00:20", "00:00:24")
           .departAimedExpected("00:00:21", "00:00:25")
       )
       .buildEstimatedTimetableDeliveries();
@@ -68,10 +69,13 @@ class InvalidCallsTest implements RealtimeTestConstants {
           .call(STOP_A)
           .departAimedExpected("00:00:10", "00:00:11")
           .call(STOP_B)
+          .arriveAimedExpected("00:00:20", "00:00:24")
           .departAimedExpected("00:00:21", "00:00:25")
           .call(STOP_C)
+          .arriveAimedExpected("00:00:40", "00:00:40")
           .departAimedExpected("00:00:40", "00:00:41")
           .call(STOP_D)
+          .arriveAimedExpected("00:00:50", "00:00:50")
           .departAimedExpected("00:00:50", "00:00:51")
       )
       .buildEstimatedTimetableDeliveries();
@@ -95,8 +99,10 @@ class InvalidCallsTest implements RealtimeTestConstants {
           .call(STOP_A)
           .departAimedExpected("00:00:10", "00:00:11")
           .call(STOP_D)
+          .arriveAimedExpected("00:00:20", "00:00:24")
           .departAimedExpected("00:00:21", "00:00:25")
           .call(STOP_C)
+          .arriveAimedExpected("00:00:40", "00:00:40")
           .departAimedExpected("00:00:40", "00:00:41")
       )
       .buildEstimatedTimetableDeliveries();
@@ -120,8 +126,10 @@ class InvalidCallsTest implements RealtimeTestConstants {
           .call(STOP_A_ID)
           .departAimedExpected("00:00:10", "00:00:11")
           .call("Unknown stop")
+          .arriveAimedExpected("00:00:20", "00:00:24")
           .departAimedExpected("00:00:21", "00:00:25")
           .call(STOP_C_ID)
+          .arriveAimedExpected("00:00:40", "00:00:40")
           .departAimedExpected("00:00:40", "00:00:41")
       )
       .buildEstimatedTimetableDeliveries();
