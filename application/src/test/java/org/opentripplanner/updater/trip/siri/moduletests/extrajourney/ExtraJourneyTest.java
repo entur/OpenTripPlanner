@@ -1165,6 +1165,20 @@ class ExtraJourneyTest implements RealtimeTestConstants {
     assertThat(env.raptorData().summarizePatterns()).containsExactly("F:Pattern1[S]");
   }
 
+  /** SIRI-ET leaves the calls of an extra journey unmarked as timepoints. */
+  @Test
+  void extraJourneyCallsAreNotTimepoints() {
+    var env = ENV_BUILDER.addTrip(TRIP_1_INPUT).build();
+    var siri = SiriTestHelper.of(env);
+
+    var updates = createValidAddedJourney(siri).buildEstimatedTimetableDeliveries();
+    assertSuccess(siri.applyEstimatedTimetable(updates));
+
+    var tripTimes = env.tripData(ADDED_TRIP_ID).tripTimes();
+    assertFalse(tripTimes.isTimepoint(0));
+    assertFalse(tripTimes.isTimepoint(1));
+  }
+
   private SiriEtBuilder createValidAddedJourney(SiriTestHelper siri) {
     return siri
       .etBuilder()

@@ -174,7 +174,7 @@ public final class TripModification extends ExistingTripChange {
     var stopTimesAndPattern = NewStopPatternFactory.buildNewStopPattern(
       trip,
       filteredUpdates.updates(),
-      formatPolicy().pickDrop()
+      formatPolicy()
     );
 
     // Create scheduled trip times for the new pattern (used as baseline for real-time)

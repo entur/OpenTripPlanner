@@ -1,6 +1,7 @@
 package org.opentripplanner.ext.updater.trip.unified.model.change;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -13,11 +14,13 @@ import org.opentripplanner.ext.updater.trip.unified.model.ServiceTime;
 import org.opentripplanner.ext.updater.trip.unified.model.command.ParsedStopTimeUpdate;
 import org.opentripplanner.ext.updater.trip.unified.model.command.StopReference;
 import org.opentripplanner.ext.updater.trip.unified.model.command.TimeUpdate;
-import org.opentripplanner.ext.updater.trip.unified.policy.PickDropPolicy;
+import org.opentripplanner.ext.updater.trip.unified.policy.FormatPolicy;
 import org.opentripplanner.transit.model.TransitTestEnvironment;
 import org.opentripplanner.transit.model.TripInput;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.timetable.Trip;
+import org.opentripplanner.updater.trip.gtfs.interpolation.BackwardsDelayPropagationType;
+import org.opentripplanner.updater.trip.gtfs.interpolation.ForwardsDelayPropagationType;
 
 class NewStopPatternFactoryTest {
 
@@ -85,7 +88,7 @@ class NewStopPatternFactoryTest {
     var stopTimesAndPattern = NewStopPatternFactory.buildNewStopPattern(
       trip,
       stopUpdates,
-      PickDropPolicy.ROUTABILITY_CHANGE_ONLY
+      FormatPolicy.siri()
     );
 
     var stopTimes = stopTimesAndPattern.stopTimes();
@@ -155,7 +158,7 @@ class NewStopPatternFactoryTest {
     var stopTimesAndPattern = NewStopPatternFactory.buildNewStopPattern(
       trip,
       stopUpdates,
-      PickDropPolicy.ROUTABILITY_CHANGE_ONLY
+      FormatPolicy.siri()
     );
 
     var stopTimes = stopTimesAndPattern.stopTimes();
@@ -177,6 +180,48 @@ class NewStopPatternFactoryTest {
       arr2Seconds,
       lastStop.getDepartureTime(),
       "Last stop departure should equal arrival"
+    );
+  }
+
+  /** GTFS-RT marks the calls of a new pattern as timepoints, SIRI-ET leaves them unmarked. */
+  @Test
+  void timepointFollowsTheFormat() {
+    var stopUpdates = List.of(callAt(stopA, 12 * 3600), callAt(stopB, 12 * 3600 + 10 * 60));
+
+    var gtfsRt = NewStopPatternFactory.buildNewStopPattern(
+      trip,
+      stopUpdates,
+      FormatPolicy.gtfsRt(ForwardsDelayPropagationType.NONE, BackwardsDelayPropagationType.NONE)
+    );
+    assertTrue(
+      gtfsRt
+        .stopTimes()
+        .stream()
+        .allMatch(stopTime -> stopTime.getTimepoint() == 1)
+    );
+
+    var siri = NewStopPatternFactory.buildNewStopPattern(trip, stopUpdates, FormatPolicy.siri());
+    assertTrue(
+      siri
+        .stopTimes()
+        .stream()
+        .noneMatch(stopTime -> stopTime.getTimepoint() == 1)
+    );
+  }
+
+  private ResolvedStopTimeUpdate callAt(RegularStop stop, int departureSeconds) {
+    return ResolvedStopTimeUpdate.of(
+      ParsedStopTimeUpdate.builder(StopReference.ofStopId(stop.getId()))
+        .withDepartureUpdate(
+          TimeUpdate.ofAbsolute(
+            ServiceTime.ofSecondsPastMidnight(departureSeconds),
+            ServiceTime.ofSecondsPastMidnight(departureSeconds)
+          )
+        )
+        .build(),
+      SERVICE_DATE,
+      ZONE_ID,
+      ResolvedStopReference.ofReferencedStop(stop)
     );
   }
 }

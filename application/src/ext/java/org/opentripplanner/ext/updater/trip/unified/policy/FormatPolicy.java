@@ -19,7 +19,8 @@ public record FormatPolicy(
   ScheduledDataPolicy scheduledData,
   UnknownStopPolicy unknownStop,
   ImplicitCancellationPolicy implicitCancellation,
-  RepeatedAdditionPolicy repeatedAddition
+  RepeatedAdditionPolicy repeatedAddition,
+  TimepointPolicy timepoint
 ) {
   /** The SIRI-ET format policy. */
   public static FormatPolicy siri() {
@@ -36,7 +37,8 @@ public record FormatPolicy(
       ScheduledDataPolicy.INCLUDE,
       UnknownStopPolicy.FAIL,
       ImplicitCancellationPolicy.NOTHING_ROUTABLE,
-      RepeatedAdditionPolicy.REVISE_IN_PLACE
+      RepeatedAdditionPolicy.REVISE_IN_PLACE,
+      TimepointPolicy.UNMARKED
     );
   }
 
@@ -55,7 +57,8 @@ public record FormatPolicy(
       ScheduledDataPolicy.EXCLUDE,
       UnknownStopPolicy.IGNORE,
       ImplicitCancellationPolicy.NEVER,
-      RepeatedAdditionPolicy.REBUILD_FROM_CALLS
+      RepeatedAdditionPolicy.REBUILD_FROM_CALLS,
+      TimepointPolicy.EXACT_TIMES
     );
   }
 
@@ -83,6 +86,7 @@ public record FormatPolicy(
     private UnknownStopPolicy unknownStop = UnknownStopPolicy.IGNORE;
     private ImplicitCancellationPolicy implicitCancellation = ImplicitCancellationPolicy.NEVER;
     private RepeatedAdditionPolicy repeatedAddition = RepeatedAdditionPolicy.REBUILD_FROM_CALLS;
+    private TimepointPolicy timepoint = TimepointPolicy.EXACT_TIMES;
 
     public Builder withStopMatching(StopMatchingPolicy stopMatching) {
       this.stopMatching = stopMatching;
@@ -115,7 +119,8 @@ public record FormatPolicy(
         scheduledData,
         unknownStop,
         implicitCancellation,
-        repeatedAddition
+        repeatedAddition,
+        timepoint
       );
     }
   }

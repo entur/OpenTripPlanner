@@ -6,7 +6,7 @@ import javax.annotation.Nullable;
 import org.opentripplanner.ext.updater.trip.unified.model.ServiceTime;
 import org.opentripplanner.ext.updater.trip.unified.model.command.AbsoluteTimeUpdate;
 import org.opentripplanner.ext.updater.trip.unified.model.command.TimeUpdate;
-import org.opentripplanner.ext.updater.trip.unified.policy.PickDropPolicy;
+import org.opentripplanner.ext.updater.trip.unified.policy.FormatPolicy;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.network.StopPattern;
@@ -36,14 +36,14 @@ public final class NewStopPatternFactory {
    *
    * @param trip The trip being modified or created
    * @param stopTimeUpdates The resolved stop time updates (with pre-resolved stops)
-   * @param pickDrop Policy deciding what a cancelled call does to boarding at its stop
+   * @param formatPolicy The policies of the format the message arrived in
    * @return stop times and pattern
    * @throws UpdateException if stops cannot be resolved
    */
   public static StopTimesAndPattern buildNewStopPattern(
     Trip trip,
     List<ResolvedStopTimeUpdate> stopTimeUpdates,
-    PickDropPolicy pickDrop
+    FormatPolicy formatPolicy
   ) {
     var stopTimes = new ArrayList<StopTime>();
 
@@ -65,6 +65,11 @@ public final class NewStopPatternFactory {
       stopTime.setStop(stop);
       var stopSequence = stopUpdate.stopSequence();
       stopTime.setStopSequence(stopSequence != null ? stopSequence.value() : i);
+
+      // A format whose calls carry exact times marks them as timepoints
+      if (formatPolicy.timepoint().callsAreTimepoints()) {
+        stopTime.setTimepoint(1);
+      }
 
       // Resolve times
       boolean isFirstStop = (i == 0);
@@ -120,13 +125,17 @@ public final class NewStopPatternFactory {
       // itself reports - takes the place of the scheduled one, the way the legacy SIRI
       // StopTimesMapper reconciles it.
       if (stopUpdate.isPickupCancelled()) {
-        var cancelledPickup = pickDrop.effectiveWhenCancelled(stopTime.getPickupType());
+        var cancelledPickup = formatPolicy
+          .pickDrop()
+          .effectiveWhenCancelled(stopTime.getPickupType());
         if (cancelledPickup != null) {
           stopTime.setPickupType(cancelledPickup);
         }
       }
       if (stopUpdate.isDropoffCancelled()) {
-        var cancelledDropoff = pickDrop.effectiveWhenCancelled(stopTime.getDropOffType());
+        var cancelledDropoff = formatPolicy
+          .pickDrop()
+          .effectiveWhenCancelled(stopTime.getDropOffType());
         if (cancelledDropoff != null) {
           stopTime.setDropOffType(cancelledDropoff);
         }

@@ -72,6 +72,24 @@ class AddedTest implements RealtimeTestConstants {
     assertAddedTrip(ADDED_TRIP_ID, env);
   }
 
+  /** Every call of an added trip carries an exact time, so it is a timepoint. */
+  @Test
+  void addedTripCallsAreTimepoints() {
+    var tripUpdate = gtfsRt
+      .tripUpdate(ADDED_TRIP_ID, ADDED)
+      .addStopTime(STOP_A_ID, "00:30")
+      .addStopTime(STOP_B_ID, "00:40")
+      .addStopTime(STOP_C_ID, "00:55")
+      .build();
+
+    assertSuccess(gtfsRt.applyTripUpdate(tripUpdate));
+
+    var tripTimes = env.tripData(ADDED_TRIP_ID).tripTimes();
+    assertTrue(tripTimes.isTimepoint(0));
+    assertTrue(tripTimes.isTimepoint(1));
+    assertTrue(tripTimes.isTimepoint(2));
+  }
+
   @Test
   void addedTripWithNewRoute() {
     var tripUpdate = gtfsRt

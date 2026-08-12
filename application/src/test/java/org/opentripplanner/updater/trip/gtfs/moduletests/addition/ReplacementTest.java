@@ -160,6 +160,40 @@ public class ReplacementTest implements RealtimeTestConstants {
     assertEquals(List.of(STOP_A, STOP_C), env.tripData(TRIP_1_ID).tripPattern().getStops());
   }
 
+  /** Every call of a replacement trip carries an exact time, so it is a timepoint. */
+  @Test
+  void replacementCallsAreTimepoints() {
+    var builder = TransitTestEnvironment.of();
+    var STOP_A = builder.stop(STOP_A_ID);
+    var STOP_B = builder.stop(STOP_B_ID);
+    builder.stop(STOP_C_ID);
+    var env = builder
+      .addTrip(
+        TripInput.of(TRIP_1_ID).addStop(STOP_A, "8:30:00", "8:30:00").addStop(STOP_B, "8:40:00")
+      )
+      .build();
+    var rt = GtfsRtTestHelper.of(env);
+
+    // the scheduled trip has no timepoints, so the flag can only come from the real-time path
+    var scheduledTripTimes = env.tripData(TRIP_1_ID).scheduledTripTimes();
+    assertNotNull(scheduledTripTimes);
+    assertFalse(scheduledTripTimes.isTimepoint(0));
+
+    var tripUpdate = rt
+      .tripUpdate(TRIP_1_ID, REPLACEMENT)
+      .addStopTime(STOP_A_ID, "00:30")
+      .addStopTime(STOP_B_ID, "00:45")
+      .addStopTime(STOP_C_ID, "01:00")
+      .build();
+
+    assertSuccess(rt.applyTripUpdate(tripUpdate));
+
+    var tripTimes = env.tripData(TRIP_1_ID).tripTimes();
+    assertTrue(tripTimes.isTimepoint(0));
+    assertTrue(tripTimes.isTimepoint(1));
+    assertTrue(tripTimes.isTimepoint(2));
+  }
+
   /** A replacement with fewer than two calls at known stops cannot reroute the trip. */
   @Test
   void replacementWithTooFewKnownStops() {
