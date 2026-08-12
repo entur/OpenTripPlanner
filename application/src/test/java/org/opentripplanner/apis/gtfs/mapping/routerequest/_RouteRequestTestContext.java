@@ -12,7 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner._support.time.ZoneIds;
-import org.opentripplanner.apis.gtfs.GraphQLRequestContext;
+import org.opentripplanner.apis.gtfs.GtfsGraphQLRequestContext;
 import org.opentripplanner.apis.gtfs.SchemaFactory;
 import org.opentripplanner.apis.gtfs.TestRoutingService;
 import org.opentripplanner.apis.support.graphql.DataFetchingSupport;
@@ -53,7 +53,7 @@ class _RouteRequestTestContext {
     )
   );
 
-  private final GraphQLRequestContext context;
+  private final GtfsGraphQLRequestContext context;
   private final Locale locale;
 
   public _RouteRequestTestContext(Locale locale) {
@@ -76,7 +76,7 @@ class _RouteRequestTestContext {
         return Optional.ofNullable(group).map(locationsGroup -> locationsGroup.getCoordinate());
       }
     );
-    this.context = new GraphQLRequestContext(
+    this.context = new GtfsGraphQLRequestContext(
       new TestRoutingService(List.of()),
       transitService,
       new TransitAlertServiceImpl(),
@@ -105,7 +105,7 @@ class _RouteRequestTestContext {
     return new _RouteRequestTestContext(locale);
   }
 
-  public GraphQLRequestContext context() {
+  public GtfsGraphQLRequestContext context() {
     return context;
   }
 
