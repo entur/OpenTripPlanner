@@ -1,16 +1,11 @@
 package org.opentripplanner.standalone.configure;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoInteractions;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
-import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.street.graph.Graph;
-import org.opentripplanner.transit.service.TransitService;
+import org.opentripplanner.transit.service.DefaultTransitService;
+import org.opentripplanner.transit.service.TransitRepository;
 
 /**
  * Verifies that {@link DaggerGtfsGraphQLRequestContext} — the production {@link
@@ -23,84 +18,74 @@ import org.opentripplanner.transit.service.TransitService;
  */
 class DaggerGtfsGraphQLRequestContextTest {
 
-  private final RequestScopedFactory factory = mock(RequestScopedFactory.class);
+  private final RecordingRequestScopedFactory factory = new RecordingRequestScopedFactory();
   private final DaggerGtfsGraphQLRequestContext context = new DaggerGtfsGraphQLRequestContext(
-    factory
+    factory.factory()
   );
 
   @Test
   void constructingTheContextTouchesNothing() {
-    verifyNoInteractions(factory);
+    assertThat(factory.callCounts()).isEmpty();
   }
 
   @Test
   void routingService() {
     context.routingService();
-    verify(factory).routingService();
-    verifyNoMoreInteractions(factory);
+    assertThat(factory.callCounts()).containsExactly("routingService", 1);
   }
 
   @Test
   void transitService() {
     context.transitService();
-    verify(factory).transitService();
-    verifyNoMoreInteractions(factory);
+    assertThat(factory.callCounts()).containsExactly("transitService", 1);
   }
 
   @Test
   void transferService() {
     context.transferService();
-    verify(factory).transferService();
-    verifyNoMoreInteractions(factory);
+    assertThat(factory.callCounts()).containsExactly("transferService", 1);
   }
 
   @Test
   void fareService() {
     context.fareService();
-    verify(factory).fareService();
-    verifyNoMoreInteractions(factory);
+    assertThat(factory.callCounts()).containsExactly("fareService", 1);
   }
 
   @Test
   void vehicleRentalService() {
     context.vehicleRentalService();
-    verify(factory).vehicleRentalService();
-    verifyNoMoreInteractions(factory);
+    assertThat(factory.callCounts()).containsExactly("vehicleRentalService", 1);
   }
 
   @Test
   void vehicleParkingService() {
     context.vehicleParkingService();
-    verify(factory).vehicleParkingService();
-    verifyNoMoreInteractions(factory);
+    assertThat(factory.callCounts()).containsExactly("vehicleParkingService", 1);
   }
 
   @Test
   void realTimeVehicleService() {
     context.realTimeVehicleService();
-    verify(factory).realtimeVehicleService();
-    verifyNoMoreInteractions(factory);
+    assertThat(factory.callCounts()).containsExactly("realtimeVehicleService", 1);
   }
 
   @Test
   void schema() {
     context.schema();
-    verify(factory).gtfsSchema();
-    verifyNoMoreInteractions(factory);
+    assertThat(factory.callCounts()).containsExactly("gtfsSchema", 1);
   }
 
   @Test
   void defaultRouteRequest() {
     context.defaultRouteRequest();
-    verify(factory).defaultRouteRequest();
-    verifyNoMoreInteractions(factory);
+    assertThat(factory.callCounts()).containsExactly("defaultRouteRequest", 1);
   }
 
   @Test
   void nearbyPlaceFinderOnlyTouchesLinkingContextFactory() {
     context.nearbyPlaceFinder();
-    verify(factory).linkingContextFactory();
-    verifyNoMoreInteractions(factory);
+    assertThat(factory.callCounts()).containsExactly("linkingContextFactory", 1);
   }
 
   @Test
@@ -109,31 +94,29 @@ class DaggerGtfsGraphQLRequestContextTest {
     var second = context.nearbyPlaceFinder();
 
     assertThat(second).isSameInstanceAs(first);
-    verify(factory, times(1)).linkingContextFactory();
+    assertThat(factory.callCount("linkingContextFactory")).isEqualTo(1);
   }
 
   @Test
   void nearbyStopFinderOnAGraphWithoutStreetsOnlyTouchesGraphAndTransitService() {
-    when(factory.graph()).thenReturn(new Graph());
-    when(factory.transitService()).thenReturn(mock(TransitService.class));
+    factory.stub("graph", new Graph());
+    factory.stub("transitService", new DefaultTransitService(new TransitRepository()));
 
     context.nearbyStopFinder();
 
-    verify(factory).graph();
-    verify(factory).transitService();
-    verifyNoMoreInteractions(factory);
+    assertThat(factory.callCounts()).containsExactly("graph", 1, "transitService", 1);
   }
 
   @Test
   void nearbyStopFinderIsMemoized() {
-    when(factory.graph()).thenReturn(new Graph());
-    when(factory.transitService()).thenReturn(mock(TransitService.class));
+    factory.stub("graph", new Graph());
+    factory.stub("transitService", new DefaultTransitService(new TransitRepository()));
 
     var first = context.nearbyStopFinder();
     var second = context.nearbyStopFinder();
 
     assertThat(second).isSameInstanceAs(first);
-    verify(factory, times(1)).graph();
-    verify(factory, times(1)).transitService();
+    assertThat(factory.callCount("graph")).isEqualTo(1);
+    assertThat(factory.callCount("transitService")).isEqualTo(1);
   }
 }
