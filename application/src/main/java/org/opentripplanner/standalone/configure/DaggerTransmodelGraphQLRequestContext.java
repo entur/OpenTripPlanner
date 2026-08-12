@@ -21,7 +21,7 @@ import org.opentripplanner.transfer.regular.RegularTransferService;
 import org.opentripplanner.transit.service.TransitService;
 
 /**
- * Production {@link TransmodelRequestContext}: every accessor delegates to the enclosing
+ * Production {@link TransmodelGraphQLRequestContext}: every accessor delegates to the enclosing
  * {@link RequestScopedFactory}.
  */
 final class DaggerTransmodelGraphQLRequestContext implements TransmodelGraphQLRequestContext {
