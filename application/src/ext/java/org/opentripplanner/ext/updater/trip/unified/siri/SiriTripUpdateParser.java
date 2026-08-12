@@ -230,10 +230,18 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
   ) {
     var builder = TripReference.builder().withStartDate(psd.serviceDate());
 
-    var tripId = resolveTripId(journey);
-    if (tripId != null) {
-      builder.withTripId(tripId);
-    }
+    // A journey may name its trip in three ways, and each is kept apart from the others here so
+    // that they can be followed in the order the profile ranks them: the framed reference states
+    // the service journey id outright, the dated reference names the journey of a day, and the
+    // journey code is the id an earlier message added the journey under.
+    journey
+      .vehicleJourneyIdAndServiceDate()
+      .map(VehicleJourneyIdAndServiceDate::vehicleJourneyId)
+      .ifPresent(id -> builder.withTripId(createId(id)));
+
+    journey
+      .code()
+      .ifPresent(code -> builder.withPreviouslyAddedTripId(createId(code.asServiceJourneyId())));
 
     // For ADD_NEW_TRIP, the tripOnServiceDateId is the ID of the NEW trip being created,
     // not an existing TripOnServiceDate to resolve. Don't set it in the reference.
@@ -259,28 +267,6 @@ public class SiriTripUpdateParser implements TripUpdateParser<EstimatedVehicleJo
     }
 
     return builder.build();
-  }
-
-  /**
-   * Resolve the Trip ID (service journey id) from the EstimatedVehicleJourney.
-   * This only returns an ID when it's actually a Trip ID, not a TripOnServiceDate ID.
-   */
-  @Nullable
-  private FeedScopedId resolveTripId(EstimatedVehicleJourneyWrapper journey) {
-    // The framed vehicle journey id is the actual Trip ID
-    var vehicleJourneyId = journey
-      .vehicleJourneyIdAndServiceDate()
-      .map(VehicleJourneyIdAndServiceDate::vehicleJourneyId)
-      .orElse(null);
-    if (vehicleJourneyId != null) {
-      return createId(vehicleJourneyId);
-    }
-
-    // EstimatedVehicleJourneyCode contains an encoded Trip ID
-    return journey
-      .code()
-      .map(code -> createId(code.asServiceJourneyId()))
-      .orElse(null);
   }
 
   private List<ParsedStopTimeUpdate> parseStopTimeUpdates(

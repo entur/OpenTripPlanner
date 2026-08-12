@@ -14,7 +14,10 @@ import org.opentripplanner.transit.model.timetable.Direction;
 public final class TripReference {
 
   @Nullable
-  private final FeedScopedId tripId;
+  private final FeedScopedId statedTripId;
+
+  @Nullable
+  private final FeedScopedId previouslyAddedTripId;
 
   @Nullable
   private final FeedScopedId tripOnServiceDateId;
@@ -35,7 +38,9 @@ public final class TripReference {
   private final String internalPlanningCode;
 
   /**
-   * @param tripId The trip ID (may be null if fuzzy matching by route/time is used)
+   * @param statedTripId The trip ID the feed states outright (may be null if fuzzy matching by
+   *                     route/time is used)
+   * @param previouslyAddedTripId The ID an earlier real-time message added the trip under
    * @param tripOnServiceDateId The TripOnServiceDate ID (dated service journey ID)
    * @param routeId The route ID (used for fuzzy matching when trip ID is ambiguous)
    * @param startTime The scheduled start time of the trip, relative to the service date's midnight
@@ -43,8 +48,9 @@ public final class TripReference {
    * @param direction The direction of travel (inbound/outbound)
    * @param internalPlanningCode The NeTEx internal planning code (from VehicleRef for RAIL trips)
    */
-  public TripReference(
-    @Nullable FeedScopedId tripId,
+  private TripReference(
+    @Nullable FeedScopedId statedTripId,
+    @Nullable FeedScopedId previouslyAddedTripId,
     @Nullable FeedScopedId tripOnServiceDateId,
     @Nullable FeedScopedId routeId,
     @Nullable ServiceTime startTime,
@@ -52,7 +58,8 @@ public final class TripReference {
     @Nullable Direction direction,
     @Nullable String internalPlanningCode
   ) {
-    this.tripId = tripId;
+    this.statedTripId = statedTripId;
+    this.previouslyAddedTripId = previouslyAddedTripId;
     this.tripOnServiceDateId = tripOnServiceDateId;
     this.routeId = routeId;
     this.startTime = startTime;
@@ -65,7 +72,7 @@ public final class TripReference {
    * Create a trip reference with just a trip ID.
    */
   public static TripReference ofTripId(FeedScopedId tripId) {
-    return new TripReference(tripId, null, null, null, null, null, null);
+    return new TripReference(tripId, null, null, null, null, null, null, null);
   }
 
   /**
@@ -75,9 +82,32 @@ public final class TripReference {
     return new Builder();
   }
 
+  /**
+   * The trip id the feed states outright: the SIRI FramedVehicleJourneyRef or the GTFS-RT
+   * {@code trip_id}. It names a trip the schedule is expected to know.
+   */
+  @Nullable
+  public FeedScopedId statedTripId() {
+    return statedTripId;
+  }
+
+  /**
+   * The trip id an earlier real-time message added this journey under, taken from the SIRI
+   * EstimatedVehicleJourneyCode. It names no scheduled trip, so it is only worth following once
+   * the ids the schedule knows have come up empty.
+   */
+  @Nullable
+  public FeedScopedId previouslyAddedTripId() {
+    return previouslyAddedTripId;
+  }
+
+  /**
+   * The trip id this reference names: the stated one, or the id of a previously added journey when
+   * the feed states none.
+   */
   @Nullable
   public FeedScopedId tripId() {
-    return tripId;
+    return statedTripId != null ? statedTripId : previouslyAddedTripId;
   }
 
   @Nullable
@@ -109,7 +139,14 @@ public final class TripReference {
    * Returns true if this reference has a trip ID.
    */
   public boolean hasTripId() {
-    return tripId != null;
+    return tripId() != null;
+  }
+
+  /**
+   * Returns true if this reference has the trip ID of a previously added journey.
+   */
+  public boolean hasPreviouslyAddedTripId() {
+    return previouslyAddedTripId != null;
   }
 
   /**
@@ -174,7 +211,8 @@ public final class TripReference {
     }
     TripReference that = (TripReference) o;
     return (
-      Objects.equals(tripId, that.tripId) &&
+      Objects.equals(statedTripId, that.statedTripId) &&
+      Objects.equals(previouslyAddedTripId, that.previouslyAddedTripId) &&
       Objects.equals(tripOnServiceDateId, that.tripOnServiceDateId) &&
       Objects.equals(routeId, that.routeId) &&
       Objects.equals(startTime, that.startTime) &&
@@ -187,7 +225,8 @@ public final class TripReference {
   @Override
   public int hashCode() {
     return Objects.hash(
-      tripId,
+      statedTripId,
+      previouslyAddedTripId,
       tripOnServiceDateId,
       routeId,
       startTime,
@@ -201,8 +240,10 @@ public final class TripReference {
   public String toString() {
     return (
       "TripReference{" +
-      "tripId=" +
-      tripId +
+      "statedTripId=" +
+      statedTripId +
+      ", previouslyAddedTripId=" +
+      previouslyAddedTripId +
       ", tripOnServiceDateId=" +
       tripOnServiceDateId +
       ", routeId=" +
@@ -225,7 +266,8 @@ public final class TripReference {
    */
   public static class Builder {
 
-    private FeedScopedId tripId;
+    private FeedScopedId statedTripId;
+    private FeedScopedId previouslyAddedTripId;
     private FeedScopedId tripOnServiceDateId;
     private FeedScopedId routeId;
     private ServiceTime startTime;
@@ -234,7 +276,12 @@ public final class TripReference {
     private String internalPlanningCode;
 
     public Builder withTripId(FeedScopedId tripId) {
-      this.tripId = tripId;
+      this.statedTripId = tripId;
+      return this;
+    }
+
+    public Builder withPreviouslyAddedTripId(FeedScopedId previouslyAddedTripId) {
+      this.previouslyAddedTripId = previouslyAddedTripId;
       return this;
     }
 
@@ -270,7 +317,8 @@ public final class TripReference {
 
     public TripReference build() {
       return new TripReference(
-        tripId,
+        statedTripId,
+        previouslyAddedTripId,
         tripOnServiceDateId,
         routeId,
         startTime,
