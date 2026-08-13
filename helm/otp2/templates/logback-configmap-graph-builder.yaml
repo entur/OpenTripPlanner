@@ -1,0 +1,12 @@
+{{- if or (.Values.cronjobRedeployGraphBuilder.enabled) (.Values.cronjobRedeployGraphBuilder.releaseCandidateGraphBuilderEnabled) }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otp2-logback-config-graph-builder{{- if .Values.cronjobRedeployGraphBuilder.releaseCandidateGraphBuilderEnabled }}-candidate{{end}}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels" . | indent 4 }}
+data:
+  logback.xml: |-{{ range .Files.Lines .Values.configMap.logbackConfig}}
+    {{ . }}{{ end }}
+  {{- end }}
