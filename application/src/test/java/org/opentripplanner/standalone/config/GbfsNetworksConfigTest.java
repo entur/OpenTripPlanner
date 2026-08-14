@@ -1,6 +1,9 @@
 package org.opentripplanner.standalone.config;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.standalone.config.framework.json.JsonSupport.newNodeAdapterForTest;
 
 import org.junit.jupiter.api.Test;
@@ -13,7 +16,7 @@ class GbfsNetworksConfigTest {
     var subject = map("{}");
 
     assertThat(subject.byNetwork()).isEmpty();
-    assertThat(subject.includeUnlistedNetworks()).isFalse();
+    assertFalse(subject.includeUnlistedNetworks());
     assertThat(subject.forNetwork("tier")).isEmpty();
   }
 
@@ -28,7 +31,7 @@ class GbfsNetworksConfigTest {
             "requireDropOffInsideBusinessArea" : false,
             "allowKeepingVehicleAtDestination" : true
           },
-          "networks" : [ { "network" : "tier", "geofencingZones" : "permanent" } ]
+          "networks" : [ { "network" : "tier", "geofencingZones" : "realtime" } ]
         }
       }
       """
@@ -36,9 +39,9 @@ class GbfsNetworksConfigTest {
 
     var tier = subject.forNetwork("tier").orElseThrow();
 
-    assertThat(tier.geofencingZones()).isEqualTo(GeofencingZonePhase.PERMANENT);
-    assertThat(tier.requireDropOffInsideBusinessArea()).isFalse();
-    assertThat(tier.allowKeepingVehicleAtDestination()).isTrue();
+    assertEquals(GeofencingZonePhase.REALTIME, tier.geofencingZones());
+    assertFalse(tier.requireDropOffInsideBusinessArea());
+    assertTrue(tier.allowKeepingVehicleAtDestination());
   }
 
   @Test
@@ -56,9 +59,7 @@ class GbfsNetworksConfigTest {
       """
     );
 
-    assertThat(
-      subject.forNetwork("voi").orElseThrow().requireDropOffInsideBusinessArea()
-    ).isFalse();
+    assertFalse(subject.forNetwork("voi").orElseThrow().requireDropOffInsideBusinessArea());
   }
 
   /**
@@ -73,7 +74,7 @@ class GbfsNetworksConfigTest {
         "gbfs" : {
           "includeUnlistedNetworks" : true,
           "defaults" : {
-            "geofencingZones" : "permanent",
+            "geofencingZones" : "realtime",
             "requireDropOffInsideBusinessArea" : false
           },
           "networks" : [
@@ -85,12 +86,12 @@ class GbfsNetworksConfigTest {
     );
 
     var listed = subject.forNetwork("boltoslo").orElseThrow();
-    assertThat(listed.geofencingZones()).isEqualTo(GeofencingZonePhase.PERMANENT);
-    assertThat(listed.requireDropOffInsideBusinessArea()).isTrue();
+    assertEquals(GeofencingZonePhase.REALTIME, listed.geofencingZones());
+    assertTrue(listed.requireDropOffInsideBusinessArea());
 
     var unlisted = subject.forNetwork("voioslo").orElseThrow();
-    assertThat(unlisted.geofencingZones()).isEqualTo(GeofencingZonePhase.PERMANENT);
-    assertThat(unlisted.requireDropOffInsideBusinessArea()).isFalse();
+    assertEquals(GeofencingZonePhase.REALTIME, unlisted.geofencingZones());
+    assertFalse(unlisted.requireDropOffInsideBusinessArea());
   }
 
   @Test
@@ -103,9 +104,9 @@ class GbfsNetworksConfigTest {
 
     var tier = subject.forNetwork("tier").orElseThrow();
 
-    assertThat(tier.geofencingZones()).isEqualTo(GeofencingZonePhase.OFF);
-    assertThat(tier.requireDropOffInsideBusinessArea()).isTrue();
-    assertThat(tier.allowKeepingVehicleAtDestination()).isFalse();
+    assertEquals(GeofencingZonePhase.OFF, tier.geofencingZones());
+    assertTrue(tier.requireDropOffInsideBusinessArea());
+    assertFalse(tier.allowKeepingVehicleAtDestination());
   }
 
   @Test
@@ -122,8 +123,9 @@ class GbfsNetworksConfigTest {
       """
     );
 
-    assertThat(subject.forNetwork("ryde").orElseThrow().geofencingZones()).isEqualTo(
-      GeofencingZonePhase.REALTIME
+    assertEquals(
+      GeofencingZonePhase.REALTIME,
+      subject.forNetwork("ryde").orElseThrow().geofencingZones()
     );
   }
 
