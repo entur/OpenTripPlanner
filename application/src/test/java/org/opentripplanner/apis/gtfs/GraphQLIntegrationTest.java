@@ -124,7 +124,6 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
 import org.opentripplanner.transit.model.timetable.TripTimesFactory;
 import org.opentripplanner.transit.repository.DefaultTimetableRepository;
 import org.opentripplanner.transit.service.DefaultTransitService;
-import org.opentripplanner.transit.service.TransitEditorService;
 import org.opentripplanner.transit.service.TransitRepository;
 import org.opentripplanner.utils.collection.ListUtils;
 
@@ -376,7 +375,7 @@ class GraphQLIntegrationTest {
 
     var snapshot = timetableSnapshot.commit();
 
-    TransitEditorService transitService = new DefaultTransitService(transitRepository, snapshot) {
+    var transitService = new DefaultTransitService(transitRepository, snapshot) {
       @Override
       public List<TransitMode> findTransitModes(StopLocation stop) {
         return List.of(BUS, FERRY);
