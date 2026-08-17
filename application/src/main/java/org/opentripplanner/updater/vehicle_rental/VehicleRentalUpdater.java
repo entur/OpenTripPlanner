@@ -56,7 +56,7 @@ public class VehicleRentalUpdater extends PollingGraphUpdater<StreetRealTimeUpda
 
   private final VehicleRentalDataSource source;
   private final String nameForLogging;
-  private final boolean applyBusinessAreas;
+  private final boolean requireDropOffInsideBusinessArea;
 
   private Set<Vertex> latestBoundaryVertices = Set.of();
   private GeofencingZoneIndex latestZoneIndex;
@@ -83,9 +83,9 @@ public class VehicleRentalUpdater extends PollingGraphUpdater<StreetRealTimeUpda
       parameters.sourceParameters().url()
     );
     this.unlinkedPlaceThrottle = Throttle.ofOneSecond();
-    this.applyBusinessAreas = parameters.sourceParameters() instanceof
+    this.requireDropOffInsideBusinessArea = parameters.sourceParameters() instanceof
         GbfsVehicleRentalDataSourceParameters gbfs
-      ? gbfs.geofencingBusinessAreaBorders()
+      ? gbfs.requireDropOffInsideBusinessArea()
       : true;
 
     // Creation of network linker library will not modify the graph
@@ -246,19 +246,16 @@ public class VehicleRentalUpdater extends PollingGraphUpdater<StreetRealTimeUpda
         var applier = new GeofencingZoneApplier(
           ls -> graph.findEdgesAlongLineStrings(ls, Scope.REQUEST),
           env -> graph.findEdges(env, Scope.REQUEST),
-          applyBusinessAreas
+          requireDropOffInsideBusinessArea
         );
         var result = applier.applyGeofencingZones(geofencingZones);
         latestBoundaryVertices = result.boundaryVertices();
         latestZoneIndex = result.zoneIndex();
         latestAppliedGeofencingZones = geofencingZones;
-        service.setGeofencingZoneIndex(nameForLogging, latestZoneIndex);
-
-        GeofencingZoneApplier.preResolveVertexZones(
-          verticesByStation.values(),
-          latestZoneIndex,
-          applyBusinessAreas
-        );
+        // A network has one source of zones, so registering under it replaces any earlier index.
+        // One updater serves one GBFS feed, so every zone here carries the same resolved system id.
+        var network = geofencingZones.iterator().next().id().getFeedId();
+        service.setGeofencingZoneIndex(network, latestZoneIndex);
 
         var end = System.currentTimeMillis();
         var millis = Duration.ofMillis(end - start);
@@ -269,6 +266,15 @@ public class VehicleRentalUpdater extends PollingGraphUpdater<StreetRealTimeUpda
           nameForLogging
         );
       }
+
+      // Seed from the repository rather than from the zones computed above: a network in the
+      // permanent phase has an index there, rebuilt from the graph, but computes none here.
+      // Runs on every update because vertices are recreated as vehicles come and go.
+      GeofencingZoneApplier.preResolveVertexZones(
+        verticesByStation.values(),
+        service,
+        requireDropOffInsideBusinessArea
+      );
     }
   }
 
