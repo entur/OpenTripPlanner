@@ -4,6 +4,8 @@ kind: Service
 metadata:
   labels:
     {{- include "common.nordic.labels" . | indent 4 }}
+  annotations:
+    {{- include "common.nordic.annotations" . | indent 4 }}
   name: otp2nordic
   namespace: {{ .Release.Namespace }}
 spec:

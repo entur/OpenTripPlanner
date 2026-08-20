@@ -5,7 +5,9 @@ metadata:
   name: otp2nordic-logback-config
   namespace: {{ .Release.Namespace }}
   labels:
-    {{- include "common.labels" . | indent 4 }}
+    {{- include "common.nordic.labels" . | indent 4 }}
+  annotations:
+    {{- include "common.nordic.annotations" . | indent 4 }}
 data:
   logback.xml: |-{{ range .Files.Lines .Values.configMap.logbackConfig}}
     {{ . }}{{ end }}

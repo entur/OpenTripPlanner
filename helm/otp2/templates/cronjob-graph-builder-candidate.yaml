@@ -4,6 +4,8 @@ kind: CronJob
 metadata:
   labels:
     {{- include "graph.builder.labels" . | indent 4 }}
+  annotations:
+    {{- include "graph.builder.annotations" . | indent 4 }}
   name: graph-builder-otp2-candidate
   namespace: {{ .Release.Namespace }}
 spec:

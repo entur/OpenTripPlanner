@@ -6,6 +6,8 @@ metadata:
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "common.nordic.labels" . | indent 4 }}
+  annotations:
+    {{- include "common.nordic.annotations" . | indent 4 }}
 spec:
   progressDeadlineSeconds: 1200
   selector:

@@ -98,6 +98,8 @@ secrets:
 # twice. Unlisted networks are still loaded, with zones off.
 gbfs:
   includeUnlistedNetworks: true
+  defaults:
+    requireDropOffInsideBusinessArea: false
   networks:
   - network: voioslo
     geofencingZones: permanent

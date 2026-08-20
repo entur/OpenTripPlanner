@@ -7,6 +7,7 @@ metadata:
     traffic-type: api
   annotations:
     kubernetes.io/ingress.class: traefik
+    {{- include "common.nordic.annotations" . | indent 4 }}
   name: nordic-journey-planner-v3
   namespace: {{ .Release.Namespace }}
 spec:
@@ -29,6 +30,7 @@ metadata:
     traffic-type: public
   annotations:
     kubernetes.io/ingress.class: traefik
+    {{- include "common.nordic.annotations" . | indent 4 }}
   name: otp2debug-nordic
   namespace: {{ .Release.Namespace }}
 spec:
