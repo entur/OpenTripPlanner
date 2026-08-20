@@ -4,6 +4,8 @@ kind: Service
 metadata:
   labels:
     {{- include "common.labels" . | indent 4 }}
+  annotations:
+    {{- include "common.annotations" . | indent 4 }}
   name: {{ template "app.name" . }}
   namespace: {{ .Release.Namespace }}
 spec:

@@ -4,6 +4,8 @@ kind: CronJob
 metadata:
   labels:
     {{- include "nordic.graph.builder.labels" . | indent 4 }}
+  annotations:
+    {{- include "nordic.graph.builder.annotations" . | indent 4 }}
   name: graph-builder-otp2nordic
   namespace: {{ .Release.Namespace }}
 spec:
