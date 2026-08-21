@@ -9,6 +9,7 @@ ENTUR_WORKFLOWS=(
   "entur-0-main-pipeline.yml"
   "entur-a-otp-release.yml"
   "entur-b-docker-build.yml"
+  "entur-c-deploy-otp2nordic.yml"
 )
 
 pushd .github/workflows
