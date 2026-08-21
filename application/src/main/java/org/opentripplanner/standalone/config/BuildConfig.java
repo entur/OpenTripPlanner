@@ -598,7 +598,7 @@ public class BuildConfig implements OtpDataStoreConfig {
     demDefaults = DemConfig.mapDemDefaultsConfig(root, "demDefaults");
     dem = DemConfig.mapDemConfig(root, "dem", demDefaults);
     emission = EmissionConfig.mapEmissionsConfig("emission", root);
-    empiricalDelay = EmpiricalDelayConfig.mapEmissionsConfig("empiricalDelay", root);
+    empiricalDelay = EmpiricalDelayConfig.mapEmpiricalDelayConfig("empiricalDelay", root);
     vehicleRentalGeofencing = VehicleRentalGeofencingConfig.mapConfig(
       "vehicleRentalGeofencing",
       root

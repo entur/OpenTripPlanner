@@ -108,6 +108,12 @@ based on merged pull requests. Search GitHub issues and pull requests for smalle
 - Deprecate RealtimeState in both APIs [#7748](https://github.com/opentripplanner/OpenTripPlanner/pull/7748)
 - Remove UNDEFINED alert severity [#7883](https://github.com/opentripplanner/OpenTripPlanner/pull/7883)
 - Share GBFS manifest loading and send configured headers with the manifest request [#7884](https://github.com/opentripplanner/OpenTripPlanner/pull/7884)
+- Reject GTFS-RT added trips referring to unknown stops [#7897](https://github.com/opentripplanner/OpenTripPlanner/pull/7897)
+- Treat unstated NeTEx DaysOfWeek as valid for all days [#7871](https://github.com/opentripplanner/OpenTripPlanner/pull/7871)
+- Improve how vehicle rental networks and vehicles are presented in the debug client [#7888](https://github.com/opentripplanner/OpenTripPlanner/pull/7888)
+- Direction of line restriction in SIRI-SX [#7903](https://github.com/opentripplanner/OpenTripPlanner/pull/7903)
+- Support for SIRI partial replacedBy [#7873](https://github.com/opentripplanner/OpenTripPlanner/pull/7873)
+- Expose scheduled quay [#7739](https://github.com/opentripplanner/OpenTripPlanner/pull/7739)
 [](AUTOMATIC_CHANGELOG_PLACEHOLDER_DO_NOT_REMOVE)
 
 ## 2.9.0 (2026-03-18)
