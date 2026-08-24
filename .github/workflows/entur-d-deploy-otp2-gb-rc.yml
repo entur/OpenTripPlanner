@@ -33,7 +33,7 @@ jobs:
       image_set_path: "image.identifier"
       values: values-kub-ent-dev-rc.yaml
       namespace: marduk
-      release_name: otp2
+      release_name: otp2-gb-rc
     secrets: inherit
 
   approval-tst:
@@ -60,7 +60,7 @@ jobs:
       image_set_path: "image.identifier"
       values: values-kub-ent-tst-rc.yaml
       namespace: marduk
-      release_name: otp2
+      release_name: otp2-gb-rc
     secrets: inherit
 
   approval-prd:
@@ -87,5 +87,5 @@ jobs:
       image_set_path: "image.identifier"
       values: values-kub-ent-prd-rc.yaml
       namespace: marduk
-      release_name: otp2
+      release_name: otp2-gb-rc
     secrets: inherit
