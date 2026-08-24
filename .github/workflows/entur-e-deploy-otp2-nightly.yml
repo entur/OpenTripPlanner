@@ -1,0 +1,64 @@
+name: "E - Nightly redeploy otp2 to dev 🌙"
+run-name: "Nightly redeploy otp2 to dev 🌙"
+on:
+  schedule:
+    - cron: '30 3 * * *'
+  workflow_dispatch: {}
+jobs:
+  resolve-latest-tag:
+    if: github.repository_owner == 'entur'
+    runs-on: ubuntu-24.04
+    environment: dev
+    permissions:
+      contents: read
+      id-token: write
+    outputs:
+      tag: ${{ steps.latest.outputs.tag }}
+    steps:
+      - uses: google-github-actions/auth@v3
+        with:
+          workload_identity_provider: ${{ vars.WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ vars.SERVICE_ACCOUNT }}
+      - uses: google-github-actions/setup-gcloud@v3
+      - id: latest
+        name: Resolve latest published otp2 tag from GAR
+        run: |
+          TAG=$(gcloud container images list-tags eu.gcr.io/entur-system-1287/otp2 \
+            --sort-by=~TIMESTAMP --limit=1 --format='value(tags)')
+          if [ -z "${TAG}" ]; then
+            echo "::error::Could not resolve a tag from GAR for eu.gcr.io/entur-system-1287/otp2"
+            exit 1
+          fi
+          echo "Resolved latest published tag: ${TAG}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+  helm-lint:
+    needs: [resolve-latest-tag]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.resolve-latest-tag.outputs.tag }}
+      - name: Helm lint against every env values file
+        run: |
+          for env in dev tst prd jp-dev jp-tst jp-prd dev-jp-nordic dev-rc tst-rc prd-rc; do
+            helm lint helm/otp2 -f helm/otp2/env/values-kub-ent-${env}.yaml
+          done
+
+  deploy-otp2-jpdev:
+    if: github.repository_owner == 'entur'
+    needs: [resolve-latest-tag, helm-lint]
+    uses: entur/gha-helm/.github/workflows/deploy.yml@v1
+    with:
+      environment: dev
+      image: otp2:${{ needs.resolve-latest-tag.outputs.tag }}
+      gcp_cluster_location: europe-west4
+      gcp_cluster_name: kub-ent-jp-dev-001
+      chart: helm/otp2
+      image_set_path: "image.identifier"
+      values: values-kub-ent-jp-dev.yaml
+      namespace: otp2
+      release_name: otp2
+    secrets: inherit
