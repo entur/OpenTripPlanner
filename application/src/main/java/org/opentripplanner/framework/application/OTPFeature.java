@@ -139,6 +139,15 @@ public enum OTPFeature {
       "(transit-group-priority) is kept, even if the max-limit is exceeded. This is turned off by default " +
       "for now, until this feature is well tested."
   ),
+  NetexNewModes(
+    false,
+    false,
+    """
+    Import NeTEx Part 5 "New Modes" entities. Currently `VehiclePooling` as a `ModeOfOperation`,
+    which classifies a line as carpooling, and `VehicleMeetingPoint`, which is a stop place given
+    only as a named coordinate - without a `StopPlace` or a `Quay`.
+    """
+  ),
   OjpApi(false, true, "OJP v2.0 API."),
   RealtimeResolver(
     false,

@@ -27,6 +27,8 @@ import org.entur.netex2.model.ServiceJourneyInterchange;
 import org.entur.netex2.model.ServiceLink;
 import org.entur.netex2.model.StopPlace;
 import org.entur.netex2.model.TariffZone_VersionStructure;
+import org.entur.netex2.model.VehicleMeetingPoint;
+import org.entur.netex2.model.VehiclePooling;
 
 public interface NetexEntityIndexReadOnlyView {
   Network lookupNetworkForLine(String groupOfLineOrNetworkId);
@@ -72,6 +74,18 @@ public interface NetexEntityIndexReadOnlyView {
   ReadOnlyHierarchicalMap<String, String> getQuayIdByStopPointRef();
 
   ReadOnlyHierarchicalMap<String, String> getFlexibleStopPlaceByStopPointRef();
+
+  /** NeTEx Part 5 "New Modes" - carpooling and other alternative modes of operation. */
+  ReadOnlyHierarchicalMapById<VehiclePooling> getVehiclePoolingById();
+
+  /** NeTEx Part 5 "New Modes" - meeting points given as a bare coordinate. */
+  ReadOnlyHierarchicalMapById<VehicleMeetingPoint> getVehicleMeetingPointById();
+
+  /**
+   * ScheduledStopPoint id to VehicleMeetingPoint id. The Part 5 counterpart to
+   * {@link #getQuayIdByStopPointRef()}.
+   */
+  ReadOnlyHierarchicalMap<String, String> getVehicleMeetingPointIdByStopPointRef();
 
   ReadOnlyHierarchicalMapById<Route> getRouteById();
 

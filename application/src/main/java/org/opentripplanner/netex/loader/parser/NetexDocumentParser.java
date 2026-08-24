@@ -11,6 +11,7 @@ import org.entur.netex2.model.CompositeFrame;
 import org.entur.netex2.model.FareFrame;
 import org.entur.netex2.model.GeneralFrame;
 import org.entur.netex2.model.InfrastructureFrame;
+import org.entur.netex2.model.MobilityServiceFrame;
 import org.entur.netex2.model.PublicationDeliveryStructure;
 import org.entur.netex2.model.ResourceFrame;
 import org.entur.netex2.model.ServiceCalendarFrame;
@@ -19,6 +20,7 @@ import org.entur.netex2.model.SiteFrame;
 import org.entur.netex2.model.TimetableFrame;
 import org.entur.netex2.model.VersionFrameDefaultsStructure;
 import org.entur.netex2.model.VersionFrame_VersionStructure;
+import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.netex.config.IgnorableFeature;
 import org.opentripplanner.netex.index.NetexEntityIndex;
 import org.slf4j.Logger;
@@ -90,6 +92,12 @@ public class NetexDocumentParser {
       );
     } else if (value instanceof SiteFrame frame) {
       parse(frame, new SiteFrameParser(ignoredFeatures));
+    } else if (value instanceof MobilityServiceFrame frame && OTPFeature.NetexNewModes.isOn()) {
+      // NeTEx Part 5 "New Modes" is behind a feature flag for profiles that have not taken a stand
+      // on Part 5 yet - the Nordic profile is one such example. With the flag off the frame falls
+      // through to the default branch and is reported as unmapped, like any other frame OTP does
+      // not read, so a Part 5 document stays readable either way.
+      parse(frame, new MobilityServiceFrameParser());
     } else if (!ignoredFeatures.contains(FARE_FRAME) && value instanceof FareFrame fareFrame) {
       parse(fareFrame, new FareFrameParser());
     } else if (value instanceof CompositeFrame frame) {

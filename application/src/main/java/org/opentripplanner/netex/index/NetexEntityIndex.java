@@ -27,6 +27,8 @@ import org.entur.netex2.model.ServiceJourneyInterchange;
 import org.entur.netex2.model.ServiceLink;
 import org.entur.netex2.model.StopPlace;
 import org.entur.netex2.model.TariffZone_VersionStructure;
+import org.entur.netex2.model.VehicleMeetingPoint;
+import org.entur.netex2.model.VehiclePooling;
 import org.opentripplanner.netex.index.api.NetexEntityIndexReadOnlyView;
 import org.opentripplanner.netex.index.api.ReadOnlyHierarchicalMap;
 import org.opentripplanner.netex.index.api.ReadOnlyHierarchicalMapById;
@@ -92,6 +94,11 @@ public class NetexEntityIndex {
   public final HierarchicalMap<String, String> stopPlaceIdByStopPointRef;
   public final HierarchicalMap<String, String> flexibleStopPlaceByStopPointRef;
   public final HierarchicalMap<String, String> quayIdByStopPointRef;
+  /**
+   * ScheduledStopPoint id to VehicleMeetingPoint id, resolved from the PointProjection on the
+   * ScheduledStopPoint. This is the Part 5 counterpart to {@link #quayIdByStopPointRef}.
+   */
+  public final HierarchicalMap<String, String> vehicleMeetingPointIdByStopPointRef;
   public final HierarchicalMapById<Route> routeById;
   public final HierarchicalMapById<ServiceJourney> serviceJourneyById;
   public final HierarchicalMapById<ServiceJourneyInterchange> serviceJourneyInterchangeById;
@@ -100,6 +107,12 @@ public class NetexEntityIndex {
   public final HierarchicalVersionMapById<TariffZone_VersionStructure> tariffZonesById;
   public final HierarchicalMapById<Branding> brandingById;
   public final HierarchicalMapById<Parking> parkings;
+
+  /** NeTEx Part 5 "New Modes". Only populated when {@link org.opentripplanner.framework.application.OTPFeature#NetexNewModes} is on. */
+  public final HierarchicalMapById<VehiclePooling> vehiclePoolingById;
+
+  /** NeTEx Part 5 "New Modes". Only populated when {@link org.opentripplanner.framework.application.OTPFeature#NetexNewModes} is on. */
+  public final HierarchicalMapById<VehicleMeetingPoint> vehicleMeetingPointById;
 
   // Relations between entities - The Netex XML sometimes relies on the
   // nested structure of the XML document, rater than explicit references.
@@ -147,6 +160,9 @@ public class NetexEntityIndex {
     this.brandingById = new HierarchicalMapById<>();
     this.timeZone = new HierarchicalElement<>();
     this.parkings = new HierarchicalMapById<>();
+    this.vehiclePoolingById = new HierarchicalMapById<>();
+    this.vehicleMeetingPointById = new HierarchicalMapById<>();
+    this.vehicleMeetingPointIdByStopPointRef = new HierarchicalMap<>();
   }
 
   /**
@@ -194,6 +210,11 @@ public class NetexEntityIndex {
     this.brandingById = new HierarchicalMapById<>(parent.brandingById);
     this.timeZone = new HierarchicalElement<>(parent.timeZone);
     this.parkings = new HierarchicalMapById<>(parent.parkings);
+    this.vehiclePoolingById = new HierarchicalMapById<>(parent.vehiclePoolingById);
+    this.vehicleMeetingPointById = new HierarchicalMapById<>(parent.vehicleMeetingPointById);
+    this.vehicleMeetingPointIdByStopPointRef = new HierarchicalMap<>(
+      parent.vehicleMeetingPointIdByStopPointRef
+    );
   }
 
   /**
@@ -345,6 +366,21 @@ public class NetexEntityIndex {
       @Override
       public ReadOnlyHierarchicalMap<String, String> getFlexibleStopPlaceByStopPointRef() {
         return flexibleStopPlaceByStopPointRef;
+      }
+
+      @Override
+      public ReadOnlyHierarchicalMapById<VehiclePooling> getVehiclePoolingById() {
+        return vehiclePoolingById;
+      }
+
+      @Override
+      public ReadOnlyHierarchicalMapById<VehicleMeetingPoint> getVehicleMeetingPointById() {
+        return vehicleMeetingPointById;
+      }
+
+      @Override
+      public ReadOnlyHierarchicalMap<String, String> getVehicleMeetingPointIdByStopPointRef() {
+        return vehicleMeetingPointIdByStopPointRef;
       }
 
       @Override

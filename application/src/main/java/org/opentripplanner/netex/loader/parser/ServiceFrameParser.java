@@ -19,8 +19,11 @@ import org.entur.netex2.model.LinesInFrame_RelStructure;
 import org.entur.netex2.model.Network;
 import org.entur.netex2.model.NetworksInFrame_RelStructure;
 import org.entur.netex2.model.PassengerStopAssignment;
+import org.entur.netex2.model.PointProjection;
 import org.entur.netex2.model.Route;
 import org.entur.netex2.model.RoutesInFrame_RelStructure;
+import org.entur.netex2.model.ScheduledStopPoint;
+import org.entur.netex2.model.ScheduledStopPointsInFrame_RelStructure;
 import org.entur.netex2.model.ServiceLink;
 import org.entur.netex2.model.ServiceLinksInFrame_RelStructure;
 import org.entur.netex2.model.Service_VersionFrameStructure;
@@ -60,6 +63,8 @@ class ServiceFrameParser extends NetexParser<Service_VersionFrameStructure> {
 
   private final Map<String, String> flexibleStopPlaceByStopPointRef = new HashMap<>();
 
+  private final Map<String, String> vehicleMeetingPointIdByStopPointRef = new HashMap<>();
+
   private final Collection<ServiceLink> serviceLinks = new ArrayList<>();
 
   private final NoticeParser noticeParser = new NoticeParser();
@@ -86,6 +91,7 @@ class ServiceFrameParser extends NetexParser<Service_VersionFrameStructure> {
     parseJourneyPatterns(frame.getJourneyPatterns());
     parseDestinationDisplays(frame.getDestinationDisplays());
     parseServiceLinks(frame.getServiceLinks());
+    parseScheduledStopPoints(frame.getScheduledStopPoints());
 
     // Keep list sorted alphabetically
     warnOnMissingMapping(LOG, frame.getCommonSections());
@@ -103,7 +109,6 @@ class ServiceFrameParser extends NetexParser<Service_VersionFrameStructure> {
     warnOnMissingMapping(LOG, frame.getRouteLinks());
     warnOnMissingMapping(LOG, frame.getRoutePoints());
     warnOnMissingMapping(LOG, frame.getRoutingConstraintZones());
-    warnOnMissingMapping(LOG, frame.getScheduledStopPoints());
     warnOnMissingMapping(LOG, frame.getServiceExclusions());
     warnOnMissingMapping(LOG, frame.getServicePatterns());
     warnOnMissingMapping(LOG, frame.getStopAreas());
@@ -132,6 +137,7 @@ class ServiceFrameParser extends NetexParser<Service_VersionFrameStructure> {
     index.quayIdByStopPointRef.addAll(quayIdByStopPointRef);
     index.stopPlaceIdByStopPointRef.addAll(stopPlaceByStopPointRef);
     index.flexibleStopPlaceByStopPointRef.addAll(flexibleStopPlaceByStopPointRef);
+    index.vehicleMeetingPointIdByStopPointRef.addAll(vehicleMeetingPointIdByStopPointRef);
     index.routeById.addAll(routes);
     index.serviceLinkById.addAll(serviceLinks);
 
@@ -179,6 +185,51 @@ class ServiceFrameParser extends NetexParser<Service_VersionFrameStructure> {
         warnOnMissingMapping(LOG, stopAssignment.getValue());
       }
     }
+  }
+
+  /**
+   * NeTEx Part 5 "New Modes": a ScheduledStopPoint may be tied to a VehicleMeetingPoint instead of
+   * to a Quay. There is no StopAssignment for this - {@code VehicleMeetingPointAssignment} extends
+   * {@code Assignment_VersionStructure} and has no ScheduledStopPointRef - so the link goes the
+   * other way, through a PointProjection on the ScheduledStopPoint itself. Both ends are a NeTEx
+   * {@code Point}, which makes the projection a legal way to express the relation.
+   * <p>
+   * Only the projection is kept. ScheduledStopPoints are otherwise not used by OTP; the stop is
+   * resolved later from {@link NetexEntityIndex#vehicleMeetingPointById}.
+   */
+  private void parseScheduledStopPoints(
+    @Nullable ScheduledStopPointsInFrame_RelStructure scheduledStopPoints
+  ) {
+    if (OTPFeature.NetexNewModes.isOff()) {
+      // Unchanged from before Part 5 support: OTP does not read scheduled stop points, and says so.
+      warnOnMissingMapping(LOG, scheduledStopPoints);
+      return;
+    }
+    if (scheduledStopPoints == null) {
+      return;
+    }
+    for (ScheduledStopPoint stopPoint : scheduledStopPoints.getScheduledStopPoint()) {
+      String meetingPointRef = findProjectedVehicleMeetingPoint(stopPoint);
+      if (meetingPointRef != null) {
+        vehicleMeetingPointIdByStopPointRef.put(stopPoint.getId(), meetingPointRef);
+      }
+    }
+  }
+
+  @Nullable
+  private static String findProjectedVehicleMeetingPoint(ScheduledStopPoint stopPoint) {
+    if (stopPoint.getProjections() == null) {
+      return null;
+    }
+    for (JAXBElement<?> element : stopPoint.getProjections().getProjectionRefOrProjection()) {
+      if (
+        element.getValue() instanceof PointProjection projection &&
+        projection.getProjectToPointRef() != null
+      ) {
+        return projection.getProjectToPointRef().getRef();
+      }
+    }
+    return null;
   }
 
   private void parseRoutes(@Nullable RoutesInFrame_RelStructure routes) {
