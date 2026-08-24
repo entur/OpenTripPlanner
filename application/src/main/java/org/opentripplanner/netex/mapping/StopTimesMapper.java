@@ -70,6 +70,8 @@ class StopTimesMapper {
 
   private final ReadOnlyHierarchicalMap<String, String> flexibleStopPlaceIdByStopPointRef;
 
+  private final ReadOnlyHierarchicalMap<String, String> vehicleMeetingPointIdByStopPointRef;
+
   private final ReadOnlyHierarchicalMap<String, Route> routeByid;
 
   private final ReadOnlyHierarchicalMapById<FlexibleLine> flexibleLinesById;
@@ -97,6 +99,7 @@ class StopTimesMapper {
     ReadOnlyHierarchicalMap<String, String> stopPlaceIdByStopPointRef,
     ReadOnlyHierarchicalMap<String, String> quayIdByStopPointRef,
     ReadOnlyHierarchicalMap<String, String> flexibleStopPlaceIdByStopPointRef,
+    ReadOnlyHierarchicalMap<String, String> vehicleMeetingPointIdByStopPointRef,
     ReadOnlyHierarchicalMapById<FlexibleLine> flexibleLinesById,
     ReadOnlyHierarchicalMap<String, Route> routeById
   ) {
@@ -110,6 +113,7 @@ class StopTimesMapper {
     this.stopPlaceIdByStopPointRef = stopPlaceIdByStopPointRef;
     this.quayIdByStopPointRef = quayIdByStopPointRef;
     this.flexibleStopPlaceIdByStopPointRef = flexibleStopPlaceIdByStopPointRef;
+    this.vehicleMeetingPointIdByStopPointRef = vehicleMeetingPointIdByStopPointRef;
     this.flexibleLinesById = flexibleLinesById;
     this.routeByid = routeById;
     this.headsignMapper = new HeadsignMapper(issueStore);
@@ -390,9 +394,15 @@ class StopTimesMapper {
     var quayId = quayIdByStopPointRef.lookup(stopPointRef);
     var stopPlaceId = stopPlaceIdByStopPointRef.lookup(stopPointRef);
     var flexibleStopPlaceId = flexibleStopPlaceIdByStopPointRef.lookup(stopPointRef);
+    // NeTEx Part 5 "New Modes": the stop point may be projected onto a VehicleMeetingPoint
+    // instead of assigned to a Quay. The meeting point is mapped to a RegularStop under its own
+    // id, so from here on the two are indistinguishable.
+    var vehicleMeetingPointId = vehicleMeetingPointIdByStopPointRef.lookup(stopPointRef);
     StopLocation stopLocation = null;
     if (quayId != null) {
       stopLocation = stopsById.get(idFactory.createId(quayId));
+    } else if (vehicleMeetingPointId != null) {
+      stopLocation = stopsById.get(idFactory.createId(vehicleMeetingPointId));
     } else if (stopPlaceId != null) {
       // The validation normally drops assignments to missing or quay-less stop places, but corner
       // cases (e.g. a quay attached to two stop places) can still end up here, so we drop the stop.
@@ -412,7 +422,7 @@ class StopTimesMapper {
     if (stopLocation == null) {
       issueStore.add(
         "StopPointInJourneyPatternMissingStopLocation",
-        "No Quay, StopPlace or FlexibleStopPlace mapping found for stop point ref %s",
+        "No Quay, StopPlace, VehicleMeetingPoint or FlexibleStopPlace mapping found for stop point ref %s",
         stopPointRef
       );
     }

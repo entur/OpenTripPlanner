@@ -25,6 +25,7 @@ import org.entur.netex2.model.StopPlace;
 import org.entur.netex2.model.VersionOfObjectRefStructure;
 import org.opentripplanner.core.model.deduplicator.DeduplicatorService;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.calendar.ServiceCalendar;
@@ -191,6 +192,7 @@ public class NetexMapper {
     mapMultiModalStopPlaces();
     mapGroupsOfStopPlaces();
     mapFlexibleStopPlaces();
+    mapVehicleMeetingPoints();
     addDatedServiceJourneysToTripCalendar();
     mapDayTypeAssignments();
 
@@ -203,6 +205,7 @@ public class NetexMapper {
     mapNoticeAssignments();
 
     mapScheduledStopPointsToQuays();
+    mapScheduledStopPointsToVehicleMeetingPoints();
     mapVehicleParkings();
 
     addEntriesToGroupMapperForPostProcessingLater();
@@ -454,6 +457,7 @@ public class NetexMapper {
       currentNetexIndex.getStopPlaceIdByStopPointRef(),
       currentNetexIndex.getQuayIdByStopPointRef(),
       currentNetexIndex.getFlexibleStopPlaceByStopPointRef(),
+      currentNetexIndex.getVehicleMeetingPointIdByStopPointRef(),
       currentNetexIndex.getDestinationDisplayById(),
       currentNetexIndex.getServiceJourneyById(),
       currentNetexIndex.getServiceLinkById(),
@@ -527,6 +531,54 @@ public class NetexMapper {
         currentNetexIndex.getServiceJourneyInterchangeById().localValues()
       );
     }
+  }
+
+  /**
+   * NeTEx Part 5 "New Modes": map VehicleMeetingPoints to RegularStops. Must run before
+   * {@link #mapTripPatterns(Map)}, since the stop times mapper resolves the stop from the site
+   * repository.
+   */
+  private void mapVehicleMeetingPoints() {
+    if (OTPFeature.NetexNewModes.isOff()) {
+      return;
+    }
+    var mapper = new VehicleMeetingPointMapper(
+      idFactory,
+      transitBuilder.siteRepository(),
+      issueStore
+    );
+    currentNetexIndex.getVehicleMeetingPointById().localValues().forEach(mapper::map);
+  }
+
+  /**
+   * The Part 5 counterpart to {@link #mapScheduledStopPointsToQuays()}. A VehicleMeetingPoint is
+   * mapped to a RegularStop under its own id, so the scheduled stop point resolves to the stop
+   * directly - there is no intermediate Quay.
+   */
+  private void mapScheduledStopPointsToVehicleMeetingPoints() {
+    if (OTPFeature.NetexNewModes.isOff()) {
+      return;
+    }
+    currentNetexIndex
+      .getVehicleMeetingPointIdByStopPointRef()
+      .localKeys()
+      .forEach(id -> {
+        var sspid = idFactory.createId(id);
+        var meetingPointId = idFactory.createId(
+          currentNetexIndex.getVehicleMeetingPointIdByStopPointRef().lookup(id)
+        );
+        var stop = transitBuilder.siteRepository().regularStopsById().get(meetingPointId);
+        if (stop != null) {
+          transitBuilder.addStopByScheduledStopPoint(sspid, stop);
+        } else {
+          issueStore.add(
+            "ScheduledStopPointProjectedToUnknownVehicleMeetingPoint",
+            "Scheduled stop point %s is projected to unknown vehicle meeting point %s.",
+            sspid,
+            meetingPointId
+          );
+        }
+      });
   }
 
   private void mapScheduledStopPointsToQuays() {

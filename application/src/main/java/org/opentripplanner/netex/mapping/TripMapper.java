@@ -12,11 +12,13 @@ import org.jspecify.annotations.Nullable;
 import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.netex.index.api.ReadOnlyHierarchicalMap;
 import org.opentripplanner.netex.mapping.support.FeedScopedIdFactory;
 import org.opentripplanner.netex.mapping.support.NetexMainAndSubMode;
 import org.opentripplanner.netex.support.JourneyPatternHelper;
+import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.DefaultEntityById;
 import org.opentripplanner.transit.model.framework.EntityById;
 import org.opentripplanner.transit.model.organization.Operator;
@@ -117,7 +119,18 @@ class TripMapper {
       )
     );
 
-    if (serviceJourney.getTransportMode() != null) {
+    // NeTEx Part 5 "New Modes": a mode of operation classifies every journey on the line, so it
+    // also wins over the service journey's own transport mode. That mode is only a fallback for
+    // consumers without Part 5 support - letting it through here would give a CARPOOL route trips
+    // that report as taxi, and legs would follow the trip, not the route.
+    boolean modeFromModeOfOperation =
+      OTPFeature.NetexNewModes.isOn() && route.getMode() == TransitMode.CARPOOL;
+
+    if (modeFromModeOfOperation) {
+      builder.withMode(route.getMode());
+      builder.withNetexSubmode(route.getNetexSubmode().name());
+      builder.withCarsAllowed(transportModeMapper.mapCarsAllowed(route.getNetexSubmode()));
+    } else if (serviceJourney.getTransportMode() != null) {
       NetexMainAndSubMode transitMode = null;
       try {
         transitMode = transportModeMapper.map(

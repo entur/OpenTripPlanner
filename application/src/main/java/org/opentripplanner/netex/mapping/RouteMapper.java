@@ -16,6 +16,7 @@ import org.entur.netex2.model.PresentationStructure;
 import org.jspecify.annotations.Nullable;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.netex.index.api.NetexEntityIndexReadOnlyView;
 import org.opentripplanner.netex.mapping.support.FeedScopedIdFactory;
@@ -37,6 +38,7 @@ class RouteMapper {
   private final DataImportIssueStore issueStore;
   private final HexBinaryAdapter hexBinaryAdapter = new HexBinaryAdapter();
   private final TransportModeMapper transportModeMapper = new TransportModeMapper();
+  private final ModeOfOperationMapper modeOfOperationMapper;
 
   private final FeedScopedIdFactory idFactory;
   private final EntityById<Agency> agenciesById;
@@ -69,6 +71,7 @@ class RouteMapper {
     this.groupOfRoutesById = groupOfRoutesById;
     this.netexIndex = netexIndex;
     this.authorityMapper = new AuthorityToAgencyMapper(idFactory, timeZone);
+    this.modeOfOperationMapper = new ModeOfOperationMapper(netexIndex);
     this.ferryIdsNotAllowedForBicycle = ferryIdsNotAllowedForBicycle;
   }
 
@@ -100,6 +103,18 @@ class RouteMapper {
 
     builder.withMode(mode.mainMode());
     builder.withNetexSubmode(mode.subMode());
+
+    // NeTEx Part 5 "New Modes": a mode of operation on the network the line belongs to overrides
+    // the transport mode. This is how carpooling is expressed - there is no carpool value in
+    // AllVehicleModesOfTransportEnumeration, so the line carries a fallback transport mode and the
+    // VehiclePooling reference carries the real classification.
+    if (OTPFeature.NetexNewModes.isOn()) {
+      var modeOfOperation = modeOfOperationMapper.mapLine(line);
+      if (modeOfOperation != null) {
+        builder.withMode(modeOfOperation.mainMode());
+        builder.withNetexSubmode(modeOfOperation.subMode());
+      }
+    }
 
     if (line instanceof FlexibleLine_VersionStructure) {
       builder.withFlexibleLineType(

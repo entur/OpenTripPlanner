@@ -102,6 +102,7 @@ class TripPatternMapper {
     ReadOnlyHierarchicalMap<String, String> stopPlaceByStopPointRef,
     ReadOnlyHierarchicalMap<String, String> quayIdByStopPointRef,
     ReadOnlyHierarchicalMap<String, String> flexibleStopPlaceIdByStopPointRef,
+    ReadOnlyHierarchicalMap<String, String> vehicleMeetingPointIdByStopPointRef,
     ReadOnlyHierarchicalMap<String, DestinationDisplay> destinationDisplayById,
     ReadOnlyHierarchicalMap<String, ServiceJourney> serviceJourneyById,
     ReadOnlyHierarchicalMapById<ServiceLink> serviceLinkById,
@@ -140,6 +141,7 @@ class TripPatternMapper {
       stopPlaceByStopPointRef,
       quayIdByStopPointRef,
       flexibleStopPlaceIdByStopPointRef,
+      vehicleMeetingPointIdByStopPointRef,
       flexibleLineById,
       routeById
     );
