@@ -11,7 +11,7 @@ metadata:
 data:
   otp-config.json: |+
       {
-        "configVersion" : "{{ .Values.build.number }}",
+        "configVersion" : "{{ include "app.configVersion" . }}",
         "otpFeatures" : {
             "ConsiderPatternsForDirectTransfers" : true,
             "CostlyAssertions" : {{ .Values.otpFeatures.costlyAssertions }},
@@ -29,7 +29,7 @@ data:
       }
   build-config.json: |+
       {
-        "configVersion" : "{{ .Values.build.number }}",
+        "configVersion" : "{{ include "app.configVersion" . }}",
         "dataImportReport": true,
         "subwayAccessTime": 0,
         "embedRouterConfig": true,
