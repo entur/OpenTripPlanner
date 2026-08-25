@@ -1,5 +1,10 @@
 default_replicas: 40
 
+# Deployed via GitHub CD, which only sets image.identifier - clear the Harness placeholder so
+# configVersion falls back to the tag embedded in image.identifier (see app.configVersion helper).
+build:
+  number: ""
+
 horizontalPodAutoscaler:
   enabled: true
   maxReplicas: 110
