@@ -99,12 +99,7 @@ jobs:
         run: echo "Approve PRD deployment"
 
   deploy-otp2-gb:
-    if: |
-      github.repository_owner == 'entur' &&
-      needs.verify-image-tag.result == 'success' &&
-      needs.resolve-env-config.result == 'success' &&
-      needs.helm-lint.result == 'success' &&
-      (needs.approval-prd.result == 'success' || needs.approval-prd.result == 'skipped')
+    if: github.repository_owner == 'entur' && needs.verify-image-tag.result == 'success' && needs.resolve-env-config.result == 'success' && needs.helm-lint.result == 'success' && (needs.approval-prd.result == 'success' || needs.approval-prd.result == 'skipped')
     needs: [verify-image-tag, resolve-env-config, helm-lint, approval-prd]
     uses: entur/gha-helm/.github/workflows/deploy.yml@v1
     with:
@@ -120,12 +115,7 @@ jobs:
     secrets: inherit
 
   deploy-otp2-jp:
-    if: |
-      github.repository_owner == 'entur' &&
-      needs.verify-image-tag.result == 'success' &&
-      needs.resolve-env-config.result == 'success' &&
-      needs.helm-lint.result == 'success' &&
-      (needs.approval-prd.result == 'success' || needs.approval-prd.result == 'skipped')
+    if: github.repository_owner == 'entur' && needs.verify-image-tag.result == 'success' && needs.resolve-env-config.result == 'success' && needs.helm-lint.result == 'success' && (needs.approval-prd.result == 'success' || needs.approval-prd.result == 'skipped')
     needs: [verify-image-tag, resolve-env-config, helm-lint, approval-prd]
     uses: entur/gha-helm/.github/workflows/deploy.yml@v1
     with:
