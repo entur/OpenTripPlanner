@@ -11,7 +11,7 @@ metadata:
 data:
   otp-config.json: |+
       {
-        "configVersion" : "{{ .Values.build.number }}",
+        "configVersion" : "{{ include "app.configVersion" . }}",
         "otpFeatures" : {
             "ConsiderPatternsForDirectTransfers" : true,
             "CostlyAssertions" : {{ .Values.otpFeatures.costlyAssertions }},
@@ -29,7 +29,7 @@ data:
       }
   build-config.json: |+
       {
-        "configVersion" : "{{ .Values.build.number }}",
+        "configVersion" : "{{ include "app.configVersion" . }}",
         "dataImportReport": true,
         "subwayAccessTime": 0,
         "embedRouterConfig": true,
@@ -117,7 +117,7 @@ data:
         },
         {{- if .Values.vehicleRentalGeofencing }}
         // Networks are discovered from the manifest; which of them are built here is decided by
-        // "geofencingZones": "permanent" in the shared gbfs section of otp-config.json.
+        // "applyGeofencingZones": "permanent" in the shared gbfs section of otp-config.json.
         "vehicleRentalGeofencing": {
           "url": "{{ .Values.vehicleRentalGeofencing.url }}",
           "headers": {

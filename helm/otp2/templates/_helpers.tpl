@@ -91,3 +91,8 @@ app.kubernetes.io/managed-by: Helm
 meta.helm.sh/release-name: {{ .Release.Name }}
 meta.helm.sh/release-namespace: {{ .Release.Namespace }}
 {{- end }}
+
+{{/* configVersion: prefer an explicit build.number, else fall back to the tag in image.identifier */}}
+{{- define "app.configVersion" -}}
+{{- .Values.build.number | default (splitList ":" .Values.image.identifier | last) -}}
+{{- end -}}

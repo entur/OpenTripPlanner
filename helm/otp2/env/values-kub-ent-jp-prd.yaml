@@ -1,5 +1,10 @@
 default_replicas: 40
 
+# Deployed via GitHub CD, which only sets image.identifier - clear the Harness placeholder so
+# configVersion falls back to the tag embedded in image.identifier (see app.configVersion helper).
+build:
+  number: ""
+
 horizontalPodAutoscaler:
   enabled: true
   maxReplicas: 110
@@ -73,4 +78,3 @@ configuration:
   transferConstraints: true
   vehicleRentalServiceDirectory:
     url: "http://mobility-cache.prd.entur.internal/gbfs-internal/v3/manifest.json"
-    enableGeofencingZones: false

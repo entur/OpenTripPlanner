@@ -4,6 +4,11 @@ journeyPlanner:
 nordicJourneyPlanner:
   enabled: true
 
+# Deployed via GitHub CD, which only sets image.identifier - clear the Harness placeholder so
+# configVersion falls back to the tag embedded in image.identifier (see app.configVersion helper).
+build:
+  number: ""
+
 replicas: 2
 default_replicas: 2
 

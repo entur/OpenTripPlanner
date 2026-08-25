@@ -22,7 +22,7 @@ spec:
     metadata:
       annotations:
         prometheus.io/path: /otp/actuators/prometheus
-        prometheus.io/port: {{ .Values.service.internalPort }}
+        prometheus.io/port: "{{ .Values.service.internalPort }}"
         prometheus.io/scrape: "true"
       labels:
         {{- include "common.labels" . | indent 8 }}
@@ -111,7 +111,7 @@ spec:
         - --load
         - /code/otpdata/norway
         - --maxThreads
-        - {{ .Values.maxConcurrentRoutingRequests }}
+        - "{{ .Values.maxConcurrentRoutingRequests }}"
         - --serve
         env:
         - name: TZ
