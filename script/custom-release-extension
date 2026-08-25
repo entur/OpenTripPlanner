@@ -13,6 +13,7 @@ ENTUR_WORKFLOWS=(
   "entur-d-deploy-otp2-gb-rc.yml"
   "entur-e-deploy-otp2-nightly.yml"
   "entur-f-deploy-otp2.yml"
+  "entur-g-deploy-otp2-manual.yml"
 )
 
 pushd .github/workflows
