@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ProxyEndpoint name="journey-planner-v3">
+  <Description/>
+  <FaultRules>
+    <FaultRule name="overQuota">
+      <Condition>(fault.name = "QuotaViolation")</Condition>
+      <Step>
+        <FaultRules/>
+        <Name>javaScript.rateLimitHeaders</Name>
+      </Step>
+      <Step>
+        <FaultRules/>
+        <Name>assignMessage.rateLimitQuotaHeaders</Name>
+      </Step>
+      <Step>
+        <Name>flowCallout.journeyPlannerCollectStatisticsEtHeader</Name>
+      </Step>
+    </FaultRule>
+    <FaultRule name="overSpikeArrest">
+      <Condition>(fault.name = "SpikeArrestViolation")</Condition>
+      <Step>
+        <FaultRules/>
+        <Name>javaScript.rateLimitHeaders</Name>
+      </Step>
+      <Step>
+        <FaultRules/>
+        <Name>assignMessage.rateLimitSpikeArrestHeaders</Name>
+      </Step>
+      <Step>
+        <Name>flowCallout.journeyPlannerCollectStatisticsEtHeader</Name>
+      </Step>
+    </FaultRule>
+  </FaultRules>
+  <Flows>
+    <Flow name="OptionsPreFlight">
+      <Request/>
+      <Response>
+        <Step>
+          <Name>assignMessage.addCors</Name>
+        </Step>
+      </Response>
+      <Condition>request.verb == "OPTIONS" AND request.header.origin != null AND request.header.Access-Control-Request-Method != null</Condition>
+    </Flow>
+  </Flows>
+  <PostFlow name="PostFlow">
+    <Request/>
+    <Response/>
+  </PostFlow>
+  <PreFlow name="PreFlow">
+    <Request>
+      <Step>
+        <FaultRules/>
+        <Name>flowCallout.globalIpBlacklistTeamRutedata</Name>
+      </Step>
+      <Step>
+        <FaultRules/>
+        <Name>flowCallout.getEnvironmentConfiguration</Name>
+      </Step>
+      <Step>
+        <Condition>message.verb IsNot "OPTIONS"</Condition>
+        <FaultRules/>
+        <Name>flowCallout.journeyPlannerAddQueryTypeToHeader</Name>
+      </Step>
+      <Step>
+        <Condition>message.verb IsNot "OPTIONS"</Condition>
+        <Name>javaScript.rateLimitValues</Name>
+      </Step>
+      <Step>
+        <Condition>message.verb IsNot "OPTIONS"</Condition>
+        <Name>quota</Name>
+      </Step>
+      <Step>
+        <Condition>message.verb IsNot "OPTIONS"</Condition>
+        <Name>spikeArrest</Name>
+      </Step>
+      <Step>
+        <Condition>message.verb IsNot "OPTIONS"</Condition>
+        <Name>javaScript.rateLimitHeaders</Name>
+      </Step>
+    </Request>
+    <Response/>
+  </PreFlow>
+  <HTTPProxyConnection>
+    <BasePath>/journey-planner/v3</BasePath>
+    <Properties/>
+    <VirtualHost>entur</VirtualHost>
+  </HTTPProxyConnection>
+  <RouteRule name="NoRoute">
+    <Condition>request.verb == "OPTIONS" AND request.header.origin != null AND request.header.Access-Control-Request-Method != null</Condition>
+  </RouteRule>
+  <RouteRule name="journey-planner-v3">
+    <TargetEndpoint>journey-planner-v3</TargetEndpoint>
+  </RouteRule>
+</ProxyEndpoint>
