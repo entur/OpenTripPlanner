@@ -1,0 +1,37 @@
+name: "C - Deploy otp2nordic 🚀"
+run-name: "Deploy otp2nordic 🚀"
+on:
+  workflow_run:
+    workflows: ["B - Build and push docker image 🎁"]
+    types: [completed]
+jobs:
+  helm-lint:
+    if: github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.workflow_run.head_sha }}
+      - name: Helm lint against every env values file
+        run: |
+          for env in dev tst prd jp-dev jp-tst jp-prd dev-jp-nordic dev-rc tst-rc prd-rc; do
+            helm lint helm/otp2 -f helm/otp2/env/values-kub-ent-${env}.yaml
+          done
+
+  deploy-otp2nordic-dev:
+    if: github.event.workflow_run.conclusion == 'success' && github.repository_owner == 'entur'
+    needs: [helm-lint]
+    uses: entur/gha-helm/.github/workflows/deploy.yml@v1
+    with:
+      environment: dev
+      image: otp2:${{ github.event.workflow_run.head_branch }}
+      gcp_cluster_location: europe-west4
+      gcp_cluster_name: kub-ent-jp-dev-001
+      chart: helm/otp2
+      image_set_path: "image.identifier"
+      values: values-kub-ent-dev-jp-nordic.yaml
+      namespace: otp2-nordic
+      release_name: otp2nordic
+    secrets: inherit
