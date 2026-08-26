@@ -6,7 +6,7 @@
   <parent>
     <groupId>org.opentripplanner</groupId>
     <artifactId>otp-root</artifactId>
-    <version>2.10.0-entur-175</version>
+    <version>2.10.0-entur-177</version>
     <relativePath>../../pom.xml</relativePath>
   </parent>
     
