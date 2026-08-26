@@ -117,7 +117,7 @@ data:
         },
         {{- if .Values.vehicleRentalGeofencing }}
         // Networks are discovered from the manifest; which of them are built here is decided by
-        // "applyGeofencingZones": "permanent" in the shared gbfs section of otp-config.json.
+        // "geofencingZones": "permanent" in the shared gbfs section of otp-config.json.
         "vehicleRentalGeofencing": {
           "url": "{{ .Values.vehicleRentalGeofencing.url }}",
           "headers": {

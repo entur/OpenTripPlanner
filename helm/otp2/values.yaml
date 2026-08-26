@@ -94,17 +94,17 @@ secrets:
 # unknown-parameter warning from OTP rather than being silently dropped, and field inheritance
 # from "defaults" is applied by OTP, not by the templates.
 #
-# "applyGeofencingZones" names when a network's zones are computed and applied, so they cannot be
-# applied twice. Unlisted networks are still loaded, with zones off.
+# "geofencingZones" names the phase that computes a network's zones, so they cannot be applied
+# twice. Unlisted networks are still loaded, with zones off.
 gbfs:
   includeUnlistedNetworks: true
   defaults:
     requireDropOffInsideBusinessArea: false
   networks:
   - network: voioslo
-    applyGeofencingZones: permanent
+    geofencingZones: permanent
   - network: boltoslo
-    applyGeofencingZones: permanent
+    geofencingZones: permanent
     requireDropOffInsideBusinessArea: true
   - network: rydeoslo
-    applyGeofencingZones: permanent
+    geofencingZones: permanent

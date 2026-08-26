@@ -22,7 +22,7 @@ vehicleRentalGeofencing:
 # business-area default are listed.
 gbfs:
   defaults:
-    applyGeofencingZones: permanent
+    geofencingZones: permanent
     requireDropOffInsideBusinessArea: false
   networks:
   - network: boltoslo

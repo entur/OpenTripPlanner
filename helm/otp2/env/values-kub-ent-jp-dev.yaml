@@ -79,3 +79,4 @@ configuration:
   transferConstraints: true
   vehicleRentalServiceDirectory:
     url: "http://mobility-cache.dev.entur.internal/gbfs-internal/v3/manifest.json"
+    enableGeofencingZones: false
