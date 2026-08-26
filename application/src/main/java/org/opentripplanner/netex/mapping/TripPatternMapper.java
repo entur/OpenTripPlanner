@@ -149,6 +149,7 @@ class TripPatternMapper {
       idFactory,
       serviceLinkById,
       quayIdByStopPointRef,
+      vehicleMeetingPointIdByStopPointRef,
       stopById,
       issueStore,
       maxStopToShapeSnapDistance,

@@ -34,6 +34,7 @@ class ServiceLinkMapper {
   private final FeedScopedIdFactory idFactory;
   private final ReadOnlyHierarchicalMapById<ServiceLink> serviceLinkById;
   private final ReadOnlyHierarchicalMap<String, String> quayIdByStopPointRef;
+  private final ReadOnlyHierarchicalMap<String, String> vehicleMeetingPointIdByStopPointRef;
   private final ImmutableEntityById<RegularStop> stopById;
   private final DataImportIssueStore issueStore;
   private final double maxStopToShapeSnapDistance;
@@ -44,6 +45,7 @@ class ServiceLinkMapper {
     FeedScopedIdFactory idFactory,
     ReadOnlyHierarchicalMapById<ServiceLink> serviceLinkById,
     ReadOnlyHierarchicalMap<String, String> quayIdByStopPointRef,
+    ReadOnlyHierarchicalMap<String, String> vehicleMeetingPointIdByStopPointRef,
     ImmutableEntityById<RegularStop> stopById,
     DataImportIssueStore issueStore,
     double maxStopToShapeSnapDistance,
@@ -52,6 +54,7 @@ class ServiceLinkMapper {
     this.idFactory = idFactory;
     this.serviceLinkById = serviceLinkById;
     this.quayIdByStopPointRef = quayIdByStopPointRef;
+    this.vehicleMeetingPointIdByStopPointRef = vehicleMeetingPointIdByStopPointRef;
     this.stopById = stopById;
     this.issueStore = issueStore;
     this.maxStopToShapeSnapDistance = maxStopToShapeSnapDistance;
@@ -220,10 +223,10 @@ class ServiceLinkMapper {
     StopPattern stopPattern,
     int stopIndex
   ) {
-    String fromPointQuayId = quayIdByStopPointRef.lookup(serviceLink.getFromPointRef().getRef());
+    String fromPointQuayId = resolveStopId(serviceLink.getFromPointRef().getRef());
     RegularStop fromPointStop = findStop(fromPointQuayId);
 
-    String toPointQuayId = quayIdByStopPointRef.lookup(serviceLink.getToPointRef().getRef());
+    String toPointQuayId = resolveStopId(serviceLink.getToPointRef().getRef());
     RegularStop toPointStop = findStop(toPointQuayId);
 
     if (fromPointStop == null || toPointStop == null) {
@@ -256,6 +259,17 @@ class ServiceLinkMapper {
       return false;
     }
     return true;
+  }
+
+  /**
+   * A scheduled stop point is normally assigned to a Quay. With NeTEx Part 5 "New Modes" it may
+   * instead be projected onto a VehicleMeetingPoint, which is mapped to a RegularStop under its
+   * own id.
+   */
+  @Nullable
+  private String resolveStopId(String stopPointRef) {
+    String quayId = quayIdByStopPointRef.lookup(stopPointRef);
+    return quayId != null ? quayId : vehicleMeetingPointIdByStopPointRef.lookup(stopPointRef);
   }
 
   private boolean areEndpointsWithinTolerance(
