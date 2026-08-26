@@ -1,5 +1,5 @@
 name: "C - Deploy otp2nordic 🚀"
-run-name: "Deploy otp2nordic 🚀"
+run-name: "Deploy otp2nordic ${{ github.event.workflow_run.head_branch }} 🚀"
 on:
   workflow_run:
     workflows: ["B - Build and push docker image 🎁"]

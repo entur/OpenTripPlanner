@@ -1,5 +1,5 @@
 name: "D - Deploy otp2 graph builder release candidate 🚀"
-run-name: "Deploy otp2 graph builder release candidate 🚀"
+run-name: "Deploy otp2 graph builder release candidate ${{ github.event.workflow_run.head_branch }} 🚀"
 on:
   workflow_run:
     workflows: ["B - Build and push docker image 🎁"]
