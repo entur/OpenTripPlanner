@@ -4,7 +4,7 @@ import com.google.common.annotations.VisibleForTesting;
 import jakarta.inject.Inject;
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -207,7 +207,12 @@ public class Graph implements Serializable {
    * Return all the edges in the graph. Derived from vertices on demand.
    */
   public Collection<Edge> getEdges() {
-    Set<Edge> edges = new HashSet<>();
+    // Must not iterate in Edge.hashCode() order: this collection is serialized into the graph
+    // file, and Kryo's reference-tracking map hashes objects by the same identity hash code
+    // without mixing the bits. Feeding it millions of edges ordered by their own hash
+    // degenerates its linear probing and makes the graph save quadratic. LinkedHashSet keeps
+    // vertex iteration order, which is independent of the edges' hash codes.
+    Set<Edge> edges = new LinkedHashSet<>();
     for (Vertex v : this.getVertices()) {
       edges.addAll(v.getOutgoing());
     }
