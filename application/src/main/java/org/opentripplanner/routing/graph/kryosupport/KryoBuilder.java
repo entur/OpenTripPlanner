@@ -44,6 +44,9 @@ public final class KryoBuilder {
     // Allow serialization of unrecognized classes, for which we haven't manually set up a serializer.
     // We might actually want to manually register a serializer for every class, to be safe.
     kryo.setRegistrationRequired(false);
+    // Use a reference resolver that spreads identity hashes before bucketing, instead of Kryo's
+    // default MapReferenceResolver. For more info see {@link SpreadingIdentityReferenceResolver}.
+    kryo.setReferenceResolver(new SpreadingIdentityReferenceResolver());
     kryo.setReferences(true);
     kryo.addDefaultSerializer(TPrimitiveHash.class, ExternalizableSerializer.class);
     kryo.register(TIntArrayList.class, new TIntArrayListSerializer());
