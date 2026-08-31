@@ -29,7 +29,7 @@ data:
           }
         },
         "routingDefaults": {
-          "directTransitSearch": { "enabled": {{ .Values.configuration.directTransitSearch | default false }} },
+          "directTransitSearch": { "enabled": {{ .Values.configuration.directTransitSearch }} },
           "streetRoutingTimeout": "5s",
           "numItineraries": 12,
           "transferPenalty": 0,
