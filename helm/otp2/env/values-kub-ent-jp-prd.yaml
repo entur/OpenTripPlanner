@@ -58,6 +58,7 @@ configuration:
   apiProcessingTimeout: "15s"
   carpooling: false
   costlyAssertions: false
+  directTransitSearch: false
   emission: true
   empiricalDelay: true
   flexRouting: true
