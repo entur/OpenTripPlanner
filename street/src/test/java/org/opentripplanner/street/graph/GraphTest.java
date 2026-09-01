@@ -64,7 +64,7 @@ class GraphTest {
 
     FreeEdge ee = FreeEdge.createFreeEdge(a, b);
 
-    List<Edge> edges = new ArrayList<>(g.listEdges());
+    List<Edge> edges = new ArrayList<>(g.listCopyOfEdges());
     assertEquals(1, edges.size());
     assertEquals(ee, edges.get(0));
   }
@@ -86,7 +86,7 @@ class GraphTest {
     expectedEdges.add(FreeEdge.createFreeEdge(c, b));
     expectedEdges.add(FreeEdge.createFreeEdge(c, a));
 
-    Set<Edge> edges = new HashSet<>(g.listEdges());
+    Set<Edge> edges = new HashSet<>(g.listCopyOfEdges());
     assertEquals(4, edges.size());
     assertEquals(expectedEdges, edges);
   }

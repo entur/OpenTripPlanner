@@ -3,8 +3,8 @@ package org.opentripplanner.street.graph;
 import com.google.common.annotations.VisibleForTesting;
 import jakarta.inject.Inject;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -204,14 +204,19 @@ public class Graph implements Serializable {
   }
 
   /**
-   * Return all the edges in the graph. Derived from vertices on demand.
+   * Return a new list containing all the edges in the graph, derived from vertices on demand.
+   * <p>
+   * <strong>This is slow.</strong> It walks every vertex in the graph and copies its outgoing
+   * edges into a freshly allocated {@link ArrayList} sized to the whole graph. Only use this
+   * method where a materialized {@link Collection} is actually required (e.g. serialization), or
+   * the performance is non-critical.
    * <p>
    * Note: Under concurrent modification this method may return edges that have been removed from
    * the graph or not return edges that have been added to the graph after this method has been
    * called.
    */
-  public Collection<Edge> listEdges() {
-    Set<Edge> edges = new HashSet<>();
+  public List<Edge> listCopyOfEdges() {
+    List<Edge> edges = new ArrayList<>();
     for (Vertex v : this.getVertices()) {
       edges.addAll(v.getOutgoing());
     }
