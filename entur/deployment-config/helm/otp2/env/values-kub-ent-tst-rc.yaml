@@ -1,0 +1,16 @@
+otpFeatures:
+  costlyAssertions: true
+  emission: true
+  empiricalDelay: true
+journeyPlanner:
+  enabled: false
+
+# Deployed via GitHub CD, which only sets image.identifier - clear the Harness placeholder so
+# configVersion falls back to the tag embedded in image.identifier (see app.configVersion helper).
+build:
+  number: ""
+cronjobRedeployGraphBuilder:
+    releaseCandidateGraphBuilderEnabled: true
+    mardukBucket: marduk-test
+    mardukInternalBucket: ror-marduk-internal-test
+    ignoreFareFrame: false
