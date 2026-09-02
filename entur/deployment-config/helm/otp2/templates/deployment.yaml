@@ -156,7 +156,7 @@ spec:
             path: /otp/actuators/health
             port: {{ .Values.service.internalPort }}
             scheme: HTTP
-          initialDelaySeconds: 60
+          initialDelaySeconds: 30
           periodSeconds: 1
           successThreshold: 1
           timeoutSeconds: 10
