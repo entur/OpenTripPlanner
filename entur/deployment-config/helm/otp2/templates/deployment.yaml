@@ -98,6 +98,7 @@ spec:
         - -XX:ActiveProcessorCount={{ .Values.resources.cpuRequest }}
         - -XX:ConcGCThreads=1
         - -XX:ParallelGCThreads=6
+        - -XX:MetaspaceSize=256m
         - --add-opens=java.base/java.lang=ALL-UNNAMED
         - --add-opens=java.base/java.nio=ALL-UNNAMED
         - --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
