@@ -43,46 +43,6 @@ spec:
       serviceAccountName: application
       automountServiceAccountToken: false
       containers:
-      {{- if .Values.proxy.enabled }}
-      - image: {{ .Values.proxy.image.repo }}
-        env:
-        - name: API_SCHEME
-          value: http
-        - name: API_HOST
-          value: 127.0.0.1
-        - name: API_PORT
-          value: "{{ .Values.service.internalPort }}"
-        - name: GOOGLE_PUBSUB_PROJECT_ID
-          value: {{ .Values.proxy.googlePubsubProjectId }}
-        - name: GOOGLE_PUBSUB_REQUEST_TOPIC
-          value: {{ .Values.proxy.googlePubsubRequestTopic }}
-        - name: GOOGLE_PUBSUB_RESPONSE_TOPIC
-          value: {{ .Values.proxy.googlePubsubResponseTopic }}
-        - name: LOG_RESPONSE_BODY
-          value: "false"
-        lifecycle:
-          preStop:
-            exec:
-              command:
-              - /bin/sh
-              - -c
-              - sleep 15
-        name: {{ .Chart.Name }}-proxy
-        ports:
-          - containerPort: {{ .Values.proxy.port }}
-            protocol: TCP
-        resources:
-          requests:
-            cpu: {{ .Values.proxy.resources.cpuRequest }}
-            memory: {{ .Values.proxy.resources.memRequest }}
-        securityContext:
-          allowPrivilegeEscalation: false
-          runAsNonRoot: true
-          capabilities:
-            drop: [ "ALL" ]
-          seccompProfile:
-            type: RuntimeDefault
-      {{- end }}
       - image: {{ .Values.image.identifier }}
         imagePullPolicy: {{ .Values.image.imagePullPolicy }}
         command:
@@ -190,6 +150,46 @@ spec:
         - name: build-config-volume
           mountPath: /code/otpdata/norway/build-config.json
           subPath: build-config.json
+      {{- if .Values.proxy.enabled }}
+      - image: {{ .Values.proxy.image.repo }}
+        env:
+        - name: API_SCHEME
+          value: http
+        - name: API_HOST
+          value: 127.0.0.1
+        - name: API_PORT
+          value: "{{ .Values.service.internalPort }}"
+        - name: GOOGLE_PUBSUB_PROJECT_ID
+          value: {{ .Values.proxy.googlePubsubProjectId }}
+        - name: GOOGLE_PUBSUB_REQUEST_TOPIC
+          value: {{ .Values.proxy.googlePubsubRequestTopic }}
+        - name: GOOGLE_PUBSUB_RESPONSE_TOPIC
+          value: {{ .Values.proxy.googlePubsubResponseTopic }}
+        - name: LOG_RESPONSE_BODY
+          value: "false"
+        lifecycle:
+          preStop:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - sleep 15
+        name: {{ .Chart.Name }}-proxy
+        ports:
+          - containerPort: {{ .Values.proxy.port }}
+            protocol: TCP
+        resources:
+          requests:
+            cpu: {{ .Values.proxy.resources.cpuRequest }}
+            memory: {{ .Values.proxy.resources.memRequest }}
+        securityContext:
+          allowPrivilegeEscalation: false
+          runAsNonRoot: true
+          capabilities:
+            drop: [ "ALL" ]
+          seccompProfile:
+            type: RuntimeDefault
+      {{- end }}
       dnsPolicy: ClusterFirst
       restartPolicy: Always
       schedulerName: default-scheduler
