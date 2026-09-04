@@ -102,9 +102,9 @@ gbfs:
     requireDropOffInsideBusinessArea: false
   networks:
   - network: voioslo
-    applyGeofencingZones: permanent
+    applyGeofencingZones: graph-build
   - network: boltoslo
-    applyGeofencingZones: permanent
+    applyGeofencingZones: graph-build
     requireDropOffInsideBusinessArea: true
   - network: rydeoslo
-    applyGeofencingZones: permanent
+    applyGeofencingZones: graph-build
