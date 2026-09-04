@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.math.BigInteger;
 import java.time.Duration;
@@ -300,6 +301,10 @@ public class StopTimesMapperTest {
     assertEquals(
       List.of("StopPointInJourneyPatternMissingStopLocation", "JourneyPatternStopNotFound"),
       issueTypes(issueStore)
+    );
+    assertTrue(
+      issueStore.listIssues().getFirst().getMessage().contains(MEETING_POINT),
+      "The issue must name the id that could not be resolved, not just the stop point"
     );
   }
 

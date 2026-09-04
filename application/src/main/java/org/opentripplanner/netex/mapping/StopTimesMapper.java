@@ -399,16 +399,21 @@ class StopTimesMapper {
     // id, so from here on the two are indistinguishable.
     var vehicleMeetingPointId = vehicleMeetingPointIdByStopPointRef.lookup(stopPointRef);
     StopLocation stopLocation = null;
+    String resolvedId = null;
     if (quayId != null) {
+      resolvedId = quayId;
       stopLocation = stopsById.get(idFactory.createId(quayId));
     } else if (vehicleMeetingPointId != null) {
+      resolvedId = vehicleMeetingPointId;
       stopLocation = stopsById.get(idFactory.createId(vehicleMeetingPointId));
     } else if (stopPlaceId != null) {
       // The validation normally drops assignments to missing or quay-less stop places, but corner
       // cases (e.g. a quay attached to two stop places) can still end up here, so we drop the stop.
+      resolvedId = stopPlaceId;
       var station = stationsById.get(idFactory.createId(stopPlaceId));
       stopLocation = pickAnyChildStop(station);
     } else if (flexibleStopPlaceId != null) {
+      resolvedId = flexibleStopPlaceId;
       AreaStop areaStop = flexibleStopLocationsById.get(idFactory.createId(flexibleStopPlaceId));
       GroupStop groupStop = groupStopById.get(idFactory.createId(flexibleStopPlaceId));
 
@@ -420,11 +425,22 @@ class StopTimesMapper {
     }
 
     if (stopLocation == null) {
-      issueStore.add(
-        "StopPointInJourneyPatternMissingStopLocation",
-        "No Quay, StopPlace, VehicleMeetingPoint or FlexibleStopPlace mapping found for stop point ref %s",
-        stopPointRef
-      );
+      if (resolvedId == null) {
+        issueStore.add(
+          "StopPointInJourneyPatternMissingStopLocation",
+          "No Quay, StopPlace, VehicleMeetingPoint or FlexibleStopPlace mapping found for stop " +
+            "point ref %s",
+          stopPointRef
+        );
+      } else {
+        issueStore.add(
+          "StopPointInJourneyPatternMissingStopLocation",
+          "Scheduled stop point %s resolves to %s, but no Quay, StopPlace, VehicleMeetingPoint " +
+            "or FlexibleStopPlace exists with that id.",
+          stopPointRef,
+          resolvedId
+        );
+      }
     }
 
     return stopLocation;
