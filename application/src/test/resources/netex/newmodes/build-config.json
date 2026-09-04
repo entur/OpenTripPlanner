@@ -1,0 +1,8 @@
+{
+  "transitServiceStart": "2026-01-01",
+  "transitServiceEnd": "2026-01-31",
+  "netexDefaults": {
+    "groupFilePattern": "(\\w{3})_.*\\.xml",
+    "feedId": "NBG"
+  }
+}

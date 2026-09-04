@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<PublicationDelivery
+    xmlns="http://www.netex.org.uk/netex"
+    xmlns:gml="http://www.opengis.net/gml/3.2"
+    xmlns:siri="http://www.siri.org.uk/siri"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    version="1.15:NO-NeTEx-networktimetable:1.5">
+
+  <PublicationTimestamp>2026-08-24T09:00:00</PublicationTimestamp>
+  <ParticipantRef>NBG</ParticipantRef>
+  <Description>AtB Nabogo samkjøring Trondheim–Stjørdal. PoC for NeTEx Part 5 New Modes.</Description>
+
+  <dataObjects>
+    <CompositeFrame version="1" id="NBG:CompositeFrame:1">
+      <ValidBetween>
+        <FromDate>2026-01-01T00:00:00</FromDate>
+        <ToDate>2027-12-31T00:00:00</ToDate>
+      </ValidBetween>
+      <codespaces>
+        <Codespace id="nbg">
+          <Xmlns>NBG</Xmlns>
+          <XmlnsUrl>http://www.rutebanken.org/ns/nbg</XmlnsUrl>
+          <Description>AtB Nabogo</Description>
+        </Codespace>
+      </codespaces>
+      <FrameDefaults>
+        <DefaultCodespaceRef ref="nbg"/>
+        <DefaultLocale>
+          <TimeZone>Europe/Oslo</TimeZone>
+          <DefaultLanguage>no</DefaultLanguage>
+        </DefaultLocale>
+      </FrameDefaults>
+
+      <frames>
+
+        <!-- ============================================================
+             ResourceFrame - organisasjoner (Part 1)
+             ============================================================ -->
+        <ResourceFrame version="1" id="NBG:ResourceFrame:1">
+          <organisations>
+            <Authority version="1" id="NBG:Authority:ATB">
+              <Name>AtB</Name>
+              <ContactDetails>
+                <Url>https://www.atb.no</Url>
+              </ContactDetails>
+              <OrganisationType>authority</OrganisationType>
+            </Authority>
+            <Operator version="1" id="NBG:Operator:NABOGO">
+              <Name>AtB Nabogo</Name>
+              <ContactDetails>
+                <Url>https://nabogo.com</Url>
+              </ContactDetails>
+              <OrganisationType>operator</OrganisationType>
+            </Operator>
+          </organisations>
+        </ResourceFrame>
+
+        <!-- ============================================================
+             MobilityServiceFrame - NeTEx Part 5 New Modes
+
+             Baerer to ting:
+               1. VehiclePooling som ModeOfOperation. Klassifiseringen som
+                  gjor turen til samkjoring. Refereres fra Network.
+               2. VehicleMeetingPoint. Motepunkter som rene geolokasjoner,
+                  uten StopPlace, uten Quay og uten oppforing i NSR.
+             ============================================================ -->
+        <MobilityServiceFrame version="1" id="NBG:MobilityServiceFrame:1">
+          <modesOfOperation>
+            <VehiclePooling version="1" id="NBG:VehiclePooling:commuter">
+              <Name>Nabogo faste turer</Name>
+              <Description>Faste arbeidsreiser i privatbil, formidlet gjennom Nabogo-appen.</Description>
+              <submodes>
+                <Submode version="1" id="NBG:Submode:selfDriveOwnCar">
+                  <TransportMode>selfDrive</TransportMode>
+                  <SelfDriveSubmode>ownCar</SelfDriveSubmode>
+                </Submode>
+              </submodes>
+              <VehiclePoolingType>commuterCarPooling</VehiclePoolingType>
+            </VehiclePooling>
+          </modesOfOperation>
+          <vehicleMeetingPoints>
+            <VehicleMeetingPoint version="1" id="NBG:VehicleMeetingPoint:strandveien">
+              <Name>Strandveien – parkeringen ved Nyhavna</Name>
+              <Location>
+                <Longitude>10.419224</Longitude>
+                <Latitude>63.437207</Latitude>
+              </Location>
+            </VehicleMeetingPoint>
+            <VehicleMeetingPoint version="1" id="NBG:VehicleMeetingPoint:evjevegen">
+              <Name>Evjevegen – innfartsparkering ved Mellomriksvegen</Name>
+              <Location>
+                <Longitude>10.942183</Longitude>
+                <Latitude>63.467782</Latitude>
+              </Location>
+            </VehicleMeetingPoint>
+          </vehicleMeetingPoints>
+        </MobilityServiceFrame>
+
+        <!-- ============================================================
+             ServiceFrame - nettverk og monster (Part 1)
+
+             Network baerer VehiclePoolingRef. Line kan ikke - se README.
+             ScheduledStopPoint kobles til motepunktene med PointProjection,
+             ikke med PassengerStopAssignment mot en Quay.
+             ============================================================ -->
+        <ServiceFrame version="1" id="NBG:ServiceFrame:1">
+          <Network version="1" id="NBG:Network:samkjoring">
+            <Name>AtB Nabogo samkjøring</Name>
+            <VehiclePoolingRef version="1" ref="NBG:VehiclePooling:commuter"/>
+            <AuthorityRef version="1" ref="NBG:Authority:ATB"/>
+          </Network>
+
+          <routes>
+            <Route version="1" id="NBG:Route:TRD_STJ">
+              <Name>Trondheim – Stjørdal</Name>
+              <LineRef version="1" ref="NBG:Line:TRD_STJ"/>
+              <DirectionType>outbound</DirectionType>
+            </Route>
+          </routes>
+
+          <lines>
+            <Line version="1" id="NBG:Line:TRD_STJ">
+              <Name>Trondheim – Stjørdal</Name>
+              <Description>Fast samkjøringstur mellom Strandveien og Evjevegen.</Description>
+              <TransportMode>taxi</TransportMode>
+              <TransportSubmode>
+                <TaxiSubmode>communalTaxi</TaxiSubmode>
+              </TransportSubmode>
+              <PublicCode>NBG1</PublicCode>
+              <OperatorRef version="1" ref="NBG:Operator:NABOGO"/>
+              <RepresentedByGroupRef version="1" ref="NBG:Network:samkjoring"/>
+            </Line>
+          </lines>
+
+          <scheduledStopPoints>
+            <ScheduledStopPoint version="1" id="NBG:ScheduledStopPoint:strandveien">
+              <Name>Strandveien</Name>
+              <projections>
+                <PointProjection version="1" id="NBG:PointProjection:strandveien">
+                  <ProjectToPointRef version="1" ref="NBG:VehicleMeetingPoint:strandveien"/>
+                </PointProjection>
+              </projections>
+            </ScheduledStopPoint>
+            <ScheduledStopPoint version="1" id="NBG:ScheduledStopPoint:evjevegen">
+              <Name>Evjevegen</Name>
+              <projections>
+                <PointProjection version="1" id="NBG:PointProjection:evjevegen">
+                  <ProjectToPointRef version="1" ref="NBG:VehicleMeetingPoint:evjevegen"/>
+                </PointProjection>
+              </projections>
+            </ScheduledStopPoint>
+          </scheduledStopPoints>
+
+          <serviceLinks>
+            <ServiceLink version="1" id="NBG:ServiceLink:strandveien-evjevegen">
+              <Distance>34255</Distance>
+              <projections>
+                <LinkSequenceProjection version="1" id="NBG:LinkSequenceProjection:strandveien-evjevegen">
+                  <gml:LineString gml:id="NBG_LineString_strandveien-evjevegen" srsName="EPSG:4326">
+                    <gml:posList>63.437212 10.419213 63.437246 10.419295 63.437265 10.419333 63.437211 10.419594 63.467747 10.942593 63.467772 10.942434 63.467799 10.942330 63.467824 10.942256</gml:posList>
+                  </gml:LineString>
+                </LinkSequenceProjection>
+              </projections>
+              <FromPointRef version="1" ref="NBG:ScheduledStopPoint:strandveien"/>
+              <ToPointRef version="1" ref="NBG:ScheduledStopPoint:evjevegen"/>
+            </ServiceLink>
+          </serviceLinks>
+
+          <journeyPatterns>
+            <ServiceJourneyPattern version="1" id="NBG:ServiceJourneyPattern:TRD_STJ">
+              <Name>Trondheim – Stjørdal</Name>
+              <RouteRef version="1" ref="NBG:Route:TRD_STJ"/>
+              <pointsInSequence>
+                <StopPointInJourneyPattern version="1" id="NBG:StopPointInJourneyPattern:TRD_STJ_1" order="1">
+                  <ScheduledStopPointRef version="1" ref="NBG:ScheduledStopPoint:strandveien"/>
+                  <ForAlighting>false</ForAlighting>
+                </StopPointInJourneyPattern>
+                <StopPointInJourneyPattern version="1" id="NBG:StopPointInJourneyPattern:TRD_STJ_2" order="2">
+                  <ScheduledStopPointRef version="1" ref="NBG:ScheduledStopPoint:evjevegen"/>
+                  <ForBoarding>false</ForBoarding>
+                </StopPointInJourneyPattern>
+              </pointsInSequence>
+            </ServiceJourneyPattern>
+            <ServiceJourneyPattern version="1" id="NBG:ServiceJourneyPattern:TRD_STJ_TRASE">
+              <Name>Trondheim – Stjørdal med trasé</Name>
+              <RouteRef version="1" ref="NBG:Route:TRD_STJ"/>
+              <pointsInSequence>
+                <StopPointInJourneyPattern version="1" id="NBG:StopPointInJourneyPattern:TRD_STJ_T1" order="1">
+                  <ScheduledStopPointRef version="1" ref="NBG:ScheduledStopPoint:strandveien"/>
+                  <ForAlighting>false</ForAlighting>
+                </StopPointInJourneyPattern>
+                <StopPointInJourneyPattern version="1" id="NBG:StopPointInJourneyPattern:TRD_STJ_T2" order="2">
+                  <ScheduledStopPointRef version="1" ref="NBG:ScheduledStopPoint:evjevegen"/>
+                  <ForBoarding>false</ForBoarding>
+                </StopPointInJourneyPattern>
+              </pointsInSequence>
+              <linksInSequence>
+                <ServiceLinkInJourneyPattern version="1" id="NBG:ServiceLinkInJourneyPattern:TRD_STJ_T1" order="1">
+                  <ServiceLinkRef version="1" ref="NBG:ServiceLink:strandveien-evjevegen"/>
+                </ServiceLinkInJourneyPattern>
+              </linksInSequence>
+            </ServiceJourneyPattern>
+          </journeyPatterns>
+        </ServiceFrame>
+
+        <!-- ============================================================
+             TimetableFrame - selve turen (Part 1)
+
+             Fast avgang mandag-fredag. Bevisst IKKE en Part 5 SingleJourney,
+             som er et datert engangstilbud uten gjentakelse - se README.
+             ============================================================ -->
+        <TimetableFrame version="1" id="NBG:TimetableFrame:1">
+          <vehicleJourneys>
+            <ServiceJourney version="1" id="NBG:ServiceJourney:TRD_STJ_0720">
+              <Name>Strandveien 07:20 – Evjevegen</Name>
+              <TransportMode>taxi</TransportMode>
+              <TransportSubmode>
+                <TaxiSubmode>communalTaxi</TaxiSubmode>
+              </TransportSubmode>
+              <dayTypes>
+                <DayTypeRef version="1" ref="NBG:DayType:hverdag"/>
+              </dayTypes>
+              <JourneyPatternRef version="1" ref="NBG:ServiceJourneyPattern:TRD_STJ"/>
+              <OperatorRef version="1" ref="NBG:Operator:NABOGO"/>
+              <passingTimes>
+                <TimetabledPassingTime version="1" id="NBG:TimetabledPassingTime:TRD_STJ_0720_1">
+                  <StopPointInJourneyPatternRef version="1" ref="NBG:StopPointInJourneyPattern:TRD_STJ_1"/>
+                  <DepartureTime>07:20:00</DepartureTime>
+                </TimetabledPassingTime>
+                <TimetabledPassingTime version="1" id="NBG:TimetabledPassingTime:TRD_STJ_0720_2">
+                  <StopPointInJourneyPatternRef version="1" ref="NBG:StopPointInJourneyPattern:TRD_STJ_2"/>
+                  <ArrivalTime>08:05:00</ArrivalTime>
+                </TimetabledPassingTime>
+              </passingTimes>
+              <FlexibleServiceProperties version="1" id="NBG:FlexibleServiceProperties:1">
+                <FlexibleServiceType>notFlexible</FlexibleServiceType>
+                <BookingContact>
+                  <Url>https://nabogo.com</Url>
+                </BookingContact>
+                <BookingMethods>online</BookingMethods>
+                <BookWhen>advanceAndDayOfTravel</BookWhen>
+                <MinimumBookingPeriod>PT30M</MinimumBookingPeriod>
+                <BookingUrl>https://nabogo.com</BookingUrl>
+                <BookingNote>Plass må reserveres i Nabogo-appen senest 30 minutter før avgang.</BookingNote>
+              </FlexibleServiceProperties>
+            </ServiceJourney>
+            <ServiceJourney version="1" id="NBG:ServiceJourney:TRD_STJ_0751">
+              <Name>Strandveien 07:51 – Evjevegen</Name>
+              <TransportMode>taxi</TransportMode>
+              <TransportSubmode>
+                <TaxiSubmode>communalTaxi</TaxiSubmode>
+              </TransportSubmode>
+              <dayTypes>
+                <DayTypeRef version="1" ref="NBG:DayType:hverdag"/>
+              </dayTypes>
+              <JourneyPatternRef version="1" ref="NBG:ServiceJourneyPattern:TRD_STJ_TRASE"/>
+              <OperatorRef version="1" ref="NBG:Operator:NABOGO"/>
+              <passingTimes>
+                <TimetabledPassingTime version="1" id="NBG:TimetabledPassingTime:TRD_STJ_0751_1">
+                  <StopPointInJourneyPatternRef version="1" ref="NBG:StopPointInJourneyPattern:TRD_STJ_T1"/>
+                  <DepartureTime>07:51:00</DepartureTime>
+                </TimetabledPassingTime>
+                <TimetabledPassingTime version="1" id="NBG:TimetabledPassingTime:TRD_STJ_0751_2">
+                  <StopPointInJourneyPatternRef version="1" ref="NBG:StopPointInJourneyPattern:TRD_STJ_T2"/>
+                  <ArrivalTime>08:36:00</ArrivalTime>
+                </TimetabledPassingTime>
+              </passingTimes>
+            </ServiceJourney>
+          </vehicleJourneys>
+        </TimetableFrame>
+
+        <!-- ============================================================
+             ServiceCalendarFrame - kalender (Part 1)
+             ============================================================ -->
+        <ServiceCalendarFrame version="1" id="NBG:ServiceCalendarFrame:1">
+          <dayTypes>
+            <DayType version="1" id="NBG:DayType:hverdag">
+              <Name>Mandag til fredag</Name>
+              <properties>
+                <PropertyOfDay>
+                  <DaysOfWeek>Monday Tuesday Wednesday Thursday Friday</DaysOfWeek>
+                </PropertyOfDay>
+              </properties>
+            </DayType>
+          </dayTypes>
+          <operatingPeriods>
+            <OperatingPeriod version="1" id="NBG:OperatingPeriod:2026_2027">
+              <FromDate>2026-01-01T00:00:00</FromDate>
+              <ToDate>2027-12-31T00:00:00</ToDate>
+            </OperatingPeriod>
+          </operatingPeriods>
+          <dayTypeAssignments>
+            <DayTypeAssignment version="1" id="NBG:DayTypeAssignment:hverdag" order="1">
+              <OperatingPeriodRef version="1" ref="NBG:OperatingPeriod:2026_2027"/>
+              <DayTypeRef version="1" ref="NBG:DayType:hverdag"/>
+            </DayTypeAssignment>
+          </dayTypeAssignments>
+        </ServiceCalendarFrame>
+
+      </frames>
+    </CompositeFrame>
+  </dataObjects>
+</PublicationDelivery>

@@ -87,6 +87,8 @@ public class ConstantsForTests {
   private static final String NETEX_NORDIC_DIR_NAME = "netex_minimal/";
   private static final String NETEX_EPIP_DIR = "src/test/resources/netex/epip/";
   private static final String NETEX_EPIP_DATA_DIR = NETEX_EPIP_DIR + "netex_epip_minimal/";
+  private static final String NETEX_NEWMODES_DIR = "src/test/resources/netex/newmodes";
+  private static final String NETEX_NEWMODES_DIR_NAME = "netex_newmodes_minimal/";
 
   private static final CompositeDataSource NETEX_MINIMAL_DATA_SOURCE = new DirectoryDataSource(
     new File(NETEX_NORDIC_DIR, NETEX_NORDIC_DIR_NAME),
@@ -111,6 +113,27 @@ public class ConstantsForTests {
     var netexZipFile = new File(NETEX_NORDIC_DIR, NETEX_NORDIC_DIR_NAME);
 
     var dataSource = new DirectoryDataSource(netexZipFile, FileType.NETEX);
+    var configuredDataSource = new ConfiguredCompositeDataSource<>(
+      dataSource,
+      buildConfig.netexDefaults
+    );
+    var transitService = new TransitDataImportBuilder(
+      new SiteRepository(),
+      DataImportIssueStore.NOOP
+    );
+
+    return new NetexConfigure(buildConfig).netexBundle(transitService, configuredDataSource);
+  }
+
+  /**
+   * A NeTEx Part 5 "New Modes" data set: a structured carpool trip whose stops are
+   * VehicleMeetingPoints rather than Quays. Requires {@code OTPFeature.NetexNewModes} to be on.
+   */
+  public static NetexBundle createMinimalNetexNewModesBundle() {
+    var buildConfig = createNetexNewModesBuilderParameters();
+    var netexDir = new File(NETEX_NEWMODES_DIR, NETEX_NEWMODES_DIR_NAME);
+
+    var dataSource = new DirectoryDataSource(netexDir, FileType.NETEX);
     var configuredDataSource = new ConfiguredCompositeDataSource<>(
       dataSource,
       buildConfig.netexDefaults
@@ -456,6 +479,10 @@ public class ConstantsForTests {
 
   private static BuildConfig createNetexNordicBuilderParameters() {
     return new OtpConfigLoader(new File(ConstantsForTests.NETEX_NORDIC_DIR)).loadBuildConfig();
+  }
+
+  private static BuildConfig createNetexNewModesBuilderParameters() {
+    return new OtpConfigLoader(new File(ConstantsForTests.NETEX_NEWMODES_DIR)).loadBuildConfig();
   }
 
   private static BuildConfig createNetexEpipBuilderParameters() {
