@@ -3,6 +3,7 @@ package org.opentripplanner.netex.mapping;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.math.BigInteger;
 import java.time.Duration;
@@ -15,7 +16,9 @@ import org.entur.netex2.model.StopPointInJourneyPattern;
 import org.entur.netex2.model.TimetabledPassingTime;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.graph_builder.issue.api.DataImportIssue;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
+import org.opentripplanner.graph_builder.issue.service.DefaultDataImportIssueStore;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.netex.index.hierarchy.HierarchicalMap;
 import org.opentripplanner.netex.index.hierarchy.HierarchicalMapById;
@@ -32,6 +35,9 @@ public class StopTimesMapperTest {
   private static final BigInteger TWO = BigInteger.valueOf(2);
 
   private static final LocalTime QUARTER_PAST_FIVE = LocalTime.of(5, 15);
+
+  private static final String STOP_POINT_3 = "RUT:StopPointInJourneyPattern:3";
+  private static final String MEETING_POINT = "NBG:VehicleMeetingPoint:1";
   public static final Trip TRIP = TransitRepositoryForTest.trip("T1").build();
 
   @Test
@@ -252,6 +258,96 @@ public class StopTimesMapperTest {
       () ->
         assertNotEquals(1, stopTimes.get(3).getTimepoint(), "StopTime expected to not be waitPoint")
     );
+  }
+
+  /**
+   * A scheduled stop point projected onto a VehicleMeetingPoint resolves to the stop that
+   * {@link VehicleMeetingPointMapper} created for it - the trip is mapped as usual, and the
+   * meeting point is indistinguishable from a Quay at this level.
+   */
+  @Test
+  void tripIsMappedWhenStopPointIsProjectedToVehicleMeetingPoint() {
+    var sample = new NetexTestDataSample();
+    sample
+      .getStopsById()
+      .add(TransitRepositoryForTest.of().stop(MEETING_POINT, 63.437207, 10.419224).build());
+
+    var issueStore = new DefaultDataImportIssueStore();
+    var result = mapWithMeetingPoint(sample, issueStore);
+
+    assertNotNull(result);
+    assertEquals(4, result.stopTimes.size());
+    assertEquals(MEETING_POINT, result.stopTimes.get(2).getStop().getId().getId());
+    assertEquals(List.of(), issueTypes(issueStore));
+  }
+
+  /**
+   * The same setup, but with no stop for the meeting point - the state left behind when
+   * {@link VehicleMeetingPointMapper} drops a VehicleMeetingPoint that has no coordinates. The
+   * projection still resolves the stop point to an id, so the stop is looked up and comes back
+   * empty. The whole trip is then dropped, which is what we want: a carpool trip is only usable if
+   * every meeting point on it is.
+   */
+  @Test
+  void tripIsDroppedWhenVehicleMeetingPointHasNoStop() {
+    var sample = new NetexTestDataSample();
+    // Deliberately no stop added for MEETING_POINT.
+
+    var issueStore = new DefaultDataImportIssueStore();
+    var result = mapWithMeetingPoint(sample, issueStore);
+
+    assertNull(result, "A trip with an unresolved meeting point must not be mapped");
+    assertEquals(
+      List.of("StopPointInJourneyPatternMissingStopLocation", "JourneyPatternStopNotFound"),
+      issueTypes(issueStore)
+    );
+  }
+
+  /**
+   * Maps the sample journey pattern with the third stop point projected onto a
+   * VehicleMeetingPoint instead of assigned to a Quay.
+   */
+  private static StopTimesMapperResult mapWithMeetingPoint(
+    NetexTestDataSample sample,
+    DataImportIssueStore issueStore
+  ) {
+    var quays = new HierarchicalMap<String, String>();
+    var source = sample.getQuayIdByStopPointRef();
+    source
+      .localKeys()
+      .stream()
+      .filter(key -> !STOP_POINT_3.equals(key))
+      .forEach(key -> quays.add(key, source.lookup(key)));
+
+    var meetingPoints = new HierarchicalMap<String, String>();
+    meetingPoints.add(STOP_POINT_3, MEETING_POINT);
+
+    var mapper = new StopTimesMapper(
+      issueStore,
+      MappingSupport.ID_FACTORY,
+      sample.getStopsById(),
+      new DefaultEntityById<>(),
+      new DefaultEntityById<>(),
+      new DefaultEntityById<>(),
+      sample.getDestinationDisplayById(),
+      new HierarchicalMap<>(),
+      quays,
+      new HierarchicalMap<>(),
+      meetingPoints,
+      new HierarchicalMapById<>(),
+      new HierarchicalMap<>()
+    );
+
+    return mapper.mapToStopTimes(
+      sample.getJourneyPattern(),
+      TRIP,
+      sample.getTimetabledPassingTimes(),
+      null
+    );
+  }
+
+  private static List<String> issueTypes(DefaultDataImportIssueStore issueStore) {
+    return issueStore.listIssues().stream().map(DataImportIssue::getType).toList();
   }
 
   private void assertStop(
