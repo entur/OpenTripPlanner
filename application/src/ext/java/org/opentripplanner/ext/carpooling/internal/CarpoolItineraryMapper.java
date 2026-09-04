@@ -296,16 +296,19 @@ public class CarpoolItineraryMapper {
   /**
    * Builds the carpool leg's {@code pickupBookingInfo} from the trip's public-contact details.
    * <p>
-   * The contact's {@code bookingUrl} (if present) is augmented with {@code from_coordinate} and
-   * {@code to_coordinate} query parameters reflecting the passenger's carpool boarding and
-   * alighting vertices — i.e. where the passenger gets in/out of the driver's car. These are
-   * distinct from the passenger's walking endpoints (handled by the surrounding walk legs) and
-   * from the driver's trip origin/destination.
+   * The contact's {@code bookingUrl} (if present) is treated as a URI template: its
+   * {@code {from}} and {@code {to}} placeholders are expanded with the passenger's carpool
+   * boarding and alighting vertices — i.e. where the passenger gets in/out of the driver's car.
+   * These are distinct from the passenger's walking endpoints (handled by the surrounding walk
+   * legs) and from the driver's trip origin/destination. See
+   * {@link #expandPassengerCoordinates(String, WgsCoordinate, WgsCoordinate)} for the template
+   * syntax and for the treatment of a URL that carries no placeholders.
    * <p>
-   * If the contact's booking URL cannot be parsed as a valid {@link URI}, the URL is dropped from
-   * the returned {@code BookingInfo} (a malformed URL is logged and treated as if the trip
-   * published no booking URL at all) and {@link BookingMethod#ONLINE} is omitted from
-   * the booking methods. This keeps the "non-null return ⇒ at least one usable booking method"
+   * If the booking URL is not a valid {@link URI} once its placeholders have been expanded, the
+   * URL is dropped from the returned {@code BookingInfo} (the failure is logged and the trip is
+   * treated as if it
+   * published no booking URL at all) and {@link BookingMethod#ONLINE} is omitted from the
+   * booking methods. This keeps the "non-null return ⇒ at least one usable booking method"
    * contract honest: a {@code BookingInfo} is never returned advertising {@code ONLINE} without
    * a URL the user can actually open.
    * <p>
@@ -322,10 +325,10 @@ public class CarpoolItineraryMapper {
    * @param contact the trip's public-contact details, or {@code null} if the trip publishes none.
    * @param tripStartTime the driver's trip start time; only the time-of-day is used, as the
    *        placeholder source for {@code latestBookingTime}.
-   * @param pickup the carpool boarding coordinate (where the passenger gets into the car), used to
-   *        augment the booking URL with {@code from_coordinate}.
+   * @param pickup the carpool boarding coordinate (where the passenger gets into the car),
+   *        expanded into the booking URL's {@code {from}} placeholder.
    * @param dropoff the carpool alighting coordinate (where the passenger gets out of the car),
-   *        used to augment the booking URL with {@code to_coordinate}.
+   *        expanded into the booking URL's {@code {to}} placeholder.
    * @return a booking info populated with the contact details and derived booking methods
    *         (CALL_OFFICE if phone is set, ONLINE if URL is set and parses), or {@code null} when
    *         no actionable booking method can be derived — i.e. {@code contact} is {@code null},
@@ -350,7 +353,7 @@ public class CarpoolItineraryMapper {
     String effectiveUrl =
       contact.getBookingUrl() == null
         ? null
-        : appendPassengerCoordinates(contact.getBookingUrl(), pickup, dropoff);
+        : expandPassengerCoordinates(contact.getBookingUrl(), pickup, dropoff);
     if (effectiveUrl != null) {
       bookingMethods.add(BookingMethod.ONLINE);
     }
@@ -381,50 +384,55 @@ public class CarpoolItineraryMapper {
   }
 
   /**
-   * Appends {@code from_coordinate} and {@code to_coordinate} query parameters to the booking URL
-   * so the carpool provider's booking page can pre-fill the passenger's pickup and dropoff.
+   * Expands the {@code {from}} and {@code {to}} placeholders in a booking URL template with the
+   * passenger's carpool boarding and alighting coordinates, each rendered as
+   * {@code "latitude,longitude"} with six decimals.
    * <p>
-   * The URL is parsed via {@link URI} so that any existing query string is merged with {@code &}
-   * (rather than a second {@code ?}) and any fragment ends up after the appended parameters
-   * rather than swallowing them.
+   * The template is the URL exactly as the carpool provider published it, so the provider — not
+   * OTP — decides where in the URL the coordinates land and what the surrounding parameters are
+   * called. Both {@code https://example.com/book?pickup={from}&dropoff={to}} and
+   * {@code https://example.com/book/{from}/{to}} are therefore honoured, and every occurrence of
+   * a placeholder is expanded. A template carrying neither placeholder is returned unchanged:
+   * that is how a provider declines to receive the passenger's coordinates at all.
+   * <p>
+   * The placeholder syntax is <a href="https://www.rfc-editor.org/rfc/rfc6570">RFC 6570</a> URI
+   * Template simple expansion. Curly braces are not legal URI characters, so expansion runs on
+   * the raw string and only its result is parsed. The expanded values are not percent-encoded: a
+   * {@code "latitude,longitude"} pair consists solely of digits, {@code .}, {@code -} and
+   * {@code ,}, every one of which is legal unencoded in a URI path, query and fragment alike.
    *
-   * @return the augmented URL, or {@code null} if the input is not a parseable URI — in which
-   *         case the failure is logged and the caller should drop the URL (and the
-   *         {@link BookingMethod#ONLINE} booking method along with it).
+   * @return the expanded URL, or {@code null} if the expansion is not a parseable URI — in
+   *         which case the failure is logged and the caller should drop the URL (and the
+   *         {@link BookingMethod#ONLINE} booking method along with it). An unrecognised
+   *         placeholder such as {@code {From}} also lands here: its braces survive expansion and
+   *         leave the result invalid.
    */
   @Nullable
-  private static String appendPassengerCoordinates(
-    String url,
+  private static String expandPassengerCoordinates(
+    String urlTemplate,
     WgsCoordinate pickup,
     WgsCoordinate dropoff
   ) {
-    String addedQuery = String.format(
-      Locale.ROOT,
-      "from_coordinate=%.6f,%.6f&to_coordinate=%.6f,%.6f",
-      pickup.latitude(),
-      pickup.longitude(),
-      dropoff.latitude(),
-      dropoff.longitude()
-    );
+    String url = urlTemplate
+      .replace("{from}", formatCoordinate(pickup))
+      .replace("{to}", formatCoordinate(dropoff));
     try {
-      URI uri = new URI(url);
-      String existingQuery = uri.getQuery();
-      String mergedQuery = existingQuery == null ? addedQuery : existingQuery + "&" + addedQuery;
-      return new URI(
-        uri.getScheme(),
-        uri.getAuthority(),
-        uri.getPath(),
-        mergedQuery,
-        uri.getFragment()
-      ).toString();
+      // Parsed only to reject a URL that is not a valid URI. URI#toString returns the string the
+      // URI was constructed from, so this leaves the provider's URL byte-for-byte intact.
+      return new URI(url).toString();
     } catch (URISyntaxException e) {
       LOG.info(
-        "Failed to parse carpool booking URL '{}'; dropping URL from booking info: {}",
-        url,
+        "Carpool booking URL '{}' is not a valid URI once its placeholders are expanded; " +
+          "dropping URL from booking info: {}",
+        urlTemplate,
         e.getMessage()
       );
       return null;
     }
+  }
+
+  private static String formatCoordinate(WgsCoordinate coordinate) {
+    return String.format(Locale.ROOT, "%.6f,%.6f", coordinate.latitude(), coordinate.longitude());
   }
 
   /**
