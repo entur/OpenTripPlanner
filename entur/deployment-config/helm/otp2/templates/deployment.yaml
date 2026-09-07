@@ -96,7 +96,6 @@ spec:
         - -XX:+UseTransparentHugePages
         - -XX:+AlwaysPreTouch
         - -XX:+UseCompactObjectHeaders
-        - -XX:ActiveProcessorCount={{ .Values.resources.cpuRequest }}
         - -XX:ConcGCThreads=1
         - -XX:ParallelGCThreads=6
         - -XX:MetaspaceSize=256m
