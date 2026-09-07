@@ -41,6 +41,7 @@ spec:
                 topologyKey: kubernetes.io/hostname
               weight: 100
       serviceAccountName: application
+      automountServiceAccountToken: false
       containers:
       {{- if .Values.proxy.enabled }}
       - image: {{ .Values.proxy.image.repo }}

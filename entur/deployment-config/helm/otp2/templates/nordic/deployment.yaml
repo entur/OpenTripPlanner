@@ -38,6 +38,7 @@ spec:
                       - nordic-gb-pool-3
 
       serviceAccountName: application
+      automountServiceAccountToken: false
       containers:
       - image: {{ .Values.image.identifier }}
         imagePullPolicy: {{ .Values.image.imagePullPolicy }}
