@@ -1,4 +1,7 @@
-FROM eclipse-temurin:25.0.3_9-jdk-noble
+# A JRE is enough: OTP itself only needs java, and the JDK tools (jcmd, jstack, jmap,
+# async-profiler) are brought in by an ephemeral debug container instead, e.g.
+#   kubectl debug -it <pod> --image=eclipse-temurin:25-jdk-noble --target=otp2 --profile=restricted
+FROM eclipse-temurin:25.0.3_9-jre-noble
 
 # The default user "ubuntu" must be removed, otherwise it supercedes the user "appuser" created
 # in this Dockerfile
