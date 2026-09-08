@@ -1,0 +1,37 @@
+name: "Deploy OTP Pipline"
+run-name: "Deploy OTP ${{inputs.version}} to ${{inputs.target}}"
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "The OTP version"
+        required: true
+        type: string
+      ser_ver_id:
+        description: "The OTP Serialization version id"
+        required: true
+        type: string
+      target:
+        description: "The target environment to deploy OTP to"
+        required: true
+        type: string
+jobs:
+  deploy-gb-rc:
+    name: Deploy Graph Builder RC
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploy Graph Builder RC ${{inputs.version}} (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
+  build-street-graph:
+    name: Build Street Graph (RC)
+    runs-on: ubuntu-latest
+    needs: deploy-gb-rc
+    steps:
+      - run: echo "Build Street Graph ${{inputs.version}} (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
+  deploy-otp:
+    name: Deploy
+    uses: ./.github/workflows/en-deploy.yml
+    needs: build-street-graph
+    with:
+      version: ${{inputs.version}}
+      ser_ver_id: ${{inputs.ser_ver_id}}
+      target: ${{inputs.target}}
