@@ -10,7 +10,6 @@ WORKDIR /code
 
 RUN apt-get -y update && apt-get -y upgrade && apt-get install -y \
     ca-certificates \
-    curl \
     && rm -rf /var/lib/apt/lists/*
 
 COPY --chmod=444 otp-shaded/target/otp-shaded-*.jar /code/otp-shaded.jar
@@ -21,10 +20,6 @@ ADD --chmod=444 https://repo1.maven.org/maven2/io/prometheus/jmx/jmx_prometheus_
 # JMX Exporter config (used only by Graph Builder)
 COPY --chmod=444 entur/deployment-config/docker/jmx_exporter_config.yml /opt/jmx/config.yaml
 
-COPY --chmod=755 entur/deployment-config/docker/docker-entrypoint.sh /docker-entrypoint.sh
-
-ENTRYPOINT ["/docker-entrypoint.sh"]
-
 RUN  addgroup appuser \
      && adduser --disabled-password --gecos "" appuser --ingroup appuser \
      && chown -R appuser:appuser /code/otpdata
@@ -32,6 +27,6 @@ RUN  addgroup appuser \
 USER appuser
 
 EXPOSE 8080
-CMD ["java","-Dfile.encoding=UTF-8", "-Xms256m", "-Xmx6144m", "-server", "-javaagent:/opt/jmx/jmx_prometheus_javaagent.jar=9779:/opt/jmx/config.yaml", "-jar", "code/otp-shaded.jar", "--load", "/code/otpdata/norway", "--serve"]
+CMD ["java","-Dfile.encoding=UTF-8", "-Xms256m", "-Xmx6144m", "-server", "-javaagent:/opt/jmx/jmx_prometheus_javaagent.jar=9779:/opt/jmx/config.yaml", "-jar", "/code/otp-shaded.jar", "--load", "/code/otpdata/norway", "--serve"]
 
 # For debug, add parameter "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=5005"

@@ -1,9 +1,10 @@
 {{- if .Values.nordicJourneyPlanner.enabled }}
 apiVersion: v1
 data:
+  # Same URI as the "graph" output of the nordic graph builder (configmap-nordic-graph-builder.yaml).
   build-config.json: |+
    {
-      "graph": "${GRAPH_URI}"
+      "graph": "{{ .Values.environmentValues.mardukGcpBaseName }}netex-otp2nordic/${otp.serialization.version.id}/graph-${otp.serialization.version.id}.obj"
    }
 kind: ConfigMap
 metadata:
