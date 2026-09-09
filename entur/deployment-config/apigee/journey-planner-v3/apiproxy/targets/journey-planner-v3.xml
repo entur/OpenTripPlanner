@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<TargetEndpoint name="journey-planner-v3">
+  <DefaultFaultRule name="DefaultFaultRule">
+    <Step>
+      <FaultRules/>
+      <Name>assignMessage.addCors</Name>
+    </Step>
+    <Step>
+      <FaultRules/>
+      <Name>flowCallout.journeyPlannerCollectStatisticsEtHeader</Name>
+    </Step>
+    <AlwaysEnforce>false</AlwaysEnforce>
+  </DefaultFaultRule>
+  <Description/>
+  <FaultRules/>
+  <Flows/>
+  <PostFlow name="PostFlow">
+    <Request/>
+    <Response>
+      <Step>
+        <FaultRules/>
+        <Name>flowCallout.journeyPlannerCollectStatisticsEtHeader</Name>
+      </Step>
+    </Response>
+  </PostFlow>
+  <PreFlow name="PreFlow">
+    <Request>
+      <Step>
+        <FaultRules/>
+        <Name>flowCallout.replaceTargetUrl</Name>
+      </Step>
+    </Request>
+    <Response>
+      <Step>
+        <Name>assignMessage.rateLimitQuotaHeaders</Name>
+      </Step>
+      <Step>
+        <FaultRules/>
+        <Name>assignMessage.addCors</Name>
+      </Step>
+    </Response>
+  </PreFlow>
+  <HTTPTargetConnection>
+    <Properties/>
+    <URL>https://journey-planner-v3-gcp2.INGRESS_ENVIRONMENT/otp/routers/norway/transmodel/index</URL>
+  </HTTPTargetConnection>
+</TargetEndpoint>
