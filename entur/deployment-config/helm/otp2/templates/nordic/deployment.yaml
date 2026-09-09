@@ -73,11 +73,9 @@ spec:
           value: Europe/Oslo
         lifecycle:
           preStop:
-            exec:
-              command:
-              - /bin/sh
-              - -c
-              - sleep 15
+            # The image has no shell: use the native sleep action (Kubernetes >= 1.30).
+            sleep:
+              seconds: 15
         name: otp2nordic
         ports:
         - containerPort: {{ .Values.service.internalPort }}
