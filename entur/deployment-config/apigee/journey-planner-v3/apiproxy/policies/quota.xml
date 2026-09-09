@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Quota async="true" continueOnError="false" enabled="true" name="quota" type="flexi">
+    <DisplayName>quota</DisplayName>
+    <Properties>
+        <Property name="features.isHTTPStatusTooManyRequestEnabled">true</Property>
+    </Properties>
+    <Allow count="1000" countRef="quota.client.allowed"/>
+    <Interval ref="request.header.quota_count">1</Interval>
+    <TimeUnit ref="request.header.quota_timeout">minute</TimeUnit>
+    <Identifier ref="quota.client.identifier"/>
+    <Distributed>true</Distributed>
+    <Synchronous>true</Synchronous>
+</Quota>
