@@ -96,11 +96,6 @@ data:
           "type": "gtfs",
           "feedId": "VK",
           "source": "https://fgwgtfsprod.blob.core.windows.net/gtfsout/latest_VIKINGLINE.zip"
-        },
-        {
-          "type": "gtfs",
-          "feedId": "FL",
-          "source": "https://finap.fi/export/gtfs/1660"
         }
       ],
       "fares": "off"
