@@ -33,6 +33,37 @@ revision=$(apigeetool listdeployments -u $APIGEEUSER -p $APIGEEPASSWORD  -o entu
 apigeetool deployExistingRevision -V -u $APIGEEUSER -p $APIGEEPASSWORD -o entur -e prod  -n journey-planner-v3 -r $revision
 ```
 
+## Graph lookup
+
+The journey-planner pods do not resolve a graph pointer at startup. Marduk publishes every new graph
+twice in the graph bucket: under a timestamped name and under the stable name
+`netex-otp2/<serialization version id>/Graph-otp2-current.obj` (see `Otp2NetexGraphRouteBuilder` in
+Marduk). The `build-config.json` in `otp2-build-configmap.yaml` references the stable name using OTP's
+own `${otp.serialization.version.id}` substitution, so an OTP build always loads a graph it can read.
+The nordic journey planner loads the graph written by the nordic graph builder, whose output path is
+already stable (`netex-otp2nordic/<serialization version id>/graph-<serialization version id>.obj`).
+
+If no graph exists yet for a new serialization version, OTP fails to start and Kubernetes retries with
+back-off until the graph builder has published one.
+
+The pointer files (`current-otp2` at the bucket root and `netex-otp2/<serialization version id>/current-otp2`)
+are still written by Marduk; the root pointer triggers `cronjob-redeploy-otp2`. They are no longer read
+by the OTP pods.
+
+### Rolling back to a previous graph
+
+Rewriting the pointer files has no effect on the pods. Copy the previous timestamped graph over the
+stable name and restart the deployment:
+
+```bash
+gcloud storage cp gs://<bucket>/netex-otp2/<ser id>/<timestamp>-Graph-otp2-<ser id>.obj \
+                  gs://<bucket>/netex-otp2/<ser id>/Graph-otp2-current.obj
+kubectl rollout restart deployment/otp2 -n otp2
+```
+
+The buckets keep overwritten generations for 7 days (soft delete), so a graph overwritten by mistake can
+also be restored with `gcloud storage restore`.
+
 ## Test config
 
 You can test the config variable substitution locally by running:

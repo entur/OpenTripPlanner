@@ -1,9 +1,11 @@
 {{- if .Values.journeyPlanner.enabled }}
 apiVersion: v1
 data:
+  # The graph published by Marduk for the serialization version of this OTP build. Marduk copies
+  # every new graph to this stable name, so no pointer-file lookup is needed at startup.
   build-config.json: |+
    {
-      "graph": "${GRAPH_URI}"
+      "graph": "{{ .Values.environmentValues.mardukGcpBaseName }}netex-otp2/${otp.serialization.version.id}/Graph-otp2-current.obj"
    }
 kind: ConfigMap
 metadata:
