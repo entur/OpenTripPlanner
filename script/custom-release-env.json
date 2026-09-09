@@ -1,0 +1,9 @@
+{
+  "upstream_remote": "otp",
+  "release_remote": "entur",
+  "release_branch": "main",
+  "ser_ver_id_prefix": "EN",
+  "include_prs_label": "Entur Test",
+  "ext_branches" : [ "main_config"],
+  "otp_production_url" : "https://otp2debug.entur.org/otp"
+}

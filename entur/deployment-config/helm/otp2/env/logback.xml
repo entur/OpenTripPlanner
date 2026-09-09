@@ -1,0 +1,74 @@
+<configuration>
+
+  <variable name="otpServiceName" value="${entur.otp.service.name:-otp2}" />
+
+    <!--
+       Add the default shutdown hook, with a 5s delay so that log messages produced during shutdown are visible.
+    -->
+    <shutdownHook>
+        <delay>5000</delay>
+    </shutdownHook>
+
+  <!--
+    This suppresses the meta-log entries about Logback configuration (how Java).
+    This is a stopgap measure.
+    The right solution is to make sure there are not logback.xml files from our dependency libraries on the classpath.
+   -->
+  <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
+
+  <!-- This will push these level changes onto JUL. Otherwise, JUL defaults to a high threshold
+       for logging and debug log messages will never make it to slf4j. -->
+  <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator"/>
+
+  <!-- Using the synchronous ConsoleAppender is generally not recommended in a production
+      environment, but in a Google Cloud environment this appender does not cause contention unless
+      extreme log pressure, which we do not experience in this deployment.
+      The "reportLocation" field could be enriched with "functionName" and "lineNumber".
+      This would have however a (small) performance impact since LogBack needs to create a Throwable object
+      and extract a stacktrace to populate these fields.
+  -->
+  <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+      <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+          <providers>
+              <!-- provides the timestamp <timestamp/> -->
+              <!-- provides the version <version/> -->
+              <!-- provides the fields in the configured pattern -->
+              <pattern>
+                  <!-- the pattern that defines what to include -->
+                  <pattern>
+                      {
+                      "serviceContext": {
+                          "service": "${otpServiceName}"
+                      },
+                      "message": "%message\n%ex{full}",
+                      "severity": "%level",
+                      "thread": "%thread",
+                      "correlationId": "%X{correlationId}",
+                      "etClientName": "%X{etClientName}",
+                      "reportLocation": {
+                          "filePath": "%logger"
+                      }
+                      }
+                  </pattern>
+              </pattern>
+          </providers>
+      </encoder>
+  </appender>
+
+  <!-- Change this to debug to let more messages through. -->
+  <root level="info">
+    <appender-ref ref="console" />
+  </root>
+  <!-- Third-party loggers -->
+  <logger name="ch.qos.logback" level="warn"/>
+  <logger name="com.amazonaws" level="info"/>
+  <logger name="org.apache.hc" level="info" />
+  <logger name="com.conveyal" level="info"/>
+  <logger name="com.azure" level="warn"/>
+  <!-- Avoid printing info messages about calendars when building graph -->
+  <logger name="org.onebusaway.gtfs.impl.calendar.CalendarServiceDataFactoryImpl" level="warn" />
+  <logger name="com.sun.jersey" level="warn" />
+  <!-- Suppress an inconsequential IOException that is logged at debug level. -->
+  <logger name="org.glassfish.grizzly" level="info" />
+
+</configuration>
