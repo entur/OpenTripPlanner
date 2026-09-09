@@ -1,5 +1,9 @@
 FROM gcr.io/distroless/java25-debian13:nonroot
 
+# WORKDIR creates the directories (there is no shell for mkdir). ADD/COPY --chmod=444 would
+# otherwise create the missing parent directories read-only, without the execute bit that the
+# non-root user needs to enter them.
+WORKDIR /opt/jmx
 WORKDIR /code/otpdata/norway
 WORKDIR /code
 
