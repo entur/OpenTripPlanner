@@ -121,7 +121,7 @@ data:
               "frequency": "1m",
               "url": "{{ .Values.configuration.siriSXUpdater }}",
               "timeout": "20s",
-              "feedId": "EN",
+              "feedId": "NO",
               "blockReadinessUntilInitialized": true,
               "headers" : {
                "ET-Client-Name": "${HOSTNAME}-SX"
@@ -131,7 +131,7 @@ data:
             // SIRI ET Google Pubsub updater
             {
               "type": "siri-et-google-pubsub-updater",
-              "feedId": "EN",
+              "feedId": "NO",
               "reconnectPeriod": "5s",
               "initialGetDataTimeout": "1m20s",
               "projectName": "{{ .Values.configuration.siriETPubsubUpdater.topicProjectName }}",
@@ -148,7 +148,7 @@ data:
               "previewInterval": "3h",
               "timeout": "20s",
               "url": "{{ .Values.configuration.siriETUpdater }}",
-              "feedId": "EN",
+              "feedId": "NO",
               "blockReadinessUntilInitialized": true
             },
             {
@@ -157,7 +157,7 @@ data:
               "previewInterval": "3h",
               "timeout": "10s",
               "url": "{{ .Values.configuration.siriETUpdaterVar }}",
-              "feedId": "EN",
+              "feedId": "NO",
               "blockReadinessUntilInitialized": true
             }
      {{- end }}
