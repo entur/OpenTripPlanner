@@ -33,6 +33,24 @@ revision=$(apigeetool listdeployments -u $APIGEEUSER -p $APIGEEPASSWORD  -o entu
 apigeetool deployExistingRevision -V -u $APIGEEUSER -p $APIGEEPASSWORD -o entur -e prod  -n journey-planner-v3 -r $revision
 ```
 
+## Container image
+
+The `otp2` image (`Dockerfile`) is the Temurin 25 JRE on `gcr.io/distroless/java25-debian13`: no
+shell, no package manager, no JDK tools. All workloads (journey planner, nordic, graph builders) run
+`java` directly.
+
+Debugging a running pod requires an ephemeral container with a JDK, for example:
+
+```bash
+kubectl debug -it <pod> --image=eclipse-temurin:25-jdk-noble --target=otp2 --profile=restricted
+```
+
+### Local run
+
+```bash
+docker run --rm -p 8080:8080 -v /path/to/graph-dir:/code/otpdata/norway otp2:<tag>
+```
+
 ## Graph lookup
 
 The journey-planner pods do not resolve a graph pointer at startup. Marduk publishes every new graph
