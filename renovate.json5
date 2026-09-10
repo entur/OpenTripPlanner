@@ -1,7 +1,7 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:base"
+    "config:recommended"
   ],
   "prConcurrentLimit": 3,
   "labels": [
@@ -32,7 +32,7 @@
       "enabled": false
     },
     {
-      "matchFiles": ["client/package.json"],
+      "matchFileNames": ["client/package.json"],
       "matchUpdateTypes": ["patch", "minor"],
       "groupName": "Debug UI dependencies (non-major)",
       "schedule": ["after 6pm on the 17th day of the month"],
@@ -41,7 +41,7 @@
       "postUpdateOptions": ["npmInstallTwice"]
     },
     {
-      "matchFiles": ["client/package.json"],
+      "matchFileNames": ["client/package.json"],
       "matchPackageNames": [
         // incompatible with the current code, needs further investigation
         "@graphql-codegen/cli",
@@ -51,11 +51,23 @@
       enabled: false
     },
     {
-      "matchFiles": ["client/package.json"],
+      "matchFileNames": ["client/package.json"],
       "matchUpdateTypes": ["major"],
       "minimumReleaseAge": "4 days",
       "reviewers": ["testower"],
       "postUpdateOptions": ["npmInstallTwice"]
+    },
+    {
+      // vitest and its @vitest/* companions pin each other as exact peer dependencies,
+      // so updating one on its own makes the dependency tree unresolvable and npm cannot
+      // regenerate package-lock.json. They have to move in a single PR.
+      "description": "vitest packages must be updated together",
+      "groupName": "vitest",
+      "matchFileNames": ["client/package.json"],
+      "matchPackageNames": [
+        "vitest",
+        "@vitest/{/,}**"
+      ]
     },
     // some dependencies that we auto-merge release very often and even the auto-merges create a lot of
     // noise, so we slow it down a bit
@@ -130,7 +142,7 @@
     },
     {
       "groupName": "GTFS API code generation",
-      "matchFiles": ["application/src/main/java/org/opentripplanner/apis/gtfs/generated/package.json"],
+      "matchFileNames": ["application/src/main/java/org/opentripplanner/apis/gtfs/generated/package.json"],
       "minimumReleaseAge": "4 days",
       "reviewers": ["optionsome", "leonardehrenfried"],
       "schedule": "on the 11th through 12th day of the month"
