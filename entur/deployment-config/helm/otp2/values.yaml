@@ -94,17 +94,11 @@ secrets:
 # unknown-parameter warning from OTP rather than being silently dropped, and field inheritance
 # from "defaults" is applied by OTP, not by the templates.
 #
-# "applyGeofencingZones" names when a network's zones are computed and applied, so they cannot be
-# applied twice. Unlisted networks are still loaded, with zones off.
+# Geofencing is configured per environment, because only an environment that also sets
+# "vehicleRentalGeofencing" has a graph builder to apply the zones. Without a "defaults" block
+# here, a network is off unless its environment turns it on.
+#
+# An environment that sets "networks" replaces this list rather than adding to it, since Helm
+# merges maps but not lists.
 gbfs:
   includeUnlistedNetworks: true
-  defaults:
-    requireDropOffInsideBusinessArea: false
-  networks:
-  - network: voioslo
-    applyGeofencingZones: graph-build
-  - network: boltoslo
-    applyGeofencingZones: graph-build
-    requireDropOffInsideBusinessArea: true
-  - network: rydeoslo
-    applyGeofencingZones: graph-build
