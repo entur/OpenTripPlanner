@@ -47,5 +47,3 @@ gbfs:
     requireDropOffInsideBusinessArea: true
   - network: dotttrondheim
     requireDropOffInsideBusinessArea: true
-  - network: altairtrondheim
-    requireDropOffInsideBusinessArea: true
