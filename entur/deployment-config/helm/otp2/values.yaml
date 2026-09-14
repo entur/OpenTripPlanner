@@ -62,6 +62,9 @@ proxy:
 cronjobRedeployGraphBuilder:
   releaseCandidateGraphBuilderEnabled: false
   enabled: false
+  # Marduk outbound folder holding the NeTEx export. "netex-dsj-new" is the NeTEx 1.16 export,
+  # which uses the new DatedServiceJourney format (requires OTP with PR #7257).
+  netexExportFolder: outbound/netex-dsj-new
   imagePullPolicy: Always
   resources:
     cpuLimit: 5000m
