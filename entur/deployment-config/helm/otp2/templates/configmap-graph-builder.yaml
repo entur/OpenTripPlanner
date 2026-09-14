@@ -91,7 +91,7 @@ data:
         "transitFeeds": [
           {
             "type": "netex",
-            "source": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukBucket }}/outbound/netex/rb_norway-aggregated-netex.zip",
+            "source": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukBucket }}/{{ .Values.cronjobRedeployGraphBuilder.netexExportFolder }}/rb_norway-aggregated-netex.zip",
             "sharedFilePattern": "_stops.xml",
             "sharedGroupFilePattern": "_(\\w{3})(_flexible)?_shared_data.xml",
             "groupFilePattern": "(\\w{3})_.*\\.xml",
