@@ -1,0 +1,36 @@
+name: Deploy OTP
+run-name: "Deploy JP & GB ${{inputs.version}} to ${{inputs.target}}"
+on:
+  workflow_call:
+    inputs:
+      version:
+        description: "The OTP version"
+        required: true
+        type: string
+      ser_ver_id:
+        description: "The OTP Serialization version id"
+        required: true
+        type: string
+      target:
+        description: "The target environment to deploy OTP to"
+        required: false
+        type: string
+jobs:
+  build-transit-graph:
+    name: Build Transit Graph (RC)
+    runs-on: ubuntu-latest
+    environment: ${{inputs.target}}
+    steps:
+      - run: echo "Build Transit Graph ${{inputs.version}} (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
+  deploy-gb:
+    name: "Deploy Graph Builder ${{inputs.version}} (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
+    runs-on: ubuntu-latest
+    needs: build-transit-graph
+    steps:
+      - run: echo "Deploy Graph Builder ${{inputs.version}}  (${{inputs.ser_ver_id}}) in ${{inputs.target}}"
+  deploy-jp:
+    name: "Deploy Journey Planner ${{inputs.version}} in ${{inputs.target}}"
+    runs-on: ubuntu-latest
+    needs: build-transit-graph
+    steps:
+      - run: echo "Deploy Journey Planner ${{inputs.version}} in ${{inputs.target}}"
