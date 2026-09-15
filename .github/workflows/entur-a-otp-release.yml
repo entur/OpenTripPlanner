@@ -35,39 +35,138 @@ on:
       ser_ver_id:
         description: 'The OTP serialization id'
         value: ${{ jobs.release.outputs.ser_ver_id }}
+
+permissions:
+  contents: read
+
+env:
+  # The GitHub users allowed to decide that an upstream pull request goes into an Entur release, by
+  # putting the "Entur Test" label on it. Anyone with triage rights on
+  # opentripplanner/OpenTripPlanner can set that label, so this list - not the label itself - is what
+  # the release trusts. Adding someone requires a reviewed pull request to the main_config branch.
+  ENTUR_TEST_LABELERS: 'vpaturet t2gran testower sigtot'
+
 jobs:
+  # Verify who decided that the labeled pull requests go into this release. The release script merges
+  # the current head of every open upstream pull request carrying the "Entur Test" label, so the
+  # label is what lets third-party code into the Entur build. This job deliberately holds no
+  # credentials, and it runs before the release job, which is the one with something worth stealing.
+  verify-labeled-prs:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Verify who labeled the pull requests included in this release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HOTFIX: ${{ inputs.hotfix }}
+          UPSTREAM: opentripplanner/OpenTripPlanner
+          # Keep in sync with 'include_prs_label' in script/custom-release-env.json
+          LABEL: 'Entur Test'
+        run: |
+          set -euo pipefail
+
+          # A hotfix releases a branch as it is, without merging any pull request.
+          if [ "${HOTFIX}" = "true" ]; then
+            echo "Hotfix release - no pull requests are merged, nothing to verify."
+            exit 0
+          fi
+
+          PRS=$(gh api graphql -f label="${LABEL}" -f query='
+            query($label: String!) {
+              repository(owner: "opentripplanner", name: "OpenTripPlanner") {
+                pullRequests(first: 100, states: OPEN, labels: [$label]) {
+                  nodes { number headRefOid authorAssociation author { login } }
+                }
+              }
+            }' --jq '.data.repository.pullRequests.nodes')
+
+          {
+            echo "### Pull requests included in this release"
+            echo ""
+            echo "| PR | Author | Labeled by | Head |"
+            echo "|---|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          UNTRUSTED=""
+          for NUMBER in $(echo "$PRS" | jq -r '.[].number'); do
+            PR=$(echo "$PRS" | jq -c --argjson n "$NUMBER" '.[] | select(.number == $n)')
+            AUTHOR=$(echo "$PR" | jq -r '.author.login')
+            ASSOCIATION=$(echo "$PR" | jq -r '.authorAssociation')
+            HEAD=$(echo "$PR" | jq -r '.headRefOid[0:8]')
+
+            # The label can be removed and set again, so only the last event is in force.
+            LABELER=$(gh api "repos/${UPSTREAM}/issues/${NUMBER}/timeline" --paginate \
+              --jq "[.[] | select(.event == \"labeled\" and (.label.name | ascii_downcase == \"${LABEL,,}\"))] | last | .actor.login")
+            if [ -z "${LABELER}" ] || [ "${LABELER}" = "null" ]; then
+              LABELER='unknown'
+            fi
+
+            echo "| [#${NUMBER}](https://github.com/${UPSTREAM}/pull/${NUMBER}) | ${AUTHOR} | ${LABELER} | ${HEAD} |" >> "$GITHUB_STEP_SUMMARY"
+
+            if ! echo " ${ENTUR_TEST_LABELERS} " | grep -q " ${LABELER} "; then
+              UNTRUSTED="${UNTRUSTED}  - #${NUMBER} was labeled by '${LABELER}', who is not in ENTUR_TEST_LABELERS\n"
+            fi
+
+            # The label says the code was trusted when it was set, but the head of a pull request can
+            # move afterwards. For an author outside the upstream organisation that gap is worth
+            # looking at; it is not a reason to stop the release, since the labeler above is the
+            # decision that counts.
+            case "${ASSOCIATION}" in
+              MEMBER | OWNER | COLLABORATOR) ;;
+              *) echo "::warning::#${NUMBER} is authored by ${AUTHOR} (${ASSOCIATION}), outside the upstream organisation. Its head may have moved since it was labeled." ;;
+            esac
+          done
+
+          if [ -n "${UNTRUSTED}" ]; then
+            printf "::error::Untrusted labels:\n%b" "${UNTRUSTED}"
+            echo "Remove the label, or add the person to ENTUR_TEST_LABELERS in this workflow."
+            exit 1
+          fi
+
   release:
     runs-on: ubuntu-latest
     # This condition ensures the job only runs if the branch is 'main'
     if: github.ref == 'refs/heads/main'
+    needs: [verify-labeled-prs]
+    permissions:
+      contents: read
     outputs:
       version: ${{ steps.set_version.outputs.version }}
       ser_ver_id: ${{ steps.set_ser_ver_id.outputs.ser_ver_id }}
     steps:
+      # No token here. The release script only ever fetches from GitHub and both repositories are
+      # public, so it does not need one. Without 'persist-credentials: false' the checkout leaves a
+      # credential in .git/config for the steps that merge, build and test upstream pull requests.
       - name: Checkout entur/OpenTripPlanner
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
-          token: '${{ secrets.ENTUR_OTP_CI_BUILD }}'
-      - uses: actions/setup-python@v6
+          persist-credentials: false
+      - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: '3.13'
-      - uses: actions/setup-java@v5
+      - uses: actions/setup-java@b6effb05e454b25005698d916606bdc6ffcbf961 # v5.7.0
         with:
           java-version: 25
           distribution: temurin
       - name: Cache Maven dependencies
-        uses: actions/cache@v5
+        uses: actions/cache@caa296126883cff596d87d8935842f9db880ef25 # v5.1.0
         with:
           path: ~/.m2/repository
           key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
           restore-keys: |
             ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
             ${{ runner.os }}-maven-
-            ${{ runner.os }}-
+      # This step merges upstream pull requests and runs Maven over the result, so everything it
+      # executes is third-party code. It therefore runs without any credential: the push the script
+      # makes at the end goes to a throwaway repository on the runner, and the real push happens in
+      # "Publish release" once Maven is done. Only the push URL is redirected, so the fetches the
+      # script makes still reach GitHub.
       - name: Release OTP
         env:
-          CUSTOM_RELEASE_GIT_HUB_API_TOKEN: ${{ secrets.ENTUR_OTP_CI_BUILD }}
+          CUSTOM_RELEASE_GIT_HUB_API_TOKEN: ${{ github.token }}
           CUSTOM_RELEASE_LOG_LEVEL: ${{ inputs.log_level }}
         run: |
           echo "Start otp release script"
@@ -76,6 +175,8 @@ jobs:
           git remote rename origin entur
           git remote add otp https://github.com/opentripplanner/OpenTripPlanner.git
           git fetch --no-tags otp
+          git init --bare --quiet "${RUNNER_TEMP}/release-staging.git"
+          git config remote.entur.pushurl "${RUNNER_TEMP}/release-staging.git"
           git remote -v
           if [ "${{inputs.bump_ser_ver_id}}" == "true" ]; then
             SER_VER="--serVerId"
@@ -99,12 +200,21 @@ jobs:
           echo "ser_ver_id=${SER_VER_ID}" >> $GITHUB_OUTPUT
       - name: Create Summary
         run: cat .custom_release_summary.md >> $GITHUB_STEP_SUMMARY
-      - name: Create GitHub Release
+      # The first step that sees the token, and the last step to run. The authorization header keeps
+      # the token out of the process arguments, where anything else on the runner could read it.
+      - name: Publish release
         env:
-          GITHUB_TOKEN: ${{ secrets.ENTUR_OTP_CI_BUILD }}
+          TOKEN: ${{ secrets.ENTUR_OTP_CI_BUILD }}
+          GH_TOKEN: ${{ secrets.ENTUR_OTP_CI_BUILD }}
+          TAG_NAME: ${{ steps.set_version.outputs.version }}
+          SER_VER_ID: ${{ steps.set_ser_ver_id.outputs.ser_ver_id }}
         run: |
-          TAG_NAME=${{ steps.set_version.outputs.version }}
-          SER_VER_ID=${{ steps.set_ser_ver_id.outputs.ser_ver_id }}
-          gh release create "$TAG_NAME" \
+          set -euo pipefail
+          trap 'git config --local --unset "http.https://github.com/.extraheader" || true' EXIT
+          git config --local "http.https://github.com/.extraheader" \
+            "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${TOKEN}" | base64 -w0)"
+          git push --force https://github.com/entur/OpenTripPlanner.git HEAD:main "refs/tags/${TAG_NAME}"
+          echo "Release pushed to: entur/main"
+          gh release create "${TAG_NAME}" \
             --title "Release ${TAG_NAME} (${SER_VER_ID})" \
             --notes-file .custom_release_summary.md
