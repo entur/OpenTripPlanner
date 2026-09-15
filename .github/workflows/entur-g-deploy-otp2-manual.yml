@@ -1,0 +1,131 @@
+name: "G - Deploy otp2 manually 🎛️"
+run-name: "Deploy otp2 ${{ inputs.image_tag }} to ${{ inputs.environment }} 🎛️"
+on:
+  workflow_dispatch:
+    inputs:
+      image_tag:
+        description: "The otp2 image tag to deploy (e.g. v2.10.0-entur-167)"
+        required: true
+        type: string
+      environment:
+        description: "Target environment"
+        required: true
+        type: choice
+        options:
+          - dev
+          - tst
+          - prd
+jobs:
+  verify-image-tag:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      tag: ${{ steps.verify.outputs.tag }}
+    steps:
+      - id: verify
+        name: Verify a published release exists for the given tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${{ inputs.image_tag }}"
+          if ! gh release view "${TAG}" --repo "${GITHUB_REPOSITORY}" > /dev/null 2>&1; then
+            echo "::error::No published release found for tag '${TAG}' - refusing to deploy an image that may not exist"
+            exit 1
+          fi
+          echo "Verified release exists for tag: ${TAG}"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+  resolve-env-config:
+    runs-on: ubuntu-24.04
+    outputs:
+      gb_cluster: ${{ steps.resolve.outputs.gb_cluster }}
+      gb_values: ${{ steps.resolve.outputs.gb_values }}
+      jp_cluster: ${{ steps.resolve.outputs.jp_cluster }}
+      jp_values: ${{ steps.resolve.outputs.jp_values }}
+    steps:
+      - id: resolve
+        name: Resolve cluster/values for the chosen environment
+        run: |
+          case "${{ inputs.environment }}" in
+            dev)
+              echo "gb_cluster=kub-ent-dev-001" >> "$GITHUB_OUTPUT"
+              echo "gb_values=values-kub-ent-dev.yaml" >> "$GITHUB_OUTPUT"
+              echo "jp_cluster=kub-ent-jp-dev-001" >> "$GITHUB_OUTPUT"
+              echo "jp_values=values-kub-ent-jp-dev.yaml" >> "$GITHUB_OUTPUT"
+              ;;
+            tst)
+              echo "gb_cluster=kub-ent-tst-001" >> "$GITHUB_OUTPUT"
+              echo "gb_values=values-kub-ent-tst.yaml" >> "$GITHUB_OUTPUT"
+              echo "jp_cluster=kub-ent-jp-tst-001" >> "$GITHUB_OUTPUT"
+              echo "jp_values=values-kub-ent-jp-tst.yaml" >> "$GITHUB_OUTPUT"
+              ;;
+            prd)
+              echo "gb_cluster=kub-ent-prd-001" >> "$GITHUB_OUTPUT"
+              echo "gb_values=values-kub-ent-prd.yaml" >> "$GITHUB_OUTPUT"
+              echo "jp_cluster=kub-ent-jp-prd-001" >> "$GITHUB_OUTPUT"
+              echo "jp_values=values-kub-ent-jp-prd.yaml" >> "$GITHUB_OUTPUT"
+              ;;
+            *)
+              echo "::error::Unknown environment: ${{ inputs.environment }}"
+              exit 1
+              ;;
+          esac
+
+  helm-lint:
+    needs: [verify-image-tag]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.verify-image-tag.outputs.tag }}
+      - name: Helm lint against every env values file
+        run: |
+          for env in dev tst prd jp-dev jp-tst jp-prd dev-jp-nordic dev-rc tst-rc prd-rc; do
+            helm lint helm/otp2 -f helm/otp2/env/values-kub-ent-${env}.yaml
+          done
+
+  approval-prd:
+    if: inputs.environment == 'prd'
+    needs: [verify-image-tag]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment: Approve
+    steps:
+      - name: Manual approval
+        shell: bash
+        run: echo "Approve PRD deployment"
+
+  deploy-otp2-gb:
+    if: always() && github.repository_owner == 'entur' && needs.verify-image-tag.result == 'success' && needs.resolve-env-config.result == 'success' && needs.helm-lint.result == 'success' && (needs.approval-prd.result == 'success' || needs.approval-prd.result == 'skipped')
+    needs: [verify-image-tag, resolve-env-config, helm-lint, approval-prd]
+    uses: entur/gha-helm/.github/workflows/deploy.yml@v1
+    with:
+      environment: ${{ inputs.environment }}
+      image: otp2:${{ needs.verify-image-tag.outputs.tag }}
+      gcp_cluster_location: europe-west1
+      gcp_cluster_name: ${{ needs.resolve-env-config.outputs.gb_cluster }}
+      chart: helm/otp2
+      image_set_path: "image.identifier"
+      values: ${{ needs.resolve-env-config.outputs.gb_values }}
+      namespace: marduk
+      release_name: otp2-gb
+    secrets: inherit
+
+  deploy-otp2-jp:
+    if: always() && github.repository_owner == 'entur' && needs.verify-image-tag.result == 'success' && needs.resolve-env-config.result == 'success' && needs.helm-lint.result == 'success' && (needs.approval-prd.result == 'success' || needs.approval-prd.result == 'skipped')
+    needs: [verify-image-tag, resolve-env-config, helm-lint, approval-prd]
+    uses: entur/gha-helm/.github/workflows/deploy.yml@v1
+    with:
+      environment: ${{ inputs.environment }}
+      image: otp2:${{ needs.verify-image-tag.outputs.tag }}
+      gcp_cluster_location: europe-west4
+      gcp_cluster_name: ${{ needs.resolve-env-config.outputs.jp_cluster }}
+      chart: helm/otp2
+      image_set_path: "image.identifier"
+      values: ${{ needs.resolve-env-config.outputs.jp_values }}
+      namespace: otp2
+      release_name: otp2
+    secrets: inherit
