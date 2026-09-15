@@ -39,11 +39,97 @@ on:
 permissions:
   contents: read
 
+env:
+  # The GitHub users allowed to decide that an upstream pull request goes into an Entur release, by
+  # putting the "Entur Test" label on it. Anyone with triage rights on
+  # opentripplanner/OpenTripPlanner can set that label, so this list - not the label itself - is what
+  # the release trusts. Adding someone requires a reviewed pull request to the main_config branch.
+  ENTUR_TEST_LABELERS: 'vpaturet t2gran testower sigtot'
+
 jobs:
+  # Verify who decided that the labeled pull requests go into this release. The release script merges
+  # the current head of every open upstream pull request carrying the "Entur Test" label, so the
+  # label is what lets third-party code into the Entur build. This job deliberately holds no
+  # credentials, and it runs before the release job, which is the one with something worth stealing.
+  verify-labeled-prs:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    steps:
+      - name: Verify who labeled the pull requests included in this release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          HOTFIX: ${{ inputs.hotfix }}
+          UPSTREAM: opentripplanner/OpenTripPlanner
+          # Keep in sync with 'include_prs_label' in script/custom-release-env.json
+          LABEL: 'Entur Test'
+        run: |
+          set -euo pipefail
+
+          # A hotfix releases a branch as it is, without merging any pull request.
+          if [ "${HOTFIX}" = "true" ]; then
+            echo "Hotfix release - no pull requests are merged, nothing to verify."
+            exit 0
+          fi
+
+          PRS=$(gh api graphql -f label="${LABEL}" -f query='
+            query($label: String!) {
+              repository(owner: "opentripplanner", name: "OpenTripPlanner") {
+                pullRequests(first: 100, states: OPEN, labels: [$label]) {
+                  nodes { number headRefOid authorAssociation author { login } }
+                }
+              }
+            }' --jq '.data.repository.pullRequests.nodes')
+
+          {
+            echo "### Pull requests included in this release"
+            echo ""
+            echo "| PR | Author | Labeled by | Head |"
+            echo "|---|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          UNTRUSTED=""
+          for NUMBER in $(echo "$PRS" | jq -r '.[].number'); do
+            PR=$(echo "$PRS" | jq -c --argjson n "$NUMBER" '.[] | select(.number == $n)')
+            AUTHOR=$(echo "$PR" | jq -r '.author.login')
+            ASSOCIATION=$(echo "$PR" | jq -r '.authorAssociation')
+            HEAD=$(echo "$PR" | jq -r '.headRefOid[0:8]')
+
+            # The label can be removed and set again, so only the last event is in force.
+            LABELER=$(gh api "repos/${UPSTREAM}/issues/${NUMBER}/timeline" --paginate \
+              --jq "[.[] | select(.event == \"labeled\" and (.label.name | ascii_downcase == \"${LABEL,,}\"))] | last | .actor.login")
+            if [ -z "${LABELER}" ] || [ "${LABELER}" = "null" ]; then
+              LABELER='unknown'
+            fi
+
+            echo "| [#${NUMBER}](https://github.com/${UPSTREAM}/pull/${NUMBER}) | ${AUTHOR} | ${LABELER} | ${HEAD} |" >> "$GITHUB_STEP_SUMMARY"
+
+            if ! echo " ${ENTUR_TEST_LABELERS} " | grep -q " ${LABELER} "; then
+              UNTRUSTED="${UNTRUSTED}  - #${NUMBER} was labeled by '${LABELER}', who is not in ENTUR_TEST_LABELERS\n"
+            fi
+
+            # The label says the code was trusted when it was set, but the head of a pull request can
+            # move afterwards. For an author outside the upstream organisation that gap is worth
+            # looking at; it is not a reason to stop the release, since the labeler above is the
+            # decision that counts.
+            case "${ASSOCIATION}" in
+              MEMBER | OWNER | COLLABORATOR) ;;
+              *) echo "::warning::#${NUMBER} is authored by ${AUTHOR} (${ASSOCIATION}), outside the upstream organisation. Its head may have moved since it was labeled." ;;
+            esac
+          done
+
+          if [ -n "${UNTRUSTED}" ]; then
+            printf "::error::Untrusted labels:\n%b" "${UNTRUSTED}"
+            echo "Remove the label, or add the person to ENTUR_TEST_LABELERS in this workflow."
+            exit 1
+          fi
+
   release:
     runs-on: ubuntu-latest
     # This condition ensures the job only runs if the branch is 'main'
     if: github.ref == 'refs/heads/main'
+    needs: [verify-labeled-prs]
     permissions:
       contents: read
     outputs:
