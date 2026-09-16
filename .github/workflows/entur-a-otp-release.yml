@@ -175,7 +175,16 @@ jobs:
           git remote rename origin entur
           git remote add otp https://github.com/opentripplanner/OpenTripPlanner.git
           git fetch --no-tags otp
+          # The staging repository shares this checkout's objects and starts at the current
+          # release, so the push the script makes at the end stays the small incremental push it
+          # was against GitHub. Pushing into an empty repository would send the whole history
+          # instead, which takes longer than the 20 s timeout custom-release.py puts on every git
+          # command.
           git init --bare --quiet "${RUNNER_TEMP}/release-staging.git"
+          printf '%s\n' "$(git rev-parse --path-format=absolute --git-path objects)" \
+            > "${RUNNER_TEMP}/release-staging.git/objects/info/alternates"
+          git --git-dir="${RUNNER_TEMP}/release-staging.git" \
+            update-ref refs/heads/main "$(git rev-parse HEAD)"
           git config remote.entur.pushurl "${RUNNER_TEMP}/release-staging.git"
           git remote -v
           if [ "${{inputs.bump_ser_ver_id}}" == "true" ]; then
