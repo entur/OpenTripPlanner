@@ -97,15 +97,28 @@ jobs:
             HEAD=$(echo "$PR" | jq -r '.headRefOid[0:8]')
 
             # The label can be removed and set again, so only the last event is in force.
-            LABELER=$(gh api "repos/${UPSTREAM}/issues/${NUMBER}/timeline" --paginate \
-              --jq "[.[] | select(.event == \"labeled\" and (.label.name | ascii_downcase == \"${LABEL,,}\"))] | last | .actor.login")
+            # '--paginate' runs '--jq' once per page, which for a timeline longer than one page
+            # yields one line per page and a blank line for every page without a labeling event.
+            # '--slurp' collects the pages into a single document, which the filter then flattens,
+            # so LABELER is one login whatever the length of the timeline. '--slurp' cannot be
+            # combined with '--jq', hence the pipe.
+            LABELER=$(gh api "repos/${UPSTREAM}/issues/${NUMBER}/timeline" --paginate --slurp \
+              | jq -r "[.[][] | select(.event == \"labeled\" and (.label.name | ascii_downcase == \"${LABEL,,}\"))] | last | .actor.login")
             if [ -z "${LABELER}" ] || [ "${LABELER}" = "null" ]; then
               LABELER='unknown'
             fi
 
             echo "| [#${NUMBER}](https://github.com/${UPSTREAM}/pull/${NUMBER}) | ${AUTHOR} | ${LABELER} | ${HEAD} |" >> "$GITHUB_STEP_SUMMARY"
 
-            if ! echo " ${ENTUR_TEST_LABELERS} " | grep -q " ${LABELER} "; then
+            # Compare against each entry in full. A pattern or substring match would accept a
+            # login that is not on the list.
+            TRUSTED=false
+            for ALLOWED in ${ENTUR_TEST_LABELERS}; do
+              if [ "${ALLOWED}" = "${LABELER}" ]; then
+                TRUSTED=true
+              fi
+            done
+            if [ "${TRUSTED}" != "true" ]; then
               UNTRUSTED="${UNTRUSTED}  - #${NUMBER} was labeled by '${LABELER}', who is not in ENTUR_TEST_LABELERS\n"
             fi
 
