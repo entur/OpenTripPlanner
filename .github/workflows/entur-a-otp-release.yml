@@ -56,8 +56,13 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
+    # The pull requests this job accepted, as a map of number to head, so the release job can check
+    # that those - and only those - are the ones that ended up being merged.
+    outputs:
+      verified: ${{ steps.verify.outputs.verified }}
     steps:
       - name: Verify who labeled the pull requests included in this release
+        id: verify
         env:
           GH_TOKEN: ${{ github.token }}
           HOTFIX: ${{ inputs.hotfix }}
@@ -81,6 +86,9 @@ jobs:
                 }
               }
             }' --jq '.data.repository.pullRequests.nodes')
+
+          echo "verified=$(printf '%s' "$PRS" | jq -c 'map({(.number|tostring): .headRefOid}) | add // {}')" \
+            >> "$GITHUB_OUTPUT"
 
           {
             echo "### Pull requests included in this release"
@@ -222,6 +230,70 @@ jobs:
           echo "ser_ver_id=${SER_VER_ID}" >> $GITHUB_OUTPUT
       - name: Create Summary
         run: cat .custom_release_summary.md >> $GITHUB_STEP_SUMMARY
+      # 'verify-labeled-prs' ran before this job started, so a pull request labeled in between is
+      # merged without ever having been checked - the gate's verdict for it is not "trusted", it is
+      # absent. Bind the two together by comparing what was actually merged against what the gate
+      # accepted. This runs last, immediately before the push, so a mismatch leaves nothing behind:
+      # no push to entur/main, no tag, and therefore no downstream deploy.
+      - name: Check the merged pull requests against the labeler gate
+        env:
+          VERIFIED: ${{ needs.verify-labeled-prs.outputs.verified }}
+          HOTFIX: ${{ inputs.hotfix }}
+          BASE: otp/dev-2.x
+        run: |
+          set -euo pipefail
+
+          # A hotfix releases a branch as it is, without merging any pull request.
+          if [ "${HOTFIX}" = "true" ]; then
+            echo "Hotfix release - no pull requests are merged, nothing to compare."
+            exit 0
+          fi
+
+          # An empty value means the gate did not produce a verdict, which must not be read as an
+          # empty verdict.
+          if [ -z "${VERIFIED}" ]; then
+            echo "::error::The labeler check produced no output. Refusing to publish."
+            exit 1
+          fi
+
+          # Two sources, because neither is complete on its own. A pull request merged fast-forward
+          # leaves no merge commit, so the summary is needed; the summary is written by the release
+          # script, so the merge commits are needed. '--first-parent' is required: the release also
+          # merges the previous release with '-s ours', which pulls its entire history into the
+          # range. Only the 'Pull Requests' section of the summary is read - the changelog sections
+          # below it link pull requests that are not part of this release.
+          MERGED=$(
+            {
+              git log --merges --first-parent --format='%s' "${BASE}..HEAD" \
+                | sed -n "s/^Merge branch 'pull-request-\([0-9][0-9]*\)'.*/\1/p"
+              sed -n '/^## Pull Requests$/,/^## /p' .custom_release_summary.md \
+                | sed -n 's|.*/pull/\([0-9][0-9]*\)).*|\1|p'
+            } | sort -u
+          )
+
+          {
+            echo "### Merged pull requests vs the labeler gate"
+            echo ""
+            echo "| PR | Verified by the gate | Head it was verified at |"
+            echo "|---|---|---|"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          UNVERIFIED=""
+          for NUMBER in ${MERGED}; do
+            if HEAD_OID=$(printf '%s' "${VERIFIED}" | jq -er --arg n "${NUMBER}" '.[$n]'); then
+              echo "| #${NUMBER} | yes | ${HEAD_OID:0:8} |" >> "$GITHUB_STEP_SUMMARY"
+            else
+              echo "| #${NUMBER} | **NO** | - |" >> "$GITHUB_STEP_SUMMARY"
+              UNVERIFIED="${UNVERIFIED} #${NUMBER}"
+            fi
+          done
+
+          if [ -n "${UNVERIFIED}" ]; then
+            echo "::error::Merged without passing the labeler check:${UNVERIFIED}. The label was set after 'verify-labeled-prs' ran, so nobody checked who set it. Re-run the whole workflow to have it verified."
+            exit 1
+          fi
+          echo "All merged pull requests were verified by the labeler gate."
+
       # The first step that sees the token, and the last step to run. The authorization header keeps
       # the token out of the process arguments, where anything else on the runner could read it.
       - name: Publish release
