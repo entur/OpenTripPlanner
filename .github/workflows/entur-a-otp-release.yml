@@ -78,6 +78,12 @@ jobs:
       # The push the script makes at the end goes to a throwaway repository on the runner, and the
       # real push happens in "Publish release" once Maven is done. Only the push URL is redirected,
       # so the fetches the script makes still reach GitHub.
+      #
+      # The "Entur Test" label on an upstream pull request is what lets third-party code into the
+      # Entur build, and anyone with triage rights on opentripplanner/OpenTripPlanner can set it.
+      # The script therefore checks who set the label against 'include_prs_labelers' in
+      # script/custom-release-env.json before it merges anything, and stops the release if a
+      # pull request was labeled by someone else.
       - name: Release OTP
         env:
           CUSTOM_RELEASE_GIT_HUB_API_TOKEN: ${{ github.token }}
@@ -115,8 +121,15 @@ jobs:
             SER_VER="--serVerId"
           fi
           if [ "${HOTFIX}" = "true" ]; then
-            "${RUNNER_TEMP}/custom-release.py" --summary --release $SER_VER
+            # A hotfix releases a branch as it is; no pull request is merged and none is needed to
+            # resolve the serialization version id in '--release' mode.
+            "${RUNNER_TEMP}/custom-release.py" --summary --release --skipPRs $SER_VER
           else
+            # The script only warns when the list is empty. Refuse to release instead.
+            if ! jq -e '.include_prs_labelers | length > 0' script/custom-release-env.json > /dev/null; then
+              echo "::error::'include_prs_labelers' is missing or empty in script/custom-release-env.json. Refusing to release."
+              exit 1
+            fi
             "${RUNNER_TEMP}/custom-release.py" --summary $SER_VER otp/dev-2.x
           fi
       - name: Set version (Git repository Tag)
