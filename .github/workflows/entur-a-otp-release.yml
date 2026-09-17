@@ -104,14 +104,20 @@ jobs:
             update-ref refs/heads/main "$(git rev-parse HEAD)"
           git config remote.entur.pushurl "${RUNNER_TEMP}/release-staging.git"
           git remote -v
+          # The script in this checkout is the copy the previous release merged, and a labeled
+          # pull request can change it, since main_config carries no edits of its own to it. Run
+          # the upstream copy instead; it is not written into the checkout, which the script
+          # requires to be clean.
+          git show otp/dev-2.x:script/custom-release.py > "${RUNNER_TEMP}/custom-release.py"
+          chmod +x "${RUNNER_TEMP}/custom-release.py"
           SER_VER=""
           if [ "${BUMP_SER_VER_ID}" = "true" ]; then
             SER_VER="--serVerId"
           fi
           if [ "${HOTFIX}" = "true" ]; then
-            script/custom-release.py --summary --release $SER_VER
+            "${RUNNER_TEMP}/custom-release.py" --summary --release $SER_VER
           else
-            script/custom-release.py --summary $SER_VER otp/dev-2.x
+            "${RUNNER_TEMP}/custom-release.py" --summary $SER_VER otp/dev-2.x
           fi
       - name: Set version (Git repository Tag)
         id: set_version
