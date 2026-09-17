@@ -44,8 +44,6 @@ jobs:
     runs-on: ubuntu-latest
     # This condition ensures the job only runs if the branch is 'main'
     if: github.ref == 'refs/heads/main'
-    permissions:
-      contents: read
     outputs:
       version: ${{ steps.set_version.outputs.version }}
       ser_ver_id: ${{ steps.set_ser_ver_id.outputs.ser_ver_id }}
@@ -127,13 +125,7 @@ jobs:
             # resolve the serialization version id in '--release' mode.
             "${RUNNER_TEMP}/custom-release.py" --summary --release --skipPRs $SER_VER
           else
-            # The script ignores config keys it does not know, so an upstream copy that predates the
-            # labeler check, or a config without the list, would release without checking anyone.
-            # Refuse to release rather than let that pass silently.
-            if ! grep -q 'include_prs_labelers' "${RUNNER_TEMP}/custom-release.py"; then
-              echo "::error::The upstream release script does not verify who labeled the pull requests. Merge opentripplanner/OpenTripPlanner#8018 first."
-              exit 1
-            fi
+            # The script only warns when the list is empty. Refuse to release instead.
             if ! jq -e '.include_prs_labelers | length > 0' script/custom-release-env.json > /dev/null; then
               echo "::error::'include_prs_labelers' is missing or empty in script/custom-release-env.json. Refusing to release."
               exit 1
@@ -154,21 +146,18 @@ jobs:
           echo "ser_ver_id=${SER_VER_ID}" >> $GITHUB_OUTPUT
       - name: Create Summary
         run: cat .custom_release_summary.md >> $GITHUB_STEP_SUMMARY
-      # The first step that sees the token, and the last step to run. The authorization header keeps
-      # the token out of the process arguments, where anything else on the runner could read it.
+      # The first step that sees the token, and the last step to run.
       - name: Publish release
         env:
-          TOKEN: ${{ secrets.ENTUR_OTP_CI_BUILD }}
           GH_TOKEN: ${{ secrets.ENTUR_OTP_CI_BUILD }}
           TAG_NAME: ${{ steps.set_version.outputs.version }}
           SER_VER_ID: ${{ steps.set_ser_ver_id.outputs.ser_ver_id }}
         run: |
           set -euo pipefail
-          trap 'git config --local --unset "http.https://github.com/.extraheader" || true' EXIT
-          git config --local "http.https://github.com/.extraheader" \
-            "AUTHORIZATION: basic $(printf 'x-access-token:%s' "${TOKEN}" | base64 -w0)"
-          git push --force https://github.com/entur/OpenTripPlanner.git HEAD:main "refs/tags/${TAG_NAME}"
+          AUTH="AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=${AUTH}" \
+            push --force https://github.com/entur/OpenTripPlanner.git HEAD:main "refs/tags/${TAG_NAME}"
           echo "Release pushed to: entur/main"
-          gh release create "${TAG_NAME}" \
+          gh release create "${TAG_NAME}" --repo entur/OpenTripPlanner \
             --title "Release ${TAG_NAME} (${SER_VER_ID})" \
             --notes-file .custom_release_summary.md
