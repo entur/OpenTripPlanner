@@ -47,19 +47,22 @@ env:
   ENTUR_TEST_LABELERS: 'vpaturet t2gran testower sigtot'
 
 jobs:
-  # Verify who decided that the labeled pull requests go into this release. The release script merges
-  # the current head of every open upstream pull request carrying the "Entur Test" label, so the
-  # label is what lets third-party code into the Entur build. This job deliberately holds no
-  # credentials, and it runs before the release job, which is the one with something worth stealing.
+  # Verify who decided that the labeled pull requests go into this release. The "Entur Test" label
+  # on an upstream pull request is what lets third-party code into the Entur build, so this job
+  # checks who set it and then hands the accepted list to the release job, which passes it to the
+  # release script as the pull requests to merge. The script never queries GitHub itself, so a pull
+  # request labeled after this job ran is not merged. This job deliberately holds no credentials,
+  # and it runs before the release job, which is the one with something worth stealing.
   verify-labeled-prs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-    # The pull requests this job accepted, as a map of number to head, so the release job can check
-    # that those - and only those - are the ones that ended up being merged.
+    # The pull requests this job accepted, in the format 'custom-release.py --prs=<file>' reads. The
+    # script checks the head of each pull request against 'headRefOid' when it fetches it, so the
+    # code merged is the code listed here.
     outputs:
-      verified: ${{ steps.verify.outputs.verified }}
+      prs: ${{ steps.verify.outputs.prs }}
     steps:
       - name: Verify who labeled the pull requests included in this release
         id: verify
@@ -82,13 +85,19 @@ jobs:
             query($label: String!) {
               repository(owner: "opentripplanner", name: "OpenTripPlanner") {
                 pullRequests(first: 100, states: OPEN, labels: [$label]) {
-                  nodes { number headRefOid authorAssociation author { login } }
+                  nodes {
+                    number headRefOid title authorAssociation author { login }
+                    labels(first: 20) { nodes { name } }
+                  }
                 }
               }
             }' --jq '.data.repository.pullRequests.nodes')
 
-          echo "verified=$(printf '%s' "$PRS" | jq -c 'map({(.number|tostring): .headRefOid}) | add // {}')" \
-            >> "$GITHUB_OUTPUT"
+          # Assigned first so that a failing jq fails the step; 'set -e' does not see a failure
+          # inside "$(...)" on an echo line.
+          PRS_FOR_SCRIPT=$(printf '%s' "$PRS" \
+            | jq -c 'map({number, title, headRefOid, labels: [.labels.nodes[].name]})')
+          echo "prs=${PRS_FOR_SCRIPT}" >> "$GITHUB_OUTPUT"
 
           {
             echo "### Pull requests included in this release"
@@ -181,15 +190,19 @@ jobs:
             ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
             ${{ runner.os }}-maven-
       # This step merges upstream pull requests and runs Maven over the result, so everything it
-      # executes is third-party code. It therefore runs without any credential: the push the script
+      # executes is third-party code. It therefore runs without any credential: the pull requests
+      # to merge come from 'verify-labeled-prs' instead of a GitHub query, the push the script
       # makes at the end goes to a throwaway repository on the runner, and the real push happens in
       # "Publish release" once Maven is done. Only the push URL is redirected, so the fetches the
       # script makes still reach GitHub.
       - name: Release OTP
         env:
-          CUSTOM_RELEASE_GIT_HUB_API_TOKEN: ${{ github.token }}
           CUSTOM_RELEASE_LOG_LEVEL: ${{ inputs.log_level }}
+          PRS: ${{ needs.verify-labeled-prs.outputs.prs }}
+          HOTFIX: ${{ inputs.hotfix }}
+          BUMP_SER_VER_ID: ${{ inputs.bump_ser_ver_id }}
         run: |
+          set -euo pipefail
           echo "Start otp release script"
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
@@ -208,13 +221,31 @@ jobs:
             update-ref refs/heads/main "$(git rev-parse HEAD)"
           git config remote.entur.pushurl "${RUNNER_TEMP}/release-staging.git"
           git remote -v
-          if [ "${{inputs.bump_ser_ver_id}}" == "true" ]; then
+          # The script in this checkout is the copy the previous release merged, and a labeled
+          # pull request can change it, since main_config carries no edits of its own to it. Run
+          # the upstream copy instead; it is not written into the checkout, which the script
+          # requires to be clean.
+          git show otp/dev-2.x:script/custom-release.py > "${RUNNER_TEMP}/custom-release.py"
+          chmod +x "${RUNNER_TEMP}/custom-release.py"
+          SER_VER=""
+          if [ "${BUMP_SER_VER_ID}" = "true" ]; then
             SER_VER="--serVerId"
           fi
-          if [ "${{inputs.hotfix}}" == "true" ]; then
-            script/custom-release.py --summary --release $SER_VER
+          if [ "${HOTFIX}" = "true" ]; then
+            # A hotfix releases a branch as it is; no pull request is merged and none is needed to
+            # resolve the serialization version id in '--release' mode.
+            "${RUNNER_TEMP}/custom-release.py" --summary --release --skipPRs $SER_VER
           else
-            script/custom-release.py --summary $SER_VER otp/dev-2.x
+            # An empty list means the gate did not produce one, which must not be read as "no pull
+            # requests": the script would then fall back to its own GitHub query.
+            if [ -z "${PRS}" ]; then
+              echo "::error::'verify-labeled-prs' produced no pull request list. Refusing to release."
+              exit 1
+            fi
+            printf '%s\n' "${PRS}" > "${RUNNER_TEMP}/prs.json"
+            echo "Pull requests to merge:"
+            jq -r '.[] | "  - #\(.number) \(.headRefOid[0:8]) \(.title)"' "${RUNNER_TEMP}/prs.json"
+            "${RUNNER_TEMP}/custom-release.py" --summary --prs="${RUNNER_TEMP}/prs.json" $SER_VER otp/dev-2.x
           fi
       - name: Set version (Git repository Tag)
         id: set_version
@@ -230,70 +261,6 @@ jobs:
           echo "ser_ver_id=${SER_VER_ID}" >> $GITHUB_OUTPUT
       - name: Create Summary
         run: cat .custom_release_summary.md >> $GITHUB_STEP_SUMMARY
-      # 'verify-labeled-prs' ran before this job started, so a pull request labeled in between is
-      # merged without ever having been checked - the gate's verdict for it is not "trusted", it is
-      # absent. Bind the two together by comparing what was actually merged against what the gate
-      # accepted. This runs last, immediately before the push, so a mismatch leaves nothing behind:
-      # no push to entur/main, no tag, and therefore no downstream deploy.
-      - name: Check the merged pull requests against the labeler gate
-        env:
-          VERIFIED: ${{ needs.verify-labeled-prs.outputs.verified }}
-          HOTFIX: ${{ inputs.hotfix }}
-          BASE: otp/dev-2.x
-        run: |
-          set -euo pipefail
-
-          # A hotfix releases a branch as it is, without merging any pull request.
-          if [ "${HOTFIX}" = "true" ]; then
-            echo "Hotfix release - no pull requests are merged, nothing to compare."
-            exit 0
-          fi
-
-          # An empty value means the gate did not produce a verdict, which must not be read as an
-          # empty verdict.
-          if [ -z "${VERIFIED}" ]; then
-            echo "::error::The labeler check produced no output. Refusing to publish."
-            exit 1
-          fi
-
-          # Two sources, because neither is complete on its own. A pull request merged fast-forward
-          # leaves no merge commit, so the summary is needed; the summary is written by the release
-          # script, so the merge commits are needed. '--first-parent' is required: the release also
-          # merges the previous release with '-s ours', which pulls its entire history into the
-          # range. Only the 'Pull Requests' section of the summary is read - the changelog sections
-          # below it link pull requests that are not part of this release.
-          MERGED=$(
-            {
-              git log --merges --first-parent --format='%s' "${BASE}..HEAD" \
-                | sed -n "s/^Merge branch 'pull-request-\([0-9][0-9]*\)'.*/\1/p"
-              sed -n '/^## Pull Requests$/,/^## /p' .custom_release_summary.md \
-                | sed -n 's|.*/pull/\([0-9][0-9]*\)).*|\1|p'
-            } | sort -u
-          )
-
-          {
-            echo "### Merged pull requests vs the labeler gate"
-            echo ""
-            echo "| PR | Verified by the gate | Head it was verified at |"
-            echo "|---|---|---|"
-          } >> "$GITHUB_STEP_SUMMARY"
-
-          UNVERIFIED=""
-          for NUMBER in ${MERGED}; do
-            if HEAD_OID=$(printf '%s' "${VERIFIED}" | jq -er --arg n "${NUMBER}" '.[$n]'); then
-              echo "| #${NUMBER} | yes | ${HEAD_OID:0:8} |" >> "$GITHUB_STEP_SUMMARY"
-            else
-              echo "| #${NUMBER} | **NO** | - |" >> "$GITHUB_STEP_SUMMARY"
-              UNVERIFIED="${UNVERIFIED} #${NUMBER}"
-            fi
-          done
-
-          if [ -n "${UNVERIFIED}" ]; then
-            echo "::error::Merged without passing the labeler check:${UNVERIFIED}. The label was set after 'verify-labeled-prs' ran, so nobody checked who set it. Re-run the whole workflow to have it verified."
-            exit 1
-          fi
-          echo "All merged pull requests were verified by the labeler gate."
-
       # The first step that sees the token, and the last step to run. The authorization header keeps
       # the token out of the process arguments, where anything else on the runner could read it.
       - name: Publish release
