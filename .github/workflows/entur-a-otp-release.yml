@@ -48,11 +48,14 @@ jobs:
       version: ${{ steps.set_version.outputs.version }}
       ser_ver_id: ${{ steps.set_ser_ver_id.outputs.ser_ver_id }}
     steps:
+      # No token here. The release script only ever fetches from GitHub and both repositories are
+      # public, so it does not need one. Without 'persist-credentials: false' the checkout leaves a
+      # credential in .git/config for the steps that merge, build and test upstream pull requests.
       - name: Checkout entur/OpenTripPlanner
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           fetch-depth: 0
-          token: '${{ secrets.ENTUR_OTP_CI_BUILD }}'
+          persist-credentials: false
       - uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: '3.13'
@@ -68,22 +71,44 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
             ${{ runner.os }}-maven-
+      # This step merges upstream pull requests and runs Maven over the result, so everything it
+      # executes is third-party code. It therefore runs without a credential that can write
+      # anything: the only token is the read-only job token the script needs to query GitHub for
+      # the labeled pull requests, and the script drops it from the environment before Maven runs.
+      # The push the script makes at the end goes to a throwaway repository on the runner, and the
+      # real push happens in "Publish release" once Maven is done. Only the push URL is redirected,
+      # so the fetches the script makes still reach GitHub.
       - name: Release OTP
         env:
-          CUSTOM_RELEASE_GIT_HUB_API_TOKEN: ${{ secrets.ENTUR_OTP_CI_BUILD }}
+          CUSTOM_RELEASE_GIT_HUB_API_TOKEN: ${{ github.token }}
           CUSTOM_RELEASE_LOG_LEVEL: ${{ inputs.log_level }}
+          HOTFIX: ${{ inputs.hotfix }}
+          BUMP_SER_VER_ID: ${{ inputs.bump_ser_ver_id }}
         run: |
+          set -euo pipefail
           echo "Start otp release script"
           git config user.name github-actions[bot]
           git config user.email 41898282+github-actions[bot]@users.noreply.github.com
           git remote rename origin entur
           git remote add otp https://github.com/opentripplanner/OpenTripPlanner.git
           git fetch --no-tags otp
+          # The staging repository shares this checkout's objects and starts at the current
+          # release, so the push the script makes at the end stays the small incremental push it
+          # was against GitHub. Pushing into an empty repository would send the whole history
+          # instead, which takes longer than the 20 s timeout custom-release.py puts on every git
+          # command.
+          git init --bare --quiet "${RUNNER_TEMP}/release-staging.git"
+          printf '%s\n' "$(git rev-parse --path-format=absolute --git-path objects)" \
+            > "${RUNNER_TEMP}/release-staging.git/objects/info/alternates"
+          git --git-dir="${RUNNER_TEMP}/release-staging.git" \
+            update-ref refs/heads/main "$(git rev-parse HEAD)"
+          git config remote.entur.pushurl "${RUNNER_TEMP}/release-staging.git"
           git remote -v
-          if [ "${{inputs.bump_ser_ver_id}}" == "true" ]; then
+          SER_VER=""
+          if [ "${BUMP_SER_VER_ID}" = "true" ]; then
             SER_VER="--serVerId"
           fi
-          if [ "${{inputs.hotfix}}" == "true" ]; then
+          if [ "${HOTFIX}" = "true" ]; then
             script/custom-release.py --summary --release $SER_VER
           else
             script/custom-release.py --summary $SER_VER otp/dev-2.x
@@ -102,12 +127,18 @@ jobs:
           echo "ser_ver_id=${SER_VER_ID}" >> $GITHUB_OUTPUT
       - name: Create Summary
         run: cat .custom_release_summary.md >> $GITHUB_STEP_SUMMARY
-      - name: Create GitHub Release
+      # The first step that sees the token, and the last step to run.
+      - name: Publish release
         env:
-          GITHUB_TOKEN: ${{ secrets.ENTUR_OTP_CI_BUILD }}
+          GH_TOKEN: ${{ secrets.ENTUR_OTP_CI_BUILD }}
+          TAG_NAME: ${{ steps.set_version.outputs.version }}
+          SER_VER_ID: ${{ steps.set_ser_ver_id.outputs.ser_ver_id }}
         run: |
-          TAG_NAME=${{ steps.set_version.outputs.version }}
-          SER_VER_ID=${{ steps.set_ser_ver_id.outputs.ser_ver_id }}
-          gh release create "$TAG_NAME" \
+          set -euo pipefail
+          AUTH="AUTHORIZATION: basic $(printf 'x-access-token:%s' "${GH_TOKEN}" | base64 -w0)"
+          git -c "http.https://github.com/.extraheader=${AUTH}" \
+            push --force https://github.com/entur/OpenTripPlanner.git HEAD:main "refs/tags/${TAG_NAME}"
+          echo "Release pushed to: entur/main"
+          gh release create "${TAG_NAME}" --repo entur/OpenTripPlanner \
             --title "Release ${TAG_NAME} (${SER_VER_ID})" \
             --notes-file .custom_release_summary.md
