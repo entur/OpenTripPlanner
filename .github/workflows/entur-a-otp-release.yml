@@ -58,9 +58,10 @@ jobs:
     runs-on: ubuntu-24.04
     permissions:
       contents: read
-    # The pull requests this job accepted, in the format 'custom-release.py --prs=<file>' reads. The
-    # script checks the head of each pull request against 'headRefOid' when it fetches it, so the
-    # code merged is the code listed here.
+    # The pull requests this job accepted, in the format 'custom-release.py --prs=<file>' reads. It
+    # is written only once every entry has passed the check below. The script checks the head of
+    # each pull request against 'headRefOid' when it fetches it, so the code merged is the code
+    # listed here.
     outputs:
       prs: ${{ steps.verify.outputs.prs }}
     steps:
@@ -94,10 +95,11 @@ jobs:
             }' --jq '.data.repository.pullRequests.nodes')
 
           # Assigned first so that a failing jq fails the step; 'set -e' does not see a failure
-          # inside "$(...)" on an echo line.
+          # inside "$(...)" on an echo line. The list is written to the job output only after
+          # every entry in it has been checked, at the end of this step.
           PRS_FOR_SCRIPT=$(printf '%s' "$PRS" \
             | jq -c 'map({number, title, headRefOid, labels: [.labels.nodes[].name]})')
-          echo "prs=${PRS_FOR_SCRIPT}" >> "$GITHUB_OUTPUT"
+          EXPECTED=$(printf '%s' "$PRS" | jq -r 'length')
 
           {
             echo "### Pull requests included in this release"
@@ -107,7 +109,9 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
           UNTRUSTED=""
+          CHECKED=0
           for NUMBER in $(echo "$PRS" | jq -r '.[].number'); do
+            CHECKED=$((CHECKED + 1))
             PR=$(echo "$PRS" | jq -c --argjson n "$NUMBER" '.[] | select(.number == $n)')
             AUTHOR=$(echo "$PR" | jq -r '.author.login')
             ASSOCIATION=$(echo "$PR" | jq -r '.authorAssociation')
@@ -139,13 +143,14 @@ jobs:
               UNTRUSTED="${UNTRUSTED}  - #${NUMBER} was labeled by '${LABELER}', who is not in ENTUR_TEST_LABELERS\n"
             fi
 
-            # The label says the code was trusted when it was set, but the head of a pull request can
-            # move afterwards. For an author outside the upstream organisation that gap is worth
-            # looking at; it is not a reason to stop the release, since the labeler above is the
-            # decision that counts.
+            # The head recorded above is what the release script merges: it stops the release if the
+            # head it fetches differs from the one listed here. What is not checked is the gap
+            # between the label being set and this job reading the head, so for an author outside
+            # the upstream organisation the head is worth a look. Information only; the labeler
+            # above is the decision that counts.
             case "${ASSOCIATION}" in
               MEMBER | OWNER | COLLABORATOR) ;;
-              *) echo "::warning::#${NUMBER} is authored by ${AUTHOR} (${ASSOCIATION}), outside the upstream organisation. Its head may have moved since it was labeled." ;;
+              *) echo "::warning::#${NUMBER} is authored by ${AUTHOR} (${ASSOCIATION}), outside the upstream organisation. The head going into the release is ${HEAD}; check that it is what was labeled." ;;
             esac
           done
 
@@ -154,6 +159,16 @@ jobs:
             echo "Remove the label, or add the person to ENTUR_TEST_LABELERS in this workflow."
             exit 1
           fi
+
+          # 'set -e' does not police the command substitution in the loop header, so make sure the
+          # loop ran once per pull request before handing the list on. The list is only written
+          # here, so a pull request the release script merges is one this step has checked.
+          if [ "${CHECKED}" != "${EXPECTED}" ]; then
+            echo "::error::Checked ${CHECKED} of ${EXPECTED} pull requests. Refusing to pass the list on."
+            exit 1
+          fi
+          echo "prs=${PRS_FOR_SCRIPT}" >> "$GITHUB_OUTPUT"
+          echo "Verified ${CHECKED} pull request(s)."
 
   release:
     runs-on: ubuntu-latest
