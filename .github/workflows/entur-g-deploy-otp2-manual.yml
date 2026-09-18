@@ -38,6 +38,7 @@ jobs:
 
   resolve-env-config:
     runs-on: ubuntu-24.04
+    permissions: {}
     outputs:
       gb_cluster: ${{ steps.resolve.outputs.gb_cluster }}
       gb_values: ${{ steps.resolve.outputs.gb_values }}
@@ -78,9 +79,10 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
           ref: ${{ needs.verify-image-tag.outputs.tag }}
+          persist-credentials: false
       - name: Helm lint against every env values file
         run: |
           for env in dev tst prd jp-dev jp-tst jp-prd dev-jp-nordic dev-rc tst-rc prd-rc; do
@@ -91,6 +93,7 @@ jobs:
     if: inputs.environment == 'prd'
     needs: [verify-image-tag]
     runs-on: ubuntu-latest
+    permissions: {}
     timeout-minutes: 10
     environment: Approve
     steps:
