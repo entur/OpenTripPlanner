@@ -1,0 +1,25 @@
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+
+rules:
+  - pattern: 'java.lang<type=Memory><>(HeapMemoryUsage|NonHeapMemoryUsage)'
+    name: jvm_memory_$1
+    type: GAUGE
+
+  - pattern: 'java.lang<type=GarbageCollector,name=(.+)><>(CollectionCount|CollectionTime)'
+    name: jvm_gc_$2
+    labels:
+      gc: "$1"
+    type: COUNTER
+
+  - pattern: 'java.lang<type=Threading><>(ThreadCount|DaemonThreadCount|PeakThreadCount)'
+    name: jvm_threads_$1
+    type: GAUGE
+
+  - pattern: 'java.lang<type=ClassLoading><>(LoadedClassCount|TotalLoadedClassCount|UnloadedClassCount)'
+    name: jvm_classes_$1
+    type: GAUGE
+
+  - pattern: 'java.lang<type=OperatingSystem><>(ProcessCpuLoad|SystemCpuLoad|AvailableProcessors)'
+    name: jvm_os_$1
+    type: GAUGE
