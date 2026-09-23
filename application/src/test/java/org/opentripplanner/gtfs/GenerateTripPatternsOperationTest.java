@@ -1,6 +1,6 @@
 package org.opentripplanner.gtfs;
 
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.trip;
+import static org.opentripplanner.transit.model._data.TransitRepositoryForTest.trip;
 
 import java.util.Collection;
 import java.util.List;
@@ -13,6 +13,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.graph_builder.issue.service.DefaultDataImportIssueStore;
 import org.opentripplanner.graph_builder.issues.TripDegenerate;
@@ -20,7 +21,7 @@ import org.opentripplanner.graph_builder.issues.TripUndefinedService;
 import org.opentripplanner.graph_builder.module.geometry.GeometryProcessor;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.impl.TransitDataImportBuilder;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model._data.TransitRepositoryForTest;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.site.RegularStop;
@@ -50,11 +51,11 @@ class GenerateTripPatternsOperationTest {
 
   @BeforeAll
   static void setupClass() {
-    TimetableRepositoryForTest timetableRepositoryForTest = TimetableRepositoryForTest.of();
-    stopA = timetableRepositoryForTest.stop("stopA").build();
-    stopB = timetableRepositoryForTest.stop("stopB").build();
-    stopC = timetableRepositoryForTest.stop("stopC").build();
-    siteRepository = timetableRepositoryForTest
+    TransitRepositoryForTest transitRepositoryForTest = TransitRepositoryForTest.of();
+    stopA = transitRepositoryForTest.stop("stopA").build();
+    stopB = transitRepositoryForTest.stop("stopB").build();
+    stopC = transitRepositoryForTest.stop("stopC").build();
+    siteRepository = transitRepositoryForTest
       .siteRepositoryBuilder()
       .withRegularStop(stopA)
       .withRegularStop(stopB)
@@ -68,7 +69,7 @@ class GenerateTripPatternsOperationTest {
     stopTimeC = new StopTime();
     stopTimeC.setStop(stopC);
 
-    FeedScopedId serviceId1 = TimetableRepositoryForTest.id("SERVICE_ID_1");
+    FeedScopedId serviceId1 = FeedScopedIdForTestFactory.id("SERVICE_ID_1");
     trip1 = trip("TRIP_ID_1")
       .withServiceId(serviceId1)
       .withMode(TransitMode.RAIL)
@@ -77,7 +78,7 @@ class GenerateTripPatternsOperationTest {
       .build();
 
     // same route, mode, submode and direction as trip1
-    FeedScopedId serviceId2 = TimetableRepositoryForTest.id("SERVICE_ID_2");
+    FeedScopedId serviceId2 = FeedScopedIdForTestFactory.id("SERVICE_ID_2");
     trip2 = trip("TRIP_ID_2")
       .withServiceId(serviceId2)
       .withRoute(trip1.getRoute())
@@ -87,7 +88,7 @@ class GenerateTripPatternsOperationTest {
       .build();
 
     // same route, direction as trip1, different mode
-    FeedScopedId serviceId3 = TimetableRepositoryForTest.id("SERVICE_ID_3");
+    FeedScopedId serviceId3 = FeedScopedIdForTestFactory.id("SERVICE_ID_3");
     trip3 = trip("TRIP_ID_3")
       .withServiceId(serviceId3)
       .withRoute(trip1.getRoute())
@@ -96,7 +97,7 @@ class GenerateTripPatternsOperationTest {
       .build();
 
     // same route, mode, direction  as trip1, different submode
-    FeedScopedId serviceId4 = TimetableRepositoryForTest.id("SERVICE_ID_4");
+    FeedScopedId serviceId4 = FeedScopedIdForTestFactory.id("SERVICE_ID_4");
     trip4 = trip("TRIP_ID_4")
       .withServiceId(serviceId4)
       .withRoute(trip1.getRoute())
@@ -106,7 +107,7 @@ class GenerateTripPatternsOperationTest {
       .build();
 
     // same route, mode  as trip1, different direction
-    FeedScopedId serviceId5 = TimetableRepositoryForTest.id("SERVICE_ID_5");
+    FeedScopedId serviceId5 = FeedScopedIdForTestFactory.id("SERVICE_ID_5");
     trip5 = trip("TRIP_ID_5")
       .withServiceId(serviceId5)
       .withRoute(trip1.getRoute())

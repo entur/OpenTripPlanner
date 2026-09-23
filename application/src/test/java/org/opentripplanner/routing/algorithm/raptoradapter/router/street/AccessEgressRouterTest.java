@@ -10,11 +10,10 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.graph_builder.module.nearbystops.SiteRepositoryResolver;
 import org.opentripplanner.model.GenericLocation;
+import org.opentripplanner.place.api.NearbyStop;
 import org.opentripplanner.routing.algorithm.GraphRoutingTest;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.graphfinder.NearbyStop;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.routing.linking.internal.VertexCreationService;
@@ -26,12 +25,12 @@ import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.search.state.State;
 import org.opentripplanner.transit.service.DefaultTransitService;
-import org.opentripplanner.transit.service.TimetableRepository;
+import org.opentripplanner.transit.service.TransitRepository;
 
 class AccessEgressRouterTest extends GraphRoutingTest {
 
   private Graph graph;
-  private TimetableRepository timetableRepository;
+  private TransitRepository transitRepository;
 
   private TransitStopVertex stopForCentroidRoutingStation;
   private TransitStopVertex stopForNoCentroidRoutingStation;
@@ -82,7 +81,7 @@ class AccessEgressRouterTest extends GraphRoutingTest {
       }
     );
     graph = otpModel.graph();
-    timetableRepository = otpModel.timetableRepository();
+    transitRepository = otpModel.transitRepository();
   }
 
   @Test
@@ -214,7 +213,7 @@ class AccessEgressRouterTest extends GraphRoutingTest {
   }
 
   private GenericLocation location(FeedScopedId id) {
-    return new GenericLocation(null, id, null, null);
+    return GenericLocation.fromStopId(id);
   }
 
   private GenericLocation location(String id) {
@@ -227,7 +226,11 @@ class AccessEgressRouterTest extends GraphRoutingTest {
 
   private String nearbyStopDescription(NearbyStop nearbyStop) {
     if (nearbyStop.edges.isEmpty()) {
-      return "direct[" + nearbyStop.stop.getName() + "]";
+      return (
+        "direct[" +
+        transitRepository.getSiteRepository().getStopLocation(nearbyStop.stopId).getName() +
+        "]"
+      );
     } else {
       return "street[" + stateDescription(nearbyStop.state) + "]";
     }
@@ -259,7 +262,7 @@ class AccessEgressRouterTest extends GraphRoutingTest {
     try (var verticesContainer = new TemporaryVerticesContainer()) {
       var vertexLinker = VertexLinkerTestFactory.of(graph);
       var vertexCreationService = new VertexCreationService(vertexLinker);
-      var transitService = new DefaultTransitService(timetableRepository);
+      var transitService = new DefaultTransitService(transitRepository);
       var linkingContextFactory = new LinkingContextFactory(
         graph,
         vertexCreationService,
@@ -272,9 +275,7 @@ class AccessEgressRouterTest extends GraphRoutingTest {
       var linkingRequest = LinkingContextRequestMapper.map(request);
       var linkingContext = linkingContextFactory.create(verticesContainer, linkingRequest);
 
-      return new AccessEgressRouter(
-        new SiteRepositoryResolver(timetableRepository.getSiteRepository())
-      ).findAccessEgresses(
+      return AccessEgressRouter.findAccessEgresses(
         request,
         StreetMode.WALK,
         List.of(),

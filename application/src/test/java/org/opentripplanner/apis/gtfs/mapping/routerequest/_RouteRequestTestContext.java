@@ -12,24 +12,30 @@ import java.util.Map;
 import java.util.Optional;
 import org.locationtech.jts.geom.Coordinate;
 import org.opentripplanner._support.time.ZoneIds;
-import org.opentripplanner.apis.gtfs.GraphQLRequestContext;
+import org.opentripplanner.apis.gtfs.GtfsGraphQLRequestContext;
 import org.opentripplanner.apis.gtfs.SchemaFactory;
+import org.opentripplanner.apis.gtfs.TestGtfsGraphQLRequestContext;
 import org.opentripplanner.apis.gtfs.TestRoutingService;
 import org.opentripplanner.apis.support.graphql.DataFetchingSupport;
 import org.opentripplanner.ext.fares.service.gtfs.v1.DefaultFareService;
+import org.opentripplanner.place.nearbystopfinder.StreetNearbyStopFinder;
+import org.opentripplanner.place.placefinder.StreetNearbyPlaceFinder;
 import org.opentripplanner.routing.api.request.RouteRequest;
-import org.opentripplanner.routing.graphfinder.GraphFinder;
+import org.opentripplanner.routing.impl.TransitAlertServiceImpl;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.routing.linking.internal.VertexCreationService;
+import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleRepository;
 import org.opentripplanner.service.realtimevehicles.internal.DefaultRealtimeVehicleService;
+import org.opentripplanner.service.realtimevehicles.internal.RealtimeVehicleRepositoryLifecycle;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingService;
+import org.opentripplanner.service.vehiclerental.internal.DefaultVehicleRentalRepository;
 import org.opentripplanner.service.vehiclerental.internal.DefaultVehicleRentalService;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.transfer.regular.TransferServiceTestFactory;
 import org.opentripplanner.transit.service.DefaultTransitService;
-import org.opentripplanner.transit.service.TimetableRepository;
+import org.opentripplanner.transit.service.TransitRepository;
 
 class _RouteRequestTestContext {
 
@@ -39,26 +45,26 @@ class _RouteRequestTestContext {
   static final Map<String, Object> ARGS = Map.ofEntries(
     entry(
       "origin",
-      Map.ofEntries(entry("location", Map.of("coordinate", mapCoordinate(ORIGIN.x, ORIGIN.y))))
+      Map.ofEntries(entry("location", Map.of("coordinate", mapCoordinate(ORIGIN.y, ORIGIN.x))))
     ),
     entry(
       "destination",
       Map.ofEntries(
-        entry("location", Map.of("coordinate", mapCoordinate(DESTINATION.x, DESTINATION.y)))
+        entry("location", Map.of("coordinate", mapCoordinate(DESTINATION.y, DESTINATION.x)))
       )
     )
   );
 
-  private final GraphQLRequestContext context;
+  private final GtfsGraphQLRequestContext context;
   private final Locale locale;
 
   public _RouteRequestTestContext(Locale locale) {
     this.locale = locale;
 
     Graph graph = new Graph();
-    var timetableRepository = new TimetableRepository();
-    timetableRepository.initTimeZone(ZoneIds.BERLIN);
-    final DefaultTransitService transitService = new DefaultTransitService(timetableRepository);
+    var transitRepository = new TransitRepository();
+    transitRepository.initTimeZone(ZoneIds.BERLIN);
+    final DefaultTransitService transitService = new DefaultTransitService(transitRepository);
     var transferService = TransferServiceTestFactory.defaultTransferService();
     var routeRequest = RouteRequest.defaultValue();
     var vertexLinker = VertexLinkerTestFactory.of(graph);
@@ -72,21 +78,21 @@ class _RouteRequestTestContext {
         return Optional.ofNullable(group).map(locationsGroup -> locationsGroup.getCoordinate());
       }
     );
-    this.context = new GraphQLRequestContext(
+    this.context = new TestGtfsGraphQLRequestContext(
       new TestRoutingService(List.of()),
       transitService,
+      new TransitAlertServiceImpl(),
       transferService,
       new DefaultFareService(),
-      new DefaultVehicleRentalService(),
+      new DefaultVehicleRentalService(new DefaultVehicleRentalRepository()),
       new DefaultVehicleParkingService(new DefaultVehicleParkingRepository()),
-      new DefaultRealtimeVehicleService(transitService),
-      SchemaFactory.createSchemaWithDefaultInjection(routeRequest),
-      GraphFinder.getInstance(
-        graph.hasStreets,
-        transitService::getRegularStop,
-        transitService::findRegularStopsByBoundingBox,
-        linkingContextFactory
+      new DefaultRealtimeVehicleService(
+        new RealtimeVehicleRepositoryLifecycle().freeze(new DefaultRealtimeVehicleRepository()),
+        transitService
       ),
+      SchemaFactory.createSchemaWithDefaultInjection(routeRequest),
+      new StreetNearbyPlaceFinder(linkingContextFactory),
+      StreetNearbyStopFinder.of(linkingContextFactory).build(),
       routeRequest
     );
   }
@@ -101,7 +107,7 @@ class _RouteRequestTestContext {
     return new _RouteRequestTestContext(locale);
   }
 
-  public GraphQLRequestContext context() {
+  public GtfsGraphQLRequestContext context() {
     return context;
   }
 

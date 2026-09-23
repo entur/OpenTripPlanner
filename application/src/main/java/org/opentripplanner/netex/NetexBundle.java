@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
+import org.opentripplanner.core.model.deduplicator.DeduplicatorService;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.datastore.api.CompositeDataSource;
 import org.opentripplanner.datastore.api.DataSource;
@@ -124,19 +124,19 @@ public class NetexBundle implements Closeable {
   /** Load all files entries in the bundle */
   private void loadFileEntries() {
     // Load global shared files
-    loadFilesThenMapToTimetableRepository("shared file", hierarchy.sharedEntries());
+    loadFilesThenMapToTransitRepository("shared file", hierarchy.sharedEntries());
 
     for (GroupEntries group : hierarchy.groups()) {
       LOG.info("reading group {}", group.name());
 
       scopeInputData(() -> {
         // Load shared group files
-        loadFilesThenMapToTimetableRepository("shared group file", group.sharedEntries());
+        loadFilesThenMapToTransitRepository("shared group file", group.sharedEntries());
 
         for (DataSource entry : group.independentEntries()) {
           scopeInputData(() -> {
             // Load each independent file in group
-            loadFilesThenMapToTimetableRepository("group file", List.of(entry));
+            loadFilesThenMapToTransitRepository("group file", List.of(entry));
           });
         }
       });
@@ -163,7 +163,7 @@ public class NetexBundle implements Closeable {
    * when read, would lead to missing references, since the order entries are read is not enforced
    * in any way.
    */
-  private void loadFilesThenMapToTimetableRepository(
+  private void loadFilesThenMapToTransitRepository(
     String fileDescription,
     Iterable<DataSource> entries
   ) {
@@ -183,13 +183,10 @@ public class NetexBundle implements Closeable {
   private void loadSingeFileEntry(String fileDescription, DataSource entry) {
     try {
       LOG.info("reading entity {}: {}", fileDescription, entry.name());
-      issueStore.startProcessingSource(entry.name());
       PublicationDeliveryStructure doc = xmlParser.parseXmlDoc(entry.asInputStream());
       NetexDocumentParser.parseAndPopulateIndex(index, doc, ignoredFeatures);
     } catch (JAXBException e) {
       throw new RuntimeException(e.getMessage(), e);
-    } finally {
-      issueStore.stopProcessingSource();
     }
   }
 }

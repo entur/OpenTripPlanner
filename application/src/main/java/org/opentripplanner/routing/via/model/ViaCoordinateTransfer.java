@@ -1,9 +1,9 @@
 package org.opentripplanner.routing.via.model;
 
 import java.util.List;
-import org.opentripplanner.raptor.api.model.RaptorCostConverter;
-import org.opentripplanner.raptor.api.model.RaptorTransfer;
 import org.opentripplanner.raptor.api.model.RaptorValueType;
+import org.opentripplanner.raptor.spi.RaptorTransfer;
+import org.opentripplanner.routing.cost.CostLimit;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.utils.time.DurationUtils;
@@ -55,7 +55,7 @@ public class ViaCoordinateTransfer implements RaptorTransfer {
     this.fromEdges = fromEdges;
     this.toEdges = toEdges;
     this.durationInSeconds = durationInSeconds;
-    this.raptorCost = RaptorCostConverter.toRaptorCost(generalizedCostInSeconds);
+    this.raptorCost = CostLimit.toRaptorCost(generalizedCostInSeconds);
   }
 
   public WgsCoordinate coordinate() {

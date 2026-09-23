@@ -7,7 +7,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.opentripplanner.api.model.transit.FeedScopedIdMapper;
-import org.opentripplanner.apis.transmodel.TransmodelRequestContext;
+import org.opentripplanner.apis.transmodel.TransmodelGraphQLRequestContext;
 import org.opentripplanner.apis.transmodel.model.plan.TripQuery;
 import org.opentripplanner.apis.transmodel.support.DataFetcherDecorator;
 import org.opentripplanner.apis.transmodel.support.GqlUtil;
@@ -41,17 +41,16 @@ public class TripRequestMapper {
    * Create a RouteRequest from the input fields of the trip query arguments.
    */
   public RouteRequestBuilder createRequestBuilder(DataFetchingEnvironment environment) {
-    TransmodelRequestContext context = environment.getContext();
-    var serverContext = context.getServerContext();
-    var requestBuilder = serverContext.defaultRouteRequest().copyOf();
+    TransmodelGraphQLRequestContext context = environment.getContext();
+    var requestBuilder = context.defaultRouteRequest().copyOf();
 
     DataFetcherDecorator callWith = new DataFetcherDecorator(environment);
 
     callWith.argument("from", (Map<String, Object> v) ->
-      requestBuilder.withFrom(genericLocationMapper.toGenericLocation(v))
+      genericLocationMapper.toGenericLocation(v).ifPresent(requestBuilder::withFrom)
     );
     callWith.argument("to", (Map<String, Object> v) ->
-      requestBuilder.withTo(genericLocationMapper.toGenericLocation(v))
+      genericLocationMapper.toGenericLocation(v).ifPresent(requestBuilder::withTo)
     );
     callWith.argument("passThroughPoints", (List<Map<String, Object>> v) -> {
       requestBuilder.withViaLocations(tripViaLocationMapper.toLegacyPassThroughLocations(v));

@@ -5,20 +5,20 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 
 import java.util.BitSet;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model._data.TransitRepositoryForTest;
 import org.opentripplanner.transit.model.framework.DataValidationException;
 import org.opentripplanner.utils.time.TimeUtils;
 
 class ScheduledTripTimesTest {
 
-  private static final Trip TRIP = TimetableRepositoryForTest.trip("Trip-1").build();
+  private static final Trip TRIP = TransitRepositoryForTest.trip("Trip-1").build();
 
   private static final List<FeedScopedId> STOP_IDS = List.of(id("A"), id("B"), id("C"));
   private static final int SERVICE_CODE = 5;
@@ -125,8 +125,8 @@ class ScheduledTripTimesTest {
   }
 
   @Test
-  void isScheduled() {
-    assertTrue(subject.isScheduled());
+  void hasAnyUpdates() {
+    assertFalse(subject.hasAnyUpdates());
   }
 
   @Test
@@ -142,11 +142,6 @@ class ScheduledTripTimesTest {
   @Test
   void isDeleted() {
     assertFalse(subject.isDeleted());
-  }
-
-  @Test
-  void getRealTimeState() {
-    assertEquals(RealTimeState.SCHEDULED, subject.getRealTimeState());
   }
 
   @Test

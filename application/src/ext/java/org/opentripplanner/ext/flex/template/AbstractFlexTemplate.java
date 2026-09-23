@@ -1,6 +1,5 @@
 package org.opentripplanner.ext.flex.template;
 
-import java.time.Duration;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -8,12 +7,14 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.flex.FlexAccessEgress;
+import org.opentripplanner.ext.flex.FlexParameters;
 import org.opentripplanner.ext.flex.FlexPathDurations;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
-import org.opentripplanner.routing.graphfinder.NearbyStop;
+import org.opentripplanner.place.api.NearbyStop;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.state.EdgeTraverser;
@@ -49,19 +50,19 @@ abstract class AbstractFlexTemplate {
   protected final LocalDate serviceDate;
   protected final int requestedBookingTime;
   protected final FlexPathCalculator calculator;
-  private final Duration maxTransferDuration;
+  protected final FlexParameters flexParameters;
 
   /**
-   * @param trip                The FlexTrip used for this template
-   * @param accessEgress        Path from origin/destination to the point of boarding/alighting for
-   *                            this flex trip
-   * @param transferStop        The stop location where this FlexTrip transfers to another transit
-   *                            service.
-   * @param boardStopPosition   The stop-board-position in the trip pattern
-   * @param alightStopPosition  The stop-alight-position in the trip pattern
-   * @param date                The service date of this FlexTrip
-   * @param calculator          Calculates the path and duration of the FlexTrip
-   * @param maxTransferDuration The limit for how long a transfer is allowed to be
+   * @param trip               The FlexTrip used for this template
+   * @param accessEgress       Path from origin/destination to the point of boarding/alighting for
+   *                           this flex trip
+   * @param transferStop       The stop location where this FlexTrip transfers to another transit
+   *                           service.
+   * @param boardStopPosition  The stop-board-position in the trip pattern
+   * @param alightStopPosition The stop-alight-position in the trip pattern
+   * @param date               The service date of this FlexTrip
+   * @param calculator         Calculates the path and duration of the FlexTrip
+   * @param flexParameters     Flex configuration parameters (maxTransferDuration, etc.)
    */
   AbstractFlexTemplate(
     FlexTrip<?, ?> trip,
@@ -71,7 +72,7 @@ abstract class AbstractFlexTemplate {
     int alightStopPosition,
     FlexServiceDate date,
     FlexPathCalculator calculator,
-    Duration maxTransferDuration
+    FlexParameters flexParameters
   ) {
     this.accessEgress = accessEgress;
     this.trip = trip;
@@ -82,15 +83,15 @@ abstract class AbstractFlexTemplate {
     this.serviceDate = date.serviceDate();
     this.requestedBookingTime = date.requestedBookingTime();
     this.calculator = calculator;
-    this.maxTransferDuration = maxTransferDuration;
+    this.flexParameters = flexParameters;
   }
 
-  StopLocation getTransferStop() {
-    return transferStop;
+  FeedScopedId getTransferStopId() {
+    return transferStop.getId();
   }
 
-  StopLocation getAccessEgressStop() {
-    return accessEgress.stop;
+  FeedScopedId getAccessEgressStopId() {
+    return accessEgress.stopId;
   }
 
   /**
@@ -107,7 +108,8 @@ abstract class AbstractFlexTemplate {
     // transferStop is Location Area/Line
     else {
       double maxDistanceMeters =
-        maxTransferDuration.getSeconds() * accessEgress.state.getRequest().walk().speed();
+        flexParameters.maxTransferDuration().getSeconds() *
+        accessEgress.state.getRequest().walk().speed();
 
       return getTransfersFromTransferStop(callback)
         .stream()
@@ -134,7 +136,7 @@ abstract class AbstractFlexTemplate {
       .addServiceTime("secondsFromStartOfTime", secondsFromStartOfTime)
       .addDate("serviceDate", serviceDate)
       .addObj("calculator", calculator)
-      .addDuration("maxTransferDuration", maxTransferDuration)
+      .addDuration("maxTransferDuration", flexParameters.maxTransferDuration())
       .toString();
   }
 
@@ -174,7 +176,7 @@ abstract class AbstractFlexTemplate {
    * Get the FlexTripEdge for the flex ride.
    */
   @Nullable
-  protected abstract FlexTripEdge getFlexEdge(Vertex flexFromVertex, StopLocation transferStop);
+  protected abstract FlexTripEdge getFlexEdge(Vertex flexFromVertex, FeedScopedId transferStopId);
 
   @Nullable
   private FlexAccessEgress createFlexAccessEgress(
@@ -182,7 +184,7 @@ abstract class AbstractFlexTemplate {
     Vertex flexVertex,
     RegularStop stop
   ) {
-    var flexEdge = getFlexEdge(flexVertex, transferStop);
+    var flexEdge = getFlexEdge(flexVertex, transferStop.getId());
 
     // Drop non-routable and very short(<10s) trips
     if (flexEdge == null || flexEdge.getTimeInSeconds() < MIN_FLEX_TRIP_DURATION_SECONDS) {

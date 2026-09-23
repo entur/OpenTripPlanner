@@ -15,6 +15,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.api.model.transit.DefaultFeedIdMapper;
+import org.opentripplanner.apis.support.InvalidInputException;
 
 class TripTimeOnDateFilterMapperTest {
 
@@ -120,6 +121,6 @@ class TripTimeOnDateFilterMapperTest {
   @ParameterizedTest
   @MethodSource("emptyListRejectedCases")
   void emptyListsAreRejected(List<Map<String, ?>> input) {
-    assertThrows(IllegalArgumentException.class, () -> MAPPER.mapFilters(input));
+    assertThrows(InvalidInputException.class, () -> MAPPER.mapFilters(input));
   }
 }

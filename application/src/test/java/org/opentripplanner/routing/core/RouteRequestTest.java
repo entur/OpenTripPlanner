@@ -15,8 +15,8 @@ import java.time.Month;
 import java.time.ZoneOffset;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner._support.asserts.AssertEqualsAndHashCode;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.core.testfixtures.lang.AssertEqualsAndHashCode;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.plan.SortOrder;
 import org.opentripplanner.model.plan.paging.cursor.PageCursor;
@@ -257,7 +257,7 @@ class RouteRequestTest {
   @Test
   void testValidateMissingFrom() {
     expectOneRoutingValidationException(
-      () -> minimal.copyOf().withFrom(GenericLocation.UNKNOWN).buildRequest(),
+      () -> minimal.copyOf().withFrom(null).buildRequest(),
       RoutingErrorCode.LOCATION_NOT_FOUND,
       InputField.FROM_PLACE
     );
@@ -266,7 +266,7 @@ class RouteRequestTest {
   @Test
   void testValidateMissingTo() {
     expectOneRoutingValidationException(
-      () -> minimal.copyOf().withTo(GenericLocation.UNKNOWN).buildRequest(),
+      () -> minimal.copyOf().withTo(null).buildRequest(),
       RoutingErrorCode.LOCATION_NOT_FOUND,
       InputField.TO_PLACE
     );

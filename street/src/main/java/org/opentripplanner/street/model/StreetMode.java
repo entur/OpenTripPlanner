@@ -69,8 +69,14 @@ public enum StreetMode implements DocumentedEnum<StreetMode> {
    * Carpooling is a hybrid mode: like transit, it operates on scheduled trips with set departure
    * times; like street modes, it uses private vehicles traveling on the road network. This street
    * mode is the input for requesting carpool routing, while the transit mode appears in responses.
+   *
+   * The reason why the features DRIVING and PICKUP are not used even though CARPOOLING obviously
+   * involves driving and pickup, is because we don't want to get results involving car if there are
+   * not carpooling trips available. Carpooling has to be handled differently from ordinary
+   * driving. It does on the other hand make sense to return results involving only walking and
+   * no carpooling if those results are practical for the user.
    */
-  CARPOOL(Feature.WALKING, Feature.DRIVING, Feature.PICKUP),
+  CARPOOL(Feature.ACCESS, Feature.EGRESS, Feature.WALKING),
 
   /**
    * Encompasses all types of on-demand and flexible transportation.
@@ -143,9 +149,9 @@ public enum StreetMode implements DocumentedEnum<StreetMode> {
 
   private static String GBFS_PREREQ = """
 
-    _Prerequisite:_ Vehicle or station locations need to be added to OTP from dynamic data feeds.
-    See [Configuring GBFS](GBFS-Config.md) on how to add one.
-    """;
+  _Prerequisite:_ Vehicle or station locations need to be added to OTP from dynamic data feeds.
+  See [Configuring GBFS](GBFS-Config.md) on how to add one.
+  """;
 
   @Override
   public String enumValueDescription() {
@@ -166,18 +172,15 @@ public enum StreetMode implements DocumentedEnum<StreetMode> {
       """;
       case BIKE_RENTAL -> """
       Taking a rented, shared-mobility bike for part or the entirety of the route.
-      """ +
-      GBFS_PREREQ;
+      """ + GBFS_PREREQ;
       case SCOOTER_RENTAL -> """
       Walking to a scooter rental point, riding a scooter to a scooter rental drop-off point, and walking the rest of the way.
       This can include scooter rental at fixed locations or free-floating services.
-      """ +
-      GBFS_PREREQ;
+      """ + GBFS_PREREQ;
       case CAR_RENTAL -> """
       Walk to a car rental point, drive to a car rental drop-off point and walk the rest of the way.
       This can include car rental at fixed locations or free-floating services.
-      """ +
-      GBFS_PREREQ;
+      """ + GBFS_PREREQ;
       case CAR -> """
       Driving your own car the entirety of the route.
       This can be combined with transit, where will return routes with a [Kiss & Ride](https://en.wikipedia.org/wiki/Park_and_ride#Kiss_and_ride_/_kiss_and_fly) component.

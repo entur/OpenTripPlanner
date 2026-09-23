@@ -59,11 +59,6 @@ public abstract class DominanceFunctions implements Serializable, DominanceFunct
       return false;
     }
 
-    // we cannot compare the states where one is inside a "no-drop off" zone and one isn't
-    if (a.isInsideNoRentalDropOffArea() != b.isInsideNoRentalDropOffArea()) {
-      return false;
-    }
-
     /*
      * The OTP algorithm tries hard to never visit the same node twice. This is generally a good idea because it avoids
      * useless loops in the traversal leading to way faster processing time.
@@ -98,9 +93,9 @@ public abstract class DominanceFunctions implements Serializable, DominanceFunct
      */
     if (
       a.backEdge != b.getBackEdge() &&
-      (a.backEdge instanceof StreetEdge) &&
+      a.backEdge instanceof StreetEdge &&
       a.getBackMode() != null &&
-      a.getBackMode().isInCar() &&
+      a.getBackMode().isDrivingIsh() &&
       a.getRequest().isCloseToStartOrEnd(a.getVertex())
     ) {
       return false;
@@ -143,17 +138,13 @@ public abstract class DominanceFunctions implements Serializable, DominanceFunct
   }
 
   /**
-   * A dominance function that prefers the least walking. This should only be used with walk-only
-   * searches because it does not include any functions of time, and once transit is boarded walk
-   * distance is constant.
-   * <p>
-   * It is used when building stop tree caches for egress from transit stops.
+   * A dominance function that prefers the shortest distance.
    */
-  public static class LeastWalk extends DominanceFunctions {
+  public static class ShortestDistance extends DominanceFunctions {
 
     @Override
     protected boolean betterOrEqual(State a, State b) {
-      return a.getWalkDistance() <= b.getWalkDistance();
+      return a.getTraversalDistanceMeters() <= b.getTraversalDistanceMeters();
     }
   }
 
@@ -172,8 +163,8 @@ public abstract class DominanceFunctions implements Serializable, DominanceFunct
 
       final double EPSILON = 1e-4;
       return (
-        a.getElapsedTimeSeconds() <= (b.getElapsedTimeSeconds() + EPSILON) &&
-        a.getWeight() <= (b.getWeight() + EPSILON)
+        a.getElapsedTimeSeconds() <= b.getElapsedTimeSeconds() + EPSILON &&
+        a.getWeight() <= b.getWeight() + EPSILON
       );
     }
   }

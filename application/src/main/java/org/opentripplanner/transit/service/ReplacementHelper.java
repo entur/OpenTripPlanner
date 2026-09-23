@@ -8,9 +8,9 @@ import org.opentripplanner.transit.model.basic.SubMode;
 import org.opentripplanner.transit.model.network.ReplacedByRelation;
 import org.opentripplanner.transit.model.network.ReplacementForRelation;
 import org.opentripplanner.transit.model.network.Route;
-import org.opentripplanner.transit.model.timetable.TimetableSnapshot;
 import org.opentripplanner.transit.model.timetable.Trip;
 import org.opentripplanner.transit.model.timetable.TripOnServiceDate;
+import org.opentripplanner.transit.repository.TimetableRepositorySnapshot;
 
 /**
  * <p>Encapsulates the part of Transit Service which deals with Route/Trip/TripOnServiceDate
@@ -32,24 +32,24 @@ public class ReplacementHelper {
   );
 
   private final TransitService transitService;
-  private final TimetableRepository timetableRepository;
+  private final TransitRepository transitRepository;
 
   @Nullable
-  private final TimetableSnapshot timetableSnapshot;
+  private final TimetableRepositorySnapshot timetableSnapshot;
 
   public ReplacementHelper(
     TransitService transitService,
-    TimetableRepository timetableRepository,
-    @Nullable TimetableSnapshot timetableSnapshot
+    TransitRepository transitRepository,
+    @Nullable TimetableRepositorySnapshot timetableSnapshot
   ) {
     this.transitService = transitService;
-    this.timetableRepository = timetableRepository;
+    this.transitRepository = transitRepository;
     this.timetableSnapshot = timetableSnapshot;
   }
 
   public Collection<ReplacedByRelation> getReplacedBy(TripOnServiceDate tripOnServiceDate) {
     var id = tripOnServiceDate.getId();
-    var replacedBy = timetableRepository.getReplacedByTripOnServiceDate(id);
+    var replacedBy = transitRepository.getReplacedByTripOnServiceDate(id);
     Stream<TripOnServiceDate> tripsOnServiceDate;
     if (timetableSnapshot != null) {
       tripsOnServiceDate = Stream.concat(
@@ -66,21 +66,24 @@ public class ReplacementHelper {
     return tripOnServiceDate.getReplacementFor().stream().map(ReplacementForRelation::new).toList();
   }
 
-  private boolean submodeIsReplacement(SubMode submode) {
+  private static boolean isReplacementGtfsType(@Nullable Integer gtfsType) {
+    return gtfsType != null && REPLACEMENT_EXTENDED_TYPES.contains(gtfsType);
+  }
+
+  private static boolean isReplacementSubmode(SubMode submode) {
     return submode.toString().toLowerCase().contains("replacement");
   }
 
-  private boolean isReplacementGtfsType(Route route) {
-    var type = route.getGtfsType();
-    return type != null && REPLACEMENT_EXTENDED_TYPES.contains(type);
+  public static boolean isReplacement(SubMode submode, @Nullable Integer gtfsType) {
+    return isReplacementSubmode(submode) || isReplacementGtfsType(gtfsType);
   }
 
-  public boolean isReplacementRoute(Route route) {
-    return isReplacementGtfsType(route) || submodeIsReplacement(route.getNetexSubmode());
+  public static boolean isReplacementRoute(Route route) {
+    return isReplacement(route.getNetexSubmode(), route.getGtfsType());
   }
 
-  public boolean isReplacementTrip(Trip trip) {
-    return isReplacementGtfsType(trip.getRoute()) || submodeIsReplacement(trip.getNetexSubMode());
+  public static boolean isReplacementTrip(Trip trip) {
+    return isReplacement(trip.getNetexSubMode(), trip.getRoute().getGtfsType());
   }
 
   public boolean isReplacementTripOnServiceDate(TripOnServiceDate tripOnServiceDate) {
@@ -93,7 +96,7 @@ public class ReplacementHelper {
   private boolean hasReplacedByTripOnServiceDates(TripOnServiceDate tripOnServiceDate) {
     var id = tripOnServiceDate.getId();
     return (
-      !timetableRepository.getReplacedByTripOnServiceDate(id).isEmpty() ||
+      !transitRepository.getReplacedByTripOnServiceDate(id).isEmpty() ||
       (timetableSnapshot != null &&
         timetableSnapshot.getRealTimeReplacedByTripOnServiceDate(id).isEmpty())
     );

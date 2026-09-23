@@ -1,17 +1,17 @@
 package org.opentripplanner.routing.algorithm.transferoptimization.model;
 
 import javax.annotation.Nullable;
-import org.opentripplanner.raptor.api.model.RaptorConstants;
-import org.opentripplanner.raptor.api.model.RaptorStopNameResolver;
-import org.opentripplanner.raptor.api.model.RaptorTransfer;
-import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
 import org.opentripplanner.raptor.api.model.RaptorValueType;
 import org.opentripplanner.raptor.api.path.TransitPathLeg;
 import org.opentripplanner.raptor.path.PathBuilder;
 import org.opentripplanner.raptor.path.PathBuilderLeg;
 import org.opentripplanner.raptor.spi.BoardAndAlightTime;
+import org.opentripplanner.raptor.spi.RaptorConstants;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.raptor.spi.RaptorSlackProvider;
+import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
+import org.opentripplanner.raptor.spi.RaptorTransfer;
+import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.opentripplanner.routing.algorithm.transferoptimization.api.OptimizedPath;
 import org.opentripplanner.routing.algorithm.transferoptimization.api.TransferOptimized;
 import org.opentripplanner.transfer.constrained.model.TransferConstraint;
@@ -28,7 +28,8 @@ import org.opentripplanner.utils.tostring.ValueObjectToStringBuilder;
  */
 public class OptimizedPathTail<T extends RaptorTripSchedule>
   extends PathBuilder<T>
-  implements TransferOptimized {
+  implements TransferOptimized
+{
 
   @Nullable
   private final TransferWaitTimeCostCalculator waitTimeCostCalculator;
@@ -51,13 +52,13 @@ public class OptimizedPathTail<T extends RaptorTripSchedule>
   ) {
     super(slackProvider, iterationDepartureTime, costCalculator, stopNameResolver, null);
     this.waitTimeCostCalculator = waitTimeCostCalculator;
-    this.stopPriorityCostCalculator = (stopBoardAlightTransferCosts != null &&
-        extraStopBoardAlightCostsFactor > 0.01)
-      ? new StopPriorityCostCalculator(
-          extraStopBoardAlightCostsFactor,
-          stopBoardAlightTransferCosts
-        )
-      : null;
+    this.stopPriorityCostCalculator =
+      stopBoardAlightTransferCosts != null && extraStopBoardAlightCostsFactor > 0.01
+        ? new StopPriorityCostCalculator(
+            extraStopBoardAlightCostsFactor,
+            stopBoardAlightTransferCosts
+          )
+        : null;
   }
 
   private OptimizedPathTail(OptimizedPathTail<T> other) {

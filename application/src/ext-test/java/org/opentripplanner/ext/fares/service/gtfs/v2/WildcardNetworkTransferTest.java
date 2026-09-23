@@ -1,7 +1,7 @@
 package org.opentripplanner.ext.fares.service.gtfs.v2;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
@@ -18,7 +18,9 @@ class WildcardNetworkTransferTest implements FareTestConstants {
   private final GtfsFaresV2Service SERVICE = GtfsFaresV2Service.of()
     .withLegRules(
       // wildcard rule, matches everything
-      FareLegRule.of(id(1), FARE_PRODUCT_A).withLegGroupId(LEG_GROUP_A).build()
+      FareLegRule.of(id(1), FARE_PRODUCT_A)
+        .withLegGroupId(LEG_GROUP_A)
+        .build()
     )
     .withTransferRules(
       // monthly pass with unlimited transfers

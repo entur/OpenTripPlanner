@@ -1,0 +1,83 @@
+package org.opentripplanner.raptor._data;
+
+import static org.opentripplanner.utils.time.DurationUtils.durationInSeconds;
+import static org.opentripplanner.utils.time.TimeUtils.hm2time;
+
+import org.opentripplanner.raptor.spi.RaptorSlackProvider;
+import org.opentripplanner.raptor.spi.TestSlackProvider;
+
+public interface RaptorTestConstants {
+  // Time duration(D) constants, all values are in seconds
+  int D0_s = 0;
+  int D1_s = 1;
+  int D10_s = 10;
+  int D11_s = 11;
+  int D20_s = 20;
+  int D30_s = 30;
+  int D40_s = 40;
+  int D1_m = durationInSeconds("1m");
+  int D2_m = durationInSeconds("2m");
+  int D3_m = durationInSeconds("3m");
+  int D4_m = durationInSeconds("4m");
+  int D5_m = durationInSeconds("5m");
+  int D7_m = durationInSeconds("7m");
+  int D8_m = durationInSeconds("8m");
+  int D10_m = durationInSeconds("10m");
+  int D20_m = durationInSeconds("20m");
+  int D24_h = durationInSeconds("24h");
+
+  /**
+   * There are 86400 seconds in a "normal" day(24 * 60 * 60).
+   */
+  int SECONDS_IN_A_DAY = (int) D24_h;
+
+  // Time constants, all values are in seconds
+  int T00_00 = hm2time(0, 0);
+  int T00_02 = hm2time(0, 2);
+  int T00_10 = hm2time(0, 10);
+  int T00_30 = hm2time(0, 30);
+  int T00_40 = hm2time(0, 40);
+  int T01_00 = hm2time(1, 0);
+
+  int TX_0 = 0;
+  int TX_1 = 1;
+  int TX_2 = 2;
+
+  // Stop indexes - Note! There is no stop defined for index 0(zero)! You must
+  // account for that in the test if you use the stop index.
+  int STOP_A = 1;
+  int STOP_B = 2;
+  int STOP_C = 3;
+  int STOP_D = 4;
+  int STOP_E = 5;
+  int STOP_F = 6;
+
+  int NUM_STOPS = 14;
+
+  // Stop position in pattern
+  int STOP_POS_0 = 0;
+  int STOP_POS_1 = 1;
+
+  // Slack
+  int BOARD_SLACK = 45;
+  int ALIGHT_SLACK = 15;
+  int TRANSFER_SLACK = 60;
+
+  RaptorSlackProvider SLACK_PROVIDER = new TestSlackProvider(
+    TRANSFER_SLACK,
+    BOARD_SLACK,
+    ALIGHT_SLACK
+  );
+
+  // FLEX
+  int ONE_RIDE = 1;
+
+  static String stopIndexToName(int index) {
+    return Character.toString('A' + index - 1);
+  }
+
+  static int stopNameToIndex(String name) {
+    char ch = name.startsWith("STOP_") ? name.charAt(5) : name.charAt(0);
+    return (int) (ch - 'A' + 1);
+  }
+}

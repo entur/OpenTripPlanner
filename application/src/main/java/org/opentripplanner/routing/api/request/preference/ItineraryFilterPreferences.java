@@ -65,8 +65,8 @@ public final class ItineraryFilterPreferences {
     this.groupedOtherThanSameLegsMaxCostMultiplier = Units.reluctance(
       builder.groupedOtherThanSameLegsMaxCostMultiplier
     );
-    this.groupSimilarityKeepOne = Units.reluctance(builder.groupSimilarityKeepOne);
-    this.groupSimilarityKeepThree = Units.reluctance(builder.groupSimilarityKeepThree);
+    this.groupSimilarityKeepOne = Units.ratio(builder.groupSimilarityKeepOne);
+    this.groupSimilarityKeepThree = Units.ratio(builder.groupSimilarityKeepThree);
     this.minBikeParkingDistance = builder.minBikeParkingDistance;
     this.nonTransitGeneralizedCostLimit = Objects.requireNonNull(
       builder.nonTransitGeneralizedCostLimit
@@ -211,8 +211,7 @@ public final class ItineraryFilterPreferences {
       Double.compare(
         that.groupedOtherThanSameLegsMaxCostMultiplier,
         groupedOtherThanSameLegsMaxCostMultiplier
-      ) ==
-      0 &&
+      ) == 0 &&
       Double.compare(that.groupSimilarityKeepOne, groupSimilarityKeepOne) == 0 &&
       Double.compare(that.groupSimilarityKeepThree, groupSimilarityKeepThree) == 0 &&
       Double.compare(that.minBikeParkingDistance, minBikeParkingDistance) == 0 &&

@@ -14,22 +14,21 @@ import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.api.model.geometry.EncodedPolyline;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.model.plan.leg.StreetLeg;
-import org.opentripplanner.routing.algorithm.mapping.GraphPathToItineraryMapper;
+import org.opentripplanner.routing.algorithm.raptoradapter.router.street.DirectStreetRouter;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.request.StreetRequest;
-import org.opentripplanner.routing.graphfinder.NoopSiteResolver;
-import org.opentripplanner.routing.impl.GraphPathFinder;
 import org.opentripplanner.routing.linking.LinkingContextFactory;
 import org.opentripplanner.routing.linking.VertexLinkerTestFactory;
 import org.opentripplanner.routing.linking.internal.VertexCreationService;
 import org.opentripplanner.routing.linking.mapping.LinkingContextRequestMapper;
-import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRepository;
-import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsService;
+import org.opentripplanner.standalone.api.TestServerContext;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.linking.TemporaryVerticesContainer;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.test.support.ResourceLoader;
+import org.opentripplanner.transfer.regular.TransferServiceTestFactory;
+import org.opentripplanner.transit.service.TransitRepository;
 
 /*
  * When bus stops are added to graph they split an existing edge in two parts so that an artificial
@@ -178,30 +177,31 @@ public class SplitEdgeTurnRestrictionsTest {
       var linkingContextFactory = new LinkingContextFactory(graph, vertexCreationService);
       var linkingRequest = LinkingContextRequestMapper.map(request);
       var linkingContext = linkingContextFactory.create(temporaryVerticesContainer, linkingRequest);
-      var gpf = new GraphPathFinder(null);
-      var paths = gpf.graphPathFinderEntryPoint(request, linkingContext);
-
-      GraphPathToItineraryMapper graphPathToItineraryMapper = new GraphPathToItineraryMapper(
-        new NoopSiteResolver(),
-        ZoneIds.BERLIN,
-        graph.streetNotesService,
-        new DefaultStreetDetailsService(new DefaultStreetDetailsRepository()),
-        graph.ellipsoidToGeoidDifference
+      var transitService = TestServerContext.createTransitService(
+        new TransitRepository(),
+        TransferServiceTestFactory.defaultTransferRepository()
       );
 
-      var itineraries = graphPathToItineraryMapper.mapItineraries(paths, request);
+      var itineraries = DirectStreetRouter.route(
+        graph,
+        transitService,
+        TestServerContext.createStreetLimitationParametersService(),
+        TestServerContext.createVehicleRentalService(),
+        TestServerContext.createStreetDetailsService(),
+        null,
+        request,
+        linkingContext
+      );
 
       // make sure that we only get CAR legs
       itineraries.forEach(i ->
-        i
-          .legs()
-          .forEach(l -> {
-            if (l instanceof StreetLeg stLeg) {
-              assertEquals(TraverseMode.CAR, stLeg.getMode());
-            } else {
-              fail("Expected StreetLeg (CAR): " + l);
-            }
-          })
+        i.legs().forEach(l -> {
+          if (l instanceof StreetLeg stLeg) {
+            assertEquals(TraverseMode.CAR, stLeg.getMode());
+          } else {
+            fail("Expected StreetLeg (CAR): " + l);
+          }
+        })
       );
       Geometry geometry = itineraries.get(0).legs().get(0).legGeometry();
       return EncodedPolyline.of(geometry).points();

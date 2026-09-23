@@ -3,9 +3,9 @@ package org.opentripplanner.routing.algorithm.raptoradapter.transit.cost;
 import static graphql.Assert.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.raptorlegacy._data.transit.TestRoute.route;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.agency;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
+import static org.opentripplanner.transit.model._data.TransitRepositoryForTest.agency;
 
 import java.time.Duration;
 import java.util.List;
@@ -17,8 +17,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.opentripplanner.core.model.basic.Cost;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.raptor.api.model.RaptorTransferConstraint;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
+import org.opentripplanner.raptor.spi.RaptorTransferConstraint;
 import org.opentripplanner.raptorlegacy._data.transit.TestTransitData;
 import org.opentripplanner.raptorlegacy._data.transit.TestTripPattern;
 import org.opentripplanner.raptorlegacy._data.transit.TestTripSchedule;
@@ -26,7 +26,7 @@ import org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.Gener
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.framework.CostLinearFunction;
 import org.opentripplanner.test.support.TestTableParser;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model._data.TransitRepositoryForTest;
 import org.opentripplanner.transit.model.network.RouteBuilder;
 import org.opentripplanner.transit.model.organization.Agency;
 
@@ -168,10 +168,6 @@ public class PatternCostCalculatorTest {
       return "RoutePenaltyTC {" + sb.substring(sb.isEmpty() ? 0 : 2) + "}";
     }
 
-    boolean isDefault() {
-      return !(unPreferredAgency || unPreferredRoute);
-    }
-
     RaptorCostCalculator<TestTripSchedule> createCostCalculator(TestTripSchedule schedule) {
       GeneralizedCostParameters costParams = GeneralizedCostParametersMapper.map(
         createRouteRequest(),
@@ -222,7 +218,7 @@ public class PatternCostCalculatorTest {
   }
 
   private static TestTripPattern pattern(boolean unpreferredRoute, boolean unpreferredAgency) {
-    RouteBuilder builder = TimetableRepositoryForTest.route(
+    RouteBuilder builder = TransitRepositoryForTest.route(
       unpreferredRoute ? UNPREFERRED_ROUTE_ID : DEFAULT_ROUTE_ID
     );
 

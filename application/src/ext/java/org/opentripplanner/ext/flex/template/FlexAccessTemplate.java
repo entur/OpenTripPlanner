@@ -1,13 +1,14 @@
 package org.opentripplanner.ext.flex.template;
 
-import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
+import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.ext.flex.FlexParameters;
 import org.opentripplanner.ext.flex.FlexPathDurations;
 import org.opentripplanner.ext.flex.edgetype.FlexTripEdge;
 import org.opentripplanner.ext.flex.flexpathcalculator.FlexPathCalculator;
 import org.opentripplanner.ext.flex.trip.FlexTrip;
-import org.opentripplanner.routing.graphfinder.NearbyStop;
+import org.opentripplanner.place.api.NearbyStop;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.state.State;
@@ -25,7 +26,7 @@ class FlexAccessTemplate extends AbstractFlexTemplate {
     int alightStopPosition,
     FlexServiceDate date,
     FlexPathCalculator calculator,
-    Duration maxTransferDuration
+    FlexParameters flexParameters
   ) {
     super(
       trip,
@@ -35,7 +36,7 @@ class FlexAccessTemplate extends AbstractFlexTemplate {
       alightStopPosition,
       date,
       calculator,
-      maxTransferDuration
+      flexParameters
     );
   }
 
@@ -69,7 +70,7 @@ class FlexAccessTemplate extends AbstractFlexTemplate {
     );
   }
 
-  protected FlexTripEdge getFlexEdge(Vertex flexToVertex, StopLocation transferStop) {
+  protected FlexTripEdge getFlexEdge(Vertex flexToVertex, FeedScopedId transferStopId) {
     var flexPath = calculator.calculateFlexPath(
       accessEgress.state.getVertex(),
       flexToVertex,
@@ -84,13 +85,14 @@ class FlexAccessTemplate extends AbstractFlexTemplate {
     return new FlexTripEdge(
       accessEgress.state.getVertex(),
       flexToVertex,
-      accessEgress.stop,
-      transferStop,
+      accessEgress.stopId,
+      transferStopId,
       trip,
       boardStopPosition,
       alightStopPosition,
       serviceDate,
-      flexPath
+      flexPath,
+      flexParameters
     );
   }
 }

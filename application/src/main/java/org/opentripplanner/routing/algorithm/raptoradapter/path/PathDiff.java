@@ -10,9 +10,9 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
-import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
 import org.opentripplanner.raptor.api.path.PathLeg;
 import org.opentripplanner.raptor.api.path.RaptorPath;
+import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.opentripplanner.routing.util.DiffEntry;
 import org.opentripplanner.routing.util.DiffTool;
 import org.opentripplanner.utils.collection.CompositeComparator;
@@ -101,8 +101,14 @@ public class PathDiff<T extends RaptorTripSchedule> {
     boolean skipCost
   ) {
     return DiffTool.diff(
-      left.stream().map(PathDiff<T>::new).collect(Collectors.toList()),
-      right.stream().map(PathDiff<T>::new).collect(Collectors.toList()),
+      left
+        .stream()
+        .map(PathDiff<T>::new)
+        .collect(Collectors.toList()),
+      right
+        .stream()
+        .map(PathDiff<T>::new)
+        .collect(Collectors.toList()),
       comparator(skipCost)
     );
   }

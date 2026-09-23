@@ -1,7 +1,7 @@
 package org.opentripplanner.ext.fares.service.gtfs;
 
 import static com.google.common.truth.Truth.assertThat;
-import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
@@ -44,12 +44,12 @@ class GtfsFaresServiceTest implements FareTestConstants {
     var leg1 = TestTransitLeg.of()
       .withStartTime("10:00")
       .withEndTime("10:30")
-      .withNetwork(NETWORK_A.getId())
+      .withNetwork(NETWORK_A)
       .build();
     var leg2 = TestTransitLeg.of()
       .withStartTime("10:40")
       .withEndTime("11:00")
-      .withNetwork(NETWORK_A.getId())
+      .withNetwork(NETWORK_A)
       .build();
 
     var service = new GtfsFaresService(new DefaultFareService(), V2_SERVICE);
@@ -72,7 +72,7 @@ class GtfsFaresServiceTest implements FareTestConstants {
     var leg1 = TestTransitLeg.of()
       .withStartTime("10:00")
       .withEndTime("10:30")
-      .withNetwork(NETWORK_A.getId())
+      .withNetwork(NETWORK_A)
       .build();
     var service = new GtfsFaresService(new DefaultFareService(), V2_SERVICE);
 

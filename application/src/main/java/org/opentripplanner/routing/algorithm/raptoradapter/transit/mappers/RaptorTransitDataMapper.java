@@ -1,6 +1,6 @@
 package org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers;
 
-import static org.opentripplanner.routing.algorithm.raptoradapter.transit.mappers.TransfersMapper.mapTransfers;
+import static org.opentripplanner.transfer.regular.model.TransfersMapper.mapTransfers;
 
 import com.google.common.collect.ArrayListMultimap;
 import java.time.LocalDate;
@@ -13,26 +13,26 @@ import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
 import org.opentripplanner.framework.application.OTPFeature;
-import org.opentripplanner.raptor.api.model.RaptorCostConverter;
+import org.opentripplanner.raptor.spi.RaptorCostConverter;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.Transfer;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TransitTuningParameters;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripPatternForDate;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.constrainedtransfer.ConstrainedTransfersForPatterns;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.constrainedtransfer.TransferIndexGenerator;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.transfercache.RaptorRequestTransferCache;
+import org.opentripplanner.transfer.constrained.raptoradaptor.ConstrainedTransfersForPatterns;
+import org.opentripplanner.transfer.constrained.raptoradaptor.TransferIndexGenerator;
 import org.opentripplanner.transfer.regular.TransferRepository;
+import org.opentripplanner.transfer.regular.model.PathTransfer;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.StopTransferPriority;
 import org.opentripplanner.transit.service.DefaultTransitService;
 import org.opentripplanner.transit.service.SiteRepository;
-import org.opentripplanner.transit.service.TimetableRepository;
+import org.opentripplanner.transit.service.TransitRepository;
 import org.opentripplanner.transit.service.TransitService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Maps the RaptorTransitData object from the TimetableRepository object. The ServiceDay hierarchy is reversed,
+ * Maps the RaptorTransitData object from the TransitRepository object. The ServiceDay hierarchy is reversed,
  * with service days at the top level, which contains TripPatternForDate objects that contain only
  * TripSchedules running on that particular date. This makes it faster to filter out TripSchedules
  * when doing Range Raptor searches.
@@ -51,30 +51,28 @@ public class RaptorTransitDataMapper {
   private final TransferRepository transferRepository;
 
   private RaptorTransitDataMapper(
-    TimetableRepository timetableRepository,
+    TransitRepository transitRepository,
     TransferRepository transferRepository
   ) {
-    this.transitService = new DefaultTransitService(timetableRepository);
-    this.siteRepository = timetableRepository.getSiteRepository();
+    this.transitService = new DefaultTransitService(transitRepository);
+    this.siteRepository = transitRepository.getSiteRepository();
     this.transferRepository = transferRepository;
   }
 
   public static RaptorTransitData map(
     TransitTuningParameters tuningParameters,
-    TimetableRepository timetableRepository,
+    TransitRepository transitRepository,
     TransferRepository transferRepository
   ) {
-    return new RaptorTransitDataMapper(timetableRepository, transferRepository).map(
-      tuningParameters
-    );
+    return new RaptorTransitDataMapper(transitRepository, transferRepository).map(tuningParameters);
   }
 
   private RaptorTransitData map(TransitTuningParameters tuningParameters) {
     HashMap<LocalDate, List<TripPatternForDate>> tripPatternsByStopByDate;
-    List<List<Transfer>> transfersByStopIndex;
+    List<List<PathTransfer>> transfersByStopIndex;
     ConstrainedTransfersForPatterns constrainedTransfers = null;
 
-    LOG.info("Mapping raptorTransitData from TimetableRepository...");
+    LOG.info("Mapping raptorTransitData from TransitRepository...");
 
     Collection<TripPattern> allTripPatterns = transitService.listTripPatterns();
 
@@ -125,28 +123,26 @@ public class RaptorTransitDataMapper {
     List<TripPatternForDate> tripPatternForDates = Collections.synchronizedList(new ArrayList<>());
 
     // THIS CODE RUNS IN PARALLEL
-    allServiceDates
-      .parallelStream()
-      .forEach(serviceDate -> {
-        // Create a List to hold the values for this iteration. The results are then added
-        // to the common synchronized list at the end.
-        List<TripPatternForDate> values = new ArrayList<>();
+    allServiceDates.parallelStream().forEach(serviceDate -> {
+      // Create a List to hold the values for this iteration. The results are then added
+      // to the common synchronized list at the end.
+      List<TripPatternForDate> values = new ArrayList<>();
 
-        // This nested loop could be quite inefficient.
-        // Maybe determine in advance which patterns are running on each service and day.
-        for (TripPattern oldTripPattern : allTripPatterns) {
-          TripPatternForDate tripPatternForDate = tripPatternForDateMapper.map(
-            oldTripPattern.getScheduledTimetable(),
-            serviceDate
-          );
-          if (tripPatternForDate != null) {
-            values.add(tripPatternForDate);
-          }
+      // This nested loop could be quite inefficient.
+      // Maybe determine in advance which patterns are running on each service and day.
+      for (TripPattern oldTripPattern : allTripPatterns) {
+        TripPatternForDate tripPatternForDate = tripPatternForDateMapper.map(
+          oldTripPattern.getScheduledTimetable(),
+          serviceDate
+        );
+        if (tripPatternForDate != null) {
+          values.add(tripPatternForDate);
         }
-        if (!values.isEmpty()) {
-          tripPatternForDates.addAll(values);
-        }
-      });
+      }
+      if (!values.isEmpty()) {
+        tripPatternForDates.addAll(values);
+      }
+    });
     // END PARALLEL CODE
 
     return keyByRunningPeriodDates(tripPatternForDates);

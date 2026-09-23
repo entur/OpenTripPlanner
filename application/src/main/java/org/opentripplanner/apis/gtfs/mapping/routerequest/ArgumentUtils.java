@@ -33,6 +33,21 @@ public class ArgumentUtils {
     return null;
   }
 
+  @Nullable
+  static List<GraphQLTypes.GraphQLPlanTransitModePreferenceInput> getPlanTransitModes(
+    DataFetchingEnvironment environment
+  ) {
+    var transitModes = getTransitModes(environment);
+    if (transitModes != null) {
+      return transitModes
+        .stream()
+        .map(GraphQLTypes.GraphQLPlanTransitModePreferenceInput::new)
+        .collect(Collectors.toList());
+    } else {
+      return null;
+    }
+  }
+
   /**
    * This methods returns parking preferences of the given type from argument structure:
    * preferences.street.type.parking. This methods circumvents a bug in graphql-codegen as getting a
@@ -43,12 +58,13 @@ public class ArgumentUtils {
    */
   @Nullable
   static Map<String, Object> getParking(DataFetchingEnvironment environment, String type) {
-    return (
-      (Map<String, Object>) ((Map<String, Object>) ((Map<String, Object>) ((Map<
-              String,
-              Object
-            >) environment.getArgument("preferences")).get("street")).get(type)).get("parking")
-    );
+    return (Map<String, Object>) (
+      (Map<String, Object>) (
+        (Map<String, Object>) ((Map<String, Object>) environment.getArgument("preferences")).get(
+          "street"
+        )
+      ).get(type)
+    ).get("parking");
   }
 
   /**
@@ -64,9 +80,10 @@ public class ArgumentUtils {
     String type
   ) {
     var parking = getParking(environment, type);
-    var filters = parking != null && parking.containsKey("filters")
-      ? getParking(environment, type).get("filters")
-      : null;
+    var filters =
+      parking != null && parking.containsKey("filters")
+        ? getParking(environment, type).get("filters")
+        : null;
     return filters != null ? (Collection<Map<String, Object>>) filters : List.of();
   }
 
@@ -83,9 +100,10 @@ public class ArgumentUtils {
     String type
   ) {
     var parking = getParking(environment, type);
-    var preferred = parking != null && parking.containsKey("preferred")
-      ? getParking(environment, type).get("preferred")
-      : null;
+    var preferred =
+      parking != null && parking.containsKey("preferred")
+        ? getParking(environment, type).get("preferred")
+        : null;
     return preferred != null ? (Collection<Map<String, Object>>) preferred : List.of();
   }
 
@@ -107,11 +125,9 @@ public class ArgumentUtils {
   }
 
   private static Stream<String> parseOperation(Collection<Map<String, Collection<String>>> map) {
-    return map
-      .stream()
-      .flatMap(f -> {
-        var tags = f.getOrDefault("tags", List.of());
-        return tags.stream();
-      });
+    return map.stream().flatMap(f -> {
+      var tags = f.getOrDefault("tags", List.of());
+      return tags.stream();
+    });
   }
 }

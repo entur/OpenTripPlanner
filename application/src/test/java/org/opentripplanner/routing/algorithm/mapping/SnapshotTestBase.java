@@ -33,7 +33,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.TestOtpModel;
-import org.opentripplanner.TestServerContext;
 import org.opentripplanner.api.parameter.ApiRequestMode;
 import org.opentripplanner.api.parameter.QualifiedMode;
 import org.opentripplanner.api.parameter.Qualifier;
@@ -43,15 +42,19 @@ import org.opentripplanner.model.plan.Leg;
 import org.opentripplanner.model.plan.leg.StreetLeg;
 import org.opentripplanner.routing.algorithm.mapping._support.mapping.ItineraryMapper;
 import org.opentripplanner.routing.algorithm.mapping._support.model.ApiLeg;
+import org.opentripplanner.routing.api.RoutingService;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.RouteRequestBuilder;
 import org.opentripplanner.routing.api.request.request.filter.AllowAllTransitFilter;
 import org.opentripplanner.routing.api.request.request.filter.TransitFilterRequest;
 import org.opentripplanner.routing.api.response.RoutingResponse;
-import org.opentripplanner.standalone.api.OtpServerRequestContext;
+import org.opentripplanner.standalone.api.TestServerContext;
+import org.opentripplanner.standalone.config.RouterConfig;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.transit.model.basic.MainAndSubMode;
+import org.opentripplanner.transit.model.basic.NarrowedTransitMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
+import org.opentripplanner.transit.service.TransitService;
 import org.opentripplanner.utils.time.DurationUtils;
 
 /**
@@ -73,7 +76,8 @@ public abstract class SnapshotTestBase {
 
   static final boolean VERBOSE = Boolean.getBoolean("otp.test.verbose");
 
-  protected OtpServerRequestContext serverContext;
+  protected TransitService transitService;
+  protected RoutingService routingService;
 
   public static void loadGraphBeforeClass(boolean withElevation) {
     if (withElevation) {
@@ -83,18 +87,19 @@ public abstract class SnapshotTestBase {
     }
   }
 
-  protected OtpServerRequestContext serverContext() {
-    if (serverContext == null) {
+  private void ensureContextInitialized() {
+    if (routingService == null) {
       TestOtpModel model = getGraph();
-      serverContext = TestServerContext.createServerContext(
+      transitService = TestServerContext.createTransitService(
+        model.transitRepository(),
+        model.transferRepository()
+      );
+      routingService = TestServerContext.createRoutingService(
         model.graph(),
-        model.timetableRepository(),
-        model.transferRepository(),
-        model.fareServiceFactory().makeFareService()
+        transitService,
+        model.transferRepository()
       );
     }
-
-    return serverContext;
   }
 
   protected TestOtpModel getGraph() {
@@ -109,14 +114,13 @@ public abstract class SnapshotTestBase {
     int minute,
     int second
   ) {
-    OtpServerRequestContext serverContext = serverContext();
+    ensureContextInitialized();
 
-    var builder = serverContext
-      .defaultRouteRequest()
+    var builder = RouterConfig.DEFAULT.routingRequestDefaults()
       .copyOf()
       .withDateTime(
         LocalDateTime.of(year, month, day, hour, minute, second)
-          .atZone(ZoneId.of(serverContext.transitService().getTimeZone().getId()))
+          .atZone(ZoneId.of(transitService.getTimeZone().getId()))
           .toInstant()
       )
       .withPreferences(pref -> pref.withTransfer(tx -> tx.withMaxTransfers(6)))
@@ -149,9 +153,7 @@ public abstract class SnapshotTestBase {
 
       for (int j = 0; j < itinerary.legs().size(); j++) {
         Leg leg = itinerary.legs().get(j);
-        String mode = (leg instanceof StreetLeg stLeg)
-          ? stLeg.getMode().name().substring(0, 1)
-          : "T";
+        String mode = leg instanceof StreetLeg stLeg ? stLeg.getMode().name().substring(0, 1) : "T";
         System.out.printf(
           " - leg %2d - %52.52s %9s --%s-> %-9s %-52.52s\n",
           j,
@@ -229,8 +231,9 @@ public abstract class SnapshotTestBase {
   }
 
   private List<Itinerary> retrieveItineraries(RouteRequest request) {
+    ensureContextInitialized();
     long startMillis = System.currentTimeMillis();
-    RoutingResponse response = serverContext.routingService().route(request);
+    RoutingResponse response = routingService.route(request);
 
     List<Itinerary> itineraries = response.getTripPlan().itineraries;
 
@@ -239,22 +242,29 @@ public abstract class SnapshotTestBase {
         itineraries,
         startMillis,
         System.currentTimeMillis(),
-        serverContext.transitService().getTimeZone()
+        transitService.getTimeZone()
       );
     }
     return itineraries;
   }
 
   private String createDebugUrlForRequest(RouteRequest request) {
+    ensureContextInitialized();
     var dateTime = Instant.ofEpochSecond(request.dateTime().getEpochSecond())
-      .atZone(serverContext().transitService().getTimeZone())
+      .atZone(transitService.getTimeZone())
       .toLocalDateTime();
 
     // TODO: 2022-12-20 filters: there should not be more than one filter but technically this is not right
     List<MainAndSubMode> transportModes = new ArrayList<>();
     var filter = request.journey().transit().filters().get(0);
     if (filter instanceof TransitFilterRequest filterRequest) {
-      transportModes = filterRequest.select().get(0).transportModes();
+      transportModes = filterRequest
+        .select()
+        .get(0)
+        .transportModes()
+        .stream()
+        .map(NarrowedTransitMode::toMainAndSubMode)
+        .toList();
     } else if (filter instanceof AllowAllTransitFilter) {
       transportModes = MainAndSubMode.all();
     }
@@ -288,10 +298,13 @@ public abstract class SnapshotTestBase {
 
   private String formatPlace(GenericLocation location) {
     String formatted;
-    if (location.stopId != null) {
-      formatted = String.format("%s::%s", location.label, location.stopId);
+    if (location.stopId() != null) {
+      formatted = String.format("%s::%s", location.label(), location.stopId());
+    } else if (location.wgsCoordinate() != null) {
+      var coord = location.wgsCoordinate();
+      formatted = String.format("%s::%s,%s", location.label(), coord.latitude(), coord.longitude());
     } else {
-      formatted = String.format("%s::%s,%s", location.label, location.lat, location.lng);
+      formatted = String.format("%s::null", location.label());
     }
     return URLEncoder.encode(formatted, StandardCharsets.UTF_8);
   }

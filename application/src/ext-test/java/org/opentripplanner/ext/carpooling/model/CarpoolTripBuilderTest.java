@@ -1,17 +1,19 @@
 package org.opentripplanner.ext.carpooling.model;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_EAST;
 import static org.opentripplanner.ext.carpooling.CarpoolTestCoordinates.OSLO_NORTH;
 import static org.opentripplanner.ext.carpooling.CarpoolTripTestData.createSimpleTrip;
 import static org.opentripplanner.ext.carpooling.CarpoolTripTestData.createStopAt;
 
-import java.time.Duration;
 import java.time.ZonedDateTime;
-import java.time.temporal.ChronoUnit;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.transit.model.organization.ContactInfo;
 
 public class CarpoolTripBuilderTest {
 
@@ -19,21 +21,20 @@ public class CarpoolTripBuilderTest {
   void buildFromValues_fromId_buildToCorrectValues() {
     var startTime = ZonedDateTime.now();
     var endTime = ZonedDateTime.now().plusMinutes(45);
-    var stop = createStopAt(1, OSLO_EAST);
+    var stop = createStopAt(OSLO_EAST);
+    var destination = createStopAt(OSLO_NORTH);
 
     var builder = new CarpoolTripBuilder(new FeedScopedId("feed", "id"));
     var trip = builder
-      .withAvailableSeats(2)
+      .withTotalCapacity(2)
       .withProvider("UNIT")
-      .withDeviationBudget(Duration.of(8, ChronoUnit.MINUTES))
       .withStartTime(startTime)
       .withEndTime(endTime)
-      .withStops(List.of(stop))
+      .withStops(List.of(stop, destination))
       .buildFromValues();
 
-    assertEquals(2, trip.availableSeats());
+    assertEquals(2, trip.totalCapacity());
     assertEquals("UNIT", trip.provider());
-    assertEquals(Duration.of(8, ChronoUnit.MINUTES), trip.deviationBudget());
     assertEquals(startTime, trip.startTime());
     assertEquals(endTime, trip.endTime());
     assertEquals(stop, trip.stops().getFirst());
@@ -46,12 +47,84 @@ public class CarpoolTripBuilderTest {
     var builder = new CarpoolTripBuilder(original);
     var trip = builder.buildFromValues();
 
-    assertEquals(original.availableSeats(), trip.availableSeats());
+    assertEquals(original.totalCapacity(), trip.totalCapacity());
     assertEquals(original.provider(), trip.provider());
-    assertEquals(original.deviationBudget(), trip.deviationBudget());
     assertEquals(original.startTime(), trip.startTime());
     assertEquals(original.endTime(), trip.endTime());
     assertEquals(original.stops().getFirst(), trip.stops().getFirst());
     assertEquals(original.stops().getLast(), trip.stops().getLast());
+  }
+
+  @Test
+  void buildFromValues_withPublicContactInformation_storesContactInfo() {
+    var contact = ContactInfo.of()
+      .withPhoneNumber("+4712345678")
+      .withBookingUrl("https://example.com/book")
+      .build();
+    var stops = List.of(createStopAt(1, OSLO_EAST), createStopAt(1, OSLO_NORTH));
+
+    var trip = new CarpoolTripBuilder(new FeedScopedId("feed", "contact-test"))
+      .withStartTime(ZonedDateTime.now())
+      .withEndTime(ZonedDateTime.now().plusMinutes(30))
+      .withStops(stops)
+      .withPublicContactInformation(contact)
+      .buildFromValues();
+
+    assertNotNull(trip.publicContactInformation());
+    assertEquals("+4712345678", trip.publicContactInformation().getPhoneNumber());
+    assertEquals("https://example.com/book", trip.publicContactInformation().getBookingUrl());
+  }
+
+  @Test
+  void buildFromValues_withNullableContactFields_allowsNulls() {
+    var contactPhoneOnly = ContactInfo.of().withPhoneNumber("+4712345678").build();
+    var contactUrlOnly = ContactInfo.of().withBookingUrl("https://example.com/book").build();
+    var stops = List.of(createStopAt(1, OSLO_EAST), createStopAt(1, OSLO_NORTH));
+
+    var tripWithPhone = new CarpoolTripBuilder(new FeedScopedId("feed", "phone-only"))
+      .withStartTime(ZonedDateTime.now())
+      .withEndTime(ZonedDateTime.now().plusMinutes(30))
+      .withStops(stops)
+      .withPublicContactInformation(contactPhoneOnly)
+      .buildFromValues();
+
+    assertEquals("+4712345678", tripWithPhone.publicContactInformation().getPhoneNumber());
+    assertNull(tripWithPhone.publicContactInformation().getBookingUrl());
+
+    var tripWithUrl = new CarpoolTripBuilder(new FeedScopedId("feed", "url-only"))
+      .withStartTime(ZonedDateTime.now())
+      .withEndTime(ZonedDateTime.now().plusMinutes(30))
+      .withStops(stops)
+      .withPublicContactInformation(contactUrlOnly)
+      .buildFromValues();
+
+    assertNull(tripWithUrl.publicContactInformation().getPhoneNumber());
+    assertEquals(
+      "https://example.com/book",
+      tripWithUrl.publicContactInformation().getBookingUrl()
+    );
+  }
+
+  @Test
+  void buildFromValues_withoutPublicContactInformation_defaultsToNull() {
+    var stops = List.of(createStopAt(1, OSLO_EAST), createStopAt(1, OSLO_NORTH));
+
+    var trip = new CarpoolTripBuilder(new FeedScopedId("feed", "no-contact"))
+      .withStartTime(ZonedDateTime.now())
+      .withEndTime(ZonedDateTime.now().plusMinutes(30))
+      .withStops(stops)
+      .buildFromValues();
+
+    assertNull(trip.publicContactInformation());
+  }
+
+  @Test
+  void buildFromValues_withFewerThanTwoStops_throws() {
+    var builder = new CarpoolTripBuilder(new FeedScopedId("feed", "too-few-stops"))
+      .withStartTime(ZonedDateTime.now())
+      .withEndTime(ZonedDateTime.now().plusMinutes(30))
+      .withStops(List.of(createStopAt(OSLO_EAST)));
+
+    assertThrows(IllegalArgumentException.class, builder::buildFromValues);
   }
 }

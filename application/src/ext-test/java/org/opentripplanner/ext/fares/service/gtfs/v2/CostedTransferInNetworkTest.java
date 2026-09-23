@@ -2,8 +2,8 @@ package org.opentripplanner.ext.fares.service.gtfs.v2;
 
 import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.model.plan.TestItineraryBuilder.newItinerary;
-import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
 import java.util.List;
 import java.util.Set;
@@ -14,7 +14,7 @@ import org.opentripplanner.ext.fares.model.FareTestConstants;
 import org.opentripplanner.ext.fares.model.FareTransferRule;
 import org.opentripplanner.model.fare.FareOffer;
 import org.opentripplanner.model.plan.PlanTestConstants;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model._data.TransitRepositoryForTest;
 import org.opentripplanner.transit.model.network.Route;
 
 class CostedTransferInNetworkTest implements PlanTestConstants, FareTestConstants {
@@ -22,7 +22,7 @@ class CostedTransferInNetworkTest implements PlanTestConstants, FareTestConstant
   private static final Route ROUTE_1 = routeInNetwork("r1");
   private static final Route ROUTE_2 = routeInNetwork("r2");
   private static final Route ROUTE_3 = routeInNetwork("r3");
-  private static final Route ROUTE_4 = TimetableRepositoryForTest.route("r4").build();
+  private static final Route ROUTE_4 = TransitRepositoryForTest.route("r4").build();
   private static final FeedScopedId LEG_GROUP = id("leg-group-a");
 
   private static final GtfsFaresV2Service SERVICE = GtfsFaresV2Service.of()
@@ -128,6 +128,6 @@ class CostedTransferInNetworkTest implements PlanTestConstants, FareTestConstant
   }
 
   private static Route routeInNetwork(String id) {
-    return TimetableRepositoryForTest.route(id).withGroupOfRoutes(List.of(NETWORK_A)).build();
+    return TransitRepositoryForTest.route(id).withGroupOfRoutes(List.of(NETWORK_A)).build();
   }
 }

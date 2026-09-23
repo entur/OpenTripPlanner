@@ -2,7 +2,7 @@ package org.opentripplanner.model.plan;
 
 import static org.opentripplanner.utils.time.TimeUtils.time;
 
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model._data.TransitRepositoryForTest;
 import org.opentripplanner.utils.time.DurationUtils;
 
 public interface PlanTestConstants {
@@ -26,6 +26,14 @@ public interface PlanTestConstants {
   int D5_m = DurationUtils.durationInSeconds("5m");
   int D10_m = DurationUtils.durationInSeconds("10m");
   int D12_m = DurationUtils.durationInSeconds("12m");
+  int D1_h = DurationUtils.durationInSeconds("1h");
+  int D2_h = DurationUtils.durationInSeconds("2h");
+  int D3_h = DurationUtils.durationInSeconds("3h");
+  int D4_h = DurationUtils.durationInSeconds("4h");
+  int D5_h = DurationUtils.durationInSeconds("5h");
+  int D10_h = DurationUtils.durationInSeconds("10h");
+  int D12_h = DurationUtils.durationInSeconds("12h");
+  int D24_h = DurationUtils.durationInSeconds("24h");
 
   // Time constants, all values are in seconds
   int T11_00 = time("11:00");
@@ -55,55 +63,55 @@ public interface PlanTestConstants {
   int T11_55 = time("11:55");
 
   /**
-   * @deprecated Create the TimetableRepositoryForTest per test, do not share between tests - it has state
+   * @deprecated Create the TransitRepositoryForTest per test, do not share between tests - it has state
    */
   @Deprecated
-  TimetableRepositoryForTest TEST_MODEL = TimetableRepositoryForTest.of();
+  TransitRepositoryForTest TEST_MODEL = TransitRepositoryForTest.of();
 
   /**
-   * @deprecated Depend on TimetableRepositoryForTest. Create per test, do not share between tests - it has state
+   * @deprecated Depend on TransitRepositoryForTest. Create per test, do not share between tests - it has state
    */
   @Deprecated
   Place A = Place.forStop(TEST_MODEL.stop("A").withCoordinate(5.0, 8.0).build());
 
   /**
-   * @deprecated Depend on TimetableRepositoryForTest. Create per test, do not share between tests - it has state
+   * @deprecated Depend on TransitRepositoryForTest. Create per test, do not share between tests - it has state
    */
   @Deprecated
   Place B = Place.forStop(TEST_MODEL.stop("B").withCoordinate(6.0, 8.5).build());
 
   /**
-   * @deprecated Depend on TimetableRepositoryForTest. Create per test, do not share between tests - it has state
+   * @deprecated Depend on TransitRepositoryForTest. Create per test, do not share between tests - it has state
    */
   @Deprecated
   Place C = Place.forStop(TEST_MODEL.stop("C").withCoordinate(7.0, 9.0).build());
 
   /**
-   * @deprecated Depend on TimetableRepositoryForTest. Create per test, do not share between tests - it has state
+   * @deprecated Depend on TransitRepositoryForTest. Create per test, do not share between tests - it has state
    */
   @Deprecated
   Place D = Place.forStop(TEST_MODEL.stop("D").withCoordinate(8.0, 9.5).build());
 
   /**
-   * @deprecated Depend on TimetableRepositoryForTest. Create per test, do not share between tests - it has state
+   * @deprecated Depend on TransitRepositoryForTest. Create per test, do not share between tests - it has state
    */
   @Deprecated
   Place E = Place.forStop(TEST_MODEL.stop("E").withCoordinate(9.0, 10.0).build());
 
   /**
-   * @deprecated Depend on TimetableRepositoryForTest. Create per test, do not share between tests - it has state
+   * @deprecated Depend on TransitRepositoryForTest. Create per test, do not share between tests - it has state
    */
   @Deprecated
   Place F = Place.forStop(TEST_MODEL.stop("F").withCoordinate(9.0, 10.5).build());
 
   /**
-   * @deprecated Depend on TimetableRepositoryForTest. Create per test, do not share between tests - it has state
+   * @deprecated Depend on TransitRepositoryForTest. Create per test, do not share between tests - it has state
    */
   @Deprecated
   Place G = Place.forStop(TEST_MODEL.stop("G").withCoordinate(9.5, 11.0).build());
 
   /**
-   * @deprecated Depend on TimetableRepositoryForTest. Create per test, do not share between tests - it has state
+   * @deprecated Depend on TransitRepositoryForTest. Create per test, do not share between tests - it has state
    */
   @Deprecated
   Place H = Place.forStop(TEST_MODEL.stop("H").withCoordinate(10.0, 11.5).build());

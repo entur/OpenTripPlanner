@@ -11,11 +11,13 @@ import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
  * or an instance of a generic trip on a certain service date.
  */
 public class TripOnServiceDate
-  extends AbstractTransitEntity<TripOnServiceDate, TripOnServiceDateBuilder> {
+  extends AbstractTransitEntity<TripOnServiceDate, TripOnServiceDateBuilder>
+{
 
   private final Trip trip;
   private final LocalDate serviceDate;
   private final TripAlteration tripAlteration;
+  private final boolean realtimeExtraJourney;
   private final List<TripOnServiceDate> replacementFor;
 
   TripOnServiceDate(TripOnServiceDateBuilder builder) {
@@ -23,6 +25,7 @@ public class TripOnServiceDate
     this.trip = builder.getTrip();
     this.serviceDate = builder.getServiceDate();
     this.tripAlteration = builder.getTripAlteration();
+    this.realtimeExtraJourney = builder.isRealtimeExtraJourney();
     this.replacementFor = builder.getReplacementFor();
   }
 
@@ -42,6 +45,17 @@ public class TripOnServiceDate
     return tripAlteration;
   }
 
+  /**
+   * Whether this is an extra journey, either in the planned data or added with a realtime update.
+   */
+  public boolean isExtraJourney() {
+    return TripAlteration.EXTRA_JOURNEY.equals(tripAlteration) || realtimeExtraJourney;
+  }
+
+  boolean isRealtimeExtraJourney() {
+    return realtimeExtraJourney;
+  }
+
   public List<TripOnServiceDate> getReplacementFor() {
     return replacementFor;
   }
@@ -53,6 +67,7 @@ public class TripOnServiceDate
       Objects.equals(this.trip, other.trip) &&
       Objects.equals(this.serviceDate, other.serviceDate) &&
       Objects.equals(this.tripAlteration, other.tripAlteration) &&
+      this.realtimeExtraJourney == other.realtimeExtraJourney &&
       Objects.equals(this.replacementFor, other.replacementFor)
     );
   }

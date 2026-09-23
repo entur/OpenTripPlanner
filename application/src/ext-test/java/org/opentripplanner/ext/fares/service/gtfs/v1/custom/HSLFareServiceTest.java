@@ -3,7 +3,7 @@ package org.opentripplanner.ext.fares.service.gtfs.v1.custom;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.opentripplanner.model.plan.TestItineraryBuilder.newItinerary;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.FEED_ID;
+import static org.opentripplanner.transit.model._data.TransitRepositoryForTest.FEED_ID;
 import static org.opentripplanner.transit.model.basic.Money.euros;
 
 import java.util.LinkedList;
@@ -21,7 +21,7 @@ import org.opentripplanner.model.plan.Place;
 import org.opentripplanner.model.plan.PlanTestConstants;
 import org.opentripplanner.routing.core.FareType;
 import org.opentripplanner.routing.fares.FareService;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model._data.TransitRepositoryForTest;
 import org.opentripplanner.transit.model.basic.Money;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.network.Route;
@@ -73,18 +73,18 @@ public class HSLFareServiceTest implements PlanTestConstants {
     FareZone C = FareZone.of(new FeedScopedId(FEED_ID, "C")).build();
     FareZone D = FareZone.of(new FeedScopedId(FEED_ID, "D")).build();
 
-    var testModel = TimetableRepositoryForTest.of();
-    Place A1 = testModel.place("A1", sb -> sb.withCoordinate(10.0, 12.0).addFareZones(A));
-    Place A2 = testModel.place("A2", sb -> sb.withCoordinate(10.0, 12.0).addFareZones(A));
+    var testModel = TransitRepositoryForTest.of();
+    Place A1 = testModel.place("A1", sb -> sb.withCoordinate(10.0, 12.0).addFareZone(A));
+    Place A2 = testModel.place("A2", sb -> sb.withCoordinate(10.0, 12.0).addFareZone(A));
 
-    Place B1 = testModel.place("B1", sb -> sb.withCoordinate(10.0, 12.0).addFareZones(B));
-    Place B2 = testModel.place("B2", sb -> sb.withCoordinate(10.0, 12.0).addFareZones(B));
+    Place B1 = testModel.place("B1", sb -> sb.withCoordinate(10.0, 12.0).addFareZone(B));
+    Place B2 = testModel.place("B2", sb -> sb.withCoordinate(10.0, 12.0).addFareZone(B));
 
-    Place C1 = testModel.place("C1", sb -> sb.withCoordinate(10.0, 12.0).addFareZones(C));
-    Place C2 = testModel.place("C2", sb -> sb.withCoordinate(10.0, 12.0).addFareZones(C));
+    Place C1 = testModel.place("C1", sb -> sb.withCoordinate(10.0, 12.0).addFareZone(C));
+    Place C2 = testModel.place("C2", sb -> sb.withCoordinate(10.0, 12.0).addFareZone(C));
 
-    Place D1 = testModel.place("D1", sb -> sb.withCoordinate(10.0, 12.0).addFareZones(D));
-    Place D2 = testModel.place("D2", sb -> sb.withCoordinate(10.0, 12.0).addFareZones(D));
+    Place D1 = testModel.place("D1", sb -> sb.withCoordinate(10.0, 12.0).addFareZone(D));
+    Place D2 = testModel.place("D2", sb -> sb.withCoordinate(10.0, 12.0).addFareZone(D));
 
     var AB_PRICE = euros(2.80f);
     var BC_PRICE = euros(2.80f);
@@ -114,11 +114,12 @@ public class HSLFareServiceTest implements PlanTestConstants {
       .withTransferDuration(fiveMinutes)
       .build();
 
-    FareAttribute fareAttributeD = FareAttribute.of(new FeedScopedId(FEED_ID, "D"))
-      .withPrice(D_PRICE)
-      .withTransferDuration(fiveMinutes)
-      //.setAgency(agency1.getId().getId())
-      .build();
+    FareAttribute fareAttributeD =
+      FareAttribute.of(new FeedScopedId(FEED_ID, "D"))
+        .withPrice(D_PRICE)
+        .withTransferDuration(fiveMinutes)
+        //.setAgency(agency1.getId().getId())
+        .build();
 
     FareAttribute fareAttributeABC = FareAttribute.of(new FeedScopedId(FEED_ID, "ABC"))
       .withPrice(ABC_PRICE)

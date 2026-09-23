@@ -17,8 +17,10 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import org.opentripplanner.apis.support.graphql.LoggingDataFetcherExceptionHandler;
+import org.dataloader.DataLoaderRegistry;
+import org.opentripplanner.apis.support.graphql.OtpDataFetcherExceptionHandler;
 import org.opentripplanner.ext.actuator.MicrometerGraphQLInstrumentation;
+import org.opentripplanner.ext.fares.ItineraryFareDataLoader;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.framework.graphql.GraphQLResponseSerializer;
 
@@ -31,7 +33,7 @@ class GtfsGraphQLIndex {
     int maxResolves,
     int timeoutMs,
     Locale locale,
-    GraphQLRequestContext requestContext,
+    GtfsGraphQLRequestContext requestContext,
     Iterable<Tag> tracingTags
   ) {
     Instrumentation instrumentation = new MaxQueryComplexityInstrumentation(maxResolves);
@@ -45,11 +47,19 @@ class GtfsGraphQLIndex {
 
     GraphQL graphQL = GraphQL.newGraphQL(requestContext.schema())
       .instrumentation(instrumentation)
-      .defaultDataFetcherExceptionHandler(new LoggingDataFetcherExceptionHandler())
+      .defaultDataFetcherExceptionHandler(new OtpDataFetcherExceptionHandler())
       .build();
 
     if (variables == null) {
       variables = new HashMap<>();
+    }
+
+    var registryBuilder = DataLoaderRegistry.newRegistry();
+    if (requestContext.fareService() != null) {
+      registryBuilder.register(
+        ItineraryFareDataLoader.KEY,
+        ItineraryFareDataLoader.create(requestContext.fareService())
+      );
     }
 
     ExecutionInput executionInput = ExecutionInput.newExecutionInput()
@@ -58,6 +68,7 @@ class GtfsGraphQLIndex {
       .context(requestContext)
       .variables(variables)
       .locale(locale)
+      .dataLoaderRegistry(registryBuilder.build())
       .build();
     try {
       return graphQL.executeAsync(executionInput).get(timeoutMs, TimeUnit.MILLISECONDS);
@@ -73,7 +84,7 @@ class GtfsGraphQLIndex {
     int maxResolves,
     int timeoutMs,
     Locale locale,
-    GraphQLRequestContext requestContext,
+    GtfsGraphQLRequestContext requestContext,
     Iterable<Tag> tracingTags
   ) {
     ExecutionResult executionResult = getGraphQLExecutionResult(

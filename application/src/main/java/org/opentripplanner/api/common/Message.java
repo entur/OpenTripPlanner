@@ -1,7 +1,7 @@
 package org.opentripplanner.api.common;
 
 import java.util.Locale;
-import org.opentripplanner.core.framework.resources.ResourceBundleAdaptor;
+import org.opentripplanner.core.model.resources.ResourceBundleAdaptor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -29,6 +29,7 @@ public enum Message {
   GEOCODE_INTERMEDIATE_NOT_FOUND(465),
   TOO_CLOSE(409),
   LOCATION_NOT_ACCESSIBLE(470),
+  NO_DIRECT_MODE_CONNECTION(480),
 
   UNDERSPECIFIED_TRIANGLE(370),
   TRIANGLE_NOT_AFFINE(371),

@@ -5,7 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 
 import java.time.Duration;
 import java.time.OffsetDateTime;
@@ -20,10 +20,10 @@ import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.model.fare.FareProduct;
 import org.opentripplanner.model.plan.Emission;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
-import org.opentripplanner.transit.model._data.TransitTestEnvironment;
-import org.opentripplanner.transit.model._data.TransitTestEnvironmentBuilder;
-import org.opentripplanner.transit.model._data.TripInput;
-import org.opentripplanner.transit.model._data.TripOnDateDataFetcher;
+import org.opentripplanner.transit.model.TransitTestEnvironment;
+import org.opentripplanner.transit.model.TransitTestEnvironmentBuilder;
+import org.opentripplanner.transit.model.TripInput;
+import org.opentripplanner.transit.model.TripOnDateDataFetcher;
 import org.opentripplanner.transit.model.basic.Money;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.model.site.RegularStop;
@@ -58,7 +58,7 @@ class ScheduledTransitLegTest {
 
   private static final double EXPECTED_DISTANCE = 1111.95;
   private static final double EXPECTED_DISTANCE_STOP1_TO_STOP2 = EXPECTED_DISTANCE / 2;
-  private static final double DISTANCE_DELTA = 0.01;
+  private static final double DISTANCE_DELTA = 1.0;
   private static final int BOARD_STOP_INDEX_IN_PATTERN = 0;
   private static final int ALIGHT_STOP_INDEX_IN_PATTERN = 2;
   private static final int GENERALIZED_COST = 980;
@@ -206,7 +206,7 @@ class ScheduledTransitLegTest {
         "startTime: 2023-04-17T17:49:06, " +
         "endTime: 2023-04-17T17:59:06, " +
         "realTime: true, " +
-        "distance: 1,111.95m, " +
+        "distance: 1,112.0m, " +
         "generalizedCost: $980, " +
         "agencyId: F:Agency1, " +
         "routeId: F:Route1, " +

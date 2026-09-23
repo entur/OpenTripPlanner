@@ -7,9 +7,11 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.astar.spi.AStarRequest;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.street.model.StreetMode;
 import org.opentripplanner.street.model.edge.ExtensionRequestContext;
 import org.opentripplanner.street.model.vertex.Vertex;
@@ -25,14 +27,6 @@ import org.opentripplanner.utils.time.TimeUtils;
 public class StreetSearchRequest implements AStarRequest {
 
   public static final StreetSearchRequest DEFAULT = new StreetSearchRequest();
-
-  /**
-   * How close to do you have to be to the start or end to be considered "close".
-   *
-   * @see StreetSearchRequest#isCloseToStartOrEnd(Vertex)
-   * @see DominanceFunctions#betterOrEqualAndComparable(State, State)
-   */
-  public static final int MAX_CLOSENESS_METERS = 500;
 
   // the time at which the search started
   private final Instant startTime;
@@ -55,6 +49,13 @@ public class StreetSearchRequest implements AStarRequest {
   private final IntersectionTraversalCalculator intersectionTraversalCalculator;
   private final List<ExtensionRequestContext> extensionRequestContexts;
   private final Duration timeout;
+
+  /**
+   * Geofencing zones containing the destination, precomputed for arriveBy searches. Used to
+   * initialize zone state on initial renting states so restrictions are enforced during the
+   * backward ride.
+   */
+  private final Set<GeofencingZone> arriveByDestinationZones;
 
   @Nullable
   private final RentalPeriod rentalPeriod;
@@ -81,6 +82,7 @@ public class StreetSearchRequest implements AStarRequest {
     this.intersectionTraversalCalculator = IntersectionTraversalCalculator.DEFAULT;
     this.extensionRequestContexts = List.of();
     this.timeout = Duration.ofSeconds(5);
+    this.arriveByDestinationZones = Set.of();
   }
 
   StreetSearchRequest(StreetSearchRequestBuilder builder) {
@@ -102,6 +104,12 @@ public class StreetSearchRequest implements AStarRequest {
     this.intersectionTraversalCalculator = requireNonNull(builder.intersectionTraversalCalculator);
     this.extensionRequestContexts = List.copyOf(requireNonNull(builder.extensionRequestContexts));
     this.timeout = requireNonNull(builder.timeout);
+    if (!arriveBy && !builder.arriveByDestinationZones.isEmpty()) {
+      throw new IllegalArgumentException(
+        "Unexpected non-empty arriveByDestinationZones when arriveBy is false"
+      );
+    }
+    this.arriveByDestinationZones = Set.copyOf(builder.arriveByDestinationZones);
   }
 
   public static StreetSearchRequestBuilder of() {
@@ -139,10 +147,20 @@ public class StreetSearchRequest implements AStarRequest {
     return mode;
   }
 
+  /**
+   * This is used to determine whether vertices are close to the beginning or end of the search.
+   *
+   * @see StreetSearchRequest#isCloseToStartOrEnd
+   */
   public Envelope fromEnvelope() {
     return fromEnvelope;
   }
 
+  /**
+   * This is used to determine whether vertices are close to the beginning or end of the search.
+   *
+   * @see StreetSearchRequest#isCloseToStartOrEnd
+   */
   public Envelope toEnvelope() {
     return toEnvelope;
   }
@@ -173,7 +191,10 @@ public class StreetSearchRequest implements AStarRequest {
   }
 
   public StreetSearchRequestBuilder copyOfReversed(Instant time) {
-    return copyOf(this).withStartTime(time).withArriveBy(!arriveBy);
+    return copyOf(this)
+      .withStartTime(time)
+      .withArriveBy(!arriveBy)
+      .withArriveByDestinationZones(Set.of());
   }
 
   /**
@@ -187,7 +208,6 @@ public class StreetSearchRequest implements AStarRequest {
    * <p>
    * If you encounter a case of this, you can adjust this code to take this into account.
    *
-   * @see StreetSearchRequest#MAX_CLOSENESS_METERS
    * @see DominanceFunctions#betterOrEqualAndComparable(State, State)
    */
   public boolean isCloseToStartOrEnd(Vertex vertex) {
@@ -219,6 +239,10 @@ public class StreetSearchRequest implements AStarRequest {
 
   public Duration timeout() {
     return timeout;
+  }
+
+  public Set<GeofencingZone> arriveByDestinationZones() {
+    return arriveByDestinationZones;
   }
 
   public RentalRequest rental(TraverseMode traverseMode) {

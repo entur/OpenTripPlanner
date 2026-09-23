@@ -1,11 +1,7 @@
 package org.opentripplanner.transit.model.framework;
 
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
-import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 
 /**
@@ -27,8 +23,7 @@ import org.opentripplanner.core.model.id.FeedScopedId;
 public abstract class AbstractTransitEntity<
   E extends AbstractTransitEntity<E, B>,
   B extends AbstractEntityBuilder<E, B>
->
-  implements TransitEntity, TransitObject<E, B>, Serializable {
+> implements TransitEntity, TransitObject<E, B>, Serializable {
 
   private final FeedScopedId id;
 
@@ -68,24 +63,10 @@ public abstract class AbstractTransitEntity<
 
     buf.append('{').append(getId());
 
-    if ((this instanceof LogInfo n) && n.logName() != null) {
+    if (this instanceof LogInfo n && n.logName() != null) {
       buf.append(' ').append(n.logName());
     }
     buf.append('}');
     return buf.toString();
-  }
-
-  protected static <T> List<T> listOfNullSafe(@Nullable List<T> list) {
-    if (list == null || list.isEmpty()) {
-      return List.of();
-    }
-    return List.copyOf(list);
-  }
-
-  protected static <T> Set<T> setOfNullSafe(@Nullable Collection<T> input) {
-    if (input == null || input.isEmpty()) {
-      return Set.of();
-    }
-    return Set.copyOf(input);
   }
 }

@@ -23,7 +23,8 @@ import org.opentripplanner.transit.model.timetable.booking.BookingInfo;
  * locations, which are not stops, but other types, such as groups of stops or location areas.
  */
 public class ScheduledDeviatedTrip
-  extends FlexTrip<ScheduledDeviatedTrip, ScheduledDeviatedTripBuilder> {
+  extends FlexTrip<ScheduledDeviatedTrip, ScheduledDeviatedTripBuilder>
+{
 
   private final ScheduledDeviatedStopTime[] stopTimes;
 
@@ -151,13 +152,13 @@ public class ScheduledDeviatedTrip
   }
 
   @Override
-  public boolean isBoardingPossible(StopLocation fromStop) {
-    return findBoardIndex(fromStop) != STOP_INDEX_NOT_FOUND;
+  public boolean isBoardingPossible(FeedScopedId fromStopId) {
+    return findBoardIndex(fromStopId) != STOP_INDEX_NOT_FOUND;
   }
 
   @Override
-  public boolean isAlightingPossible(StopLocation toStop) {
-    return findAlightIndex(toStop) != STOP_INDEX_NOT_FOUND;
+  public boolean isAlightingPossible(FeedScopedId toStopId) {
+    return findAlightIndex(toStopId) != STOP_INDEX_NOT_FOUND;
   }
 
   @Override
@@ -176,18 +177,23 @@ public class ScheduledDeviatedTrip
   }
 
   @Override
-  public int findBoardIndex(StopLocation fromStop) {
+  public int findBoardIndex(FeedScopedId fromStopId) {
     for (int i = 0; i < stopTimes.length; i++) {
       if (getBoardRule(i).isNotRoutable()) {
         continue;
       }
       StopLocation stop = stopTimes[i].stop;
       if (stop instanceof GroupStop groupStop) {
-        if (groupStop.getChildLocations().contains(fromStop)) {
+        if (
+          groupStop
+            .getChildLocations()
+            .stream()
+            .anyMatch(childStop -> childStop.getId().equals(fromStopId))
+        ) {
           return i;
         }
       } else {
-        if (stop.equals(fromStop)) {
+        if (stop.getId().equals(fromStopId)) {
           return i;
         }
       }
@@ -196,18 +202,23 @@ public class ScheduledDeviatedTrip
   }
 
   @Override
-  public int findAlightIndex(StopLocation toStop) {
+  public int findAlightIndex(FeedScopedId toStopId) {
     for (int i = stopTimes.length - 1; i >= 0; i--) {
       if (getAlightRule(i).isNotRoutable()) {
         continue;
       }
       StopLocation stop = stopTimes[i].stop;
       if (stop instanceof GroupStop groupStop) {
-        if (groupStop.getChildLocations().contains(toStop)) {
+        if (
+          groupStop
+            .getChildLocations()
+            .stream()
+            .anyMatch(childStop -> childStop.getId().equals(toStopId))
+        ) {
           return i;
         }
       } else {
-        if (stop.equals(toStop)) {
+        if (stop.getId().equals(toStopId)) {
           return i;
         }
       }

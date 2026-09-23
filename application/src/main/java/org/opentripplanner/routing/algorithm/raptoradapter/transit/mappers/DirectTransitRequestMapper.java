@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.request.SearchParams;
-import org.opentripplanner.raptor.direct.api.RaptorDirectTransitRequest;
+import org.opentripplanner.raptor.extensions.direct.api.RaptorDirectTransitRequest;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.AccessEgressWithExtraCost;
 import org.opentripplanner.routing.api.request.RouteRequest;
 
@@ -18,6 +18,10 @@ public class DirectTransitRequestMapper {
     RouteRequest request,
     SearchParams searchParamsUsed
   ) {
+    if (request.isViaSearch()) {
+      // The direct transit search is not compatible with via points
+      return Optional.empty();
+    }
     var directTransitRequestOpt = request.preferences().transit().directTransit();
     if (directTransitRequestOpt.isEmpty()) {
       return Optional.empty();

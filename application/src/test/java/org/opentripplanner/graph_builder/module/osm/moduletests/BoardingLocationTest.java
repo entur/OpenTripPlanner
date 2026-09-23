@@ -4,15 +4,15 @@ import static com.google.common.truth.Truth.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.graph_builder.module.osm.OsmModuleTestFactory;
 import org.opentripplanner.osm.TestOsmProvider;
+import org.opentripplanner.osm.WayTestData;
 import org.opentripplanner.osm.model.OsmWay;
-import org.opentripplanner.osm.wayproperty.specifier.WayTestData;
 import org.opentripplanner.service.osminfo.internal.DefaultOsmInfoGraphBuildRepository;
 import org.opentripplanner.street.graph.Graph;
+import org.opentripplanner.utils.collection.ListUtils;
 
 class BoardingLocationTest {
 
@@ -21,10 +21,12 @@ class BoardingLocationTest {
    */
   @Test
   void oneWayPlatform() {
-    var way = WayTestData.platform();
-    way.addTag("access", "no");
-    way.addTag("motor_vehicle", "permissive");
-    way.addTag("oneway", "yes");
+    var way = WayTestData.platform()
+      .copy()
+      .withTag("access", "no")
+      .withTag("motor_vehicle", "permissive")
+      .withTag("oneway", "yes")
+      .build();
     var provider = TestOsmProvider.of().addWay(way).build();
 
     var graph = new Graph();
@@ -38,7 +40,7 @@ class BoardingLocationTest {
       .build();
 
     osmModule.buildGraph();
-    var edges = List.copyOf(graph.getEdges());
+    var edges = ListUtils.ofIterable(graph.listEdges());
     assertThat(edges).hasSize(1);
 
     var platform = osmInfoRepository.findPlatform(edges.getFirst());
@@ -49,8 +51,7 @@ class BoardingLocationTest {
 
   @Test
   void skipPlatformsWithoutReferences() {
-    var way = new OsmWay();
-    way.addTag("public_transport", "platform");
+    var way = OsmWay.of().withTag("public_transport", "platform").build();
     var provider = TestOsmProvider.of().addWay(way).build();
 
     var graph = new Graph();
@@ -63,7 +64,7 @@ class BoardingLocationTest {
       .build();
 
     osmModule.buildGraph();
-    var edges = List.copyOf(graph.getEdges());
+    var edges = ListUtils.ofIterable(graph.listEdges());
     assertThat(edges).hasSize(2);
 
     var platform = osmInfoRepository.findPlatform(edges.getFirst());
@@ -72,9 +73,7 @@ class BoardingLocationTest {
 
   @Test
   void testHighwayPlatform() {
-    var way = new OsmWay();
-    way.addTag("highway", "platform");
-    way.addTag("ref", "1");
+    var way = OsmWay.of().withTag("highway", "platform").withTag("ref", "1").build();
 
     var graph = new Graph();
     var osmInfoRepository = new DefaultOsmInfoGraphBuildRepository();
@@ -88,7 +87,7 @@ class BoardingLocationTest {
       .build();
 
     osmModule.buildGraph();
-    var edges = List.copyOf(graph.getEdges());
+    var edges = ListUtils.ofIterable(graph.listEdges());
     assertThat(edges).hasSize(2);
 
     var platform = osmInfoRepository.findPlatform(edges.getFirst());

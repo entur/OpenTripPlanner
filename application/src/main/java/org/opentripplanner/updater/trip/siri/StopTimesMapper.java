@@ -1,25 +1,20 @@
 package org.opentripplanner.updater.trip.siri;
 
-import static org.opentripplanner.updater.trip.siri.support.NaturalLanguageStringHelper.getFirstStringFromList;
-
-import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import javax.annotation.Nullable;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
+import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.timetable.Trip;
-import org.opentripplanner.updater.trip.siri.mapping.PickDropMapper;
 import org.opentripplanner.utils.time.ServiceDateUtils;
 
 class StopTimesMapper {
 
   private final EntityResolver entityResolver;
-  private final ZoneId zoneId;
 
-  public StopTimesMapper(EntityResolver entityResolver, ZoneId zoneId) {
+  public StopTimesMapper(EntityResolver entityResolver) {
     this.entityResolver = entityResolver;
-    this.zoneId = zoneId;
   }
 
   /**
@@ -28,7 +23,7 @@ class StopTimesMapper {
   @Nullable
   StopTime createAimedStopTime(
     Trip trip,
-    ZonedDateTime departureDate,
+    ZonedDateTime startOfService,
     int stopSequence,
     CallWrapper call,
     boolean isFirstStop,
@@ -44,47 +39,50 @@ class StopTimesMapper {
     stopTime.setTrip(trip);
     stopTime.setStop(stop);
 
+    // Set default boarding/alighting rules for first and last stops.
+    // Can't alight at first stop and can't board at last stop.
+    if (isFirstStop) {
+      stopTime.setDropOffType(PickDrop.NONE);
+    }
+    if (isLastStop) {
+      stopTime.setPickupType(PickDrop.NONE);
+    }
+
     // Fallback to other time, if one doesn't exist
-    var aimedArrivalTime = call.getAimedArrivalTime() != null
-      ? call.getAimedArrivalTime()
-      : call.getAimedDepartureTime();
+    var aimedArrivalTime =
+      call.getAimedArrivalTime() != null
+        ? call.getAimedArrivalTime()
+        : call.getAimedDepartureTime();
 
     var aimedArrivalTimeSeconds = ServiceDateUtils.secondsSinceStartOfService(
-      departureDate,
-      aimedArrivalTime,
-      zoneId
+      startOfService,
+      aimedArrivalTime
     );
 
-    var aimedDepartureTime = call.getAimedDepartureTime() != null
-      ? call.getAimedDepartureTime()
-      : call.getAimedArrivalTime();
+    var aimedDepartureTime =
+      call.getAimedDepartureTime() != null
+        ? call.getAimedDepartureTime()
+        : call.getAimedArrivalTime();
 
     var aimedDepartureTimeSeconds = ServiceDateUtils.secondsSinceStartOfService(
-      departureDate,
-      aimedDepartureTime,
-      zoneId
+      startOfService,
+      aimedDepartureTime
     );
 
-    // Use departure time for first stop, and arrival time for last stop, to avoid negative dwell times
-    stopTime.setArrivalTime(isFirstStop ? aimedDepartureTimeSeconds : aimedArrivalTimeSeconds);
-    stopTime.setDepartureTime(isLastStop ? aimedArrivalTimeSeconds : aimedDepartureTimeSeconds);
+    stopTime.setArrivalTime(aimedArrivalTimeSeconds);
+    stopTime.setDepartureTime(aimedDepartureTimeSeconds);
 
     // Update destination display
-    var destinationDisplay = getFirstStringFromList(call.getDestinationDisplays());
+    var destinationDisplay = call.destinationDisplay();
     if (!destinationDisplay.isEmpty()) {
       stopTime.setStopHeadsign(new NonLocalizedString(destinationDisplay));
     } else if (trip.getHeadsign() != null) {
       stopTime.setStopHeadsign(trip.getHeadsign());
-    } else {
-      // Fallback to empty string
-      stopTime.setStopHeadsign(new NonLocalizedString(""));
     }
 
     // Update pickup / dropoff
-    PickDropMapper.mapPickUpType(call, stopTime.getPickupType()).ifPresent(stopTime::setPickupType);
-    PickDropMapper.mapDropOffType(call, stopTime.getDropOffType()).ifPresent(
-      stopTime::setDropOffType
-    );
+    call.pickUp().applyTo(stopTime.getPickupType()).ifPresent(stopTime::setPickupType);
+    call.dropOff().applyTo(stopTime.getDropOffType()).ifPresent(stopTime::setDropOffType);
 
     return stopTime;
   }

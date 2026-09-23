@@ -1,8 +1,10 @@
 package org.opentripplanner.netex;
 
+import java.util.LinkedList;
 import java.util.List;
-import org.opentripplanner.core.framework.deduplicator.DeduplicatorService;
-import org.opentripplanner.core.model.time.LocalDateInterval;
+import java.util.Queue;
+import org.opentripplanner.core.model.deduplicator.DeduplicatorService;
+import org.opentripplanner.core.model.time.LocalDateRange;
 import org.opentripplanner.ext.flex.FlexTripsMapper;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
@@ -20,7 +22,7 @@ import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
 import org.opentripplanner.standalone.config.BuildConfig;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.street.linking.VehicleParkingHelper;
-import org.opentripplanner.transit.service.TimetableRepository;
+import org.opentripplanner.transit.service.TransitRepository;
 
 /**
  * This module is used for importing the NeTEx CEN Technical Standard for exchanging Public
@@ -34,7 +36,7 @@ public class NetexModule implements GraphBuilderModule {
 
   private final Graph graph;
   private final DeduplicatorService deduplicator;
-  private final TimetableRepository timetableRepository;
+  private final TransitRepository transitRepository;
   private final VehicleParkingRepository parkingRepository;
   private final StreetDetailsRepository streetDetailsRepository;
   private final DataImportIssueStore issueStore;
@@ -43,30 +45,34 @@ public class NetexModule implements GraphBuilderModule {
    * @see BuildConfig#transitServiceStart
    * @see BuildConfig#transitServiceEnd
    */
-  private final LocalDateInterval transitPeriodLimit;
+  private final LocalDateRange transitPeriodLimit;
 
-  private final List<NetexBundle> netexBundles;
+  /**
+   * This collection is a queue because the bundles contain state that remains after loading.
+   * They should be garbage collected after loading is finished.
+   */
+  private final Queue<NetexBundle> netexBundles;
 
   public NetexModule(
     Graph graph,
     DeduplicatorService deduplicator,
-    TimetableRepository timetableRepository,
+    TransitRepository transitRepository,
     VehicleParkingRepository parkingRepository,
     StreetDetailsRepository streetDetailsRepository,
     DataImportIssueStore issueStore,
     int subwayAccessTime,
-    LocalDateInterval transitPeriodLimit,
+    LocalDateRange transitPeriodLimit,
     List<NetexBundle> netexBundles
   ) {
     this.graph = graph;
     this.deduplicator = deduplicator;
-    this.timetableRepository = timetableRepository;
+    this.transitRepository = transitRepository;
     this.parkingRepository = parkingRepository;
     this.streetDetailsRepository = streetDetailsRepository;
     this.issueStore = issueStore;
     this.subwayAccessTime = subwayAccessTime;
     this.transitPeriodLimit = transitPeriodLimit;
-    this.netexBundles = netexBundles;
+    this.netexBundles = new LinkedList<>(netexBundles);
   }
 
   @Override
@@ -74,7 +80,9 @@ public class NetexModule implements GraphBuilderModule {
     try {
       var calendarServiceData = new CalendarServiceData();
 
-      for (NetexBundle netexBundle : netexBundles) {
+      while (!netexBundles.isEmpty()) {
+        // removes the bundle from the collection and allows it to be garbage collected
+        var netexBundle = netexBundles.poll();
         netexBundle.checkInputs();
 
         TransitDataImportBuilder transitBuilder = netexBundle.loadBundle(deduplicator, issueStore);
@@ -91,7 +99,7 @@ public class NetexModule implements GraphBuilderModule {
 
         TransitDataImport otpService = transitBuilder.build();
 
-        AddTransitEntitiesToTimetable.addToTimetable(otpService, timetableRepository);
+        AddTransitEntitiesToTimetable.addToTimetable(otpService, transitRepository);
         AddTransitEntitiesToGraph.addToGraph(
           otpService,
           subwayAccessTime,
@@ -105,12 +113,12 @@ public class NetexModule implements GraphBuilderModule {
         lots.forEach(linker::linkVehicleParkingToGraph);
       }
 
-      timetableRepository.updateCalendarServiceData(calendarServiceData);
+      transitRepository.updateCalendarServiceData(calendarServiceData);
 
       TransitWithFutureDateValidator.validate(
         calendarServiceData,
         issueStore,
-        timetableRepository.getTimeZone()
+        transitRepository.getTimeZone()
       );
     } catch (Exception e) {
       throw new RuntimeException(e);

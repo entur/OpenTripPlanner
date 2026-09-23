@@ -11,13 +11,14 @@ import java.util.stream.Collectors;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
-import org.opentripplanner.core.model.time.LocalDateInterval;
+import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
+import org.opentripplanner.core.model.time.LocalDateRange;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.model.PickDrop;
 import org.opentripplanner.model.StopTime;
 import org.opentripplanner.model.calendar.ServiceCalendar;
 import org.opentripplanner.model.calendar.ServiceCalendarDate;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model._data.TransitRepositoryForTest;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.framework.EntityById;
 import org.opentripplanner.transit.model.network.Route;
@@ -43,12 +44,12 @@ public class TransitDataImportBuilderLimitPeriodTest {
   private static final LocalDate D1 = LocalDate.of(2020, 1, 8);
   private static final LocalDate D2 = LocalDate.of(2020, 1, 15);
   private static final LocalDate D3 = LocalDate.of(2020, 1, 31);
-  private static final FeedScopedId SERVICE_C_IN = TimetableRepositoryForTest.id("CalSrvIn");
-  private static final FeedScopedId SERVICE_D_IN = TimetableRepositoryForTest.id("CalSrvDIn");
-  private static final FeedScopedId SERVICE_C_OUT = TimetableRepositoryForTest.id("CalSrvOut");
-  private static final FeedScopedId SERVICE_D_OUT = TimetableRepositoryForTest.id("CalSrvDOut");
+  private static final FeedScopedId SERVICE_C_IN = FeedScopedIdForTestFactory.id("CalSrvIn");
+  private static final FeedScopedId SERVICE_D_IN = FeedScopedIdForTestFactory.id("CalSrvDIn");
+  private static final FeedScopedId SERVICE_C_OUT = FeedScopedIdForTestFactory.id("CalSrvOut");
+  private static final FeedScopedId SERVICE_D_OUT = FeedScopedIdForTestFactory.id("CalSrvDOut");
   private static final Deduplicator DEDUPLICATOR = new Deduplicator();
-  private static final TimetableRepositoryForTest TEST_MODEL = TimetableRepositoryForTest.of();
+  private static final TransitRepositoryForTest TEST_MODEL = TransitRepositoryForTest.of();
   private static final RegularStop STOP_1 = TEST_MODEL.stop("Stop-1").build();
   private static final RegularStop STOP_2 = TEST_MODEL.stop("Stop-2").build();
   private static final List<StopTime> STOP_TIMES = List.of(
@@ -57,7 +58,7 @@ public class TransitDataImportBuilderLimitPeriodTest {
   );
   private static final StopPattern STOP_PATTERN = new StopPattern(STOP_TIMES);
   private static int SEQ_NR = 0;
-  private final Route route = TimetableRepositoryForTest.route(newId().getId()).build();
+  private final Route route = TransitRepositoryForTest.route(newId().getId()).build();
   private final Trip tripCSIn = createTrip("TCalIn", SERVICE_C_IN);
   private final Trip tripCSOut = createTrip("TCalOut", SERVICE_C_OUT);
   private final Trip tripCSDIn = createTrip("TDateIn", SERVICE_D_IN);
@@ -117,7 +118,7 @@ public class TransitDataImportBuilderLimitPeriodTest {
     assertEquals(1, patternInT2.getScheduledTimetable().getTripTimes().size());
 
     // Limit service to last half of month
-    subject.limitServiceDays(new LocalDateInterval(D2, D3));
+    subject.limitServiceDays(LocalDateRange.ofInclusiveEnd(D2, D3));
 
     // Verify calendar
     List<ServiceCalendar> calendars = subject.getCalendars();
@@ -173,7 +174,7 @@ public class TransitDataImportBuilderLimitPeriodTest {
     LocalDate end
   ) {
     ServiceCalendar calendar = new ServiceCalendar();
-    calendar.setPeriod(new LocalDateInterval(start, end));
+    calendar.setPeriod(LocalDateRange.ofInclusiveEnd(start, end));
     calendar.setAllDays(1);
     calendar.setServiceId(serviceId);
     return calendar;
@@ -190,11 +191,11 @@ public class TransitDataImportBuilderLimitPeriodTest {
   }
 
   private static FeedScopedId newId() {
-    return TimetableRepositoryForTest.id(Integer.toString(++SEQ_NR));
+    return FeedScopedIdForTestFactory.id(Integer.toString(++SEQ_NR));
   }
 
   private TripPattern createTripPattern(Collection<Trip> trips) {
-    FeedScopedId patternId = TimetableRepositoryForTest.id(
+    FeedScopedId patternId = FeedScopedIdForTestFactory.id(
       trips
         .stream()
         .map(t -> t.getId().getId())
@@ -213,7 +214,7 @@ public class TransitDataImportBuilderLimitPeriodTest {
   }
 
   private Trip createTrip(String id, FeedScopedId serviceId) {
-    return TimetableRepositoryForTest.trip(id)
+    return TransitRepositoryForTest.trip(id)
       .withServiceId(serviceId)
       .withDirection(Direction.INBOUND)
       .withRoute(route)

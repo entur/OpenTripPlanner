@@ -1,8 +1,8 @@
 package org.opentripplanner.graph_builder.module.stopconnectivity;
 
 import static com.google.common.truth.Truth.assertThat;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 import static org.opentripplanner.street.model.StreetModelForTest.intersectionVertex;
-import static org.opentripplanner.transit.model._data.FeedScopedIdForTestFactory.id;
 
 import java.time.Duration;
 import org.junit.jupiter.api.Test;
@@ -31,6 +31,7 @@ class StopConnectivityModuleTest extends GraphRoutingTest {
     StreetModelForTest.streetEdge(i1, i3);
 
     var g = new Graph();
+    g.hasStreets = true;
     g.addVertex(stop);
     g.addVertex(i1);
     g.addVertex(i2);

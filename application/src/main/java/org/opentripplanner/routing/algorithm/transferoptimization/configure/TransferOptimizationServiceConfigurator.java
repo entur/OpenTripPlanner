@@ -3,11 +3,11 @@ package org.opentripplanner.routing.algorithm.transferoptimization.configure;
 import java.util.List;
 import java.util.function.IntFunction;
 import javax.annotation.Nullable;
-import org.opentripplanner.raptor.api.model.RaptorStopNameResolver;
-import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
-import org.opentripplanner.raptor.api.request.RaptorViaLocation;
+import org.opentripplanner.raptor.api.request.via.RaptorViaLocation;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
+import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
 import org.opentripplanner.raptor.spi.RaptorTransitDataProvider;
+import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.opentripplanner.routing.algorithm.transferoptimization.OptimizeTransferService;
 import org.opentripplanner.routing.algorithm.transferoptimization.api.TransferOptimizationParameters;
 import org.opentripplanner.routing.algorithm.transferoptimization.model.MinSafeTransferTimeCalculator;
@@ -58,9 +58,7 @@ public class TransferOptimizationServiceConfigurator<T extends RaptorTripSchedul
   /**
    * Scope: Request
    */
-  public static <T extends RaptorTripSchedule> OptimizeTransferService<
-    T
-  > createOptimizeTransferService(
+  public static <T extends RaptorTripSchedule> OptimizeTransferService<T> createOptimizeTransferService(
     IntFunction<StopLocation> stopLookup,
     RaptorStopNameResolver stopNameResolver,
     ConstrainedTransferService transferService,
@@ -129,9 +127,10 @@ public class TransferOptimizationServiceConfigurator<T extends RaptorTripSchedul
   }
 
   private TransferGenerator<T> createTransferGenerator(boolean transferPriority) {
-    var transferServiceAdaptor = (transferService != null && transferPriority)
-      ? TransferServiceAdaptor.<T>create(stopLookup, transferService)
-      : TransferServiceAdaptor.<T>noop();
+    var transferServiceAdaptor =
+      transferService != null && transferPriority
+        ? TransferServiceAdaptor.<T>create(stopLookup, transferService)
+        : TransferServiceAdaptor.<T>noop();
 
     return new TransferGenerator<>(transferServiceAdaptor, transitDataProvider);
   }

@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.api.model.transit.DefaultFeedIdMapper;
+import org.opentripplanner.apis.support.InvalidInputException;
 import org.opentripplanner.apis.transmodel.model.framework.CoordinateInputType;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 
@@ -30,9 +31,9 @@ class TripViaLocationMapperTest {
   private static final List<String> LIST_IDS_INPUT = List.of("F:ID1", "F:ID2");
   private static final String EXPECTED_IDS_AS_STRING = "[F:ID1, F:ID2]";
   private static final String REASON_EMPTY_IDS_ALLOWED_PASS_THROUGH = """
-    Unfortunately the 'placeIds' is not required. Making it required would be a breaking change,
-    so wee just ignore it."
-    """;
+  Unfortunately the 'placeIds' is not required. Making it required would be a breaking change,
+  so wee just ignore it."
+  """;
 
   private static final TripViaLocationMapper MAPPER = new TripViaLocationMapper(
     new DefaultFeedIdMapper()
@@ -144,7 +145,7 @@ class TripViaLocationMapperTest {
       entry(FIELD_VISIT, visitInput("A", D1_m, List.of("F:99"), null)),
       entry(FIELD_PASS_THROUGH, passThroughInput(LABEL, LIST_IDS_INPUT))
     );
-    var ex = assertThrows(IllegalArgumentException.class, () ->
+    var ex = assertThrows(InvalidInputException.class, () ->
       MAPPER.mapToViaLocations(List.of(input))
     );
     assertEquals(
@@ -152,7 +153,7 @@ class TripViaLocationMapperTest {
       ex.getMessage()
     );
 
-    ex = assertThrows(IllegalArgumentException.class, () ->
+    ex = assertThrows(InvalidInputException.class, () ->
       MAPPER.mapToViaLocations(List.of(Map.of()))
     );
     assertEquals(

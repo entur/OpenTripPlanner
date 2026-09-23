@@ -7,18 +7,18 @@ public interface OtpArchitectureModules {
   /* Third party libs*/
 
   Package DAGGER = Package.of("dagger..");
-  Package GEO_JSON = Package.of("org.geojson..");
-  Package GEO_TOOLS = Package.of("org.geotools..");
   Package GNU_TROVE = Package.of("gnu.trove.(*)..");
   Package GOOGLE_COLLECTIONS = Package.of("com.google.common.collect");
   Package JACKSON_ANNOTATIONS = Package.of("com.fasterxml.jackson.annotation");
   Package JTS_GEOM = Package.of("org.locationtech.jts.(*)..");
-  Package OPEN_GIS = Package.of("org.geotools.api..");
 
   /* OTP Modules */
 
   Package OTP_ROOT = Package.of("org.opentripplanner");
 
+  Package CORE = OTP_ROOT.subPackage("core");
+  Package CORE_MODEL = CORE.subPackage("model");
+  Package CORE_MODEL_ALL = CORE.subPackage("model..");
   Package UTILS_PACKAGE = OTP_ROOT.subPackage("utils");
 
   Package DATASTORE = OTP_ROOT.subPackage("datastore");
@@ -30,16 +30,11 @@ public interface OtpArchitectureModules {
   Package RAPTOR_ADAPTER_API = RAPTOR_ADAPTER.subPackage("api");
   Package TRANSIT = OTP_ROOT.subPackage("transit");
   Package TRANSIT_MODEL = TRANSIT.subPackage("model");
-  Package DOMAIN_CORE = OTP_ROOT.subPackage("core");
   Package GEOMETRY = OTP_ROOT.subPackage("street.geometry");
-  Package DOMAIN_CORE_FRAMEWORK = DOMAIN_CORE.subPackage("framework");
-  Package DOMAIN_CORE_FRAMEWORK_ALL = DOMAIN_CORE.subPackage("framework..");
-  Package DOMAIN_CORE_MODEL = DOMAIN_CORE.subPackage("model");
-  Package DOMAIN_CORE_MODEL_ALL = DOMAIN_CORE.subPackage("model..");
 
   /* The Raptor module */
   Package RAPTOR_ROOT = OTP_ROOT.subPackage("raptor");
-  Package RAPTOR_API = RAPTOR_ROOT.subPackage("api..");
+  Package RAPTOR_SPI = RAPTOR_ROOT.subPackage("spi..");
 
   /**
    * This is a bag of TRUE util classes - no dependencies to other OTP classes or frameworks
@@ -56,8 +51,7 @@ public interface OtpArchitectureModules {
 
   Module FRAMEWORK_UTILS = Module.of(
     OTP_UTILS,
-    DOMAIN_CORE_MODEL_ALL,
-    DOMAIN_CORE_FRAMEWORK_ALL,
+    CORE_MODEL_ALL,
     FRAMEWORK.subPackage("application"),
     FRAMEWORK.subPackage("error"),
     FRAMEWORK.subPackage("i18n"),

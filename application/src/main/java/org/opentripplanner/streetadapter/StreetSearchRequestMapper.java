@@ -3,7 +3,7 @@ package org.opentripplanner.streetadapter;
 import java.time.Instant;
 import java.util.List;
 import javax.annotation.Nullable;
-import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.Envelope;
 import org.opentripplanner.model.GenericLocation;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.preference.AccessibilityPreferences;
@@ -19,6 +19,7 @@ import org.opentripplanner.routing.api.request.preference.WalkPreferences;
 import org.opentripplanner.routing.api.request.preference.WheelchairPreferences;
 import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingFilter;
 import org.opentripplanner.routing.api.request.preference.filter.VehicleParkingSelect;
+import org.opentripplanner.street.geometry.SphericalDistanceLibrary;
 import org.opentripplanner.street.search.intersection_model.IntersectionTraversalCalculator;
 import org.opentripplanner.street.search.request.AccessibilityRequest;
 import org.opentripplanner.street.search.request.BikeRequest;
@@ -41,6 +42,9 @@ import org.opentripplanner.street.search.request.filter.ParkingSelect.TagsSelect
 
 public class StreetSearchRequestMapper {
 
+  /// How close to do you have to be to the start or end to be considered "close".
+  private static final int MAX_CLOSENESS_METERS = 500;
+
   /// Maps a [RouteRequest] to a [StreetSearchRequestBuilder] transferring all parameters
   /// relevant for street routing.
   public static StreetSearchRequestBuilder map(RouteRequest request) {
@@ -50,8 +54,8 @@ public class StreetSearchRequestMapper {
     var streetSearchRequestBuilder = StreetSearchRequest.of()
       .withStartTime(time)
       .withArriveBy(request.arriveBy())
-      .withFrom(mapGenericLocation(request.from()))
-      .withTo(mapGenericLocation(request.to()))
+      .withFromEnvelope(createEnvelope(request.from()))
+      .withToEnvelope(createEnvelope(request.to()))
       .withWheelchairEnabled(request.journey().wheelchair())
       .withGeoidElevation(preferences.system().geoidElevation())
       .withTurnReluctance(street.turnReluctance())
@@ -88,8 +92,8 @@ public class StreetSearchRequestMapper {
   ///
   public static StreetSearchRequestBuilder mapToTransferRequest(RouteRequest request) {
     return map(request)
-      .withFrom(null)
-      .withTo(null)
+      .withFromEnvelope(null)
+      .withToEnvelope(null)
       // transfer requests are always depart-at
       .withArriveBy(false)
       .withStartTime(Instant.ofEpochSecond(0))
@@ -98,18 +102,8 @@ public class StreetSearchRequestMapper {
 
   // private methods
 
-  @Nullable
-  private static Coordinate mapGenericLocation(@Nullable GenericLocation location) {
-    if (location != null) {
-      return location.getCoordinate();
-    } else {
-      return null;
-    }
-  }
-
   private static void mapWheelchair(WheelchairRequest.Builder b, WheelchairPreferences wheelchair) {
-    b
-      .withStop(mapAccessibility(wheelchair.stop()))
+    b.withStop(mapAccessibility(wheelchair.stop()))
       .withElevator(mapAccessibility(wheelchair.elevator()))
       .withMaxSlope(wheelchair.maxSlope())
       .withSlopeExceededReluctance(wheelchair.slopeExceededReluctance())
@@ -128,8 +122,7 @@ public class StreetSearchRequestMapper {
   }
 
   private static void mapWalk(WalkRequest.Builder b, WalkPreferences pref) {
-    b
-      .withSpeed(pref.speed())
+    b.withSpeed(pref.speed())
       .withReluctance(pref.reluctance())
       .withStairsReluctance(pref.stairsReluctance())
       .withStairsTimeFactor(pref.stairsTimeFactor())
@@ -142,8 +135,7 @@ public class StreetSearchRequestMapper {
   }
 
   private static void mapBike(BikeRequest.Builder b, BikePreferences preferences) {
-    b
-      .withReluctance(preferences.reluctance())
+    b.withReluctance(preferences.reluctance())
       .withSpeed(preferences.speed())
       .withParking(b2 -> mapParking(b2, preferences.parking()))
       .withRental(b2 -> mapRental(b2, preferences.rental()))
@@ -163,8 +155,7 @@ public class StreetSearchRequestMapper {
   }
 
   private static void mapCar(CarRequest.Builder b, CarPreferences car) {
-    b
-      .withReluctance(car.reluctance())
+    b.withReluctance(car.reluctance())
       .withParking(b2 -> mapParking(b2, car.parking()))
       .withRental(b2 -> mapRental(b2, car.rental()))
       .withPickupTime(car.pickupTime())
@@ -174,8 +165,7 @@ public class StreetSearchRequestMapper {
   }
 
   private static void mapScooter(ScooterRequest.Builder b, ScooterPreferences scooter) {
-    b
-      .withSpeed(scooter.speed())
+    b.withSpeed(scooter.speed())
       .withReluctance(scooter.reluctance())
       .withRental(b2 -> mapRental(b2, scooter.rental()))
       .withOptimizeType(scooter.optimizeType())
@@ -187,8 +177,7 @@ public class StreetSearchRequestMapper {
     VehicleWalkingRequest.Builder b,
     VehicleWalkingPreferences walking
   ) {
-    b
-      .withSpeed(walking.speed())
+    b.withSpeed(walking.speed())
       .withReluctance(walking.reluctance())
       .withStairsReluctance(walking.stairsReluctance())
       .withMountDismountCost(walking.mountDismountCost())
@@ -196,8 +185,7 @@ public class StreetSearchRequestMapper {
   }
 
   private static void mapRental(RentalRequest.Builder b, VehicleRentalPreferences rental) {
-    b
-      .withPickupTime(rental.pickupTime())
+    b.withPickupTime(rental.pickupTime())
       .withPickupCost(rental.pickupCost())
       .withDropOffTime(rental.dropOffTime())
       .withDropOffCost(rental.dropOffCost())
@@ -214,8 +202,7 @@ public class StreetSearchRequestMapper {
   }
 
   private static void mapParking(ParkingRequest.Builder b, VehicleParkingPreferences pref) {
-    b
-      .withUnpreferredTagCost(pref.unpreferredVehicleParkingTagCost())
+    b.withUnpreferredTagCost(pref.unpreferredVehicleParkingTagCost())
       .withFilter(mapParkingFilter(pref.filter()))
       .withPreferred(mapParkingFilter(pref.preferred()))
       .withTime(pref.time())
@@ -235,11 +222,29 @@ public class StreetSearchRequestMapper {
   }
 
   private static void mapElevator(ElevatorRequest.Builder b, ElevatorPreferences elevator) {
-    b
-      .withBoardCost(elevator.boardCost())
+    b.withBoardCost(elevator.boardCost())
       .withBoardSlack(elevator.boardSlack())
       .withHopTime(elevator.hopTime())
       .withReluctance(elevator.reluctance())
       .build();
+  }
+
+  @Nullable
+  private static Envelope createEnvelope(@Nullable GenericLocation location) {
+    if (location == null) {
+      return null;
+    }
+    var coordinate = location.getCoordinate();
+    if (coordinate == null) {
+      return null;
+    }
+
+    double lat = SphericalDistanceLibrary.metersToDegrees(MAX_CLOSENESS_METERS);
+    double lon = SphericalDistanceLibrary.metersToLonDegrees(MAX_CLOSENESS_METERS, coordinate.y);
+
+    Envelope env = new Envelope(coordinate);
+    env.expandBy(lon, lat);
+
+    return env;
   }
 }

@@ -1,12 +1,14 @@
 package org.opentripplanner.graph_builder.module.osm;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
+import org.opentripplanner.graph_builder.module.cache.GraphBuildCacheManager;
+import org.opentripplanner.graph_builder.module.osm.internal.naming.DefaultNamer;
 import org.opentripplanner.graph_builder.module.osm.parameters.OsmProcessingParameters;
-import org.opentripplanner.graph_builder.services.osm.DefaultNamer;
-import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
 import org.opentripplanner.osm.OsmProvider;
+import org.opentripplanner.osm.model.CompoundRefTagGroup;
 import org.opentripplanner.service.osminfo.OsmInfoGraphBuildRepository;
 import org.opentripplanner.service.streetdetails.StreetDetailsRepository;
 import org.opentripplanner.service.vehicleparking.VehicleParkingRepository;
@@ -27,6 +29,7 @@ public class OsmModuleBuilder {
   private final OsmInfoGraphBuildRepository osmInfoGraphBuildRepository;
 
   private Set<String> boardingAreaRefTags = Set.of();
+  private List<CompoundRefTagGroup> elevatorRefTags = List.of();
   private DataImportIssueStore issueStore = DataImportIssueStore.NOOP;
   private EdgeNamer edgeNamer = new DefaultNamer();
   private boolean areaVisibility = false;
@@ -34,8 +37,10 @@ public class OsmModuleBuilder {
   private boolean staticParkAndRide = false;
   private boolean staticBikeParkAndRide = false;
   private boolean includeInclinedEdgeLevelInfo = false;
-  private boolean includeOsmSubwayEntrances = false;
+  private boolean includeOsmStationEntrances = false;
   private int maxAreaNodes = StreetConstants.DEFAULT_MAX_AREA_NODES;
+
+  private GraphBuildCacheManager cacheManager = GraphBuildCacheManager.NOOP;
 
   public OsmModuleBuilder(
     Collection<OsmProvider> providers,
@@ -58,6 +63,11 @@ public class OsmModuleBuilder {
     return this;
   }
 
+  public OsmModuleBuilder withElevatorRefTags(List<CompoundRefTagGroup> elevatorRefTags) {
+    this.elevatorRefTags = elevatorRefTags;
+    return this;
+  }
+
   public OsmModuleBuilder withIssueStore(DataImportIssueStore issueStore) {
     this.issueStore = issueStore;
     return this;
@@ -70,6 +80,11 @@ public class OsmModuleBuilder {
 
   public OsmModuleBuilder withAreaVisibility(boolean areaVisibility) {
     this.areaVisibility = areaVisibility;
+    return this;
+  }
+
+  public OsmModuleBuilder withCacheManager(GraphBuildCacheManager cacheManager) {
+    this.cacheManager = cacheManager;
     return this;
   }
 
@@ -98,8 +113,8 @@ public class OsmModuleBuilder {
     return this;
   }
 
-  public OsmModuleBuilder withIncludeOsmSubwayEntrances(boolean includeOsmSubwayEntrances) {
-    this.includeOsmSubwayEntrances = includeOsmSubwayEntrances;
+  public OsmModuleBuilder withIncludeOsmStationEntrances(boolean includeOsmStationEntrances) {
+    this.includeOsmStationEntrances = includeOsmStationEntrances;
     return this;
   }
 
@@ -114,6 +129,7 @@ public class OsmModuleBuilder {
       issueStore,
       new OsmProcessingParameters(
         boardingAreaRefTags,
+        elevatorRefTags,
         edgeNamer,
         maxAreaNodes,
         areaVisibility,
@@ -121,8 +137,9 @@ public class OsmModuleBuilder {
         staticParkAndRide,
         staticBikeParkAndRide,
         includeInclinedEdgeLevelInfo,
-        includeOsmSubwayEntrances
-      )
+        includeOsmStationEntrances
+      ),
+      cacheManager
     );
   }
 }

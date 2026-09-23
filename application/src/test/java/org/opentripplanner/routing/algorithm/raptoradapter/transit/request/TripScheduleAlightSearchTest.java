@@ -7,8 +7,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.junit.jupiter.api.Test;
-import org.opentripplanner.raptor.api.model.SearchDirection;
 import org.opentripplanner.raptor.spi.RaptorTripScheduleSearch;
+import org.opentripplanner.raptor.spi.SearchDirection;
 import org.opentripplanner.raptorlegacy._data.RaptorTestConstants;
 import org.opentripplanner.raptorlegacy._data.transit.TestRoute;
 import org.opentripplanner.raptorlegacy._data.transit.TestTripPattern;
@@ -116,7 +116,7 @@ public class TripScheduleAlightSearchTest implements RaptorTestConstants {
   }
 
   @Test
-  public void findTripWithGivenTripIndexLowerBound() {
+  public void findTripWithGivenTripScheduleIndexLowerBound() {
     // Given a pattern with the following trips: A, B
     withTrips(tripA, tripB);
 
@@ -161,7 +161,9 @@ public class TripScheduleAlightSearchTest implements RaptorTestConstants {
         .withIndex(i);
 
       // Search and find trip 'i' using the previous trip index
-      searchForTrip(tripAlightTime, STOP_POS_0, i - 1).assertTripFound().withIndex(i);
+      searchForTrip(tripAlightTime, STOP_POS_0, i - 1)
+        .assertTripFound()
+        .withIndex(i);
 
       // Search with a time and index that together exclude trip 'i'
       searchForTrip(tripAlightTime, STOP_POS_0, i).assertNoTripFound();

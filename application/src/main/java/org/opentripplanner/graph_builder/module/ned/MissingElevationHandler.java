@@ -41,7 +41,7 @@ import org.slf4j.LoggerFactory;
  * <li>
  *   If a vertex only had a single path, then the last known elevation is used
  * </li>
- * </li>
+ * <li>
  *   Once elevations for vertices are interpolated they are used to set the elevation profile
  *   for the incoming / outgoing StreetEdges
  * </li>
@@ -82,56 +82,48 @@ class MissingElevationHandler {
     propagateElevationToNearbyVertices(pq, elevations);
 
     // Assign elevations to street edges based on the vertices
-    elevations
-      .keySet()
-      .forEach(vertex -> {
-        vertex
-          .getIncomingStreetEdges()
-          .forEach(edge -> assignElevationToEdgeIfPossible(elevations, edge));
-        vertex
-          .getOutgoingStreetEdges()
-          .forEach(edge -> assignElevationToEdgeIfPossible(elevations, edge));
-      });
+    elevations.keySet().forEach(vertex -> {
+      vertex
+        .getIncomingStreetEdges()
+        .forEach(edge -> assignElevationToEdgeIfPossible(elevations, edge));
+      vertex
+        .getOutgoingStreetEdges()
+        .forEach(edge -> assignElevationToEdgeIfPossible(elevations, edge));
+    });
   }
 
   private BinHeap<ElevationRepairState> createPriorityQueue(Map<Vertex, Double> elevations) {
     var pq = new BinHeap<ElevationRepairState>();
 
-    elevations.forEach(
-      ((vertex, elevation) -> {
-        vertex
-          .getIncoming()
-          .forEach(edge -> {
-            if (edge.getDistanceMeters() < maxElevationPropagationMeters) {
-              pq.insert(
-                new ElevationRepairState(
-                  vertex,
-                  elevation,
-                  edge.getFromVertex(),
-                  edge.getDistanceMeters()
-                ),
-                edge.getDistanceMeters()
-              );
-            }
-          });
+    elevations.forEach((vertex, elevation) -> {
+      vertex.getIncoming().forEach(edge -> {
+        if (edge.getDistanceMeters() < maxElevationPropagationMeters) {
+          pq.insert(
+            new ElevationRepairState(
+              vertex,
+              elevation,
+              edge.getFromVertex(),
+              edge.getDistanceMeters()
+            ),
+            edge.getDistanceMeters()
+          );
+        }
+      });
 
-        vertex
-          .getOutgoing()
-          .forEach(edge -> {
-            if (edge.getDistanceMeters() < maxElevationPropagationMeters) {
-              pq.insert(
-                new ElevationRepairState(
-                  vertex,
-                  elevation,
-                  edge.getToVertex(),
-                  edge.getDistanceMeters()
-                ),
-                edge.getDistanceMeters()
-              );
-            }
-          });
-      })
-    );
+      vertex.getOutgoing().forEach(edge -> {
+        if (edge.getDistanceMeters() < maxElevationPropagationMeters) {
+          pq.insert(
+            new ElevationRepairState(
+              vertex,
+              elevation,
+              edge.getToVertex(),
+              edge.getDistanceMeters()
+            ),
+            edge.getDistanceMeters()
+          );
+        }
+      });
+    });
 
     return pq;
   }

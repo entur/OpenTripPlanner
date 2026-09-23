@@ -22,6 +22,7 @@ import org.locationtech.jts.geom.Envelope;
 import org.locationtech.jts.geom.Geometry;
 import org.opentripplanner.core.model.i18n.TranslatedString;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingRepository;
 import org.opentripplanner.service.vehicleparking.internal.DefaultVehicleParkingService;
 import org.opentripplanner.service.vehicleparking.model.VehicleParking;
@@ -30,12 +31,11 @@ import org.opentripplanner.service.vehicleparking.model.VehicleParkingState;
 import org.opentripplanner.standalone.config.routerconfig.VectorTileConfig;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.openinghours.OpeningHoursCalendarService;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 
 public class VehicleParkingsLayerTest {
 
-  private static final FeedScopedId ID = TimetableRepositoryForTest.id("id");
+  private static final FeedScopedId ID = FeedScopedIdForTestFactory.id("id");
 
   private VehicleParking vehicleParking;
 
@@ -56,7 +56,7 @@ public class VehicleParkingsLayerTest {
       .on(LocalDate.of(2022, Month.APRIL, 1))
       .add();
 
-    vehicleParking = VehicleParking.builder()
+    vehicleParking = VehicleParking.of()
       .id(ID)
       .name(
         TranslatedString.getI18NString(Map.of("", "default name", "de", "deutscher Name"), false)
@@ -71,9 +71,9 @@ public class VehicleParkingsLayerTest {
       .tags(List.of("tag1", "tag2"))
       .openingHoursCalendar(calBuilder.build())
       .state(VehicleParkingState.OPERATIONAL)
-      .capacity(VehicleParkingSpaces.builder().bicycleSpaces(5).carSpaces(6).build())
+      .capacity(VehicleParkingSpaces.of().bicycleSpaces(5).carSpaces(6).build())
       .availability(
-        VehicleParkingSpaces.builder().wheelchairAccessibleCarSpaces(1).bicycleSpaces(1).build()
+        VehicleParkingSpaces.of().wheelchairAccessibleCarSpaces(1).bicycleSpaces(1).build()
       )
       .build();
   }
@@ -84,22 +84,22 @@ public class VehicleParkingsLayerTest {
     repo.updateVehicleParking(List.of(vehicleParking), List.of());
 
     var config = """
-      {
-        "vectorTiles": {
-          "layers" : [
-            {
-              "name": "vehicleParking",
-              "type": "VehicleParking",
-              "mapper": "Stadtnavi",
-              "maxZoom": 20,
-              "minZoom": 14,
-              "cacheMaxSeconds": 60,
-              "expansionFactor": 0
-            }
-          ]
-        }
+    {
+      "vectorTiles": {
+        "layers" : [
+          {
+            "name": "vehicleParking",
+            "type": "VehicleParking",
+            "mapper": "Stadtnavi",
+            "maxZoom": 20,
+            "minZoom": 14,
+            "cacheMaxSeconds": 60,
+            "expansionFactor": 0
+          }
+        ]
       }
-      """;
+    }
+    """;
     var nodeAdapter = newNodeAdapterForTest(config);
     var tiles = VectorTileConfig.mapVectorTilesParameters(nodeAdapter, "vectorTiles");
     assertEquals(1, tiles.layers().size());
@@ -109,7 +109,7 @@ public class VehicleParkingsLayerTest {
       Locale.US
     );
 
-    List<Geometry> geometries = builder.getGeometries(new Envelope(0.99, 1.01, 1.99, 2.01));
+    List<Geometry> geometries = builder.findGeometries(new Envelope(0.99, 1.01, 1.99, 2.01));
 
     assertEquals("[POINT (1 2)]", geometries.toString());
     assertEquals(

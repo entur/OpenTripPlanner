@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.jspecify.annotations.NonNull;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -21,8 +20,8 @@ import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsRe
 import org.opentripplanner.service.streetdetails.internal.DefaultStreetDetailsService;
 import org.opentripplanner.street.graph.Graph;
 import org.opentripplanner.transit.api.request.TripRequest;
-import org.opentripplanner.transit.model._data.TransitTestEnvironment;
-import org.opentripplanner.transit.model._data.TripInput;
+import org.opentripplanner.transit.model.TransitTestEnvironment;
+import org.opentripplanner.transit.model.TripInput;
 
 class FlexRouterTest {
 
@@ -57,7 +56,9 @@ class FlexRouterTest {
   @Test
   void runningDateToServiceDateAggregationWithFiltering() {
     var subject = setupEnvironment(
-      TripRequest.of().withIncludeRoutes(List.of(new FeedScopedId("F", ROUTE1))).build()
+      TripRequest.of()
+        .withIncludeRoutes(List.of(new FeedScopedId("F", ROUTE1)))
+        .build()
     );
 
     var dates = subject.flexServiceDates();
@@ -87,7 +88,7 @@ class FlexRouterTest {
     assertEquals(Set.of(expectedTripIds), actualTripIds);
   }
 
-  private @NonNull FlexRouter setupEnvironment(TripRequest tripRequest) {
+  private FlexRouter setupEnvironment(TripRequest tripRequest) {
     // Test FlexTrip running day -> service date aggregation using three trips:
     //     trip1 runs on it's service day
     //     trip2 runs on it's service day and the day after

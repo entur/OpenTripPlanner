@@ -8,16 +8,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.constrainedtransfer.ConstrainedTransfersForPatterns;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.constrainedtransfer.TransferIndexGenerator;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.transfercache.RaptorRequestTransferCache;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.transfer.constrained.ConstrainedTransferService;
+import org.opentripplanner.transfer.constrained.raptoradaptor.ConstrainedTransfersForPatterns;
+import org.opentripplanner.transfer.constrained.raptoradaptor.TransferIndexGenerator;
+import org.opentripplanner.transfer.regular.index.RaptorTransferIndex;
+import org.opentripplanner.transfer.regular.model.PathTransfer;
 import org.opentripplanner.transit.model.site.StopLocation;
 import org.opentripplanner.transit.service.SiteRepository;
 
 /**
- * This is a replica of public transportation data already present in TimetableRepository, but rearranged
+ * This is a replica of public transportation data already present in TransitRepository, but rearranged
  * and indexed differently for efficient use by the Raptor router. Patterns and trips are split out
  * by days, retaining only the services actually running on any particular day.
  *
@@ -36,7 +38,7 @@ public class RaptorTransitData {
    * Index of outer list is from stop index, inner list index has no specific meaning. To stop index
    * is a field of the Transfer object.
    */
-  private final List<List<Transfer>> transfersByStopIndex;
+  private final List<List<PathTransfer>> transfersByStopIndex;
 
   /**
    * Trip to trip transfers like with properties like guaranteedTransfer, staySeated and priority.
@@ -74,7 +76,7 @@ public class RaptorTransitData {
 
   public RaptorTransitData(
     Map<LocalDate, List<TripPatternForDate>> tripPatternsRunningOnDate,
-    List<List<Transfer>> transfersByStopIndex,
+    List<List<PathTransfer>> transfersByStopIndex,
     ConstrainedTransferService transferService,
     SiteRepository siteRepository,
     RaptorRequestTransferCache transferCache,

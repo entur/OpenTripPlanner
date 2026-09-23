@@ -41,6 +41,8 @@ config:
     RouteType: org.opentripplanner.apis.gtfs.model.RouteTypeModel#RouteTypeModel
     Alert: org.opentripplanner.routing.alertpatch.TransitAlert#TransitAlert
     AlertCauseType: org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLAlertCauseType#GraphQLAlertCauseType
+    AlertConnection: org.opentripplanner.framework.graphql.CountedConnection#CountedConnection<TransitAlert>
+    AlertEdge: graphql.relay.Edge#Edge<TransitAlert>
     AlertEffectType: org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLAlertEffectType#GraphQLAlertEffectType
     AlertSeverityLevelType: org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLAlertSeverityLevelType#GraphQLAlertSeverityLevelType
     BikePark: org.opentripplanner.service.vehicleparking.model.VehicleParking#VehicleParking
@@ -61,12 +63,13 @@ config:
     Cluster: Object
     Coordinates: org.locationtech.jts.geom.Coordinate#Coordinate
     StopCall: org.opentripplanner.model.TripTimeOnDate#TripTimeOnDate
+    StopCallOnTripOnServiceDate: org.opentripplanner.apis.gtfs.model.StopCallOnTripOnServiceDate#StopCallOnTripOnServiceDate
     TripOnServiceDate: org.opentripplanner.transit.model.timetable.TripOnServiceDate#TripOnServiceDate
     TripOnServiceDateConnection: org.opentripplanner.framework.graphql.CountedConnection#CountedConnection<TripOnServiceDate>
     TripOnServiceDateEdge: graphql.relay.Edge#Edge<TripOnServiceDate>
     debugOutput: org.opentripplanner.api.resource.DebugOutput#DebugOutput
-    DepartureRow: org.opentripplanner.routing.graphfinder.PatternAtStop#PatternAtStop
-    elevationProfileComponent: org.opentripplanner.model.plan.leg.ElevationProfile.Step
+    DepartureRow: org.opentripplanner.place.api.PatternAtStop#PatternAtStop
+    elevationProfileComponent: org.opentripplanner.street.model.elevation.ElevationProfile.Step
     Emissions: org.opentripplanner.model.plan.Emission#Emission
     Feed: String
     FeedPublisher: org.opentripplanner.apis.gtfs.model.FeedPublisher#FeedPublisher
@@ -83,7 +86,7 @@ config:
     Pattern: org.opentripplanner.transit.model.network.TripPattern#TripPattern
     PickupDropoffType: org.opentripplanner.apis.gtfs.generated.GraphQLTypes.GraphQLPickupDropoffType#GraphQLPickupDropoffType
     Place: org.opentripplanner.model.plan.leg.StopArrival#StopArrival
-    placeAtDistance: org.opentripplanner.routing.graphfinder.PlaceAtDistance#PlaceAtDistance
+    placeAtDistance: org.opentripplanner.place.api.PlaceAtDistance#PlaceAtDistance
     placeAtDistanceConnection: graphql.relay.Connection#Connection<PlaceAtDistance>
     placeAtDistanceEdge: graphql.relay.Edge#Edge<PlaceAtDistance>
     Plan: graphql.execution.DataFetcherResult<org.opentripplanner.routing.api.response.RoutingResponse>
@@ -100,7 +103,7 @@ config:
     serviceTimeRange: Object
     step: org.opentripplanner.model.plan.walkstep.WalkStep#WalkStep
     Stop: Object # Can be either Stop or Station
-    stopAtDistance: org.opentripplanner.routing.graphfinder.NearbyStop#NearbyStop
+    stopAtDistance: org.opentripplanner.place.api.NearbyStop#NearbyStop
     stopAtDistanceConnection: graphql.relay.Connection#Connection<NearbyStop>
     stopAtDistanceEdge: graphql.relay.Edge#Edge<NearbyStop>
     StopOnRoute: org.opentripplanner.apis.gtfs.model.StopOnRouteModel#StopOnRouteModel
@@ -142,3 +145,9 @@ config:
     CallScheduledTime: org.opentripplanner.apis.gtfs.model.CallScheduledTime#CallScheduledTime
     RentalVehicleFuel: org.opentripplanner.service.vehiclerental.model.RentalVehicleFuel#RentalVehicleFuel
     ViaLocationType: org.opentripplanner.model.plan.leg.ViaLocationType#ViaLocationType
+    CanceledTripsSummary: org.opentripplanner.apis.gtfs.model.CanceledTripsSummary#CanceledTripsSummary
+    CanceledTripsSummaryPattern: org.opentripplanner.apis.gtfs.model.CanceledTripsSummaryPattern#CanceledTripsSummaryPattern
+    CanceledTripsSummaryRoute: org.opentripplanner.apis.gtfs.model.CanceledTripsSummaryRoute#CanceledTripsSummaryRoute
+    Notice: org.opentripplanner.transit.model.basic.Notice
+    OffsetDateTimeRange: org.opentripplanner.apis.gtfs.model.OffsetDateTimeRange#OffsetDateTimeRange
+    RealTimeTripState: org.opentripplanner.apis.gtfs.model.RealTimeTripStateModel#RealTimeTripStateModel

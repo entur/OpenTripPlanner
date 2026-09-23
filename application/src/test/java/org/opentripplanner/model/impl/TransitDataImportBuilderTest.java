@@ -14,17 +14,18 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.ConstantsForTests;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.model.FeedInfoTestFactory;
 import org.opentripplanner.model.Frequency;
 import org.opentripplanner.model.calendar.ServiceCalendar;
 import org.opentripplanner.model.calendar.ServiceCalendarDate;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model._data.TransitRepositoryForTest;
 import org.opentripplanner.transit.model.network.Route;
 
 public class TransitDataImportBuilderTest {
 
-  private static final String FEED_ID = TimetableRepositoryForTest.FEED_ID;
-  private static final FeedScopedId SERVICE_WEEKDAYS_ID = TimetableRepositoryForTest.id("weekdays");
+  private static final String FEED_ID = TransitRepositoryForTest.FEED_ID;
+  private static final FeedScopedId SERVICE_WEEKDAYS_ID = FeedScopedIdForTestFactory.id("weekdays");
 
   private static TransitDataImportBuilder subject;
 

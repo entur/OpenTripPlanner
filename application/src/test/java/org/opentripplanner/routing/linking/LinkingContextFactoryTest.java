@@ -6,7 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.opentripplanner.transit.model._data.TimetableRepositoryForTest.id;
+import static org.opentripplanner.core.model.id.FeedScopedIdForTestFactory.id;
 
 import com.google.common.collect.ImmutableMultimap;
 import java.util.Arrays;
@@ -36,7 +36,7 @@ import org.opentripplanner.street.model.vertex.TemporaryStreetLocation;
 import org.opentripplanner.street.model.vertex.TransitStopVertex;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model._data.TransitRepositoryForTest;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.service.SiteRepository;
@@ -52,7 +52,7 @@ class LinkingContextFactoryTest {
   private static final FeedScopedId ALPHA_ID = id("alpha");
   private static final FeedScopedId OMEGA_ID = id("omega");
 
-  private final TimetableRepositoryForTest testModel = TimetableRepositoryForTest.of();
+  private final TransitRepositoryForTest testModel = TransitRepositoryForTest.of();
 
   private final Station stationAlpha = testModel
     .station("alpha")
@@ -161,7 +161,10 @@ class LinkingContextFactoryTest {
       id -> Optional.empty()
     );
     var container = new TemporaryVerticesContainer();
-    var from = GenericLocation.fromStopId("station", OMEGA_ID.getFeedId(), OMEGA_ID.getId());
+    var from = GenericLocation.fromStopId(
+      new FeedScopedId(OMEGA_ID.getFeedId(), OMEGA_ID.getId()),
+      "station"
+    );
     var request = LinkingContextRequest.of()
       .withFrom(from)
       .withTo(stopToLocation(stopB))
@@ -192,15 +195,15 @@ class LinkingContextFactoryTest {
       }
     );
     var container = new TemporaryVerticesContainer();
+    String label1 = stationAlpha.getName().toString();
     var from = GenericLocation.fromStopId(
-      stationAlpha.getName().toString(),
-      stationAlpha.getId().getFeedId(),
-      stationAlpha.getId().getId()
+      new FeedScopedId(stationAlpha.getId().getFeedId(), stationAlpha.getId().getId()),
+      label1
     );
+    String label = multiModalStation.getName().toString();
     var to = GenericLocation.fromStopId(
-      multiModalStation.getName().toString(),
-      multiModalStation.getId().getFeedId(),
-      multiModalStation.getId().getId()
+      new FeedScopedId(multiModalStation.getId().getFeedId(), multiModalStation.getId().getId()),
+      label
     );
     var request = LinkingContextRequest.of()
       .withFrom(from)
@@ -224,7 +227,10 @@ class LinkingContextFactoryTest {
   @Test
   void centroid() {
     var container = new TemporaryVerticesContainer();
-    var from = GenericLocation.fromStopId("station", ALPHA_ID.getFeedId(), ALPHA_ID.getId());
+    var from = GenericLocation.fromStopId(
+      new FeedScopedId(ALPHA_ID.getFeedId(), ALPHA_ID.getId()),
+      "station"
+    );
     var request = LinkingContextRequest.of()
       .withFrom(from)
       .withTo(stopToLocation(stopB))
@@ -302,9 +308,9 @@ class LinkingContextFactoryTest {
   @Test
   void verticesShouldInheritNamesFromLocations() {
     try (var container = new TemporaryVerticesContainer()) {
-      var from = new GenericLocation("First", null, 0.5, 0.5);
-      var via = new GenericLocation("Second", null, 0.4, 0.6);
-      var to = new GenericLocation("Third", null, 0.6, 0.4);
+      var from = GenericLocation.fromCoordinate(0.5, 0.5, "First");
+      var via = GenericLocation.fromCoordinate(0.4, 0.6, "Second");
+      var to = GenericLocation.fromCoordinate(0.6, 0.4, "Third");
       var request = LinkingContextRequest.of()
         .withFrom(from)
         .withTo(to)
@@ -378,7 +384,7 @@ class LinkingContextFactoryTest {
     var request = LinkingContextRequest.of()
       .withFrom(GenericLocation.fromCoordinate(80, 80))
       .withTo(GenericLocation.fromCoordinate(85, 85))
-      .withViaLocationsWithCoordinates(List.of(new GenericLocation("Via1", null, 87.0, 87.0)))
+      .withViaLocationsWithCoordinates(List.of(GenericLocation.fromCoordinate(87.0, 87.0, "Via1")))
       .withDirectMode(StreetMode.WALK)
       .build();
     var exception = assertThrows(RoutingValidationException.class, () ->
@@ -424,12 +430,17 @@ class LinkingContextFactoryTest {
     var nonExistingStopId = new FeedScopedId("F", "NonExistingStop");
 
     // Create locations with both a non-existing stop ID and valid coordinates
-    var from = new GenericLocation("From", nonExistingStopId, stopA.getLat(), stopA.getLon());
-    var to = new GenericLocation(
-      "To",
+    var from = GenericLocation.fromStopIdWithFallback(
+      nonExistingStopId,
+      stopA.getLat(),
+      stopA.getLon(),
+      "From"
+    );
+    var to = GenericLocation.fromStopIdWithFallback(
       new FeedScopedId("F", "AnotherNonExisting"),
       stopD.getLat(),
-      stopD.getLon()
+      stopD.getLon(),
+      "To"
     );
 
     var request = LinkingContextRequest.of()
@@ -509,34 +520,30 @@ class LinkingContextFactoryTest {
   }
 
   private GenericLocation stopToLocation(RegularStop s) {
+    String label = s.getName().toString();
     return GenericLocation.fromStopId(
-      s.getName().toString(),
-      s.getId().getFeedId(),
-      s.getId().getId()
+      new FeedScopedId(s.getId().getFeedId(), s.getId().getId()),
+      label
     );
   }
 
   private boolean outgoingEdgeIsTraversableWith(Collection<Edge> edges, TraverseMode mode) {
-    return edges
-      .stream()
-      .anyMatch(outgoing ->
-        outgoing
-          .getToVertex()
-          .getOutgoingStreetEdges()
-          .stream()
-          .anyMatch(edge -> edge.canTraverse(mode))
-      );
+    return edges.stream().anyMatch(outgoing ->
+      outgoing
+        .getToVertex()
+        .getOutgoingStreetEdges()
+        .stream()
+        .anyMatch(edge -> edge.canTraverse(mode))
+    );
   }
 
   private boolean incomingEdgeIsTraversableWith(Collection<Edge> edges, TraverseMode mode) {
-    return edges
-      .stream()
-      .anyMatch(incoming ->
-        incoming
-          .getFromVertex()
-          .getIncomingStreetEdges()
-          .stream()
-          .anyMatch(edge -> edge.canTraverse(mode))
-      );
+    return edges.stream().anyMatch(incoming ->
+      incoming
+        .getFromVertex()
+        .getIncomingStreetEdges()
+        .stream()
+        .anyMatch(edge -> edge.canTraverse(mode))
+    );
   }
 }

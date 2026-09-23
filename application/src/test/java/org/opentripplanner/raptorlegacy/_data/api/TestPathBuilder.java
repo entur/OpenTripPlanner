@@ -1,29 +1,28 @@
 package org.opentripplanner.raptorlegacy._data.api;
 
-import static org.opentripplanner.raptor.rangeraptor.transit.TripTimesSearch.findTripTimes;
-
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
-import org.opentripplanner.raptor.api.model.RaptorConstants;
-import org.opentripplanner.raptor.api.model.RaptorStopNameResolver;
 import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.path.PathBuilder;
+import org.opentripplanner.raptor.spi.BoardAndAlightTime;
+import org.opentripplanner.raptor.spi.RaptorConstants;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.raptor.spi.RaptorSlackProvider;
+import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
+import org.opentripplanner.raptor.spi.RaptorTransfer;
 import org.opentripplanner.raptorlegacy._data.RaptorTestConstants;
 import org.opentripplanner.raptorlegacy._data.transit.TestAccessEgress;
 import org.opentripplanner.raptorlegacy._data.transit.TestTransfers;
 import org.opentripplanner.raptorlegacy._data.transit.TestTripPattern;
 import org.opentripplanner.raptorlegacy._data.transit.TestTripSchedule;
-import org.opentripplanner.routing.algorithm.raptoradapter.transit.DefaultRaptorTransfer;
 
 /**
  * Utility to help build paths for testing. The path builder is "reusable", every time the {@code
- * access(...)} methods are called the builder reset it self.
+ * access(...)} methods are called the builder reset itself.
  * <p>
  * If the {@code costCalculator} is null, paths will not include cost.
  *
- * @deprecated This was earlier part of Raptor and should not be used outside the Raptor
+ * @deprecated This was an earlier part of Raptor and should not be used outside the Raptor
  *             module. Use the OTP model entities instead.
  */
 @Deprecated
@@ -87,7 +86,7 @@ public class TestPathBuilder implements RaptorTestConstants {
     return walk(TestTransfers.transfer(toStop, duration));
   }
 
-  public TestPathBuilder walk(DefaultRaptorTransfer transfer) {
+  public TestPathBuilder walk(RaptorTransfer transfer) {
     builder.transfer(transfer, transfer.stop());
     return this;
   }
@@ -97,7 +96,11 @@ public class TestPathBuilder implements RaptorTestConstants {
     // We use the startTime as earliest-board-time, this may cause problems for
     // testing routes visiting the same stop more than once. Create a new factory
     // method if this happens.
-    var baTime = findTripTimes(trip, boardStop, alightStop, startTime);
+    int boardStopPosition = trip.findDepartureStopPosition(startTime, boardStop);
+    int alightStopPosition = trip
+      .pattern()
+      .findAlightStopPositionAfter(boardStopPosition, alightStop);
+    var baTime = new BoardAndAlightTime(trip, boardStopPosition, alightStopPosition);
     builder.transit(trip, baTime);
     return this;
   }

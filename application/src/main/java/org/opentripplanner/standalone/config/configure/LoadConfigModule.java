@@ -4,8 +4,8 @@ import dagger.Module;
 import dagger.Provides;
 import jakarta.inject.Singleton;
 import java.io.File;
-import org.opentripplanner.core.framework.di.TransitServicePeriod;
-import org.opentripplanner.core.model.time.LocalDateInterval;
+import org.opentripplanner.core.model.di.TransitServicePeriod;
+import org.opentripplanner.core.model.time.LocalDateRange;
 import org.opentripplanner.datastore.api.OtpBaseDirectory;
 import org.opentripplanner.datastore.api.OtpDataStoreConfig;
 import org.opentripplanner.standalone.config.BuildConfig;
@@ -21,7 +21,7 @@ import org.opentripplanner.standalone.config.OtpConfigLoader;
  * types. The {@link ConfigModule} is a separate module to be able to use it without this module;
  * If the {@link ConfigModel} is already instantiated.
  * <p>
- * The binding to {@link OtpDataStoreConfig} and {@link @TransitServicePeriod} is done
+ * The binding to {@link OtpDataStoreConfig} and {@link TransitServicePeriod} is done
  * here, not in the {@link ConfigModel}, because they are only needed at load time - if this change,
  * then move the binding to the {@link ConfigModule}.
  */
@@ -46,7 +46,7 @@ public class LoadConfigModule {
 
   @Provides
   @TransitServicePeriod
-  static LocalDateInterval providesTransitServicePeriod(BuildConfig buildConfig) {
+  static LocalDateRange providesTransitServicePeriod(BuildConfig buildConfig) {
     return buildConfig.getTransitServicePeriod();
   }
 

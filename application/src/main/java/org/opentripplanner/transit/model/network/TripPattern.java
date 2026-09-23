@@ -3,21 +3,18 @@ package org.opentripplanner.transit.model.network;
 import static java.util.Objects.requireNonNull;
 import static org.opentripplanner.utils.lang.ObjectUtils.requireNotInitialized;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
-import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.LineString;
 import org.opentripplanner.core.model.accessibility.Accessibility;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.PickDrop;
-import org.opentripplanner.street.geometry.CompactLineStringUtils;
-import org.opentripplanner.street.geometry.GeometryUtils;
+import org.opentripplanner.street.geometry.CompactLineStringSequence;
 import org.opentripplanner.transit.model.basic.SubMode;
 import org.opentripplanner.transit.model.basic.TransitMode;
 import org.opentripplanner.transit.model.framework.AbstractTransitEntity;
@@ -63,7 +60,8 @@ import org.opentripplanner.transit.model.timetable.TripTimes;
  */
 public final class TripPattern
   extends AbstractTransitEntity<TripPattern, TripPatternBuilder>
-  implements Cloneable, LogInfo {
+  implements Cloneable, LogInfo
+{
 
   private final Route route;
 
@@ -78,8 +76,8 @@ public final class TripPattern
    * TripPatterns hold a reference to a Timetable (i.e. TripTimes for all Trips in the pattern) for
    * only scheduled trips from the GTFS or NeTEx data. If any trips were later updated in real time,
    * there will be another Timetable holding those updates and reading through to the scheduled one.
-   * That other realtime Timetable is retrieved from a TimetableSnapshot (see end of Javadoc on
-   * TimetableSnapshot for more details).
+   * That other realtime Timetable is retrieved from a TimetableRepositorySnapshot (see end of Javadoc on
+   * DefaultTimetableRepository for more details).
    * TODO RT_AB: The above system should be changed to integrate realtime and scheduled data more
    *   closely. The Timetable may become obsolete or change significantly when they are integrated.
    */
@@ -97,11 +95,11 @@ public final class TripPattern
   private String name;
 
   /**
-   * Geometries of each inter-stop segment of the tripPattern.
-   * Not used in routing, only for API listing.
-   * TODO: Encapsulate the byte arrays in a class.
+   * Geometries of each inter-stop segment of the tripPattern, together with the precomputed
+   * cumulative distance along the pattern. Not used in routing, only for API listing and
+   * per-leg distance computation via {@link #distanceBetween(int, int)}.
    */
-  private final byte[][] hopGeometries;
+  private final CompactLineStringSequence patternGeometry;
 
   @Nullable
   private final TripPattern originalTripPattern;
@@ -137,7 +135,7 @@ public final class TripPattern
 
     this.originalTripPattern = builder.getOriginalTripPattern();
 
-    this.hopGeometries = builder.hopGeometries();
+    this.patternGeometry = builder.buildGeometry();
     this.routingTripPattern = new RoutingTripPattern(this);
 
     getId().requireSameFeedId(route.getId());
@@ -192,16 +190,23 @@ public final class TripPattern
   }
 
   public LineString getHopGeometry(int stopPosInPattern) {
-    if (hopGeometries != null) {
-      return CompactLineStringUtils.uncompactLineString(hopGeometries[stopPosInPattern], false);
-    } else {
-      return GeometryUtils.getGeometryFactory().createLineString(
-        new Coordinate[] {
-          coordinate(stopPattern.getStop(stopPosInPattern)),
-          coordinate(stopPattern.getStop(stopPosInPattern + 1)),
-        }
-      );
-    }
+    return patternGeometry.get(stopPosInPattern);
+  }
+
+  /**
+   * Distance in meters along the pattern between the boarding and alighting stop positions.
+   * Constant-time lookup against the cumulative distance table computed at graph build.
+   */
+  public int distanceBetween(int boardingStopPosition, int alightingStopPosition) {
+    return patternGeometry.distanceBetween(boardingStopPosition, alightingStopPosition);
+  }
+
+  /**
+   * Geometry of the pattern segment between the boarding and alighting stop positions,
+   * obtained by concatenating the underlying hop geometries.
+   */
+  public LineString geometryBetween(int boardingStopPosition, int alightingStopPosition) {
+    return patternGeometry.concatenate(boardingStopPosition, alightingStopPosition);
   }
 
   public StopPattern getStopPattern() {
@@ -222,16 +227,14 @@ public final class TripPattern
       : stopPattern.copyOf();
   }
 
+  /**
+   * The concatenated hop geometry of the whole pattern. For patterns built without shape data
+   * (GTFS without {@code shapes.txt}, NeTEx without ServiceLink projections, real-time added
+   * trips), this is composed of straight-line segments between consecutive stops. The returned
+   * geometry is never null; it is empty for degenerate patterns with no hops (one stop or fewer).
+   */
   public LineString getGeometry() {
-    if (hopGeometries == null || hopGeometries.length == 0) {
-      return null;
-    }
-
-    List<LineString> lineStrings = new ArrayList<>();
-    for (int i = 0; i < hopGeometries.length; i++) {
-      lineStrings.add(getHopGeometry(i));
-    }
-    return GeometryUtils.concatenateLineStrings(lineStrings);
+    return patternGeometry.concatenate(0, patternGeometry.size());
   }
 
   public int numberOfStops() {
@@ -347,7 +350,7 @@ public final class TripPattern
 
   /** Returns whether a given stop is wheelchair-accessible. */
   public boolean wheelchairAccessible(int stopPos) {
-    return (stopPattern.getStop(stopPos).getWheelchairAccessibility() == Accessibility.POSSIBLE);
+    return stopPattern.getStop(stopPos).getWheelchairAccessibility() == Accessibility.POSSIBLE;
   }
 
   public PickDrop getAlightType(int stopPos) {
@@ -517,10 +520,6 @@ public final class TripPattern
           .collect(Collectors.toUnmodifiableSet())
           .contains(id)
       );
-  }
-
-  private static Coordinate coordinate(StopLocation s) {
-    return s.getCoordinate().asJtsCoordinate();
   }
 
   @Override

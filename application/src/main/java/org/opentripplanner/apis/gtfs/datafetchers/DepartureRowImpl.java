@@ -4,12 +4,12 @@ import graphql.relay.Relay;
 import graphql.schema.DataFetcher;
 import graphql.schema.DataFetchingEnvironment;
 import java.time.Duration;
-import org.opentripplanner.apis.gtfs.GraphQLRequestContext;
 import org.opentripplanner.apis.gtfs.GraphQLUtils;
+import org.opentripplanner.apis.gtfs.GtfsGraphQLRequestContext;
 import org.opentripplanner.apis.gtfs.generated.GraphQLDataFetchers;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.model.TripTimeOnDate;
-import org.opentripplanner.routing.graphfinder.PatternAtStop;
+import org.opentripplanner.place.api.PatternAtStop;
 import org.opentripplanner.transit.model.network.TripPattern;
 import org.opentripplanner.transit.service.ArrivalDeparture;
 import org.opentripplanner.transit.service.TransitService;
@@ -58,7 +58,7 @@ public class DepartureRowImpl implements GraphQLDataFetchers.GraphQLDepartureRow
   }
 
   private TransitService getTransitService(DataFetchingEnvironment environment) {
-    return environment.<GraphQLRequestContext>getContext().transitService();
+    return environment.<GtfsGraphQLRequestContext>getContext().transitService();
   }
 
   private PatternAtStop getSource(DataFetchingEnvironment environment) {

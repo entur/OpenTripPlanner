@@ -12,7 +12,7 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
-import org.opentripplanner.apis.gtfs.GraphQLRequestContext;
+import org.opentripplanner.apis.gtfs.GtfsGraphQLRequestContext;
 import org.opentripplanner.apis.gtfs.generated.GraphQLTypes;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.graphql.GraphQLUtils;
@@ -27,7 +27,7 @@ public class RouteRequestMapper {
 
   public static RouteRequest toRouteRequest(
     DataFetchingEnvironment environment,
-    GraphQLRequestContext context
+    GtfsGraphQLRequestContext context
   ) {
     var request = context.defaultRouteRequest().copyOf();
     var args = new GraphQLTypes.GraphQLQueryTypePlanConnectionArgs(environment.getArguments());
@@ -182,24 +182,20 @@ public class RouteRequestMapper {
     var stopLocation = locationInput.getGraphQLLocation().getGraphQLStopLocation();
     if (stopLocation.getGraphQLStopLocationId() != null) {
       var stopId = stopLocation.getGraphQLStopLocationId();
-      if (FeedScopedId.isValidString(stopId)) {
-        return new GenericLocation(
-          locationInput.getGraphQLLabel(),
-          FeedScopedId.parse(stopId),
-          null,
-          null
+      return FeedScopedId.parseOptional(stopId)
+        .map(feedScopedId ->
+          GenericLocation.fromStopId(feedScopedId, locationInput.getGraphQLLabel())
+        )
+        .orElseThrow(() ->
+          new IllegalArgumentException("Stop id %s is not of valid format.".formatted(stopId))
         );
-      } else {
-        throw new IllegalArgumentException("Stop id %s is not of valid format.".formatted(stopId));
-      }
     }
 
     var coordinate = locationInput.getGraphQLLocation().getGraphQLCoordinate();
-    return new GenericLocation(
-      locationInput.getGraphQLLabel(),
-      null,
+    return GenericLocation.fromCoordinate(
       coordinate.getGraphQLLatitude(),
-      coordinate.getGraphQLLongitude()
+      coordinate.getGraphQLLongitude(),
+      locationInput.getGraphQLLabel()
     );
   }
 

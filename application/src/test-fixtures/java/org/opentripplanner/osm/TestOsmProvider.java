@@ -7,16 +7,18 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Consumer;
 import org.opentripplanner._support.time.ZoneIds;
-import org.opentripplanner.graph_builder.module.osm.OsmDatabase;
+import org.opentripplanner.graph_builder.module.osm.storage.OsmDatabase;
 import org.opentripplanner.osm.model.OsmEntity;
 import org.opentripplanner.osm.model.OsmNode;
 import org.opentripplanner.osm.model.OsmRelation;
 import org.opentripplanner.osm.model.OsmWay;
+import org.opentripplanner.osm.model.OsmWayBuilder;
 import org.opentripplanner.osm.tagmapping.OsmTagMapper;
 import org.opentripplanner.osm.wayproperty.WayPropertySet;
 
 public class TestOsmProvider implements OsmProvider {
 
+  public static final TestOsmProvider EMPTY = new TestOsmProvider(List.of(), List.of(), List.of());
   private final List<OsmWay> ways;
   private final List<OsmNode> nodes;
   private final List<OsmRelation> relations;
@@ -25,15 +27,18 @@ public class TestOsmProvider implements OsmProvider {
 
   public TestOsmProvider(List<OsmRelation> relations, List<OsmWay> ways, List<OsmNode> nodes) {
     // this was originally peek() but Joel insisted that it's "for debugging"
-    for (OsmRelation relation : relations) {
-      relation.setOsmProvider(this);
-    }
-    this.relations = List.copyOf(relations);
-    for (OsmWay way : ways) {
-      way.setOsmProvider(this);
-    }
-    this.ways = List.copyOf(ways);
-    this.nodes = List.copyOf(nodes);
+    this.relations = relations
+      .stream()
+      .map(relation -> relation.copy().withOsmProvider(this).build())
+      .toList();
+    this.ways = ways
+      .stream()
+      .map(way -> way.copy().withOsmProvider(this).build())
+      .toList();
+    this.nodes = nodes
+      .stream()
+      .map(n -> n.copy().withOsmProvider(this).build())
+      .toList();
   }
 
   public static Builder of() {
@@ -83,14 +88,11 @@ public class TestOsmProvider implements OsmProvider {
      * Add a way and create nodes for the from and to coordinates.
      */
     public Builder addWay(OsmWay way) {
-      var from = new OsmNode(1, 1);
-      from.setId(1);
-      var to = new OsmNode(1.1, 1.1);
-      to.setId(2);
-      way.getNodeRefs().add(from.getId());
-      way.getNodeRefs().add(to.getId());
+      var from = OsmNode.of().withId(1).withLatLon(1, 1).build();
+      var to = OsmNode.of().withId(2).withLatLon(1.1, 1.1).build();
+      var wayWithNodes = way.copy().addNodeRef(from.getId(), to.getId()).build();
 
-      ways.add(way);
+      ways.add(wayWithNodes);
       nodes.addAll(List.of(from, to));
       return this;
     }
@@ -100,15 +102,29 @@ public class TestOsmProvider implements OsmProvider {
     }
 
     public Builder addAreaFromNodes(long id, List<OsmNode> areaNodes) {
+      return addAreaFromNodes(way -> way.withTag("highway", "pedestrian"), id, areaNodes);
+    }
+
+    public Builder addAreaFromNodes(
+      Consumer<OsmWayBuilder> areaBuilderConsumer,
+      List<OsmNode> areaNodes
+    ) {
+      return addAreaFromNodes(areaBuilderConsumer, counter.incrementAndGet(), areaNodes);
+    }
+
+    public Builder addAreaFromNodes(
+      Consumer<OsmWayBuilder> areaBuilderConsumer,
+      long id,
+      List<OsmNode> areaNodes
+    ) {
       this.nodes.addAll(areaNodes);
       var nodeIds = areaNodes.stream().map(OsmEntity::getId).toList();
 
-      var area = new OsmWay();
-      area.setId(id);
-      area.addTag("area", "yes");
-      area.addTag("highway", "pedestrian");
-      area.getNodeRefs().addAll(nodeIds);
-      area.getNodeRefs().add(nodeIds.getFirst());
+      var areaBuilder = OsmWay.of().withId(id).withTag("area", "yes");
+      nodeIds.forEach(areaBuilder::addNodeRef);
+      areaBuilder.addNodeRef(nodeIds.getFirst());
+      areaBuilderConsumer.accept(areaBuilder);
+      var area = areaBuilder.build();
 
       this.ways.add(area);
       return this;
@@ -122,8 +138,8 @@ public class TestOsmProvider implements OsmProvider {
       return addWayFromNodes(way -> {}, id, nodes);
     }
 
-    public Builder addWayFromNodes(Consumer<OsmWay> wayConsumer, OsmNode... nodes) {
-      return addWayFromNodes(wayConsumer, counter.incrementAndGet(), List.of(nodes));
+    public Builder addWayFromNodes(Consumer<OsmWayBuilder> wayBuilderConsumer, OsmNode... nodes) {
+      return addWayFromNodes(wayBuilderConsumer, counter.incrementAndGet(), List.of(nodes));
     }
 
     public Builder addRelation(OsmRelation relation) {
@@ -131,14 +147,17 @@ public class TestOsmProvider implements OsmProvider {
       return this;
     }
 
-    private Builder addWayFromNodes(Consumer<OsmWay> wayConsumer, long id, List<OsmNode> nodes) {
+    private Builder addWayFromNodes(
+      Consumer<OsmWayBuilder> wayBuilderConsumer,
+      long id,
+      List<OsmNode> nodes
+    ) {
       this.nodes.addAll(nodes);
       var nodeIds = nodes.stream().map(OsmEntity::getId).toList();
-      var way = new OsmWay();
-      way.setId(id);
-      way.addTag("highway", "pedestrian");
-      wayConsumer.accept(way);
-      way.getNodeRefs().addAll(nodeIds);
+      var wayBuilder = OsmWay.of().withId(id).withTag("highway", "pedestrian");
+      nodeIds.forEach(wayBuilder::addNodeRef);
+      wayBuilderConsumer.accept(wayBuilder);
+      var way = wayBuilder.build();
       this.ways.add(way);
       return this;
     }

@@ -2,6 +2,8 @@ package org.opentripplanner.standalone;
 
 import static org.opentripplanner.model.projectinfo.OtpProjectInfo.projectInfo;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import com.beust.jcommander.JCommander;
 import com.beust.jcommander.ParameterException;
 import org.geotools.referencing.factory.DeferredAuthorityFactory;
@@ -9,14 +11,16 @@ import org.geotools.util.WeakCollectionCleaner;
 import org.opentripplanner.framework.application.ApplicationShutdownSupport;
 import org.opentripplanner.framework.application.OtpAppException;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueSummary;
+import org.opentripplanner.raptor.RaptorService;
 import org.opentripplanner.raptor.configure.RaptorConfig;
 import org.opentripplanner.routing.graph.SerializedGraphObject;
+import org.opentripplanner.routing.service.DefaultRoutingService;
 import org.opentripplanner.standalone.config.CommandLineParameters;
 import org.opentripplanner.standalone.config.ConfigModel;
 import org.opentripplanner.standalone.configure.ConstructApplication;
 import org.opentripplanner.standalone.configure.LoadApplication;
 import org.opentripplanner.standalone.server.GrizzlyServer;
-import org.opentripplanner.transit.service.TimetableRepository;
+import org.opentripplanner.transit.service.TransitRepository;
 import org.opentripplanner.updater.configure.UpdaterConfigurator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,6 +112,7 @@ public class OTPMain {
       "Searching for configuration and input files in {}",
       cli.getBaseDirectory().getAbsolutePath()
     );
+    setupDebugLogging(cli);
 
     // Init loading phase (Separate DI scope)
     var loadApp = new LoadApplication(cli);
@@ -149,7 +154,7 @@ public class OTPMain {
         app.osmInfoGraphBuildRepository(),
         app.streetDetailsRepository(),
         app.streetRepository(),
-        app.timetableRepository(),
+        app.transitRepository(),
         app.transferRepository(),
         app.worldEnvelopeRepository(),
         app.vehicleParkingRepository(),
@@ -186,17 +191,12 @@ public class OTPMain {
 
   private static void startOtpWebServer(CommandLineParameters params, ConstructApplication app) {
     // Index graph for travel search
-    app.timetableRepository().index();
+    app.transitRepository().freeze();
     app.transferRepository().index();
     app.graph().index();
 
     // publishing the config version info make it available to the APIs
     setOtpConfigVersionsOnServerInfo(app);
-
-    /* Start visualizer if requested. */
-    if (params.visualize) {
-      app.graphVisualizer().run();
-    }
 
     /* Start web server if requested. */
     // We could start the server first so it can report build/load progress to a load balancer.
@@ -205,7 +205,7 @@ public class OTPMain {
     if (params.doServe()) {
       GrizzlyServer grizzlyServer = app.createGrizzlyServer();
 
-      registerShutdownHookToGracefullyShutDownServer(app.timetableRepository(), app.raptorConfig());
+      registerShutdownHookToGracefullyShutDownServer(app.transitRepository(), app.raptorConfig());
 
       // Loop to restart server on uncaught fatal exceptions.
       while (true) {
@@ -232,12 +232,12 @@ public class OTPMain {
    * </ol>
    */
   private static void registerShutdownHookToGracefullyShutDownServer(
-    TimetableRepository timetableRepository,
+    TransitRepository transitRepository,
     RaptorConfig<?> raptorConfig
   ) {
     ApplicationShutdownSupport.addShutdownHook("server-shutdown", () -> {
       LOG.info("OTP shutdown started...");
-      UpdaterConfigurator.shutdownGraph(timetableRepository);
+      UpdaterConfigurator.shutdownGraph(transitRepository);
       raptorConfig.shutdown();
       WeakCollectionCleaner.DEFAULT.exit();
       DeferredAuthorityFactory.exit();
@@ -249,5 +249,13 @@ public class OTPMain {
     projectInfo().otpConfigVersion = app.otpConfig().configVersion;
     projectInfo().buildConfigVersion = app.buildConfig().configVersion;
     projectInfo().routerConfigVersion = app.routerConfig().getConfigVersion();
+  }
+
+  private static void setupDebugLogging(CommandLineParameters params) {
+    if (params.debugRequests) {
+      var ctx = (LoggerContext) LoggerFactory.getILoggerFactory();
+      ctx.getLogger(DefaultRoutingService.class).setLevel(Level.DEBUG);
+      ctx.getLogger(RaptorService.class).setLevel(Level.DEBUG);
+    }
   }
 }

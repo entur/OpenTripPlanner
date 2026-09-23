@@ -4,9 +4,9 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
-import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
 import org.opentripplanner.raptor.api.path.PathLeg;
 import org.opentripplanner.raptor.api.path.RaptorPath;
+import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.request.TripScheduleWithOffset;
 import org.opentripplanner.transit.model.basic.TransitMode;
 
@@ -15,9 +15,8 @@ import org.opentripplanner.transit.model.basic.TransitMode;
  * Everything from the main result is kept, and any additional rail results from the alternative
  * search are added.
  */
-class MergePaths<T extends RaptorTripSchedule>
-  implements
-    BiFunction<Collection<RaptorPath<T>>, Collection<RaptorPath<T>>, Collection<RaptorPath<T>>> {
+class MergePaths<T extends RaptorTripSchedule> implements
+  BiFunction<Collection<RaptorPath<T>>, Collection<RaptorPath<T>>, Collection<RaptorPath<T>>> {
 
   @Override
   public Collection<RaptorPath<T>> apply(

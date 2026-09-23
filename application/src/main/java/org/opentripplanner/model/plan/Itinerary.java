@@ -13,11 +13,10 @@ import org.opentripplanner.core.model.basic.NormalizedCost;
 import org.opentripplanner.ext.flex.FlexibleTransitLeg;
 import org.opentripplanner.framework.model.TimeAndCost;
 import org.opentripplanner.model.SystemNotice;
-import org.opentripplanner.model.fare.ItineraryFare;
 import org.opentripplanner.model.plan.leg.ScheduledTransitLeg;
 import org.opentripplanner.model.plan.leg.StreetLeg;
-import org.opentripplanner.raptor.api.model.RaptorConstants;
 import org.opentripplanner.raptor.api.path.PathStringBuilder;
+import org.opentripplanner.raptor.spi.RaptorConstants;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.api.request.preference.ItineraryFilterPreferences;
 import org.opentripplanner.utils.lang.DoubleUtils;
@@ -89,7 +88,6 @@ public class Itinerary implements ItinerarySortKey {
 
   private final Float accessibilityScore;
   private final Emission emissionPerPerson;
-  private final ItineraryFare fare;
 
   Itinerary(ItineraryBuilder builder) {
     this.legs = List.copyOf(builder.legs);
@@ -112,7 +110,6 @@ public class Itinerary implements ItinerarySortKey {
     this.systemNotices = builder.systemNotices;
     this.accessibilityScore = builder.accessibilityScore;
     this.emissionPerPerson = builder.emissionPerPerson;
-    this.fare = builder.fare;
 
     // Set aggregated data
     this.generalizedCostIncludingPenalty = generalizedCost
@@ -280,19 +277,6 @@ public class Itinerary implements ItinerarySortKey {
    */
   public boolean hasSystemNoticeTag(String tag) {
     return systemNotices.stream().map(SystemNotice::tag).anyMatch(tag::equals);
-  }
-
-  public Itinerary withTimeShiftToStartAt(ZonedDateTime afterTime) {
-    Duration duration = Duration.between(legs().getFirst().startTime(), afterTime);
-    List<Leg> timeShiftedLegs = legs()
-      .stream()
-      .map(leg -> leg.withTimeShift(duration))
-      .collect(Collectors.toList());
-    return new ItineraryBuilder(timeShiftedLegs, searchWindowAware)
-      .withGeneralizedCost(generalizedCost)
-      .withAccessPenalty(accessPenalty)
-      .withEgressPenalty(egressPenalty)
-      .build();
   }
 
   /** Total duration of the itinerary in seconds */
@@ -579,13 +563,6 @@ public class Itinerary implements ItinerarySortKey {
     return totalWalkDuration;
   }
 
-  /**
-   * The fare products of this itinerary.
-   */
-  public ItineraryFare fare() {
-    return fare;
-  }
-
   /** @see #equals(Object) */
   @Override
   public final int hashCode() {
@@ -594,8 +571,8 @@ public class Itinerary implements ItinerarySortKey {
 
   /**
    * Return {@code true} it the other object is the same object using the {@link
-   * Object#equals(Object)}. An itinerary is a temporary object and the equals method should not be
-   * used for comparision of 2 instances, only to check that to objects are the same instance.
+   * Object#equals(Object)}. An itinerary is a temporary object, and the equals method should not be
+   * used for comparison of 2 instances, only to check that two objects are the same instance.
    */
   @Override
   public final boolean equals(Object o) {
@@ -611,9 +588,9 @@ public class Itinerary implements ItinerarySortKey {
       .addTime("end", legs().getLast().endTime())
       .addNum("nTransfers", numberOfTransfers)
       .addDuration("duration", totalDuration)
-      .addDuration("nonTransitTime", totalStreetDuration)
-      .addDuration("transitTime", totalTransitDuration)
-      .addDuration("waitingTime", totalWaitingDuration)
+      .addDuration("nonTransitDuration", totalStreetDuration)
+      .addDuration("transitDuration", totalTransitDuration)
+      .addDuration("waitingDuration", totalWaitingDuration)
       .addObj("generalizedCost", generalizedCost)
       .addNum("generalizedCost2", generalizedCost2)
       .addNum("waitTimeOptimizedCost", waitTimeOptimizedCost, UNKNOWN)
@@ -624,7 +601,6 @@ public class Itinerary implements ItinerarySortKey {
       .addNum("elevationLost", totalElevationLost(), "m")
       .addCol("legs", legs)
       .addObj("emissionPerPerson", emissionPerPerson)
-      .addObj("fare", fare)
       .toString();
   }
 

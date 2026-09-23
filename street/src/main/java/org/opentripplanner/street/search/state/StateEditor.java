@@ -1,16 +1,16 @@
 package org.opentripplanner.street.search.state;
 
+import java.util.HashSet;
 import java.util.Set;
-import javax.annotation.Nullable;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
+import org.opentripplanner.service.vehiclerental.street.geofencing.GeofencingBoundaryExtension;
 import org.opentripplanner.street.mapping.StreetModeToRentalTraverseModeMapper;
 import org.opentripplanner.street.model.RentalFormFactor;
 import org.opentripplanner.street.model.edge.Edge;
 import org.opentripplanner.street.model.vertex.Vertex;
 import org.opentripplanner.street.search.TraverseMode;
 import org.opentripplanner.street.search.request.StreetSearchRequest;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * This class is a wrapper around a new State that provides it with setter and increment methods,
@@ -22,46 +22,46 @@ import org.slf4j.LoggerFactory;
  */
 public class StateEditor {
 
-  private static final Logger LOG = LoggerFactory.getLogger(StateEditor.class);
-
-  protected State child;
-
-  private boolean spawned = false;
-
-  private boolean defectiveTraversal = false;
+  private final StreetSearchRequest request;
+  private final State backState;
+  private final Edge backEdge;
+  private final Vertex vertex;
+  private StateData stateData;
+  private double weight;
+  private long time_ms;
+  private double traversalDistance_m;
 
   private boolean traversingBackward;
 
   /* CONSTRUCTORS */
 
+  /**
+   * The very first state in the chain before any iteration has started.
+   */
   public StateEditor(Vertex v, StreetSearchRequest request) {
-    child = new State(v, request);
+    this.request = request;
+    this.stateData = new State(v, request).stateData;
+    this.backState = null;
+    this.backEdge = null;
+    this.vertex = v;
+    this.time_ms = request.startTime().toEpochMilli();
+    this.weight = 0;
+    this.traversalDistance_m = 0;
   }
 
   public StateEditor(State parent, Edge e) {
-    child = parent.clone();
-    child.backState = parent;
-    child.backEdge = e;
+    this.request = parent.getRequest();
+    this.stateData = parent.stateData;
+    this.backState = parent;
+    this.backEdge = e;
+    this.time_ms = parent.time_ms;
+    this.weight = parent.weight;
+    this.traversalDistance_m = parent.traversalDistance_m;
 
     final Vertex parentVertex = parent.vertex;
 
-    if (e == null) {
-      child.backState = null;
-      child.vertex = parentVertex;
-      child.stateData = child.stateData.clone();
-      return;
-    }
-
     final Vertex fromVertex = e.getFromVertex();
     final Vertex toVertex = e.getToVertex();
-
-    if (fromVertex == null || toVertex == null) {
-      child.vertex = parentVertex;
-      child.stateData = child.stateData.clone();
-      LOG.error("From or to vertex is null for {}", e);
-      defectiveTraversal = true;
-      return;
-    }
 
     // Note that we use equals(), not ==, here to allow for dynamically created vertices
     if (parentVertex.equals(fromVertex)) {
@@ -69,71 +69,55 @@ public class StateEditor {
       // can't know the direction of travel from the above check. The expression below is simplified
       // fromVertex.equals(toVertex) ? parent.getOptions().arriveBy : false;
       traversingBackward = fromVertex.equals(toVertex) && parent.getRequest().arriveBy();
-      child.vertex = toVertex;
+      this.vertex = toVertex;
     } else if (parentVertex.equals(toVertex)) {
       traversingBackward = true;
-      child.vertex = fromVertex;
+      this.vertex = fromVertex;
     } else {
-      // Parent state is not at either end of edge.
-      LOG.warn("Edge is not connected to parent state: {}", e);
-      LOG.warn("   from   vertex: {}", fromVertex);
-      LOG.warn("   to     vertex: {}", toVertex);
-      LOG.warn("   parent vertex: {}", parentVertex);
-      defectiveTraversal = true;
+      throw new IllegalStateException(
+        "Edge is not connected to parent state: %s, from=%s, to=%s, parent=%s".formatted(
+          e,
+          fromVertex,
+          toVertex,
+          parentVertex
+        )
+      );
     }
 
     if (traversingBackward != parent.getRequest().arriveBy()) {
-      LOG.error(
-        "Actual traversal direction does not match traversal direction in TraverseOptions."
+      throw new IllegalStateException(
+        "Actual traversal direction does not match traversal direction in %s".formatted(
+          parent.getRequest()
+        )
       );
-      defectiveTraversal = true;
     }
   }
 
-  /* PUBLIC METHODS */
-
   /**
-   *
-   * Why can a state editor only be used once? If you modify some component of state with and
-   * editor, use the editor to create a new state, and then make more modifications, these
-   * modifications will be applied to the previously created state. Reusing the state editor to make
-   * several states would modify an existing state somewhere earlier in the search, messing up the
-   * shortest path tree.
+   * Builds a new state from the current state editor.
    */
-  @Nullable
   public State makeState() {
-    // check that this editor has not been used already
-    if (spawned) {
-      throw new IllegalStateException("A StateEditor can only be used once.");
-    }
-
-    // if something was flagged incorrect, do not make a new state
-    if (defectiveTraversal) {
-      LOG.error("Defective traversal flagged on edge " + child.backEdge);
-      return null;
-    }
-
-    if (child.backState != null) {
-      // make it impossible to use a state with lower weight than its
-      // parent.
-      child.checkNegativeWeight();
-
+    if (backState != null) {
       // check that time changes are coherent with edge traversal
       // direction
-      if (
-        traversingBackward
-          ? (child.getTimeDeltaMilliseconds() > 0)
-          : (child.getTimeDeltaMilliseconds() < 0)
-      ) {
-        LOG.trace(
-          "Time was incremented the wrong direction during state editing. {}",
-          child.backEdge
+      double timeDelta = time_ms - backState.getTimeMilliseconds();
+      if (traversingBackward ? timeDelta > 0 : timeDelta < 0) {
+        throw new IllegalStateException(
+          "Time was incremented the wrong direction during state editing, while traversing " +
+            backEdge
         );
-        return null;
       }
     }
-    spawned = true;
-    return child;
+    return new State(
+      request,
+      weight,
+      vertex,
+      backState,
+      backEdge,
+      stateData,
+      traversalDistance_m,
+      time_ms
+    );
   }
 
   /**
@@ -145,33 +129,24 @@ public class StateEditor {
   }
 
   public String toString() {
-    return "StateEditor{" + child + "}";
+    return "StateEditor{" + backState + "}";
   }
-
-  /* PUBLIC METHODS TO MODIFY A STATE BEFORE IT IS USED */
 
   /* Incrementors */
 
   public void incrementWeight(double weight) {
     if (Double.isInfinite(weight) || Double.isNaN(weight)) {
-      LOG.warn(
-        "A state's weight is being incremented by " +
-          weight +
-          " while traversing edge " +
-          child.backEdge
+      throw new IllegalArgumentException(
+        "A state's weight is being incremented by " + weight + " while traversing edge " + backEdge
       );
-      defectiveTraversal = true;
-      return;
     }
     if (weight < 0) {
-      LOG.warn(
+      throw new IllegalArgumentException(
         "A state's weight is being incremented by a negative amount while traversing edge " +
-          child.backEdge
+          backEdge
       );
-      defectiveTraversal = true;
-      return;
     }
-    child.weight += weight;
+    this.weight += weight;
   }
 
   /**
@@ -181,83 +156,133 @@ public class StateEditor {
    */
   public void incrementTimeInMilliseconds(long milliseconds) {
     if (milliseconds < 0) {
-      LOG.warn(
-        "A state's time is being incremented by a negative amount while traversing edge " +
-          child.getBackEdge()
+      throw new IllegalArgumentException(
+        "A state's time is being incremented by a negative amount while traversing edge " + backEdge
       );
-      defectiveTraversal = true;
-      return;
     }
-    child.time_ms += (traversingBackward ? -milliseconds : milliseconds);
+    this.time_ms += traversingBackward ? -milliseconds : milliseconds;
   }
 
   public void incrementTimeInSeconds(long seconds) {
     incrementTimeInMilliseconds(1000L * seconds);
   }
 
-  public void incrementWalkDistance(double length) {
+  /**
+   * Increment the distance traversed through the graph in meters.
+   */
+  public void incrementTraversalDistanceMeters(double length) {
     if (length < 0) {
-      LOG.warn("A state's walk distance is being incremented by a negative amount.");
-      defectiveTraversal = true;
-      return;
+      throw new IllegalArgumentException("Traversal distance cannot be negative");
     }
-    child.walkDistance += length;
+    this.traversalDistance_m += length;
   }
 
-  /* Basic Setters */
-
   public void resetEnteredNoThroughTrafficArea() {
-    if (!child.stateData.enteredNoThroughTrafficArea) {
+    if (!stateData.enteredNoThroughTrafficArea) {
       return;
     }
 
     cloneStateDataAsNeeded();
-    child.stateData.enteredNoThroughTrafficArea = false;
+    stateData.enteredNoThroughTrafficArea = false;
   }
 
   public void setEnteredNoThroughTrafficArea() {
-    if (child.stateData.enteredNoThroughTrafficArea) {
+    if (stateData.enteredNoThroughTrafficArea) {
       return;
     }
 
     cloneStateDataAsNeeded();
-    child.stateData.enteredNoThroughTrafficArea = true;
+    stateData.enteredNoThroughTrafficArea = true;
   }
 
-  public void leaveNoRentalDropOffArea() {
-    if (!child.stateData.insideNoRentalDropOffArea) {
-      return;
+  /**
+   * Update geofencing zone tracking based on boundary extensions on the traversed edge.
+   */
+  public void updateGeofencingZones(Vertex fromVertex, Vertex toVertex, boolean arriveBy) {
+    var newZones = GeofencingBoundaryExtension.resolveZoneTransitions(
+      fromVertex.listGeofencingBoundaries(),
+      toVertex.listGeofencingBoundaries(),
+      stateData.currentGeofencingZones,
+      arriveBy
+    );
+    if (newZones != null) {
+      cloneStateDataAsNeeded();
+      stateData.currentGeofencingZones = newZones;
     }
-
-    cloneStateDataAsNeeded();
-    child.stateData.insideNoRentalDropOffArea = false;
   }
 
-  public void enterNoRentalDropOffArea() {
-    if (child.stateData.insideNoRentalDropOffArea) {
+  /**
+   * Whether drop-off is banned by the current geofencing zones in this editor's state data.
+   * Used to check zone state after traversal but before finalizing the state.
+   */
+  public boolean isDropOffBannedByCurrentZones() {
+    return GeofencingZone.resolveField(
+      stateData.currentGeofencingZones,
+      stateData.vehicleRentalNetwork,
+      GeofencingZone::dropOffBanned
+    );
+  }
+
+  /**
+   * Whether drop-off is banned by the current geofencing zones for a specific network.
+   * Used in the arrive-by deferred renting fork where the network hasn't been bound yet.
+   */
+  public boolean isDropOffBannedForNetwork(String network) {
+    return GeofencingZone.resolveField(
+      stateData.currentGeofencingZones,
+      network,
+      GeofencingZone::dropOffBanned
+    );
+  }
+
+  /**
+   * Initialize geofencing zones from pre-resolved zones on a vehicle rental vertex.
+   * Called at vehicle pickup time.
+   */
+  public void initializeGeofencingZones(Set<GeofencingZone> zones) {
+    cloneStateDataAsNeeded();
+    stateData.currentGeofencingZones = Set.copyOf(zones);
+  }
+
+  /**
+   * Bind this state to a specific vehicle rental network. Transitions a generic (null-network)
+   * RENTING_FLOATING state into a network-specific state.
+   */
+  public void bindToNetwork(String network) {
+    cloneStateDataAsNeeded();
+    stateData.vehicleRentalNetwork = network;
+  }
+
+  /**
+   * Record that this generic state has already forked a committed branch for the given network.
+   * Prevents duplicate forking at subsequent boundary crossings for the same network.
+   */
+  public void addCommittedNetwork(String network) {
+    if (stateData.committedNetworks.contains(network)) {
       return;
     }
-
     cloneStateDataAsNeeded();
-    child.stateData.insideNoRentalDropOffArea = true;
+    var newSet = new HashSet<>(stateData.committedNetworks);
+    newSet.add(network);
+    stateData.committedNetworks = Set.copyOf(newSet);
   }
 
   public void setBackMode(TraverseMode mode) {
-    if (mode == child.stateData.backMode) {
+    if (mode == stateData.backMode) {
       return;
     }
 
     cloneStateDataAsNeeded();
-    child.stateData.backMode = mode;
+    stateData.backMode = mode;
   }
 
   public void setBackWalkingBike(boolean walkingBike) {
-    if (walkingBike == child.stateData.backWalkingBike) {
+    if (walkingBike == stateData.backWalkingBike) {
       return;
     }
 
     cloneStateDataAsNeeded();
-    child.stateData.backWalkingBike = walkingBike;
+    stateData.backWalkingBike = walkingBike;
   }
 
   public void beginFloatingVehicleRenting(
@@ -268,18 +293,17 @@ public class StateEditor {
   ) {
     cloneStateDataAsNeeded();
     if (reverse) {
-      child.stateData.vehicleRentalState = VehicleRentalState.BEFORE_RENTING;
-      child.stateData.currentMode = TraverseMode.WALK;
-      child.stateData.vehicleRentalNetwork = null;
-      child.stateData.rentalVehicleFormFactor = null;
-      child.stateData.rentalVehiclePropulsionType = null;
-      child.stateData.insideNoRentalDropOffArea = false;
+      stateData.vehicleRentalState = VehicleRentalState.BEFORE_RENTING;
+      stateData.currentMode = TraverseMode.WALK;
+      stateData.vehicleRentalNetwork = null;
+      stateData.rentalVehicleFormFactor = null;
+      stateData.rentalVehiclePropulsionType = null;
     } else {
-      child.stateData.vehicleRentalState = VehicleRentalState.RENTING_FLOATING;
-      child.stateData.currentMode = formFactor.traverseMode;
-      child.stateData.vehicleRentalNetwork = network;
-      child.stateData.rentalVehicleFormFactor = formFactor;
-      child.stateData.rentalVehiclePropulsionType = propulsionType;
+      stateData.vehicleRentalState = VehicleRentalState.RENTING_FLOATING;
+      stateData.currentMode = formFactor.traverseMode;
+      stateData.vehicleRentalNetwork = network;
+      stateData.rentalVehicleFormFactor = formFactor;
+      stateData.rentalVehiclePropulsionType = propulsionType;
     }
   }
 
@@ -292,20 +316,20 @@ public class StateEditor {
   ) {
     cloneStateDataAsNeeded();
     if (reverse) {
-      child.stateData.mayKeepRentedVehicleAtDestination = mayKeep;
-      child.stateData.vehicleRentalState = VehicleRentalState.BEFORE_RENTING;
-      child.stateData.currentMode = TraverseMode.WALK;
-      child.stateData.vehicleRentalNetwork = null;
-      child.stateData.rentalVehicleFormFactor = null;
-      child.stateData.rentalVehiclePropulsionType = null;
-      child.stateData.backWalkingBike = false;
+      stateData.mayKeepRentedVehicleAtDestination = mayKeep;
+      stateData.vehicleRentalState = VehicleRentalState.BEFORE_RENTING;
+      stateData.currentMode = TraverseMode.WALK;
+      stateData.vehicleRentalNetwork = null;
+      stateData.rentalVehicleFormFactor = null;
+      stateData.rentalVehiclePropulsionType = null;
+      stateData.backWalkingBike = false;
     } else {
-      child.stateData.mayKeepRentedVehicleAtDestination = mayKeep;
-      child.stateData.vehicleRentalState = VehicleRentalState.RENTING_FROM_STATION;
-      child.stateData.currentMode = formFactor.traverseMode;
-      child.stateData.vehicleRentalNetwork = network;
-      child.stateData.rentalVehicleFormFactor = formFactor;
-      child.stateData.rentalVehiclePropulsionType = propulsionType;
+      stateData.mayKeepRentedVehicleAtDestination = mayKeep;
+      stateData.vehicleRentalState = VehicleRentalState.RENTING_FROM_STATION;
+      stateData.currentMode = formFactor.traverseMode;
+      stateData.vehicleRentalNetwork = network;
+      stateData.rentalVehicleFormFactor = formFactor;
+      stateData.rentalVehiclePropulsionType = propulsionType;
     }
   }
 
@@ -317,20 +341,20 @@ public class StateEditor {
   ) {
     cloneStateDataAsNeeded();
     if (reverse) {
-      child.stateData.mayKeepRentedVehicleAtDestination = false;
-      child.stateData.vehicleRentalState = VehicleRentalState.RENTING_FROM_STATION;
-      child.stateData.currentMode = formFactor.traverseMode;
-      child.stateData.vehicleRentalNetwork = network;
-      child.stateData.rentalVehicleFormFactor = formFactor;
-      child.stateData.rentalVehiclePropulsionType = propulsionType;
+      stateData.mayKeepRentedVehicleAtDestination = false;
+      stateData.vehicleRentalState = VehicleRentalState.RENTING_FROM_STATION;
+      stateData.currentMode = formFactor.traverseMode;
+      stateData.vehicleRentalNetwork = network;
+      stateData.rentalVehicleFormFactor = formFactor;
+      stateData.rentalVehiclePropulsionType = propulsionType;
     } else {
-      child.stateData.mayKeepRentedVehicleAtDestination = false;
-      child.stateData.vehicleRentalState = VehicleRentalState.HAVE_RENTED;
-      child.stateData.currentMode = TraverseMode.WALK;
-      child.stateData.vehicleRentalNetwork = null;
-      child.stateData.rentalVehicleFormFactor = null;
-      child.stateData.rentalVehiclePropulsionType = null;
-      child.stateData.backWalkingBike = false;
+      stateData.mayKeepRentedVehicleAtDestination = false;
+      stateData.vehicleRentalState = VehicleRentalState.HAVE_RENTED;
+      stateData.currentMode = TraverseMode.WALK;
+      stateData.vehicleRentalNetwork = null;
+      stateData.rentalVehicleFormFactor = null;
+      stateData.rentalVehiclePropulsionType = null;
+      stateData.backWalkingBike = false;
     }
   }
 
@@ -342,22 +366,23 @@ public class StateEditor {
   ) {
     cloneStateDataAsNeeded();
     if (reverse) {
-      child.stateData.mayKeepRentedVehicleAtDestination = false;
-      child.stateData.vehicleRentalState = VehicleRentalState.RENTING_FLOATING;
-      child.stateData.currentMode = formFactor != null
-        ? formFactor.traverseMode
-        : StreetModeToRentalTraverseModeMapper.map(child.getRequest().mode());
-      child.stateData.vehicleRentalNetwork = network;
-      child.stateData.rentalVehicleFormFactor = formFactor;
-      child.stateData.rentalVehiclePropulsionType = propulsionType;
+      stateData.mayKeepRentedVehicleAtDestination = false;
+      stateData.vehicleRentalState = VehicleRentalState.RENTING_FLOATING;
+      stateData.currentMode =
+        formFactor != null
+          ? formFactor.traverseMode
+          : StreetModeToRentalTraverseModeMapper.map(request.mode());
+      stateData.vehicleRentalNetwork = network;
+      stateData.rentalVehicleFormFactor = formFactor;
+      stateData.rentalVehiclePropulsionType = propulsionType;
     } else {
-      child.stateData.mayKeepRentedVehicleAtDestination = false;
-      child.stateData.vehicleRentalState = VehicleRentalState.HAVE_RENTED;
-      child.stateData.currentMode = TraverseMode.WALK;
-      child.stateData.vehicleRentalNetwork = null;
-      child.stateData.rentalVehicleFormFactor = null;
-      child.stateData.rentalVehiclePropulsionType = null;
-      child.stateData.backWalkingBike = false;
+      stateData.mayKeepRentedVehicleAtDestination = false;
+      stateData.vehicleRentalState = VehicleRentalState.HAVE_RENTED;
+      stateData.currentMode = TraverseMode.WALK;
+      stateData.vehicleRentalNetwork = null;
+      stateData.rentalVehicleFormFactor = null;
+      stateData.rentalVehiclePropulsionType = null;
+      stateData.backWalkingBike = false;
     }
   }
 
@@ -370,8 +395,8 @@ public class StateEditor {
     resetEnteredNoThroughTrafficArea();
 
     cloneStateDataAsNeeded();
-    child.stateData.vehicleParked = vehicleParked;
-    child.stateData.currentMode = nonTransitMode;
+    stateData.vehicleParked = vehicleParked;
+    stateData.currentMode = nonTransitMode;
   }
 
   /**
@@ -380,41 +405,28 @@ public class StateEditor {
    */
   public void setFromState(State state) {
     cloneStateDataAsNeeded();
-    child.stateData.currentMode = state.stateData.currentMode;
-    child.stateData.carPickupState = state.stateData.carPickupState;
-    child.stateData.vehicleParked = state.stateData.vehicleParked;
-    child.stateData.backWalkingBike = state.stateData.backWalkingBike;
+    stateData.currentMode = state.stateData.currentMode;
+    stateData.carPickupState = state.stateData.carPickupState;
+    stateData.vehicleParked = state.stateData.vehicleParked;
+    stateData.backWalkingBike = state.stateData.backWalkingBike;
   }
 
   public void setCarPickupState(CarPickupState carPickupState) {
     cloneStateDataAsNeeded();
-    child.stateData.carPickupState = carPickupState;
+    stateData.carPickupState = carPickupState;
     switch (carPickupState) {
-      case WALK_TO_PICKUP, WALK_FROM_DROP_OFF -> child.stateData.currentMode = TraverseMode.WALK;
-      case IN_CAR -> child.stateData.currentMode = TraverseMode.CAR;
+      case WALK_TO_PICKUP, WALK_FROM_DROP_OFF -> stateData.currentMode = TraverseMode.WALK;
+      case IN_CAR -> stateData.currentMode = TraverseMode.CAR;
     }
   }
 
   public void setTimeSeconds(long seconds) {
-    child.time_ms = 1000 * seconds;
+    this.time_ms = 1000 * seconds;
   }
-
-  public void setTimeMilliseconds(long milliseconds) {
-    child.time_ms = milliseconds;
-  }
-
-  /* PUBLIC GETTER METHODS */
 
   public State getBackState() {
-    return child.getBackState();
+    return backState;
   }
-
-  public void resetStartedInNoDropOffZone() {
-    cloneStateDataAsNeeded();
-    child.stateData.noRentalDropOffZonesAtStartOfReverseSearch = Set.of();
-  }
-
-  /* PRIVATE METHODS */
 
   /**
    * To be called before modifying anything in the child's StateData. Makes sure that changes are
@@ -422,8 +434,8 @@ public class StateEditor {
    * older states.
    */
   private void cloneStateDataAsNeeded() {
-    if (child.backState != null && child.stateData == child.backState.stateData) {
-      child.stateData = child.stateData.clone();
+    if (backState != null && stateData == backState.stateData) {
+      this.stateData = backState.stateData.clone();
     }
   }
 }

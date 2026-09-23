@@ -8,13 +8,13 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
-import org.opentripplanner.raptor.api.model.RaptorStopNameResolver;
-import org.opentripplanner.raptor.api.model.RaptorTripSchedule;
 import org.opentripplanner.raptor.api.path.RaptorPath;
 import org.opentripplanner.raptor.api.path.TransferPathLeg;
 import org.opentripplanner.raptor.api.path.TransitPathLeg;
 import org.opentripplanner.raptor.spi.RaptorCostCalculator;
 import org.opentripplanner.raptor.spi.RaptorSlackProvider;
+import org.opentripplanner.raptor.spi.RaptorStopNameResolver;
+import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.algorithm.transferoptimization.api.OptimizedPath;
 import org.opentripplanner.routing.algorithm.transferoptimization.model.OptimizedPathTail;
@@ -162,9 +162,12 @@ public class OptimizePathDomainService<T extends RaptorTripSchedule> {
       // prune the transfers AFTER the transit-leg. The transfers are sorted on
       // arrival-time in descending order, so the earliest-arrival-time is the
       // last element of the list of transfers.
-      int earliestDepartureTimeFromLeg = i == 0
-        ? accessArrivalTime
-        : last(possibleTransfers.get(i - 1)).to().time();
+      int earliestDepartureTimeFromLeg =
+        i == 0
+          ? accessArrivalTime
+          : last(possibleTransfers.get(i - 1))
+              .to()
+              .time();
 
       // create a tailSelector for the tails produced in the last round and use it to filter them
       // based on the transfer-arrival-time and given filter

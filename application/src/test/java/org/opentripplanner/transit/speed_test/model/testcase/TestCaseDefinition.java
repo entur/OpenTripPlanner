@@ -27,14 +27,21 @@ public record TestCaseDefinition(
 ) {
   @Override
   public String toString() {
+    var viaLoc = "";
+    var viaCoordinate = "";
+    if (viaLocation != null) {
+      viaLoc = " - via " + viaLocation.label();
+      viaCoordinate = " - via " + coordinateString(viaLocation.coordinateLocation());
+    }
+
     return String.format(
-      "#%s %s - via:%s - %s, %s - via:%s - %s, %s-%s(%s)",
+      "#%s %s%s - %s, %s%s - %s, %s-%s(%s)",
       id,
-      fromPlace.label,
-      viaLocation != null ? viaLocation.label() : null,
-      toPlace.label,
+      fromPlace.label(),
+      viaLoc,
+      toPlace.label(),
       coordinateString(fromPlace),
-      viaLocation != null ? coordinateString(viaLocation.coordinateLocation()) : null,
+      viaCoordinate,
       coordinateString(toPlace),
       TimeUtils.timeToStrCompact(departureTime, TestCase.NOT_SET),
       TimeUtils.timeToStrCompact(arrivalTime, TestCase.NOT_SET),
@@ -59,6 +66,12 @@ public record TestCaseDefinition(
   }
 
   private String coordinateString(GenericLocation location) {
-    return ValueObjectToStringBuilder.of().addCoordinate(location.lat, location.lng).toString();
+    var coord = location.wgsCoordinate();
+    if (coord == null) {
+      return ValueObjectToStringBuilder.of().addCoordinate(null, null).toString();
+    }
+    return ValueObjectToStringBuilder.of()
+      .addCoordinate(coord.latitude(), coord.longitude())
+      .toString();
   }
 }

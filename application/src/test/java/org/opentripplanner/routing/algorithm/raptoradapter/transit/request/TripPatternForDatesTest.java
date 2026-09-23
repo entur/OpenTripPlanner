@@ -7,11 +7,12 @@ import java.time.LocalDate;
 import java.util.BitSet;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
 import org.opentripplanner.model.Frequency;
 import org.opentripplanner.model.StopTime;
-import org.opentripplanner.raptor.api.model.SearchDirection;
+import org.opentripplanner.raptor.spi.SearchDirection;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripPatternForDate;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.transit.model._data.TransitRepositoryForTest;
 import org.opentripplanner.transit.model.framework.Deduplicator;
 import org.opentripplanner.transit.model.network.Route;
 import org.opentripplanner.transit.model.network.RoutingTripPattern;
@@ -27,7 +28,7 @@ class TripPatternForDatesTest {
   private static final int FREQUENCY_START = 7 * 60 * 60;
   private static final int FREQUENCY_END = 23 * 60 * 60;
   private static final int HEADWAY = 300;
-  private static final Route ROUTE = TimetableRepositoryForTest.route("1").build();
+  private static final Route ROUTE = TransitRepositoryForTest.route("1").build();
   private static final LocalDate SERVICE_DATE = LocalDate.of(2024, 11, 1);
 
   @Test
@@ -64,7 +65,7 @@ class TripPatternForDatesTest {
   }
 
   private static TripPatternForDates getTestSubjectWithExactFrequency() {
-    var testModel = TimetableRepositoryForTest.of();
+    var testModel = TransitRepositoryForTest.of();
     var stop1 = testModel.stop("FEED:STOP1", 0, 0).build();
     var stop2 = testModel.stop("FEED:STOP2", 0, 0).build();
 
@@ -79,13 +80,13 @@ class TripPatternForDatesTest {
     stopTime2.setDepartureTime(300);
     stopTime2.setStopSequence(1);
     StopPattern stopPattern = new StopPattern(List.of(stopTime1, stopTime2));
-    RoutingTripPattern tripPattern = TripPattern.of(TimetableRepositoryForTest.id("P1"))
+    RoutingTripPattern tripPattern = TripPattern.of(FeedScopedIdForTestFactory.id("P1"))
       .withRoute(ROUTE)
       .withStopPattern(stopPattern)
       .build()
       .getRoutingTripPattern();
 
-    Trip trip = TimetableRepositoryForTest.trip("1").withRoute(ROUTE).build();
+    Trip trip = TransitRepositoryForTest.trip("1").withRoute(ROUTE).build();
     final ScheduledTripTimes tripTimes = TripTimesFactory.tripTimes(
       trip,
       List.of(stopTime1, stopTime2),

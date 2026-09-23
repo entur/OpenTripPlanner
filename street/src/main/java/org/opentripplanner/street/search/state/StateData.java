@@ -8,6 +8,7 @@ import static org.opentripplanner.street.search.state.VehicleRentalState.RENTING
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import org.opentripplanner.service.vehiclerental.model.GeofencingZone;
 import org.opentripplanner.service.vehiclerental.model.RentalVehicleType.PropulsionType;
 import org.opentripplanner.street.mapping.StreetModeToFormFactorMapper;
 import org.opentripplanner.street.mapping.StreetModeToRentalTraverseModeMapper;
@@ -54,18 +55,44 @@ public class StateData implements Cloneable {
   /** This boolean is set to true upon transition from a normal street to a no-through-traffic street. */
   protected boolean enteredNoThroughTrafficArea;
 
-  protected boolean insideNoRentalDropOffArea = false;
-  public Set<String> noRentalDropOffZonesAtStartOfReverseSearch = Set.of();
+  /**
+   * The geofencing zones that currently contain this state's position. Updated at boundary
+   * crossings by {@link StateEditor#updateGeofencingZones}. Used to enforce per-field restrictions
+   * (no-traversal, no-drop-off) resolved via priority-based precedence.
+   */
+  protected Set<GeofencingZone> currentGeofencingZones = Set.of();
+
+  /**
+   * Tracks networks for which forking a committed branch from this generic state would be
+   * illegal (the path crossed the network's no-traversal zone) or duplicate the deferred BA
+   * fork. Read by NetworkCommitmentHandler and VehicleRentalEdge to skip the redundant work.
+   *
+   * <p>Not consulted by {@link
+   * org.opentripplanner.street.search.strategy.DominanceFunctions} for performance: treating
+   * differing sets as incomparable would split the SPT into a plane per subset.
+   */
+  protected Set<String> committedNetworks = Set.of();
 
   /** Private constructor, use static methods to get a set of initial states. */
   private StateData(StreetMode requestMode) {
     currentMode = switch (requestMode) {
       // when renting or using a flex vehicle, you start on foot until you have found the vehicle
-      case NOT_SET, WALK, BIKE_RENTAL, SCOOTER_RENTAL, CAR_RENTAL, FLEXIBLE -> TraverseMode.WALK;
+      /*
+        CARPOOL maps to TraverseMode.WALK because we want results involving only walking when it makes sense,
+        but we do not want results that includes driving when there are no available carpooling trips.
+       */
+      case
+        NOT_SET,
+        WALK,
+        BIKE_RENTAL,
+        SCOOTER_RENTAL,
+        CAR_RENTAL,
+        FLEXIBLE,
+        CARPOOL -> TraverseMode.WALK;
       // when cycling all the way or to a stop, you start on your own bike
       case BIKE, BIKE_TO_PARK -> TraverseMode.BICYCLE;
       // when driving (not car rental) you start in your own car or your driver's car
-      case CAR, CAR_TO_PARK, CAR_PICKUP, CAR_HAILING, CARPOOL -> TraverseMode.CAR;
+      case CAR, CAR_TO_PARK, CAR_PICKUP, CAR_HAILING -> TraverseMode.CAR;
     };
   }
 
@@ -93,8 +120,8 @@ public class StateData implements Cloneable {
     );
 
     var baseCaseDatas = switch (request.mode()) {
-      case WALK, BIKE, BIKE_TO_PARK, CAR, CAR_TO_PARK, FLEXIBLE, NOT_SET -> stateDatas;
-      case CAR_PICKUP, CAR_HAILING, CARPOOL -> stateDatas
+      case WALK, BIKE, BIKE_TO_PARK, CAR, CAR_TO_PARK, FLEXIBLE, CARPOOL, NOT_SET -> stateDatas;
+      case CAR_PICKUP, CAR_HAILING -> stateDatas
         .stream()
         .filter(d -> d.carPickupState == CarPickupState.IN_CAR)
         .toList();
@@ -196,6 +223,35 @@ public class StateData implements Cloneable {
     }
 
     return res;
+  }
+
+  /**
+   * Apply geofencing initial state preparation for arriveBy searches. Populates zone tracking
+   * fields and filters out states that are incompatible with the destination's geofencing zones.
+   *
+   * @return false if this StateData should be excluded from initial states
+   */
+  boolean applyGeofencingDestinationZones(
+    Set<GeofencingZone> destinationZones,
+    Set<String> restrictedNetworks
+  ) {
+    // Skip RENTING_FROM_STATION if destination is in any restricted zone
+    if (vehicleRentalState == RENTING_FROM_STATION && !restrictedNetworks.isEmpty()) {
+      return false;
+    }
+    // Populate zone state on arriveBy rental initial states
+    if (!destinationZones.isEmpty()) {
+      currentGeofencingZones = Set.copyOf(destinationZones);
+    }
+    // Pre-populate committed networks for generic floating states
+    if (
+      vehicleRentalState == RENTING_FLOATING &&
+      vehicleRentalNetwork == null &&
+      !restrictedNetworks.isEmpty()
+    ) {
+      committedNetworks = Set.copyOf(restrictedNetworks);
+    }
+    return true;
   }
 
   protected StateData clone() {

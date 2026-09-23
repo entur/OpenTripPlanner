@@ -11,11 +11,11 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
-import org.opentripplanner.graph_builder.module.osm.OsmDatabase;
-import org.opentripplanner.graph_builder.module.osm.StreetEdgePair;
-import org.opentripplanner.graph_builder.services.osm.EdgeNamer;
+import org.opentripplanner.graph_builder.module.osm.EdgeNamer;
+import org.opentripplanner.graph_builder.module.osm.model.StreetEdgePair;
+import org.opentripplanner.graph_builder.module.osm.storage.OsmDatabase;
+import org.opentripplanner.osm.WayTestData;
 import org.opentripplanner.osm.model.OsmWay;
-import org.opentripplanner.osm.wayproperty.specifier.WayTestData;
 import org.opentripplanner.street.geometry.WgsCoordinate;
 import org.opentripplanner.street.model.StreetTraversalPermission;
 import org.opentripplanner.street.model.edge.StreetEdge;
@@ -67,8 +67,7 @@ class SidewalkNamerTest {
         .withName(I18NString.of(name))
         .withPermission(StreetTraversalPermission.ALL)
         .buildAndConnect();
-      var way = WayTestData.highwayTertiary();
-      way.addTag("name", name);
+      var way = WayTestData.highwayTertiary().copy().withTag("name", name).build();
       assertFalse(way.isSidewalk());
       assertTrue(way.isNamed());
       var p = new EdgePair(way, edge);

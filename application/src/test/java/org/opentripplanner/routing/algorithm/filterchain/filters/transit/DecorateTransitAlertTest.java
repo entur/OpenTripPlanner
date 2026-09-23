@@ -1,6 +1,7 @@
 package org.opentripplanner.routing.algorithm.filterchain.filters.transit;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.opentripplanner.model.plan.TestItineraryBuilder.BUS_ROUTE;
 import static org.opentripplanner.model.plan.TestItineraryBuilder.newItinerary;
 
@@ -8,12 +9,11 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.model.plan.PlanTestConstants;
+import org.opentripplanner.routing.alertpatch.AlertCalendar;
 import org.opentripplanner.routing.alertpatch.EntitySelector;
-import org.opentripplanner.routing.alertpatch.TimePeriod;
 import org.opentripplanner.routing.alertpatch.TransitAlert;
 import org.opentripplanner.routing.alertpatch.TransitAlertBuilder;
 import org.opentripplanner.routing.impl.TransitAlertServiceImpl;
-import org.opentripplanner.transit.service.TimetableRepository;
 
 class DecorateTransitAlertTest implements PlanTestConstants {
 
@@ -58,10 +58,31 @@ class DecorateTransitAlertTest implements PlanTestConstants {
     assertEquals(ID, i1.legs().getFirst().listTransitAlerts().iterator().next().getId());
   }
 
+  @Test
+  void testSkipsLegRebuildWhenNoAlertsMatch() {
+    // Alert service with no alerts at all — nothing can match.
+    var transitAlertService = new TransitAlertServiceImpl();
+    var decorator = new DecorateTransitAlert(transitAlertService, ignore -> null);
+
+    var i1 = newItinerary(A).bus(31, 0, 30, E).build();
+    var originalLegs = i1.legs();
+
+    var decorated = decorator.decorate(i1);
+
+    // Every leg must be the same reference — the short-circuit avoids the rebuild.
+    for (int i = 0; i < originalLegs.size(); i++) {
+      assertSame(
+        originalLegs.get(i),
+        decorated.legs().get(i),
+        "leg " + i + " should not be rebuilt when no alerts apply"
+      );
+    }
+  }
+
   private static TransitAlertServiceImpl buildService(TransitAlertBuilder builder) {
-    var transitAlertService = new TransitAlertServiceImpl(new TimetableRepository());
+    var transitAlertService = new TransitAlertServiceImpl();
     transitAlertService.setAlerts(
-      List.of(builder.addTimePeriod(new TimePeriod(0, TimePeriod.OPEN_ENDED)).build())
+      List.of(builder.withCalendar(AlertCalendar.ofAlwaysActive()).build())
     );
     return transitAlertService;
   }

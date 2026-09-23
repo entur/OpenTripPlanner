@@ -315,6 +315,23 @@ public class DefaultValueInjector extends GraphQLTypeVisitorStub implements Grap
       .boolReq(
         "TimetablePreferencesInput.includeRealTimeCancellations",
         transit.includeRealtimeCancellations()
+      )
+      .objectReq(
+        "TransitPreferencesInput.relaxTransitGroupPriority",
+        ObjectValue.newObjectValue()
+          .objectField(
+            ObjectField.newObjectField()
+              .name("constant")
+              .value(IntValue.of(transit.relaxTransitGroupPriority().constant().toSeconds()))
+              .build()
+          )
+          .objectField(
+            ObjectField.newObjectField()
+              .name("coefficient")
+              .value(FloatValue.of(transit.relaxTransitGroupPriority().coefficient()))
+              .build()
+          )
+          .build()
       );
   }
 
@@ -391,36 +408,37 @@ public class DefaultValueInjector extends GraphQLTypeVisitorStub implements Grap
     TimeSlopeSafetyTriangle triangle,
     Function<VehicleRoutingOptimizeType, Enum> typeMapper
   ) {
-    var optimizationField = type == VehicleRoutingOptimizeType.TRIANGLE
-      ? ObjectField.newObjectField()
-          .name("triangle")
-          .value(
-            ObjectValue.newObjectValue()
-              .objectField(
-                ObjectField.newObjectField()
-                  .name("flatness")
-                  .value(FloatValue.of(triangle.slope()))
-                  .build()
-              )
-              .objectField(
-                ObjectField.newObjectField()
-                  .name("safety")
-                  .value(FloatValue.of(triangle.safety()))
-                  .build()
-              )
-              .objectField(
-                ObjectField.newObjectField()
-                  .name("time")
-                  .value(FloatValue.of(triangle.time()))
-                  .build()
-              )
-              .build()
-          )
-          .build()
-      : ObjectField.newObjectField()
-          .name("type")
-          .value(EnumValue.of(typeMapper.apply(type).name()))
-          .build();
+    var optimizationField =
+      type == VehicleRoutingOptimizeType.TRIANGLE
+        ? ObjectField.newObjectField()
+            .name("triangle")
+            .value(
+              ObjectValue.newObjectValue()
+                .objectField(
+                  ObjectField.newObjectField()
+                    .name("flatness")
+                    .value(FloatValue.of(triangle.slope()))
+                    .build()
+                )
+                .objectField(
+                  ObjectField.newObjectField()
+                    .name("safety")
+                    .value(FloatValue.of(triangle.safety()))
+                    .build()
+                )
+                .objectField(
+                  ObjectField.newObjectField()
+                    .name("time")
+                    .value(FloatValue.of(triangle.time()))
+                    .build()
+                )
+                .build()
+            )
+            .build()
+        : ObjectField.newObjectField()
+            .name("type")
+            .value(EnumValue.of(typeMapper.apply(type).name()))
+            .build();
     return ObjectValue.newObjectValue().objectField(optimizationField).build();
   }
 
@@ -443,25 +461,26 @@ public class DefaultValueInjector extends GraphQLTypeVisitorStub implements Grap
   ) {
     var selects = selectList
       .stream()
-      .map(select ->
-        (Value) ObjectValue.newObjectValue()
-          .objectField(
-            ObjectField.newObjectField()
-              .name("tags")
-              .value(
-                ArrayValue.newArrayValue()
-                  .values(
-                    select
-                      .tags()
-                      .stream()
-                      .map(tag -> (Value) StringValue.of(tag))
-                      .toList()
-                  )
-                  .build()
-              )
-              .build()
-          )
-          .build()
+      .map(
+        select ->
+          (Value) ObjectValue.newObjectValue()
+            .objectField(
+              ObjectField.newObjectField()
+                .name("tags")
+                .value(
+                  ArrayValue.newArrayValue()
+                    .values(
+                      select
+                        .tags()
+                        .stream()
+                        .map(tag -> (Value) StringValue.of(tag))
+                        .toList()
+                    )
+                    .build()
+                )
+                .build()
+            )
+            .build()
       )
       .toList();
     return ObjectField.newObjectField()
@@ -506,10 +525,10 @@ public class DefaultValueInjector extends GraphQLTypeVisitorStub implements Grap
         key,
         ArrayValue.newArrayValue()
           .values(
-            (valueList
-                .stream()
-                .map(value -> (Value) new EnumValue(value.name()))
-                .toList())
+            valueList
+              .stream()
+              .map(value -> (Value) new EnumValue(value.name()))
+              .toList()
           )
           .build()
       );

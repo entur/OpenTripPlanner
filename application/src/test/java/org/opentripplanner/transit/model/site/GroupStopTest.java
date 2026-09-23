@@ -14,12 +14,13 @@ import org.opentripplanner._support.geometry.Coordinates;
 import org.opentripplanner._support.geometry.Polygons;
 import org.opentripplanner.core.model.i18n.I18NString;
 import org.opentripplanner.core.model.i18n.NonLocalizedString;
-import org.opentripplanner.transit.model._data.TimetableRepositoryForTest;
+import org.opentripplanner.core.model.id.FeedScopedIdForTestFactory;
+import org.opentripplanner.transit.model._data.TransitRepositoryForTest;
 import org.opentripplanner.transit.service.SiteRepository;
 
 class GroupStopTest {
 
-  private static final TimetableRepositoryForTest TEST_MODEL = TimetableRepositoryForTest.of();
+  private static final TransitRepositoryForTest TEST_MODEL = TransitRepositoryForTest.of();
 
   private static final String ID = "1";
   private static final I18NString NAME = new NonLocalizedString("name");
@@ -30,7 +31,7 @@ class GroupStopTest {
     Coordinates.BERLIN.getY()
   ).build();
   private static final GroupStop SUBJECT = SiteRepository.of()
-    .groupStop(TimetableRepositoryForTest.id(ID))
+    .groupStop(FeedScopedIdForTestFactory.id(ID))
     .withName(NAME)
     .addLocation(STOP_LOCATION)
     .build();
@@ -49,7 +50,7 @@ class GroupStopTest {
     ).build();
 
     GroupStop groupStop = SiteRepository.of()
-      .groupStop(TimetableRepositoryForTest.id(ID))
+      .groupStop(FeedScopedIdForTestFactory.id(ID))
       .withName(NAME)
       .addLocation(stopLocation1)
       .addLocation(stopLocation2)
@@ -71,7 +72,7 @@ class GroupStopTest {
     ).build();
 
     GroupStop groupStop = SiteRepository.of()
-      .groupStop(TimetableRepositoryForTest.id(ID))
+      .groupStop(FeedScopedIdForTestFactory.id(ID))
       .withName(NAME)
       .addLocation(stopLocation)
       .withEncompassingAreaGeometries(List.of(Polygons.BERLIN))
@@ -110,12 +111,12 @@ class GroupStopTest {
   @Test
   void sameAs() {
     assertTrue(SUBJECT.sameAs(SUBJECT.copy().build()));
-    assertFalse(SUBJECT.sameAs(SUBJECT.copy().withId(TimetableRepositoryForTest.id("X")).build()));
+    assertFalse(SUBJECT.sameAs(SUBJECT.copy().withId(FeedScopedIdForTestFactory.id("X")).build()));
     assertFalse(SUBJECT.sameAs(SUBJECT.copy().withName(new NonLocalizedString("X")).build()));
     assertFalse(
       SUBJECT.sameAs(
         SUBJECT.copy()
-          .addLocation(TimetableRepositoryForTest.of().stop("2:stop", 1d, 2d).build())
+          .addLocation(TransitRepositoryForTest.of().stop("2:stop", 1d, 2d).build())
           .build()
       )
     );
