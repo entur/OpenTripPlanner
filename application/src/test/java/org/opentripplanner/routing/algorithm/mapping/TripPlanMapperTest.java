@@ -1,6 +1,7 @@
 package org.opentripplanner.routing.algorithm.mapping;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -33,5 +34,26 @@ class TripPlanMapperTest {
     assertEquals(new WgsCoordinate(FROM.getCoordinate()), tripPlan.from.coordinate);
     assertEquals(new WgsCoordinate(TO.getCoordinate()), tripPlan.to.coordinate);
     assertTrue(tripPlan.itineraries.isEmpty());
+  }
+
+  @Test
+  void mapEmptyTripPlan() {
+    var builder = RouteRequest.of().withFrom(FROM).withTo(TO).withDateTime(DATETIME);
+
+    TripPlan tripPlan = TripPlanMapper.mapEmptyTripPlan(builder);
+
+    assertEquals(DATETIME, tripPlan.date);
+    assertTrue(tripPlan.itineraries.isEmpty());
+  }
+
+  @Test
+  void mapEmptyTripPlanWithoutDateTimeUsesNow() {
+    var builder = RouteRequest.of().withFrom(FROM).withTo(TO);
+    var before = RouteRequest.normalizeNow();
+
+    TripPlan tripPlan = TripPlanMapper.mapEmptyTripPlan(builder);
+
+    assertNotNull(tripPlan.date);
+    assertFalse(tripPlan.date.isBefore(before));
   }
 }

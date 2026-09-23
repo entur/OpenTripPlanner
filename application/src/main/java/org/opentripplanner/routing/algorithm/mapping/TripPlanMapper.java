@@ -26,10 +26,12 @@ public class TripPlanMapper {
   /**
    * Build a TripPlan for an invalid route request, based on the route request builder.
    * This is useful when the request cannot be built because of validation errors.
-   * The resulting TripPlan contains an empty list of itineraries.
+   * The resulting TripPlan contains an empty list of itineraries. If the builder has no date-time,
+   * the request is for "now", which is only resolved when the request is built.
    */
   public static TripPlan mapEmptyTripPlan(RouteRequestBuilder builder) {
-    return mapTripPlan(builder.from(), builder.to(), builder.dateTime(), List.of());
+    var dateTime = builder.dateTime() == null ? RouteRequest.normalizeNow() : builder.dateTime();
+    return mapTripPlan(builder.from(), builder.to(), dateTime, List.of());
   }
 
   private static TripPlan mapTripPlan(
