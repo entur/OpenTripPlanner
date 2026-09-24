@@ -168,6 +168,13 @@
       "extraAccessEgressReluctance": 2
     }
   },
+  "carpooling": {
+    "maxCandidateTripsPerRequest": 50,
+    "maxCandidatesPerStop": 24,
+    "maxTrips": 10000,
+    "maxStopWalk": "15m",
+    "boardCost": 2400
+  },
   "flex": {
     "maxTransferDuration": "5m",
     "maxFlexTripDuration": "45m",

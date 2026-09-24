@@ -60,7 +60,7 @@ The carpooling extension enables OpenTripPlanner to find carpool trip options by
 org.opentripplanner.ext.carpooling/
 ├── CarpoolingService.java          # Main API interface
 ├── CarpoolingRepository.java       # Trip data management
-├── CarpoolingParameters.java       # The routing limits, in one place
+├── CarpoolingParameters.java       # The configurable limits (router-config `carpooling`)
 │
 ├── model/                           # Domain models
 │   ├── CarpoolTrip.java            # Driver's journey with stops

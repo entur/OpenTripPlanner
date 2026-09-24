@@ -10,6 +10,7 @@ import java.io.Serializable;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.apis.gtfs.GtfsApiParameters;
+import org.opentripplanner.ext.carpooling.CarpoolingParameters;
 import org.opentripplanner.ext.flex.FlexParameters;
 import org.opentripplanner.ext.ojp.config.OjpApiConfig;
 import org.opentripplanner.ext.ojp.config.TriasApiConfig;
@@ -24,6 +25,7 @@ import org.opentripplanner.standalone.config.routerconfig.TransitRoutingConfig;
 import org.opentripplanner.standalone.config.routerconfig.UpdatersConfig;
 import org.opentripplanner.standalone.config.routerconfig.VectorTileConfig;
 import org.opentripplanner.standalone.config.routerconfig.WarmupConfig;
+import org.opentripplanner.standalone.config.sandbox.CarpoolingConfig;
 import org.opentripplanner.standalone.config.sandbox.FlexConfig;
 import org.opentripplanner.standalone.config.sandbox.GtfsApiConfig;
 import org.opentripplanner.standalone.config.sandbox.TransmodelAPIConfig;
@@ -56,6 +58,7 @@ public class RouterConfig implements Serializable {
   private final UpdatersParameters updatersParameters;
   private final RideHailingServicesConfig rideHailingConfig;
   private final FlexConfig flexConfig;
+  private final CarpoolingParameters carpoolingParameters;
   private final TransmodelAPIConfig transmodelApi;
   private final GtfsApiConfig gtfsApi;
   private final VectorTileConfig vectorTileConfig;
@@ -92,6 +95,7 @@ public class RouterConfig implements Serializable {
     this.triasApiParameters = TriasApiConfig.mapParameters("triasApi", root);
     this.ojpApiParameters = OjpApiConfig.mapParameters("ojpApi", root);
     this.flexConfig = new FlexConfig(root, "flex");
+    this.carpoolingParameters = CarpoolingConfig.mapParameters(root, "carpooling");
     this.warmupParameters = WarmupConfig.mapWarmupConfig("warmup", root);
 
     if (logUnusedParams && LOG.isWarnEnabled()) {
@@ -149,6 +153,10 @@ public class RouterConfig implements Serializable {
 
   public FlexParameters flexParameters() {
     return flexConfig;
+  }
+
+  public CarpoolingParameters carpoolingParameters() {
+    return carpoolingParameters;
   }
 
   public TriasApiParameters triasApiParameters() {

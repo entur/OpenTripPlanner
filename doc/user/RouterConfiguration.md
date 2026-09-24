@@ -33,6 +33,12 @@ A full list of them can be found in the [RouteRequest](RouteRequest.md).
 | Config Parameter                                                                          |          Type         | Summary                                                                                                                                                                                                              |  Req./Opt. | Default Value  | Since |
 |-------------------------------------------------------------------------------------------|:---------------------:|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|:----------:|----------------|:-----:|
 | [configVersion](#configVersion)                                                           |        `string`       | Deployment version of the *router-config.json*.                                                                                                                                                                      | *Optional* |                |  2.1  |
+| [carpooling](#carpooling)                                                                 |        `object`       | Configuration for carpooling.                                                                                                                                                                                        | *Optional* |                |  2.11 |
+|    [boardCost](#carpooling_boardCost)                                                     |       `integer`       | The cost of getting into the car, added once to every carpool leg.                                                                                                                                                   | *Optional* | `2400`         |  2.11 |
+|    [maxCandidateTripsPerRequest](#carpooling_maxCandidateTripsPerRequest)                 |       `integer`       | The most driver trips a request evaluates.                                                                                                                                                                           | *Optional* | `50`           |  2.11 |
+|    [maxCandidatesPerStop](#carpooling_maxCandidatesPerStop)                               |       `integer`       | The most carpool access/egress candidates a transit stop hands to Raptor.                                                                                                                                            | *Optional* | `24`           |  2.11 |
+|    [maxStopWalk](#carpooling_maxStopWalk)                                                 |       `duration`      | The longest walk between a transit stop and the place where a car can stop for it.                                                                                                                                   | *Optional* | `"PT15M"`      |  2.11 |
+|    [maxTrips](#carpooling_maxTrips)                                                       |       `integer`       | The most carpool trips an instance holds, over all feeds.                                                                                                                                                            | *Optional* | `10000`        |  2.11 |
 | [flex](sandbox/Flex.md)                                                                   |        `object`       | Configuration for flex routing.                                                                                                                                                                                      | *Optional* |                |  2.1  |
 | gtfsApi                                                                                   |        `object`       | Configuration for the GTFS GraphQL API.                                                                                                                                                                              | *Optional* |                |  2.8  |
 |    [tracingTags](#gtfsApi_tracingTags)                                                    |       `string[]`      | Used to group requests based on headers or query parameters when monitoring OTP.                                                                                                                                     | *Optional* |                |   na  |
@@ -110,6 +116,84 @@ The config-version has no effect on OTP, and is provided as is on the API. There
 or format check on the version and it can be any string.
 
 Be aware that OTP uses the config embedded in the loaded graph if no new config is provided.
+
+
+<h3 id="carpooling">carpooling</h3>
+
+**Since version:** `2.11` ∙ **Type:** `object` ∙ **Cardinality:** `Optional`   
+**Path:** / 
+
+Configuration for carpooling.
+
+The limits of the carpool routing. They bound the work a request may cause and the memory
+the held trips may take; the defaults suit a feed of a few thousand trips.
+
+
+<h3 id="carpooling_boardCost">boardCost</h3>
+
+**Since version:** `2.11` ∙ **Type:** `integer` ∙ **Cardinality:** `Optional` ∙ **Default value:** `2400`   
+**Path:** /carpooling 
+
+The cost of getting into the car, added once to every carpool leg.
+
+Applied to direct legs and to access/egress legs alike, so a carpool ride costs the
+same whether it is the whole journey or the leg to a transit stop. It is what keeps
+very short carpool rides from beating walking: walking costs
+`duration x walkReluctance`, so a board cost of `10 x 60 x walkReluctance` means a
+carpool ride only wins when it saves the passenger roughly ten minutes of walking.
+The default assumes a `walkReluctance` of 4.0; lower it if your deployment uses a
+lower walk reluctance, otherwise short carpool rides are suppressed more than
+intended.
+
+
+<h3 id="carpooling_maxCandidateTripsPerRequest">maxCandidateTripsPerRequest</h3>
+
+**Since version:** `2.11` ∙ **Type:** `integer` ∙ **Cardinality:** `Optional` ∙ **Default value:** `50`   
+**Path:** /carpooling 
+
+The most driver trips a request evaluates.
+
+Every candidate trip costs a request a fixed amount of work. When more trips pass the
+pre-filters than this, only the ones whose route passes closest to the passenger are
+evaluated. Applies per direction: access, egress and direct.
+
+
+<h3 id="carpooling_maxCandidatesPerStop">maxCandidatesPerStop</h3>
+
+**Since version:** `2.11` ∙ **Type:** `integer` ∙ **Cardinality:** `Optional` ∙ **Default value:** `24`   
+**Path:** /carpooling 
+
+The most carpool access/egress candidates a transit stop hands to Raptor.
+
+A stop with at most this many candidate cars hands all of them to Raptor. A stop with
+more keeps the first and the last car of the search window and one car per slot in
+between, the slots cut from the window so that the total stays within this number. The
+waiting a passenger may lose to the cut is then at most one slot.
+
+
+<h3 id="carpooling_maxStopWalk">maxStopWalk</h3>
+
+**Since version:** `2.11` ∙ **Type:** `duration` ∙ **Cardinality:** `Optional` ∙ **Default value:** `"PT15M"`   
+**Path:** /carpooling 
+
+The longest walk between a transit stop and the place where a car can stop for it.
+
+A passenger is dropped off for a stop where a car can stop and walks the rest; stops
+farther than this from any drivable street cannot be served by carpool. The passenger's
+own maximum walk from the request is applied on top of it.
+
+
+<h3 id="carpooling_maxTrips">maxTrips</h3>
+
+**Since version:** `2.11` ∙ **Type:** `integer` ∙ **Cardinality:** `Optional` ∙ **Default value:** `10000`   
+**Path:** /carpooling 
+
+The most carpool trips an instance holds, over all feeds.
+
+Each held trip costs about a hundred kilobytes of memory and a fraction of a second to
+resolve, so this bounds both the heap and the time an instance needs to catch up with the
+feeds after a restart. New trips arriving while the instance is full are dropped; updates
+and cancellations of held trips are always applied.
 
 
 <h3 id="gtfsApi_tracingTags">tracingTags</h3>
@@ -813,6 +897,13 @@ Ordered list of `StreetMode` values used as egress modes. Each entry is paired w
       "maxAccessEgressDuration" : "5m",
       "extraAccessEgressReluctance" : 2
     }
+  },
+  "carpooling" : {
+    "maxCandidateTripsPerRequest" : 50,
+    "maxCandidatesPerStop" : 24,
+    "maxTrips" : 10000,
+    "maxStopWalk" : "15m",
+    "boardCost" : 2400
   },
   "flex" : {
     "maxTransferDuration" : "5m",
