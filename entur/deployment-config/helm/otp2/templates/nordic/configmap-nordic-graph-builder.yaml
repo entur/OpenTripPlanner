@@ -69,7 +69,7 @@ data:
           "feedId": "NO",
           "source": "gs://marduk-production/{{ .Values.cronjobRedeployGraphBuilder.netexExportFolder }}/rb_norway-aggregated-netex.zip",
           "sharedFilePattern": "_stops.xml",
-          "sharedGroupFilePattern": "_(\\w{3})(_flexible)?_shared_data.xml",
+          "sharedGroupFilePattern": "_(\\w{3})(_flexible)?_shared_data(_\\d+)?\\.xml",
           "groupFilePattern": "(\\w{3})_.*\\.xml"
         },
         {
