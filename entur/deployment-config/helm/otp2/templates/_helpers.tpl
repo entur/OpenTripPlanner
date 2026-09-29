@@ -43,23 +43,6 @@ meta.helm.sh/release-name: {{ .Release.Name }}
 meta.helm.sh/release-namespace: {{ .Release.Namespace }}
 {{- end }}
 
-{{/* Generate otp2 nordic labels */}}
-{{- define "common.nordic.labels" }}
-app: otp2nordic
-release: {{ .Release.Name }}
-team: ror
-slack: talk-ror
-type: api
-namespace: {{ .Release.Namespace }}
-app.kubernetes.io/managed-by: Helm
-{{- end }}
-
-{{/* Generate common Helm ownership annotations */}}
-{{- define "common.nordic.annotations" }}
-meta.helm.sh/release-name: {{ .Release.Name }}
-meta.helm.sh/release-namespace: {{ .Release.Namespace }}
-{{- end }}
-
 {{/* Generate graph-builder labels */}}
 {{- define "graph.builder.labels" }}
 app: graph-builder-otp2
@@ -72,22 +55,6 @@ app.kubernetes.io/managed-by: Helm
 {{- end }}
 {{/* Generate common Helm ownership annotations */}}
 {{- define "graph.builder.annotations" }}
-meta.helm.sh/release-name: {{ .Release.Name }}
-meta.helm.sh/release-namespace: {{ .Release.Namespace }}
-{{- end }}
-
-{{/* Generate graph-builder labels */}}
-{{- define "nordic.graph.builder.labels" }}
-app: graph-builder-otp2-nordic
-release: graph-builder-otp2-nordic
-team: ror
-slack: talk-ror
-type: api
-namespace: {{ .Release.Namespace }}
-app.kubernetes.io/managed-by: Helm
-{{- end }}
-{{/* Generate common Helm ownership annotations */}}
-{{- define "nordic.graph.builder.annotations" }}
 meta.helm.sh/release-name: {{ .Release.Name }}
 meta.helm.sh/release-namespace: {{ .Release.Namespace }}
 {{- end }}

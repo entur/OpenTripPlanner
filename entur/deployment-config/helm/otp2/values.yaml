@@ -47,8 +47,6 @@ service:
 
 journeyPlanner:
   enabled: true
-nordicJourneyPlanner:
-  enabled: false
 proxy:
   enabled: false
   exposed: false
