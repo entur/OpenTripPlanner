@@ -81,7 +81,7 @@ data:
         },
         "osmCacheDataInMem": "true",
         "osm" : [
-          {"source": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukBucket }}/osm/norway-latest.osm.pbf"},
+          {"source": "gs://{{ .Values.cronjobRedeployGraphBuilder.osmDataBucket }}/osm-data/norway-latest.osm.pbf"},
           {"source": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukBucket }}/osm/static/osm_static_sweden_extract.pbf"},
           {"source": "gs://{{ .Values.cronjobRedeployGraphBuilder.mardukBucket }}/osm/static/osm_static_sweden_storlien_extract.pbf"}
         ],
