@@ -82,7 +82,7 @@ cronjobRedeployOtp2:
     cpuLimit: 900m
     memLimit: 2550Mi
     cpuRequest: 100m
-    memRequest: 1000m
+    memRequest: 1000Mi
   image:
     repo: eu.gcr.io/entur-system-1287/deployment-rollout-restart:0.1.9
 

@@ -36,7 +36,6 @@ spec:
                     - key: app
                       operator: In
                       values:
-                        - otp
                         - otp2
                 topologyKey: kubernetes.io/hostname
               weight: 100
