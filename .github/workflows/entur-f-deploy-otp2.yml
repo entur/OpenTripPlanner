@@ -17,7 +17,7 @@ jobs:
           persist-credentials: false
       - name: Helm lint against every env values file
         run: |
-          for env in dev tst prd jp-dev jp-tst jp-prd dev-jp-nordic dev-rc tst-rc prd-rc; do
+          for env in dev tst prd jp-dev jp-tst jp-prd dev-rc tst-rc prd-rc; do
             helm lint helm/otp2 -f helm/otp2/env/values-kub-ent-${env}.yaml
           done
   deploy-otp2-gb-dev:
