@@ -12,6 +12,13 @@ rollingUpdate:
   maxSurge: 0
   maxUnavailable: 1
 
+# Limits voluntary disruptions (node drains by the cluster autoscaler, node upgrades, compute
+# class migration). Rolling updates are not affected, they follow rollingUpdate above.
+# A percentage scales with the HPA replica count and is rounded up (never less than 1 pod).
+podDisruptionBudget:
+  enabled: true
+  maxUnavailable: 10%
+
 resources:
   cpuLimit: "8"
   memLimit: 14000Mi
