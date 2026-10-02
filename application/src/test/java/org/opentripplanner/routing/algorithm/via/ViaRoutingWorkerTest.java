@@ -123,7 +123,7 @@ public class ViaRoutingWorkerTest {
 
     var searchItineraries = firstOrSecondSearch ? firstSearch : secondSearch;
 
-    var tripPlan = new TripPlan(null, null, null, searchItineraries);
+    var tripPlan = new TripPlan(null, null, req.dateTime(), searchItineraries);
     return new RoutingResponse(tripPlan, null, null, null, null, null);
   }
 

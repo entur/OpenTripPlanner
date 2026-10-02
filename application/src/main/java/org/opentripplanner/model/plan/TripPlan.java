@@ -3,6 +3,7 @@ package org.opentripplanner.model.plan;
 import java.time.Instant;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import org.opentripplanner.utils.tostring.ToStringBuilder;
 
 /**
@@ -10,7 +11,10 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  */
 public class TripPlan {
 
-  /** The time and date of travel */
+  /**
+   * The time and date of travel. Always set: a request for "now" must be resolved to an actual
+   * instant before the plan is created.
+   */
   public final Instant date;
 
   /** The origin */
@@ -24,7 +28,7 @@ public class TripPlan {
   public TripPlan(Place from, Place to, Instant date, Collection<Itinerary> itineraries) {
     this.from = from;
     this.to = to;
-    this.date = date;
+    this.date = Objects.requireNonNull(date);
     this.itineraries = List.copyOf(itineraries);
   }
 

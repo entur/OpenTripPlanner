@@ -87,6 +87,7 @@ public class PlanResponse {
     );
   }
 
+  /** The time and date of travel, never null. */
   public Instant date() {
     return plan.date;
   }
