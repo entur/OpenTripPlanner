@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<APIProxy name="journey-planner-v3">
+  <Description>journey-planner-v3</Description>
+  <DisplayName>journey-planner-v3</DisplayName>
+  <Policies>
+    <Policy>accessControl.blockIp</Policy>
+    <Policy>assignMessage.addCors</Policy>
+    <Policy>assignMessage.rateLimitQuotaHeaders</Policy>
+    <Policy>assignMessage.rateLimitSpikeArrestHeaders</Policy>
+    <Policy>flowCallout.getEnvironmentConfiguration</Policy>
+    <Policy>flowCallout.globalIpBlacklistTeamRutedata</Policy>
+    <Policy>flowCallout.journeyPlannerAddQueryTypeToHeader</Policy>
+    <Policy>flowCallout.journeyPlannerCollectStatisticsEtHeader</Policy>
+    <Policy>flowCallout.journeyPlannerStackdriverLogging</Policy>
+    <Policy>flowCallout.replaceTargetUrl</Policy>
+    <Policy>javaScript.rateLimitHeaders</Policy>
+    <Policy>javaScript.rateLimitValues</Policy>
+    <Policy>quota</Policy>
+    <Policy>spikeArrest</Policy>
+  </Policies>
+  <ProxyEndpoints>
+    <ProxyEndpoint>journey-planner-v3</ProxyEndpoint>
+  </ProxyEndpoints>
+  <Resources>
+    <Resource>jsc://javaScript.rateLimitHeaders.js</Resource>
+    <Resource>jsc://javaScript.rateLimitValues.js</Resource>
+  </Resources>
+  <Spec></Spec>
+  <TargetServers/>
+  <TargetEndpoints>
+    <TargetEndpoint>journey-planner-v3</TargetEndpoint>
+  </TargetEndpoints>
+</APIProxy>
