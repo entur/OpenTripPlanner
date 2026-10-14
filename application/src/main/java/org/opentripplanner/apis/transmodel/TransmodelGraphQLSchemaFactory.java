@@ -340,6 +340,7 @@ public class TransmodelGraphQLSchemaFactory {
 
     GraphQLOutputType replacementForRelationType = replacementForRelationTypeFactory.create();
     GraphQLOutputType replacedByRelationType = replacedByRelationTypeFactory.create();
+    GraphQLObjectType realTimeJourneyStateType = RealTimeTripStateType.create();
 
     GraphQLOutputType estimatedCallType = EstimatedCallType.create(
       bookingArrangementType,
@@ -352,7 +353,8 @@ public class TransmodelGraphQLSchemaFactory {
       DatedServiceJourneyType.REF,
       empiricalDelay,
       replacedByRelationType,
-      dateTimeScalar
+      dateTimeScalar,
+      realTimeJourneyStateType
     );
 
     GraphQLObjectType serviceJourneyVehicleAssignmentType =
@@ -373,7 +375,6 @@ public class TransmodelGraphQLSchemaFactory {
       serviceJourneyVehicleAssignmentType
     );
 
-    GraphQLObjectType realTimeJourneyStateType = RealTimeTripStateType.create();
     GraphQLOutputType datedServiceJourneyType = datedServiceJourneyTypeFactory.create(
       serviceJourneyType,
       journeyPatternType,
@@ -823,11 +824,12 @@ public class TransmodelGraphQLSchemaFactory {
                 .filter(
                   stopAtDistance ->
                     environment.getArgument("authority") == null ||
-                    stopAtDistance.stopId
+                    stopAtDistance
+                      .stopId()
                       .getFeedId()
                       .equalsIgnoreCase(environment.getArgument("authority"))
                 )
-                .sorted(Comparator.comparing(s -> s.distance))
+                .sorted(Comparator.comparing(s -> s.distance()))
                 .collect(Collectors.toList());
             } catch (RoutingValidationException e) {
               LOG.warn(
