@@ -19,6 +19,10 @@ podDisruptionBudget:
   enabled: true
   maxUnavailable: 10%
 
+# GKE ComputeClass the OTP pods are scheduled on (adds nodeSelector + toleration).
+# Leave empty to schedule on the default node pools.
+computeClass: ""
+
 resources:
   cpuLimit: "8"
   memLimit: 14000Mi

@@ -15,6 +15,8 @@ rollingUpdate:
   maxSurge: 25%
   maxUnavailable: 0
 
+computeClass: "jp-default"
+
 resources:
   cpuLimit: "8"
   memLimit: 20000Mi

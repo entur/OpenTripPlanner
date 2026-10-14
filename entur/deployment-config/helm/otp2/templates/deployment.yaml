@@ -39,6 +39,15 @@ spec:
                         - otp2
                 topologyKey: kubernetes.io/hostname
               weight: 100
+      {{- with .Values.computeClass }}
+      nodeSelector:
+        cloud.google.com/compute-class: {{ . }}
+      tolerations:
+        - key: cloud.google.com/compute-class
+          operator: Equal
+          value: {{ . }}
+          effect: NoSchedule
+      {{- end }}
       serviceAccountName: application
       automountServiceAccountToken: false
       containers:
