@@ -37,6 +37,10 @@
   <b><a href="https://api.staging.entur.io/graphql-explorer/journey-planner-v3">Entur GraphiQL (Shamash)</a></b>
 </p>
 <p align="center">
+  <b><a href="https://grafana.entur.org/d/sid2298/trakcf80-otp?from=now-90d&to=now&timezone=browser&var-origin=$__all&var-label=$__all">Trakπ</a></b>
+</p>
+
+<p align="center">
   <b>
     OTP Build Report ・ 
     <a href="http://otpreport.dev.entur.org">DEV</a> ・
