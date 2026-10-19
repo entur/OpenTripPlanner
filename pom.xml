@@ -102,6 +102,7 @@
         <module>astar</module>
         <module>container</module>
         <module>core</module>
+        <module>entur</module>
         <module>gtfs-realtime-protobuf</module>
         <module>otp-shaded</module>
         <module>raptor</module>
