@@ -144,6 +144,9 @@ spec:
         - name: feature-config-volume
           mountPath: /code/otpdata/norway/otp-config.json
           subPath: otp-config.json
+        - name: debug-ui-config-volume
+          mountPath: /code/otpdata/norway/debug-ui-config.json
+          subPath: debug-ui-config.json
         - mountPath: /etc/otp2/logback.xml
           name: logback-config-volume
           subPath: logback.xml
@@ -209,6 +212,10 @@ spec:
           defaultMode: 420
           name: otp2-feature-config
         name: feature-config-volume
+      - configMap:
+          defaultMode: 420
+          name: otp2-debug-ui-config
+        name: debug-ui-config-volume
       - configMap:
           defaultMode: 420
           name: otp2-logback-config

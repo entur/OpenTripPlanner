@@ -58,6 +58,10 @@ service:
 
 journeyPlanner:
   enabled: true
+# The debug UI is served through the Apigee journey-planner-v3 proxy. OTP puts this URL in the
+# vector tile URLs it gives the debug UI, so it has to be the public Apigee URL, set per environment.
+debugUi:
+  vectorTilesBaseUrl: ""
 proxy:
   enabled: false
   exposed: false

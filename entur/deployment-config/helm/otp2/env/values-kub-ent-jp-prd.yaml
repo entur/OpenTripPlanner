@@ -37,6 +37,9 @@ configmapMounts:
     configMap: otp-router-config
     readOnly: true
 
+debugUi:
+  vectorTilesBaseUrl: https://api.entur.io/journey-planner/v3/debug/otp/debug/vectortiles
+
 ingress:
   enabled: true
   otpApi:
