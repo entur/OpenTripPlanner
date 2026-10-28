@@ -1,6 +1,6 @@
 import { bikeRentalStationQueryAsString } from '../../static/query/bikeRentalStationQuery.tsx';
 import { Maybe } from '../../gql/graphql.ts';
-const graphiQLUrl = import.meta.env.VITE_GRAPHIQL_URL;
+import { getConfig } from '../../util/config.ts';
 
 export function ItineraryGraphiQLBikeRentalStationLink({
   stationId,
@@ -9,6 +9,11 @@ export function ItineraryGraphiQLBikeRentalStationLink({
   stationId: string | undefined;
   legName: Maybe<string> | undefined;
 }) {
+  const graphiQLUrl = getConfig().graphiqlUrl;
+  if (!graphiQLUrl) {
+    return <>{legName}</>;
+  }
+
   const queryID = { id: stationId };
   const formattedQuery = encodeURIComponent(bikeRentalStationQueryAsString);
   const formattedQueryID = encodeURIComponent(JSON.stringify(queryID));

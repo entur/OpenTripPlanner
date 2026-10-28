@@ -1,6 +1,7 @@
-const endpoint = import.meta.env.VITE_API_URL;
+import { getConfig } from './config.ts';
 
 export const getApiUrl = () => {
+  const endpoint = getConfig().apiUrl ?? '';
   try {
     // the URL constructor will throw exception if endpoint is not a valid URL,
     // e.g. if it is a relative path

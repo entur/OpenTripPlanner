@@ -1,6 +1,6 @@
 import { quayQueryAsString } from '../../static/query/quayQuery.tsx';
 import { Maybe } from '../../gql/graphql.ts';
-const graphiQLUrl = import.meta.env.VITE_GRAPHIQL_URL;
+import { getConfig } from '../../util/config.ts';
 
 export function ItineraryGraphiQLQuayLink({
   legId,
@@ -9,6 +9,11 @@ export function ItineraryGraphiQLQuayLink({
   legId: string | undefined;
   legName: Maybe<string> | undefined;
 }) {
+  const graphiQLUrl = getConfig().graphiqlUrl;
+  if (!graphiQLUrl) {
+    return <>{legName}</>;
+  }
+
   const queryID = { id: legId };
   const formattedQuery = encodeURIComponent(quayQueryAsString);
   const formattedQueryID = encodeURIComponent(JSON.stringify(queryID));

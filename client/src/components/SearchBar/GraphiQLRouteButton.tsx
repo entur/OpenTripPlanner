@@ -1,11 +1,11 @@
 import { Button } from 'react-bootstrap';
 import { TripQueryVariables } from '../../gql/graphql.ts';
 import graphqlIcon from '../../static/img/graphql-solid.svg';
+import { getConfig } from '../../util/config.ts';
 import { createPrunedQuery, createPrunedVariables } from '../../util/queryPruning.ts';
 
-const graphiQLUrl = import.meta.env.VITE_GRAPHIQL_URL;
-
 function GraphiQLRouteButton({ tripQueryVariables }: { tripQueryVariables: TripQueryVariables }) {
+  const graphiQLUrl = getConfig().graphiqlUrl;
   if (!graphiQLUrl) {
     return null;
   }

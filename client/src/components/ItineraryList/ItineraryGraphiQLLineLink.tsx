@@ -1,7 +1,12 @@
 import { lineQueryAsString } from '../../static/query/lineQuery.tsx';
-const graphiQLUrl = import.meta.env.VITE_GRAPHIQL_URL;
+import { getConfig } from '../../util/config.ts';
 
 export function ItineraryGraphiQLLineLink({ legId, legName }: { legId: string; legName: string }) {
+  const graphiQLUrl = getConfig().graphiqlUrl;
+  if (!graphiQLUrl) {
+    return <>{legName}</>;
+  }
+
   const queryID = { id: legId };
   const formattedQuery = encodeURIComponent(lineQueryAsString);
   const formattedQueryID = encodeURIComponent(JSON.stringify(queryID));

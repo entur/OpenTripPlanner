@@ -25,8 +25,7 @@ import { GeometryPropertyPopup } from './GeometryPropertyPopup.tsx';
 import RightMenu from './RightMenu.tsx';
 import { findSelectedDebugLayers } from '../../util/map.ts';
 import { FeatureSelectPopup } from './FeatureSelectPopup.tsx';
-
-const styleUrl = import.meta.env.VITE_DEBUG_STYLE_URL;
+import { getConfig, rewriteDebugTileRequest } from '../../util/config.ts';
 
 type PopupData = { coordinates: LngLat; feature: MapGeoJSONFeature };
 type FeatureSelectData = { coordinates: LngLat; features: MapGeoJSONFeature[] };
@@ -104,7 +103,8 @@ export function MapView({
         // @ts-ignore
         mapLib={maplibregl}
         // @ts-ignore
-        mapStyle={styleUrl}
+        mapStyle={getConfig().debugStyleUrl}
+        transformRequest={rewriteDebugTileRequest}
         onDblClick={onMapDoubleClick}
         onContextMenu={(e) => {
           setShowContextPopup(e.lngLat);
