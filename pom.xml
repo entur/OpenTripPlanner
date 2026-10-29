@@ -111,6 +111,7 @@
     <modules>
         <module>application</module>
         <module>astar</module>
+        <module>client</module>
         <module>core</module>
         <module>entur</module>
         <module>gtfs-realtime-protobuf</module>
