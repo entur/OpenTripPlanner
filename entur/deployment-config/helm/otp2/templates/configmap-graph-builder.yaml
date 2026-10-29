@@ -42,9 +42,6 @@ data:
         "distanceBetweenElevationSamples": 25,
         "multiThreadElevationCalculations": true,
         "elevationTileCacheSizeMB": 4096,
-        "boardingLocations": {
-          "refTags": [ "ref:NSR" ]
-        },
         "stopsWithRegularTransfers": [
           "RB:NSR:Quay:111059",
           "RB:NSR:Quay:111060",
