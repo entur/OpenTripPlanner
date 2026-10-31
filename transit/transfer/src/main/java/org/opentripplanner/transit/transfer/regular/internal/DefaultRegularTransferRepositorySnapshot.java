@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
+import org.opentripplanner.raptor.data.transfers.regular.RaptorRegularTransferService;
 import org.opentripplanner.raptor.data.transfers.regular.RaptorTransferStore;
 import org.opentripplanner.transit.transfer.regular.RegularTransferRepositorySnapshot;
 import org.opentripplanner.transit.transfer.regular.api.RegularTransfersService;
@@ -36,8 +37,13 @@ class DefaultRegularTransferRepositorySnapshot<
   );
 
   private final OverlaidTemplatePaths<P> paths;
-  private final RegularTransferServiceCache<RaptorTransferStore> cache;
+  private final RegularTransferServiceCache<RaptorRegularTransferService> cache;
   private final CacheFactory cacheFactory;
+
+  @Nullable
+  private final DerivedTransfersFactory<P, R> derivedFactory;
+
+  private final DerivedTables<P> tables;
   private final TransferRequestMapper<R> mapper;
   private final ProfileMatcher matcher;
   private final List<WarmupEntry> warmup;
@@ -46,13 +52,17 @@ class DefaultRegularTransferRepositorySnapshot<
 
   DefaultRegularTransferRepositorySnapshot(
     OverlaidTemplatePaths<P> paths,
-    RegularTransferServiceCache<RaptorTransferStore> cache,
+    RegularTransferServiceCache<RaptorRegularTransferService> cache,
     RaptorTransfersFactory<P, R> raptorTransfersFactory,
+    @Nullable DerivedTransfersFactory<P, R> derivedFactory,
+    DerivedTables<P> tables,
     TransferRequestMapper<R> mapper,
     ProfileMatcher matcher,
     List<WarmupEntry> warmup,
     RegularTransferCacheStatistics statistics
   ) {
+    this.derivedFactory = derivedFactory;
+    this.tables = tables;
     this.paths = paths;
     this.cache = cache;
     this.mapper = mapper;
@@ -151,14 +161,19 @@ class DefaultRegularTransferRepositorySnapshot<
     return paths;
   }
 
+  /** The derived tables of this snapshot, for the lifecycle. */
+  DerivedTables<P> tables() {
+    return tables;
+  }
+
   /** The cache of the Raptor transfers of this snapshot, for the lifecycle. */
-  RegularTransferServiceCache<RaptorTransferStore> cache() {
+  RegularTransferServiceCache<RaptorRegularTransferService> cache() {
     return cache;
   }
 
   /** Creates and patches the cached Raptor transfers from the paths of this snapshot. */
   private final class CacheFactory
-    implements RegularTransferServiceCache.Factory<RaptorTransferStore>
+    implements RegularTransferServiceCache.Factory<RaptorRegularTransferService>
   {
 
     private final RaptorTransfersFactory<P, R> raptorTransfersFactory;
@@ -168,25 +183,36 @@ class DefaultRegularTransferRepositorySnapshot<
     }
 
     @Override
-    public RaptorTransferStore create(AbstractUserPreferences<?> userPreferences) {
-      return raptorTransfersFactory.create(
-        paths,
-        userPreferences,
-        matcher.closestProfile(paths, userPreferences)
-      );
+    public RaptorRegularTransferService create(AbstractUserPreferences<?> userPreferences) {
+      var profile = matcher.closestProfile(paths, userPreferences);
+      if (derivedFactory != null) {
+        return derivedFactory.create(paths, tables, userPreferences, profile);
+      }
+      return raptorTransfersFactory.create(paths, userPreferences, profile);
     }
 
     @Override
-    public RaptorTransferStore patch(
+    public RaptorRegularTransferService patch(
       AbstractUserPreferences<?> userPreferences,
-      RaptorTransferStore previous,
+      RaptorRegularTransferService previous,
       Set<Integer> changedFromStops
     ) {
+      var profile = matcher.closestProfile(paths, userPreferences);
+      if (derivedFactory != null) {
+        return derivedFactory.patch(
+          paths,
+          tables,
+          userPreferences,
+          profile,
+          previous,
+          changedFromStops
+        );
+      }
       return raptorTransfersFactory.patch(
         paths,
         userPreferences,
-        matcher.closestProfile(paths, userPreferences),
-        previous,
+        profile,
+        (RaptorTransferStore) previous,
         changedFromStops
       );
     }

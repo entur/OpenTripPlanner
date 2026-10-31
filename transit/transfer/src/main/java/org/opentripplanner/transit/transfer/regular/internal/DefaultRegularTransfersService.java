@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.opentripplanner.raptor.data.transfers.regular.RaptorRegularTransferService;
-import org.opentripplanner.raptor.data.transfers.regular.RaptorTransferStore;
 import org.opentripplanner.transit.transfer.regular.api.RegularTransfersService;
 import org.opentripplanner.transit.transfer.regular.api.preferences.AbstractUserPreferences;
 
@@ -21,8 +20,8 @@ import org.opentripplanner.transit.transfer.regular.api.preferences.AbstractUser
 final class DefaultRegularTransfersService<P> implements RegularTransfersService<P> {
 
   private final OverlaidTemplatePaths<P> paths;
-  private final RegularTransferServiceCache<RaptorTransferStore> cache;
-  private final RegularTransferServiceCache.Factory<RaptorTransferStore> cacheFactory;
+  private final RegularTransferServiceCache<RaptorRegularTransferService> cache;
+  private final RegularTransferServiceCache.Factory<RaptorRegularTransferService> cacheFactory;
   private final AbstractUserPreferences<?> userPreferences;
 
   @Nullable
@@ -35,8 +34,8 @@ final class DefaultRegularTransfersService<P> implements RegularTransfersService
    */
   DefaultRegularTransfersService(
     OverlaidTemplatePaths<P> paths,
-    RegularTransferServiceCache<RaptorTransferStore> cache,
-    RegularTransferServiceCache.Factory<RaptorTransferStore> cacheFactory,
+    RegularTransferServiceCache<RaptorRegularTransferService> cache,
+    RegularTransferServiceCache.Factory<RaptorRegularTransferService> cacheFactory,
     AbstractUserPreferences<?> userPreferences,
     @Nullable AbstractUserPreferences<?> profile
   ) {

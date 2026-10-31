@@ -5,9 +5,11 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
+import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.place.NearbyStopFinder;
 import org.opentripplanner.place.api.NearbyStop;
+import org.opentripplanner.raptor.data.transfers.regular.TransferValueFunction;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.cost.CostLimit;
 import org.opentripplanner.street.graph.Graph;
@@ -154,6 +156,26 @@ final class DefaultTransferSearch implements TransferSearch<NearbyStop> {
         (int) state.getElapsedTimeSeconds()
       )
     );
+  }
+
+  @Nullable
+  @Override
+  public float[] components(NearbyStop path) {
+    return switch (mode(routeRequest)) {
+      case WALK -> TransferPathComponents.walk(path, streetSearchRequest);
+      case BIKE -> TransferPathComponents.bike(path, streetSearchRequest);
+      default -> null;
+    };
+  }
+
+  @Nullable
+  @Override
+  public TransferValueFunction valueFunction() {
+    return switch (mode(routeRequest)) {
+      case WALK -> TransferPathComponents.walkFunction(streetSearchRequest);
+      case BIKE -> TransferPathComponents.bikeFunction(streetSearchRequest);
+      default -> null;
+    };
   }
 
   /**

@@ -4,8 +4,8 @@
 
 ### Core concepts
 
-A name in ~~strikethrough~~ is an old name of the term. The code is not renamed yet, so some
-classes still have the old name.
+A name in ~~strikethrough~~ is an old name of the term. The code is not renamed yet, so some classes
+still have the old name.
 
 | Term                                                                                                                     | Meaning in this module                                                                                                                                                                                                                                                                                                                                                                                 |
 | ------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -68,8 +68,8 @@ generates them yet:
 
 - The **runtime repository** replaces the transfers of one leaf (all paths from one `fromStop` under
   one profile) with `replaceTransfersFrom`, and restores the graph-build paths of a leaf with
-  `resetTransfersFrom`. The paths generated at graph build are never copied: they are shared, and the
-  replaced leaves are kept separately.
+  `resetTransfersFrom`. The paths generated at graph build are never copied: they are shared, and
+  the replaced leaves are kept separately.
 - The repository is updated in a transaction on the transaction framework. Each commit publishes a
   new immutable **snapshot**. A request resolves one snapshot at its start, so the transfers used
   for routing and the paths used for the itineraries always come from the same snapshot, even if an

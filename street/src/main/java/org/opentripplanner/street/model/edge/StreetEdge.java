@@ -539,6 +539,11 @@ public class StreetEdge
     return IntUtils.round((this.outAngle * 180) / 128.0);
   }
 
+  /** True if a cost extension adds a request dependent cost to the traversal of this edge. */
+  public boolean hasCostExtension() {
+    return costExtension != null;
+  }
+
   public void setCostExtension(StreetEdgeCostExtension costExtension) {
     this.costExtension = costExtension;
   }

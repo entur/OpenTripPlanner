@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.opentripplanner.core.model.transaction.RepositoryLifecycle;
-import org.opentripplanner.raptor.data.transfers.regular.RaptorTransferStore;
+import org.opentripplanner.raptor.data.transfers.regular.RaptorRegularTransferService;
 import org.opentripplanner.transit.transfer.regular.RegularTransferRepository;
 import org.opentripplanner.transit.transfer.regular.RegularTransferRepositorySnapshot;
 import org.opentripplanner.transit.transfer.regular.api.parameters.TransferParameters;
@@ -46,6 +46,7 @@ public class RegularTransferRepositoryLifecycle<
   RepositoryLifecycle<RegularTransferRepositorySnapshot<P, R>, RegularTransferRepository<P>> {
 
   private final RaptorTransfersFactory<P, R> raptorTransfersFactory;
+  private final DerivedTransfersFactory<P, R> derivedFactory;
   private final TransferRequestMapper<R> mapper;
   private final ProfileMatcher matcher;
   private final List<WarmupEntry> warmup;
@@ -154,6 +155,10 @@ public class RegularTransferRepositoryLifecycle<
       mapper,
       profileRequests
     );
+    this.derivedFactory = DerivedTransfersFactory.fromSystemProperties(
+      numberOfStops,
+      raptorTransfersFactory
+    );
   }
 
   private static <R> Map<AbstractUserPreferences<?>, R> requestsByProfile(
@@ -201,7 +206,7 @@ public class RegularTransferRepositoryLifecycle<
     var frozen = ((DefaultRegularTransferRepository<P>) repository).freeze();
     var cache =
       frozen.base() == null
-        ? new RegularTransferServiceCache<RaptorTransferStore>(
+        ? new RegularTransferServiceCache<RaptorRegularTransferService>(
             cacheMaxSize,
             retainedKeys,
             cacheCounters
@@ -211,10 +216,16 @@ public class RegularTransferRepositoryLifecycle<
             .cache()
             .carryForward(userPreferences -> changedFromStops(frozen, userPreferences));
     cacheCounters.setLatest(cache);
+    DerivedTables<P> tables =
+      derivedFactory == null || frozen.base() == null
+        ? new DerivedTables<>()
+        : frozen.base().tables().next(frozen.paths(), frozen.changedFromStops(), derivedFactory);
     return new DefaultRegularTransferRepositorySnapshot<>(
       frozen.paths(),
       cache,
       raptorTransfersFactory,
+      derivedFactory,
+      tables,
       mapper,
       matcher,
       warmup,

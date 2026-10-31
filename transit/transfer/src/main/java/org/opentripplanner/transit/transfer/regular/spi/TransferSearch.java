@@ -2,7 +2,9 @@ package org.opentripplanner.transit.transfer.regular.spi;
 
 import java.util.Collection;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
+import org.opentripplanner.raptor.data.transfers.regular.TransferValueFunction;
 import org.opentripplanner.transit.transfer.regular.api.maxduration.MaxDurationsPreference;
 
 /**
@@ -33,4 +35,36 @@ public interface TransferSearch<P> {
    * duration of the profile type is not applied, it bounds the discovery search only.
    */
   Optional<PathCriteria> computePathCriteria(P path);
+
+  /**
+   * The result of {@link #components} for a path that can not be represented exactly by numbers
+   * independent of the user preferences, for example a path with an edge whose cost depends on
+   * them in a way the implementation does not model. Compare by length ({@code length == 0}). The
+   * transfers of such a path must be costed with {@link #computePathCriteria}.
+   */
+  float[] NOT_DERIVABLE = new float[0];
+
+  /**
+   * The numbers the duration and the cost of {@code path} depend on, independent of the user
+   * preferences, see {@link #valueFunction()}. The layout is private to the implementation.
+   *
+   * @return the numbers, {@link #NOT_DERIVABLE} if the path can not be represented exactly,
+   *         {@code null} if the search does not support components at all, or if the path can not
+   *         be traversed (then {@link #computePathCriteria} is empty too)
+   */
+  @Nullable
+  default float[] components(P path) {
+    return null;
+  }
+
+  /**
+   * Compute the duration and the cost of a path from its {@link #components} under the user
+   * preferences of this search, the same values as {@link #computePathCriteria} within the rounding
+   * of the stored numbers. It is not defined for {@link #NOT_DERIVABLE} paths. {@code null} if the search does not support it, for example for the
+   * preferences of a wheelchair.
+   */
+  @Nullable
+  default TransferValueFunction valueFunction() {
+    return null;
+  }
 }

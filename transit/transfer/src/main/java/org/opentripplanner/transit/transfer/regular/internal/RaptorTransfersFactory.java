@@ -54,7 +54,7 @@ final class RaptorTransfersFactory<P, R> {
   }
 
   /** Create the search of {@code userPreferences}, based on the request of {@code profile}. */
-  private TransferSearch<P> searchFor(
+  TransferSearch<P> searchFor(
     AbstractUserPreferences<?> userPreferences,
     AbstractUserPreferences<?> profile
   ) {
