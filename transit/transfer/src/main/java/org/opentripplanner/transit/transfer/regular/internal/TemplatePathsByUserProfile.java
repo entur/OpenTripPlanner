@@ -60,6 +60,12 @@ final class TemplatePathsByUserProfile<P> implements Serializable {
     return paths == null ? Map.of() : paths.pathsFrom(fromStop);
   }
 
+  /** The from-stops with a path to {@code toStop} under exactly the given profile. */
+  int[] fromStopsTo(AbstractUserPreferences<?> profile, int toStop) {
+    var paths = pathsByUserPreferences.get(profile);
+    return paths == null ? new int[0] : paths.fromStopsTo(toStop);
+  }
+
   /**
    * Call {@code consumer} with the paths of every {@code fromStop} stored under exactly the given
    * profile, by {@code toStop}. The maps must not be modified.

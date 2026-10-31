@@ -1,7 +1,10 @@
 package org.opentripplanner.transit.transfer.regular.internal;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
 import org.opentripplanner.transit.transfer.regular.api.preferences.AbstractUserPreferences;
@@ -25,7 +28,12 @@ import org.opentripplanner.transit.transfer.regular.api.preferences.AbstractUser
  */
 final class OverlaidTemplatePaths<P> {
 
+  private static final int[] NO_STOPS = new int[0];
+
   private final TemplatePathsByUserProfile<P> base;
+
+  /** The overlay by to-stop, derived on first read, reset by every write. */
+  private volatile Map<AbstractUserPreferences<?>, Map<Integer, int[]>> overlayReverse;
   private final Map<AbstractUserPreferences<?>, Map<Integer, Map<Integer, P>>> overlay;
 
   OverlaidTemplatePaths(TemplatePathsByUserProfile<P> base) {
@@ -58,6 +66,7 @@ final class OverlaidTemplatePaths<P> {
    */
   void replace(AbstractUserPreferences<?> profile, int fromStop, Map<Integer, P> pathsByToStop) {
     assertProfileExists(profile);
+    overlayReverse = null;
     overlay.computeIfAbsent(profile, p -> new HashMap<>()).put(fromStop, Map.copyOf(pathsByToStop));
   }
 
@@ -73,6 +82,7 @@ final class OverlaidTemplatePaths<P> {
     if (byFromStop == null || !byFromStop.containsKey(fromStop)) {
       return false;
     }
+    overlayReverse = null;
     byFromStop.remove(fromStop);
     if (byFromStop.isEmpty()) {
       overlay.remove(profile);
@@ -105,6 +115,60 @@ final class OverlaidTemplatePaths<P> {
       return replaced;
     }
     return base.pathsFrom(profile, fromStop);
+  }
+
+  /**
+   * The from-stops with a path to {@code toStop} under {@code profile}: the graph-build paths from
+   * stops that are not replaced, and the replaced paths. The returned array must not be modified.
+   */
+  int[] fromStopsTo(AbstractUserPreferences<?> profile, int toStop) {
+    var baseStops = base.fromStopsTo(profile, toStop);
+    var replaced = overlay.get(profile);
+    if (replaced == null) {
+      return baseStops;
+    }
+    var added = overlayReverse().get(profile).getOrDefault(toStop, NO_STOPS);
+    var result = new int[baseStops.length + added.length];
+    int n = 0;
+    for (int fromStop : baseStops) {
+      if (!replaced.containsKey(fromStop)) {
+        result[n++] = fromStop;
+      }
+    }
+    for (int fromStop : added) {
+      result[n++] = fromStop;
+    }
+    return n == result.length ? result : Arrays.copyOf(result, n);
+  }
+
+  /** The replaced paths by profile and to-stop, built on first use. */
+  private Map<AbstractUserPreferences<?>, Map<Integer, int[]>> overlayReverse() {
+    var index = overlayReverse;
+    if (index == null) {
+      var built = new HashMap<AbstractUserPreferences<?>, Map<Integer, int[]>>();
+      overlay.forEach((profile, byFromStop) -> {
+        var lists = new HashMap<Integer, List<Integer>>();
+        byFromStop.forEach((fromStop, byToStop) ->
+          byToStop
+            .keySet()
+            .forEach(toStop -> lists.computeIfAbsent(toStop, k -> new ArrayList<>()).add(fromStop))
+        );
+        var arrays = new HashMap<Integer, int[]>();
+        lists.forEach((toStop, froms) ->
+          arrays.put(
+            toStop,
+            froms
+              .stream()
+              .mapToInt(i -> i)
+              .toArray()
+          )
+        );
+        built.put(profile, arrays);
+      });
+      index = built;
+      overlayReverse = index;
+    }
+    return index;
   }
 
   /** Call {@code consumer} for every path stored under {@code profile}. */

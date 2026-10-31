@@ -65,7 +65,7 @@ final class RaptorTransfers implements Serializable {
     return new RaptorTransfers(copy, true);
   }
 
-  private static void sortByDuration(DefaultRaptorTransfer[] row) {
+  static void sortByDuration(DefaultRaptorTransfer[] row) {
     Arrays.sort(row, BY_DURATION);
   }
 

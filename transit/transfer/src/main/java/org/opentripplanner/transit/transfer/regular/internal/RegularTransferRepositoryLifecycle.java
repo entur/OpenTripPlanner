@@ -8,7 +8,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.opentripplanner.core.model.transaction.RepositoryLifecycle;
-import org.opentripplanner.raptor.data.transfers.regular.RaptorTransferStore;
+import org.opentripplanner.raptor.data.transfers.regular.RaptorRegularTransferService;
 import org.opentripplanner.transit.transfer.regular.RegularTransferRepository;
 import org.opentripplanner.transit.transfer.regular.RegularTransferRepositorySnapshot;
 import org.opentripplanner.transit.transfer.regular.api.parameters.TransferParameters;
@@ -201,7 +201,7 @@ public class RegularTransferRepositoryLifecycle<
     var frozen = ((DefaultRegularTransferRepository<P>) repository).freeze();
     var cache =
       frozen.base() == null
-        ? new RegularTransferServiceCache<RaptorTransferStore>(
+        ? new RegularTransferServiceCache<RaptorRegularTransferService>(
             cacheMaxSize,
             retainedKeys,
             cacheCounters

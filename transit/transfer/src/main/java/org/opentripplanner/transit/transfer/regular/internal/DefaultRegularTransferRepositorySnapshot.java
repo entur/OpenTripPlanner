@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
-import org.opentripplanner.raptor.data.transfers.regular.RaptorTransferStore;
+import org.opentripplanner.raptor.data.transfers.regular.RaptorRegularTransferService;
 import org.opentripplanner.transit.transfer.regular.RegularTransferRepositorySnapshot;
 import org.opentripplanner.transit.transfer.regular.api.RegularTransfersService;
 import org.opentripplanner.transit.transfer.regular.api.preferences.AbstractUserPreferences;
@@ -36,7 +36,7 @@ class DefaultRegularTransferRepositorySnapshot<
   );
 
   private final OverlaidTemplatePaths<P> paths;
-  private final RegularTransferServiceCache<RaptorTransferStore> cache;
+  private final RegularTransferServiceCache<RaptorRegularTransferService> cache;
   private final CacheFactory cacheFactory;
   private final TransferRequestMapper<R> mapper;
   private final ProfileMatcher matcher;
@@ -46,7 +46,7 @@ class DefaultRegularTransferRepositorySnapshot<
 
   DefaultRegularTransferRepositorySnapshot(
     OverlaidTemplatePaths<P> paths,
-    RegularTransferServiceCache<RaptorTransferStore> cache,
+    RegularTransferServiceCache<RaptorRegularTransferService> cache,
     RaptorTransfersFactory<P, R> raptorTransfersFactory,
     TransferRequestMapper<R> mapper,
     ProfileMatcher matcher,
@@ -152,13 +152,13 @@ class DefaultRegularTransferRepositorySnapshot<
   }
 
   /** The cache of the Raptor transfers of this snapshot, for the lifecycle. */
-  RegularTransferServiceCache<RaptorTransferStore> cache() {
+  RegularTransferServiceCache<RaptorRegularTransferService> cache() {
     return cache;
   }
 
   /** Creates and patches the cached Raptor transfers from the paths of this snapshot. */
   private final class CacheFactory
-    implements RegularTransferServiceCache.Factory<RaptorTransferStore>
+    implements RegularTransferServiceCache.Factory<RaptorRegularTransferService>
   {
 
     private final RaptorTransfersFactory<P, R> raptorTransfersFactory;
@@ -168,7 +168,7 @@ class DefaultRegularTransferRepositorySnapshot<
     }
 
     @Override
-    public RaptorTransferStore create(AbstractUserPreferences<?> userPreferences) {
+    public RaptorRegularTransferService create(AbstractUserPreferences<?> userPreferences) {
       return raptorTransfersFactory.create(
         paths,
         userPreferences,
@@ -177,9 +177,9 @@ class DefaultRegularTransferRepositorySnapshot<
     }
 
     @Override
-    public RaptorTransferStore patch(
+    public RaptorRegularTransferService patch(
       AbstractUserPreferences<?> userPreferences,
-      RaptorTransferStore previous,
+      RaptorRegularTransferService previous,
       Set<Integer> changedFromStops
     ) {
       return raptorTransfersFactory.patch(

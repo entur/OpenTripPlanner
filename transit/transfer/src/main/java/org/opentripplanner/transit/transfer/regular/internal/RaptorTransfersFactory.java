@@ -3,6 +3,8 @@ package org.opentripplanner.transit.transfer.regular.internal;
 import java.util.Map;
 import java.util.Set;
 import javax.annotation.Nullable;
+import org.opentripplanner.raptor.data.transfers.regular.LazyRaptorTransferStore;
+import org.opentripplanner.raptor.data.transfers.regular.RaptorRegularTransferService;
 import org.opentripplanner.raptor.data.transfers.regular.RaptorTransferStore;
 import org.opentripplanner.transit.transfer.regular.api.preferences.AbstractUserPreferences;
 import org.opentripplanner.transit.transfer.regular.spi.TransferPathProvider;
@@ -27,6 +29,9 @@ import org.opentripplanner.transit.transfer.regular.spi.TransferSearch;
  * @param <R> the request type
  */
 final class RaptorTransfersFactory<P, R> {
+
+  /** EXPERIMENT switch: off (eager), direct or viafrom (lazy per stop, see LazyTransferRows). */
+  private static final String LAZY = System.getProperty("transfers.lazy", "off");
 
   /** Patch if at most this share of all stops changed, create the transfers from scratch if not. */
   static final double MAX_PATCHED_STOPS_SHARE = 0.05;
@@ -70,11 +75,14 @@ final class RaptorTransfersFactory<P, R> {
   }
 
   /** Create the transfers of all paths stored under {@code profile}. */
-  RaptorTransferStore create(
+  RaptorRegularTransferService create(
     OverlaidTemplatePaths<P> paths,
     AbstractUserPreferences<?> userPreferences,
     @Nullable AbstractUserPreferences<?> profile
   ) {
+    if (!LAZY.equals("off")) {
+      return new LazyRaptorTransferStore(nStops, lazyRows(paths, userPreferences, profile));
+    }
     var builder = RaptorTransferStore.of(nStops);
     if (profile != null) {
       var search = searchFor(userPreferences, profile);
@@ -94,13 +102,17 @@ final class RaptorTransfersFactory<P, R> {
    * {@code changedFromStops} with the ones of the paths now stored under {@code profile}. Falls
    * back to {@link #create} if too many stops changed.
    */
-  RaptorTransferStore patch(
+  RaptorRegularTransferService patch(
     OverlaidTemplatePaths<P> paths,
     AbstractUserPreferences<?> userPreferences,
     @Nullable AbstractUserPreferences<?> profile,
-    RaptorTransferStore previous,
+    RaptorRegularTransferService previousStore,
     Set<Integer> changedFromStops
   ) {
+    if (previousStore instanceof LazyRaptorTransferStore lazy) {
+      return patchLazy(paths, userPreferences, profile, lazy, changedFromStops);
+    }
+    var previous = (RaptorTransferStore) previousStore;
     if (profile == null || changedFromStops.size() > MAX_PATCHED_STOPS_SHARE * nStops) {
       return create(paths, userPreferences, profile);
     }
@@ -119,5 +131,42 @@ final class RaptorTransfersFactory<P, R> {
         );
     }
     return patch.build();
+  }
+
+  private LazyTransferRows<P> lazyRows(
+    OverlaidTemplatePaths<P> paths,
+    AbstractUserPreferences<?> userPreferences,
+    @Nullable AbstractUserPreferences<?> profile
+  ) {
+    return new LazyTransferRows<>(
+      paths,
+      profile,
+      profile == null ? null : searchFor(userPreferences, profile),
+      LAZY.equals("viafrom")
+    );
+  }
+
+  /**
+   * Keep every loaded row of {@code previous}, except the rows affected by the changed stops: they
+   * are loaded again on the next read, from the new paths.
+   */
+  @SuppressWarnings("unchecked")
+  private RaptorRegularTransferService patchLazy(
+    OverlaidTemplatePaths<P> paths,
+    AbstractUserPreferences<?> userPreferences,
+    @Nullable AbstractUserPreferences<?> profile,
+    LazyRaptorTransferStore previous,
+    Set<Integer> changedFromStops
+  ) {
+    var rows = lazyRows(paths, userPreferences, profile);
+    if (profile == null || changedFromStops.size() > MAX_PATCHED_STOPS_SHARE * nStops) {
+      return new LazyRaptorTransferStore(nStops, rows);
+    }
+    var previousRows = (LazyTransferRows<P>) previous.loader();
+    return previous.patched(
+      rows,
+      changedFromStops,
+      rows.affectedToStops(changedFromStops, previousRows)
+    );
   }
 }
