@@ -3,27 +3,35 @@ package org.opentripplanner.netex.mapping;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 import java.math.BigInteger;
 import java.time.Duration;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.entur.netex2.model.AllPublicTransportModesEnumeration;
 import org.entur.netex2.model.StopPointInJourneyPattern;
 import org.entur.netex2.model.TimetabledPassingTime;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner._support.time.ZoneIds;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueStore;
 import org.opentripplanner.model.StopTime;
+import org.opentripplanner.netex.NetexTestDataSupport;
+import org.opentripplanner.netex.index.NetexEntityIndex;
 import org.opentripplanner.netex.index.hierarchy.HierarchicalMap;
 import org.opentripplanner.netex.index.hierarchy.HierarchicalMapById;
+import org.opentripplanner.netex.validation.Validator;
 import org.opentripplanner.transit.model._data.TransitRepositoryForTest;
 import org.opentripplanner.transit.model.framework.DefaultEntityById;
 import org.opentripplanner.transit.model.site.RegularStop;
 import org.opentripplanner.transit.model.site.Station;
 import org.opentripplanner.transit.model.timetable.Trip;
+import org.opentripplanner.transit.service.SiteRepository;
 
 public class StopTimesMapperTest {
 
@@ -148,6 +156,87 @@ public class StopTimesMapperTest {
     for (StopTime stopTime : stopTimes) {
       assertEquals(expectedChildStop, stopTime.getStop());
     }
+  }
+
+  /**
+   * A PassengerStopAssignment can refer to a StopPlace that passes validation but is mapped to a
+   * Station without child stops. Here the same Quay is listed under two StopPlaces, A and B. The
+   * Validator keeps the assignment to B, because B has a Quay with a coordinate. The
+   * StopAndStationMapper maps each Quay only once, so the Quay becomes a child stop of A and B ends
+   * up without child stops. The StopTimesMapper should then drop the trip, the same way it does
+   * when an assigned Quay is missing, instead of aborting the graph build.
+   */
+  @Test
+  public void testMapStopTimesWithPassengerStopAssignmentToStopPlaceWithoutChildStops() {
+    var sample = new NetexTestDataSample();
+    var quay = NetexTestDataSupport.createQuay("NSR:Quay:1", "Quay", "1", 59.9, 10.7, "1");
+    var bus = AllPublicTransportModesEnumeration.BUS;
+
+    var index = new NetexEntityIndex();
+    index.quayById.add(quay);
+    index.stopPlaceById.add(
+      NetexTestDataSupport.createStopPlace("NSR:StopPlace:A", "A", "1", 59.9, 10.7, bus, quay)
+    );
+    index.stopPlaceById.add(
+      NetexTestDataSupport.createStopPlace("NSR:StopPlace:B", "B", "1", 59.9, 10.7, bus, quay)
+    );
+    var stopPointRefs = sample
+      .getJourneyPattern()
+      .getPointsInSequence()
+      .getPointInJourneyPatternOrStopPointInJourneyPatternOrTimingPointInJourneyPattern()
+      .stream()
+      .map(StopPointInJourneyPattern.class::cast)
+      .map(stopPoint -> stopPoint.getScheduledStopPointRef().getValue().getRef())
+      .toList();
+    stopPointRefs.forEach(ref -> index.stopPlaceIdByStopPointRef.add(ref, "NSR:StopPlace:B"));
+
+    Validator.validate(index, DataImportIssueStore.NOOP);
+    for (var ref : stopPointRefs) {
+      assertEquals("NSR:StopPlace:B", index.stopPlaceIdByStopPointRef.lookup(ref));
+    }
+
+    var stopAndStationMapper = new StopAndStationMapper(
+      MappingSupport.ID_FACTORY,
+      index.quayById,
+      null,
+      SiteRepository.of(),
+      ZoneIds.OSLO,
+      DataImportIssueStore.NOOP,
+      false,
+      Set.of()
+    );
+    stopAndStationMapper.mapParentAndChildStops(index.stopPlaceById.lookup("NSR:StopPlace:A"));
+    stopAndStationMapper.mapParentAndChildStops(index.stopPlaceById.lookup("NSR:StopPlace:B"));
+
+    var stationsById = new DefaultEntityById<Station>();
+    stationsById.addAll(stopAndStationMapper.resultStations);
+    var stationB = stationsById.get(MappingSupport.ID_FACTORY.createId("NSR:StopPlace:B"));
+    assertNotNull(stationB);
+    assertEquals(0, stationB.getChildStops().size());
+
+    var stopTimesMapper = new StopTimesMapper(
+      DataImportIssueStore.NOOP,
+      MappingSupport.ID_FACTORY,
+      sample.getStopsById(),
+      stationsById,
+      new DefaultEntityById<>(),
+      new DefaultEntityById<>(),
+      sample.getDestinationDisplayById(),
+      index.stopPlaceIdByStopPointRef,
+      new HierarchicalMap<>(),
+      new HierarchicalMap<>(),
+      new HierarchicalMapById<>(),
+      new HierarchicalMap<>()
+    );
+
+    var result = stopTimesMapper.mapToStopTimes(
+      sample.getJourneyPattern(),
+      TRIP,
+      sample.getTimetabledPassingTimes(),
+      null
+    );
+
+    assertNull(result);
   }
 
   /**
