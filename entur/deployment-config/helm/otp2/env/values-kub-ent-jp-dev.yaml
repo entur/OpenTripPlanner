@@ -82,3 +82,13 @@ configuration:
   transferConstraints: true
   vehicleRentalServiceDirectory:
     url: "http://mobility-cache.dev.entur.internal/gbfs-internal/v3/manifest.json"
+
+# Neutral background maps for demos; both are free and need no API key.
+debugUiConfig:
+  additionalBackgroundLayers:
+    - name: "Kartverket topo grey"
+      templateUrl: "https://cache.kartverket.no/v1/wmts/1.0.0/topograatone/default/webmercator/{z}/{y}/{x}.png"
+      attribution: "© <a href=\"https://www.kartverket.no/\">Kartverket</a>"
+    - name: "OSM Humanitarian"
+      templateUrl: "https://a.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png"
+      attribution: "© <a href=\"https://www.openstreetmap.org/copyright\">OpenStreetMap</a> contributors, style by Humanitarian OpenStreetMap Team, hosted by OpenStreetMap France"
