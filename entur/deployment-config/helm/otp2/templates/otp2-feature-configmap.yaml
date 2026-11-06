@@ -24,6 +24,10 @@ data:
       },
       "gbfs": {{ .Values.gbfs | toPrettyJson | indent 6 | trim }}
    }
+  {{- with .Values.debugUiConfig }}
+  debug-ui-config.json: |+
+    {{- . | toPrettyJson | nindent 4 }}
+  {{- end }}
 kind: ConfigMap
 metadata:
   name: otp2-feature-config

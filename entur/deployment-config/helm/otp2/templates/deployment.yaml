@@ -144,6 +144,11 @@ spec:
         - name: feature-config-volume
           mountPath: /code/otpdata/norway/otp-config.json
           subPath: otp-config.json
+        {{- if .Values.debugUiConfig }}
+        - name: feature-config-volume
+          mountPath: /code/otpdata/norway/debug-ui-config.json
+          subPath: debug-ui-config.json
+        {{- end }}
         - mountPath: /etc/otp2/logback.xml
           name: logback-config-volume
           subPath: logback.xml

@@ -115,3 +115,7 @@ secrets:
 # merges maps but not lists.
 gbfs:
   includeUnlistedNetworks: true
+
+# Content of debug-ui-config.json, rendered verbatim with toPrettyJson. An empty map leaves the
+# file out, and the debug UI then shows only its built-in background layers.
+debugUiConfig: {}
