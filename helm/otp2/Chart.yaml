@@ -1,0 +1,12 @@
+apiVersion: v2
+name: otp2
+version: '2.0.0'
+description: Open Trip Planner
+keywords:
+- otp2
+sources:
+- https://github.com/entur/opentripplanner
+maintainers:
+- name: 'team-ror'
+  email: team.rutedata@entur.org
+engine: gotpl
