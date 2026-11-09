@@ -21,22 +21,27 @@ import org.opentripplanner.utils.collection.MinMap;
  * alighting is possible (depending on direction).
  * <p>
  * Stops without patterns may still be included if they are marked as sometimes-used by real-time
- * updates (when the IncludeStopsUsedRealTimeInTransfers feature is enabled).
+ * updates (when the IncludeStopsUsedRealTimeInTransfers feature is enabled), or if they are
+ * explicitly listed in the {@code stopsWithRegularTransfers} build configuration.
  */
 class PatternNearbyStopFilter implements NearbyStopFilter {
 
   private final SiteRepository siteRepository;
   private final PatternsByStopLookup patternsByStopLookup;
+  private final Set<FeedScopedId> stopsWithRegularTransfers;
 
   /**
    * @param patternsByStopLookup the scheduled trip patterns visiting a stop
+   * @param stopsWithRegularTransfers stops to always include, even without scheduled patterns
    */
   PatternNearbyStopFilter(
     SiteRepository siteRepository,
-    PatternsByStopLookup patternsByStopLookup
+    PatternsByStopLookup patternsByStopLookup,
+    Set<FeedScopedId> stopsWithRegularTransfers
   ) {
     this.siteRepository = siteRepository;
     this.patternsByStopLookup = patternsByStopLookup;
+    this.stopsWithRegularTransfers = stopsWithRegularTransfers;
   }
 
   @Override
@@ -91,6 +96,12 @@ class PatternNearbyStopFilter implements NearbyStopFilter {
   }
 
   private boolean includeStopUsedRealtime(RegularStop stop) {
-    return OTPFeature.IncludeStopsUsedRealTimeInTransfers.isOn() && stop.isSometimesUsedRealtime();
+    // Some stops, like railway and bus-replacement stops, are tagged during graph building/data
+    // import. These should always be included.
+    if (OTPFeature.IncludeStopsUsedRealTimeInTransfers.isOn() && stop.isSometimesUsedRealtime()) {
+      return true;
+    }
+    // Stops listed in the build-config are regular stops to include.
+    return stopsWithRegularTransfers.contains(stop.getId());
   }
 }

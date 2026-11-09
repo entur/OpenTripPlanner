@@ -370,7 +370,8 @@ public class GraphBuilderModules {
       regularTransferBuildRepository,
       stopsVisitedByPatterns,
       stopsAllowedForModes,
-      flexIndex
+      flexIndex,
+      config.stopsWithRegularTransfers()
     );
   }
 

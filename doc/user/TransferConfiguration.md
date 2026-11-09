@@ -332,6 +332,12 @@ must also be visited by a scheduled trip pattern. Stops that no scheduled trip v
 transfers from them, unless the feature `IncludeStopsUsedRealTimeInTransfers` is on and the stop is
 likely to be used by real-time trips, see [Configuration](Configuration.md#otp-features).
 
+A stop listed in the experimental parameter `transfers.stopsWithRegularTransfers` always has
+transfers from it, and is always a transfer target, even if no scheduled trip visits it. This is for
+stops that real-time updates may use, but the static data does not, see
+[the parameter](#transfers_stopsWithRegularTransfers). The station of the stop must still allow
+transfers.
+
 **Transfers to a stop.** Any stop where the station allows transfers can be a transfer target. With
 the feature `ConsiderPatternsForDirectTransfers` only the closest stop of each trip pattern is a
 target, so there is a single transfer to each pattern.
@@ -449,6 +455,7 @@ otherwise.
 | [flex](#transfers_flex)                                                                    |        `object`        | The configuration of the transfers created for flex routing.                                                     | *Optional* |                  |  2.10 |
 |    maxDuration                                                                             |       `duration`       | Transfers up to this duration with a mode-specific speed value will be pre-calculated and included in the Graph. | *Optional* | `"PT30M"`        |  2.10 |
 |    [requests](#transfers_flex_requests)                                                    |       `object[]`       | Routing requests to use for pre-calculating stop-to-stop transfers.                                              | *Optional* |                  |  2.10 |
+| [stopsWithRegularTransfers](#transfers_stopsWithRegularTransfers)                          |   `feed-scoped-id[]`   | Stops that should always have regular transfers computed, even without scheduled trips.                          | *Optional* |                  |  2.10 |
 | via                                                                                        |        `object`        | The configuration of the transfers between a via coordinate and the stops.                                       | *Optional* |                  |  2.10 |
 |    maxDuration                                                                             |       `duration`       | The longest transfer between a via coordinate and a stop.                                                        | *Optional* | `"PT30M"`        |  2.10 |
 | [walk](#transfers_walk)                                                                    |        `object`        | The configuration of the walk transfers.                                                                         | *Optional* |                  |  2.10 |
@@ -768,6 +775,29 @@ with street mode set to WALK. Only the requests with street mode WALK are used.
 }
 ```
 
+
+<h3 id="transfers_stopsWithRegularTransfers">stopsWithRegularTransfers</h3>
+
+**Since version:** `2.10` ∙ **Type:** `feed-scoped-id[]` ∙ **Cardinality:** `Optional`   
+**Path:** /transfers 
+
+Stops that should always have regular transfers computed, even without scheduled trips.
+
+List of stop IDs for which regular transfers are always pre-computed during graph build,
+even if the stop has no scheduled trips. Remember to include _feedId_ like this
+`"RB:NSR:Quay:102541"`.
+
+This is useful for stops that are unused in static transit data, but may be visited by
+real-time updates (e.g. a platform that a train can be re-routed to at runtime). Without
+this configuration, stops with no scheduled trips are excluded from transfer
+pre-computation and become unreachable islands when a real-time update routes a trip to
+them.
+
+Note! This parameter should be replaced with an automatic update to regular transfers
+based on real-time updates.
+
+
+**THIS IS STILL AN EXPERIMENTAL FEATURE - IT MAY CHANGE WITHOUT ANY NOTICE!**
 
 <h3 id="transfers_walk">walk</h3>
 

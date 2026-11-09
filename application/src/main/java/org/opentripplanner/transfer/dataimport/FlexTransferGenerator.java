@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import org.jspecify.annotations.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -266,7 +267,8 @@ public class FlexTransferGenerator implements GraphBuilderModule {
         siteRepository,
         patternsForStop()::get,
         flexIndex.get(),
-        finder
+        finder,
+        Set.of()
       );
     } else {
       return finder;

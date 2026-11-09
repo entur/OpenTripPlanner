@@ -5,7 +5,9 @@ import static org.opentripplanner.transit.model._data.TransitRepositoryForTest.s
 import static org.opentripplanner.transit.model._data.TransitRepositoryForTest.tripPattern;
 
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.transfer.dataimport.StopsVisitedByPatterns;
 import org.opentripplanner.transit.dataimport.TimetableDataImport;
@@ -82,8 +84,28 @@ class StreetTransferFactoryTest {
     );
   }
 
+  @Test
+  void anUnusedStopListedInStopsWithRegularTransfersIsATransferSource() {
+    assertThat(isSource(UNUSED, Set.of(UNUSED.getId()))).isTrue();
+    assertThat(isSource(UNUSED, Set.of(SCHEDULED.getId()))).isFalse();
+  }
+
+  @Test
+  void aListedStopThatDoesNotAllowTransfersIsNotATransferSource() {
+    assertThat(isSource(NO_TRANSFERS, Set.of(NO_TRANSFERS.getId()))).isFalse();
+  }
+
   private boolean isSource(RegularStop stop) {
-    return StreetTransferFactory.isTransferSource(siteRepository, stopPatterns, stop.getId());
+    return isSource(stop, Set.of());
+  }
+
+  private boolean isSource(RegularStop stop, Set<FeedScopedId> stopsWithRegularTransfers) {
+    return StreetTransferFactory.isTransferSource(
+      siteRepository,
+      stopPatterns,
+      stopsWithRegularTransfers,
+      stop.getId()
+    );
   }
 
   private static StopsVisitedByPatterns createStopPatterns() {

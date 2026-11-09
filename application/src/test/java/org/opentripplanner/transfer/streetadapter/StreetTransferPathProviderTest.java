@@ -3,6 +3,7 @@ package org.opentripplanner.transfer.streetadapter;
 import static com.google.common.truth.Truth.assertThat;
 
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.opentripplanner.framework.application.OTPFeature;
 import org.opentripplanner.place.nearbystopfinder.PatternConsideringNearbyStopFinder;
@@ -21,7 +22,8 @@ class StreetTransferPathProviderTest {
       new Graph(),
       new TransitRepository(),
       stopId -> List.of(),
-      null
+      null,
+      Set.of()
     );
 
     assertThat(OTPFeature.ConsiderPatternsForDirectTransfers.isOn()).isTrue();

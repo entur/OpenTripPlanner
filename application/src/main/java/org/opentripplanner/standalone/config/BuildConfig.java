@@ -16,6 +16,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Set;
 import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -50,6 +51,7 @@ import org.opentripplanner.standalone.config.buildconfig.IslandPruningConfig;
 import org.opentripplanner.standalone.config.buildconfig.NetexConfig;
 import org.opentripplanner.standalone.config.buildconfig.OsmConfig;
 import org.opentripplanner.standalone.config.buildconfig.S3BucketConfig;
+import org.opentripplanner.standalone.config.buildconfig.StopsWithRegularTransfersConfig;
 import org.opentripplanner.standalone.config.buildconfig.TransferProfilesConfigMapper;
 import org.opentripplanner.standalone.config.buildconfig.TransitFeedConfig;
 import org.opentripplanner.standalone.config.buildconfig.TransitFeeds;
@@ -177,6 +179,7 @@ public class BuildConfig implements OtpDataStoreConfig {
 
   private final FlexTransferParameters flexTransferParameters;
   private final Duration viaTransferMaxDuration;
+  private final Set<FeedScopedId> stopsWithRegularTransfers;
   private final TransferParameters<RouteRequest> transferProfiles;
 
   public final int maxAreaNodes;
@@ -327,6 +330,7 @@ public class BuildConfig implements OtpDataStoreConfig {
     this.transferProfiles = TransferProfilesConfigMapper.mapTransfers(transfers);
     this.flexTransferParameters = FlexTransferConfig.map(transfers);
     this.viaTransferMaxDuration = ViaTransferConfig.mapMaxDuration(transfers);
+    this.stopsWithRegularTransfers = StopsWithRegularTransfersConfig.map(transfers);
 
     this.maxStopToShapeSnapDistance = root
       .of("maxStopToShapeSnapDistance")
@@ -813,6 +817,11 @@ public class BuildConfig implements OtpDataStoreConfig {
 
   public Duration viaTransferMaxDuration() {
     return viaTransferMaxDuration;
+  }
+
+  /** Stops that always have regular transfers, even without scheduled trips. */
+  public Set<FeedScopedId> stopsWithRegularTransfers() {
+    return stopsWithRegularTransfers;
   }
 
   /**

@@ -3,8 +3,10 @@ package org.opentripplanner.place.nearbystopfinder;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import org.jspecify.annotations.Nullable;
 import org.locationtech.jts.geom.Coordinate;
+import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.ext.flex.FlexIndex;
 import org.opentripplanner.place.NearbyStopFinder;
 import org.opentripplanner.place.api.NearbyStop;
@@ -40,16 +42,18 @@ public class PatternConsideringNearbyStopFinder implements NearbyStopFinder {
   /**
    * @param patternsByStopLookup the scheduled trip patterns visiting a stop
    * @param flexIndex the flex trips to consider, or {@code null} to ignore flex trips
+   * @param stopsWithRegularTransfers stops to always include, even without scheduled patterns
    */
   public PatternConsideringNearbyStopFinder(
     SiteRepository siteRepository,
     PatternsByStopLookup patternsByStopLookup,
     @Nullable FlexIndex flexIndex,
-    NearbyStopFinder delegateNearbyStopFinder
+    NearbyStopFinder delegateNearbyStopFinder,
+    Set<FeedScopedId> stopsWithRegularTransfers
   ) {
     this.siteRepository = siteRepository;
     var builder = CompositeNearbyStopFilter.of().add(
-      new PatternNearbyStopFilter(siteRepository, patternsByStopLookup)
+      new PatternNearbyStopFilter(siteRepository, patternsByStopLookup, stopsWithRegularTransfers)
     );
 
     if (flexIndex != null) {

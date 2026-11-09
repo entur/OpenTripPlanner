@@ -332,6 +332,12 @@ must also be visited by a scheduled trip pattern. Stops that no scheduled trip v
 transfers from them, unless the feature `IncludeStopsUsedRealTimeInTransfers` is on and the stop is
 likely to be used by real-time trips, see [Configuration](Configuration.md#otp-features).
 
+A stop listed in the experimental parameter `transfers.stopsWithRegularTransfers` always has
+transfers from it, and is always a transfer target, even if no scheduled trip visits it. This is for
+stops that real-time updates may use, but the static data does not, see
+[the parameter](#transfers_stopsWithRegularTransfers). The station of the stop must still allow
+transfers.
+
 **Transfers to a stop.** Any stop where the station allows transfers can be a transfer target. With
 the feature `ConsiderPatternsForDirectTransfers` only the closest stop of each trip pattern is a
 target, so there is a single transfer to each pattern.

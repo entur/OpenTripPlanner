@@ -1,5 +1,6 @@
 package org.opentripplanner.transfer.streetadapter;
 
+import java.util.Set;
 import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
@@ -88,12 +89,14 @@ public class StreetTransferPathProvider implements TransferPathProvider<NearbySt
    * transfers a lot, so the transfers can be stored and the graph built.
    *
    * @param flexIndex the flex trips to consider, or {@code null} to ignore flex trips
+   * @param stopsWithRegularTransfers stops that are always found, even without scheduled patterns
    */
   public static NearbyStopFinder createNearbyStopFinder(
     Graph graph,
     TransitRepository transitRepository,
     PatternsByStopLookup patternsByStop,
-    @Nullable FlexIndex flexIndex
+    @Nullable FlexIndex flexIndex,
+    Set<FeedScopedId> stopsWithRegularTransfers
   ) {
     var finder = createNearbyStopFinder(graph, transitRepository);
     if (!OTPFeature.ConsiderPatternsForDirectTransfers.isOn()) {
@@ -103,7 +106,8 @@ public class StreetTransferPathProvider implements TransferPathProvider<NearbySt
       transitRepository.getSiteRepository(),
       patternsByStop,
       flexIndex,
-      finder
+      finder,
+      stopsWithRegularTransfers
     );
   }
 

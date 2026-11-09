@@ -1,5 +1,6 @@
 package org.opentripplanner.transfer.configure;
 
+import java.util.Set;
 import org.jspecify.annotations.Nullable;
 import org.opentripplanner.core.model.id.FeedScopedId;
 import org.opentripplanner.core.model.transaction.RepositoryHandle;
@@ -62,6 +63,8 @@ public final class StreetTransferFactory {
    *                     transfers, see {@code MaxDurationsPreference}
    * @param flexIndex    the flex trips to consider when the transfer stops are found, or
    *                     {@code null} to ignore flex trips
+   * @param stopsWithRegularTransfers stops that always have transfers, even if no scheduled
+   *                     pattern visits them, see {@link #isTransferSource}
    */
   public static RegularTransferGenerator createGenerator(
     Graph graph,
@@ -70,7 +73,8 @@ public final class StreetTransferFactory {
     RegularTransferBuildRepository<NearbyStop> buildRepository,
     StopsVisitedByPatterns stopPatterns,
     AllowedModesLookup allowedModes,
-    @Nullable FlexIndex flexIndex
+    @Nullable FlexIndex flexIndex,
+    Set<FeedScopedId> stopsWithRegularTransfers
   ) {
     return RegularTransferFactory.createTransferGenerator(
       new RaptorStopIndexAdaptor(transitRepository.getSiteRepository()),
@@ -81,9 +85,16 @@ public final class StreetTransferFactory {
           graph,
           transitRepository,
           stopPatterns,
-          flexIndex
+          flexIndex,
+          stopsWithRegularTransfers
         ),
-        stopId -> isTransferSource(transitRepository.getSiteRepository(), stopPatterns, stopId),
+        stopId ->
+          isTransferSource(
+            transitRepository.getSiteRepository(),
+            stopPatterns,
+            stopsWithRegularTransfers,
+            stopId
+          ),
         stopId -> transfersAllowed(transitRepository.getSiteRepository(), stopId),
         allowedModes
       ),
@@ -146,11 +157,12 @@ public final class StreetTransferFactory {
    * source, as the transfers were created before the regular transfers had profiles. If it is on,
    * the stop must also be visited by a scheduled pattern, or, with the feature
    * {@link OTPFeature#IncludeStopsUsedRealTimeInTransfers}, be likely to be used by real-time
-   * trips.
+   * trips, or be listed in {@code stopsWithRegularTransfers}.
    */
   static boolean isTransferSource(
     SiteRepository siteRepository,
     StopsVisitedByPatterns stopPatterns,
+    Set<FeedScopedId> stopsWithRegularTransfers,
     FeedScopedId stopId
   ) {
     if (!transfersAllowed(siteRepository, stopId)) {
@@ -159,7 +171,11 @@ public final class StreetTransferFactory {
     if (!OTPFeature.ConsiderPatternsForDirectTransfers.isOn()) {
       return true;
     }
-    return stopPatterns.contains(stopId) || isUsedRealtime(siteRepository, stopId);
+    return (
+      stopPatterns.contains(stopId) ||
+      stopsWithRegularTransfers.contains(stopId) ||
+      isUsedRealtime(siteRepository, stopId)
+    );
   }
 
   private static boolean isUsedRealtime(SiteRepository siteRepository, FeedScopedId stopId) {

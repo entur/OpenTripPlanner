@@ -5,6 +5,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.opentripplanner.core.framework.transaction.configure.TransactionFactory;
 import org.opentripplanner.core.model.transaction.RepositoryHandle;
 import org.opentripplanner.core.model.transaction.RepositoryRegistry;
@@ -172,7 +173,8 @@ public class TestServerContext {
       regularTransferBuildRepository,
       stopsVisitedByPatterns,
       new StopsAllowedForModes(timetableDataImport, stopsVisitedByPatterns),
-      null
+      null,
+      Set.of()
     );
     new RegularTransitTransferGenerator(
       () -> transferGenerator,
