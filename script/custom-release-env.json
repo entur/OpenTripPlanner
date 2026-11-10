@@ -5,6 +5,6 @@
   "ser_ver_id_prefix": "EN",
   "include_prs_label": "Entur Test",
   "include_prs_labelers": [ "vpaturet", "t2gran", "testower", "sigtot" ],
-  "ext_branches" : [ "main_config"],
+  "ext_branches" : [ "main_config", "keep_transfers_for_stops_onto_transfers_v2" ],
   "otp_production_url" : "https://otp2debug.entur.org/otp"
 }
