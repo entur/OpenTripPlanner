@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.opentripplanner</groupId>
     <artifactId>otp</artifactId>
-    <version>2.11.0-entur-72</version>
+    <version>2.11.0-entur-75</version>
     <packaging>pom</packaging>
 
     <name>OpenTripPlanner - Root</name>
@@ -58,7 +58,7 @@
 
 
     <properties>
-        <otp.serialization.version.id>EN-0247</otp.serialization.version.id>
+        <otp.serialization.version.id>EN-0249</otp.serialization.version.id>
 
         <!-- Lib versions - keep list sorted on property name -->
         <geotools.version>35.2</geotools.version>
