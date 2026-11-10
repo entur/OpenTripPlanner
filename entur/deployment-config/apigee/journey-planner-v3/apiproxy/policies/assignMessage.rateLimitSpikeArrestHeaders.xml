@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<AssignMessage async="false" continueOnError="false" enabled="true" name="assignMessage.rateLimitSpikeArrestHeaders">
+    <DisplayName>assignMessage.rateLimitSpikeArrestHeaders</DisplayName>
+    <Properties/>
+    <Set>
+        <Headers>
+            <Header name="Spike-Allowed">{spikeArrest.allowed}</Header>
+            <Header name="Spike-Range">{spikeArrest.range}</Header>
+        </Headers>
+        <StatusCode>429</StatusCode>
+        <ReasonPhrase>Too Frequent Requests - Spike Arrest!</ReasonPhrase>
+    </Set>
+    <IgnoreUnresolvedVariables>true</IgnoreUnresolvedVariables>
+    <AssignTo createNew="false" transport="http" type="response"/>
+</AssignMessage>
