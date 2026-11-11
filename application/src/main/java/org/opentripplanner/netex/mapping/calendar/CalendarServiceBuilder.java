@@ -22,15 +22,20 @@ import org.opentripplanner.netex.mapping.support.FeedScopedIdFactory;
  */
 public class CalendarServiceBuilder {
 
-  static final FeedScopedId EMPTY_SERVICE_ID = new FeedScopedId("CAL-SERVICE", "EMPTY");
-
   private final FeedScopedIdFactory scopedIdFactory;
+
+  /**
+   * The service id of trips without operating days. It is scoped by the feed like all other service
+   * ids, so that the empty calendars of two NeTEx feeds do not share an id.
+   */
+  private final FeedScopedId emptyServiceId;
   private final Map<Set<LocalDate>, FeedScopedId> serviceCalendar = new ConcurrentHashMap<>();
 
   private long counter = 0L;
 
   public CalendarServiceBuilder(FeedScopedIdFactory scopedIdFactory) {
     this.scopedIdFactory = scopedIdFactory;
+    this.emptyServiceId = scopedIdFactory.createId("EMPTY");
   }
 
   /**
@@ -44,7 +49,7 @@ public class CalendarServiceBuilder {
   @Nullable
   public FeedScopedId registerDatesAndGetServiceId(Set<LocalDate> dates) {
     if (dates.isEmpty()) {
-      return EMPTY_SERVICE_ID;
+      return emptyServiceId;
     }
     // The injected lambda is run inside the synchronized block
     return serviceCalendar.computeIfAbsent(dates, ignore -> createServiceId());
@@ -68,7 +73,7 @@ public class CalendarServiceBuilder {
 
   public ServiceCalendar createEmptyCalendar() {
     ServiceCalendar emptyCalendar = new ServiceCalendar();
-    emptyCalendar.setServiceId(EMPTY_SERVICE_ID);
+    emptyCalendar.setServiceId(emptyServiceId);
     emptyCalendar.setPeriod(LocalDateRange.ofUnbounded());
     return emptyCalendar;
   }
