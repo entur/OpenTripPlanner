@@ -19,10 +19,6 @@ data:
             "EmpiricalDelay": {{ .Values.otpFeatures.empiricalDelay }},
             "FlexRouting" : true,
             "GoogleCloudStorage" : true,
-            // TODO Remove "IncludeEmptyRailStopsInTransfers", when
-            // "IncludeStopsUsedRealTimeInTransfers" has been is production for a week
-            "IncludeEmptyRailStopsInTransfers" : true,
-            // Will be used when PR 7042 Missing transfers is merged
             "IncludeStopsUsedRealTimeInTransfers" : true
         },
         "gbfs": {{ .Values.gbfs | toPrettyJson | indent 8 | trim }}
