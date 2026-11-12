@@ -54,15 +54,16 @@ data:
             "profiles": [
               { "id": "WALK s=1.35 r=4.0", "userPreferences": { "speed": 1.35, "reluctance": 4.0 }},
               { "id": "WALK s=0.7 r=4.0", "userPreferences": { "speed": 0.7, "reluctance": 4.0 }},
-              { "id": "WALK s=1.3 r=10.0", "userPreferences": { "speed": 1.3, "reluctance": 10.0 }},
-              { "id": "WALK s=1.95 r=4.0", "userPreferences": { "speed": 1.95, "reluctance": 4.0 }}
+              { "id": "WALK s=1.3 r=10.0", "userPreferences": { "speed": 1.3, "reluctance": 10.0 }}
             ],
             "warmup": [
-              { "id": "WALK s=0.8 r=4.0", "userPreferences": { "speed": 0.8, "reluctance": 4.0 }},
-              { "id": "WALK s=2.0 r=4.0", "userPreferences": { "speed": 2.0, "reluctance": 4.0 }},
               { "id": "WALK s=1.3 r=4.0", "userPreferences": { "speed": 1.3, "reluctance": 4.0 }},
               { "id": "WALK s=1.4 r=4.0", "userPreferences": { "speed": 1.4, "reluctance": 4.0 }},
+              { "id": "WALK s=1.95 r=4.0", "userPreferences": { "speed": 1.95, "reluctance": 4.0 }},
+              { "id": "WALK s=2.0 r=4.0", "userPreferences": { "speed": 2.0, "reluctance": 4.0 }},
+              { "id": "WALK s=0.8 r=4.0", "userPreferences": { "speed": 0.8, "reluctance": 4.0 }},
               { "id": "WALK s=1.5 r=4.0", "userPreferences": { "speed": 1.5, "reluctance": 4.0 }},
+              { "id": "WALK s=1.3 r=2.0", "userPreferences": { "speed": 1.3, "reluctance": 2.0 }},
               { "id": "WALK s=1.3 r=7.0", "userPreferences": { "speed": 1.3, "reluctance": 7.0 }},
               { "id": "WALK s=1.65 r=4.0", "userPreferences": { "speed": 1.65, "reluctance": 4.0 }},
               { "id": "WALK s=2.8 r=4.0", "userPreferences": { "speed": 2.8, "reluctance": 4.0 }},
@@ -76,17 +77,10 @@ data:
               { "id": "WALK s=1.3 r=1.0", "userPreferences": { "speed": 1.3, "reluctance": 1.0 }},
               { "id": "WALK s=1.8 r=4.0", "userPreferences": { "speed": 1.8, "reluctance": 4.0 }},
               { "id": "WALK s=1.4 r=7.0", "userPreferences": { "speed": 1.4, "reluctance": 7.0 }},
+              { "id": "WALK s=0.8 r=2.0", "userPreferences": { "speed": 0.8, "reluctance": 2.0 }},
               { "id": "WALK s=1.45 r=4.0", "userPreferences": { "speed": 1.45, "reluctance": 4.0 }},
               { "id": "WALK s=0.65 r=4.0", "userPreferences": { "speed": 0.65, "reluctance": 4.0 }},
-              { "id": "WALK s=1.25 r=4.0", "userPreferences": { "speed": 1.25, "reluctance": 4.0 }},
-              { "id": "WALK s=1.6 r=4.0", "userPreferences": { "speed": 1.6, "reluctance": 4.0 }},
-              { "id": "WALK s=2.1 r=4.0", "userPreferences": { "speed": 2.1, "reluctance": 4.0 }},
-              { "id": "WALK s=0.8 r=10.0", "userPreferences": { "speed": 0.8, "reluctance": 10.0 }},
-              { "id": "WALK s=1.9 r=4.0", "userPreferences": { "speed": 1.9, "reluctance": 4.0 }},
-              { "id": "WALK s=1.1 r=7.0", "userPreferences": { "speed": 1.1, "reluctance": 7.0 }},
-              { "id": "WALK s=1.05 r=4.0", "userPreferences": { "speed": 1.05, "reluctance": 4.0 }},
-              { "id": "WALK s=1.3 r=8.0", "userPreferences": { "speed": 1.3, "reluctance": 8.0 }},
-              { "id": "WALK s=1.2 r=7.0", "userPreferences": { "speed": 1.2, "reluctance": 7.0 }}
+              { "id": "WALK s=1.25 r=4.0", "userPreferences": { "speed": 1.25, "reluctance": 4.0 }}
             ]
           },
           "wheelchair": {
