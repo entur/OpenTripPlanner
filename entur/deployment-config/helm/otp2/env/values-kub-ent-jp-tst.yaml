@@ -59,7 +59,7 @@ proxy:
 configuration:
   apiProcessingTimeout: "15s"
   carpooling: true
-  costlyAssertions: true
+  costlyAssertions: false
   directTransitSearch: false
   emission: true
   empiricalDelay: true
