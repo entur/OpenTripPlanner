@@ -81,3 +81,8 @@ configuration:
   transferConstraints: true
   vehicleRentalServiceDirectory:
     url: "http://mobility-cache.prd.entur.internal/gbfs-internal/v3/manifest.json"
+
+# The debug UI is served through the Apigee journey-planner-v3 proxy. OTP puts this URL in the vector
+# tile URLs it gives the debug UI, so it has to be the public Apigee URL of this environment.
+debugUiConfig:
+  vectorTilesBasePath: "https://api.entur.io/journey-planner/v3/debug/otp/debug/vectortiles"
