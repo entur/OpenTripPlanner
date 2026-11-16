@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<AssignMessage async="false" continueOnError="false" enabled="true" name="assignMessage.rateLimitQuotaHeaders">
+    <DisplayName>assignMessage.rateLimitQuotaHeaders</DisplayName>
+    <Properties/>
+    <Set>
+        <Headers>
+            <Header name="Rate-Limit-Allowed">{quota.allowed}</Header>
+            <Header name="Rate-Limit-Used">{quota.used}</Header>
+            <Header name="Rate-Limit-Available">{quota.available}</Header>
+            <Header name="Rate-Limit-Range">"per-minute"</Header>
+            <Header name="Rate-Limit-Expiry-Time">{quota.expiryTime}</Header>
+        </Headers>
+    </Set>
+    <IgnoreUnresolvedVariables>true</IgnoreUnresolvedVariables>
+    <AssignTo createNew="false" transport="http" type="response"/>
+</AssignMessage>
