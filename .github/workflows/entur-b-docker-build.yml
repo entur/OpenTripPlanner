@@ -27,8 +27,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
             ${{ runner.os }}-maven-
+      # The debug UI is served through the Apigee journey-planner-v3 proxy, so the debug client is built
+      # with the URLs it has there. They are baked into the client at build time. The URLs are the same
+      # in every environment, because they are paths on the host the debug UI is opened from.
       - name: Run maven build
-        run: mvn verify -Dps -DskipTests -Dcheckstyle.skip
+        run: >-
+          mvn verify -Dps -DskipTests -Dcheckstyle.skip
+          -DdebugUi.apiUrl=/journey-planner/v3/graphql
+          -DdebugUi.styleUrl=/journey-planner/v3/debug/otp/debug/vectortiles/style.json
+          -DdebugUi.graphiqlUrl=
       - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           path: otp-shaded/target/otp-shaded-*.jar
