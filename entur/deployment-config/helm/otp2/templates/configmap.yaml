@@ -106,6 +106,10 @@ data:
               "costLimitFunction": "900 + 1.5x",
               "intervalRelaxFactor": 0.75
             },
+            "directFlexGeneralizedCostLimit" : {
+              "costLimitFunction": "900 + 1.5x",
+              "intervalRelaxFactor": 0.75
+            },
             "bikeRentalDistanceRatio": 0.3
           },
           "ignoreRealtimeUpdates": false,
