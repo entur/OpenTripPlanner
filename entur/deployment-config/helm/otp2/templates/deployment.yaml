@@ -66,9 +66,6 @@ spec:
         - -XX:ConcGCThreads=1
         - -XX:ParallelGCThreads=6
         - -XX:MetaspaceSize=256m
-        # Mitigation for Java4Shell (CVE-2026-114938): heap overflow in the AVX-512 Base64 decode
-        # intrinsic. Remove once the base image ships a JDK with the fix (JDK-8393212).
-        - -XX:-UseBASE64Intrinsics
         - --add-opens=java.base/java.lang=ALL-UNNAMED
         - --add-opens=java.base/java.nio=ALL-UNNAMED
         - --add-opens=java.base/sun.nio.ch=ALL-UNNAMED
