@@ -95,7 +95,7 @@ cronjobRedeployOtp2:
     cpuRequest: 100m
     memRequest: 1000Mi
   image:
-    repo: eu.gcr.io/entur-system-1287/deployment-rollout-restart:0.1.9
+    repo: eu.gcr.io/entur-system-1287/deployment-rollout-restart:master.20261118-SHA2cfc448
 
 secrets:
   otp2-secrets:
