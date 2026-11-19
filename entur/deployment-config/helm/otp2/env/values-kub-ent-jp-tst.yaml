@@ -41,8 +41,6 @@ ingress:
   enabled: true
   otpApi:
     domainName: -gcp2.staging.entur.io
-  otpDebug:
-    domainName: .staging.entur.org
 
 cronjobRedeployOtp2:
   environmentValues:
