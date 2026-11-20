@@ -3,6 +3,17 @@
   Open Trip Planner (OTP) - Entur Fork
 </h1>
 <p align="center">
+  <a href="https://api.dev.entur.io/journey-planner/v3/debug/">
+    <img src="https://api.dev.entur.io/journey-planner/v3/version-badge.svg?label=DEV&amp;color=limegreen&amp;l=0" alt="OTP Version DEV">
+  </a> &nbsp;
+  <a href="https://api.staging.entur.io/journey-planner/v3/debug/">
+    <img src="https://api.staging.entur.io/journey-planner/v3/version-badge.svg?label=TEST&amp;color=orange&amp;l=0" alt="OTP Version TEST"/>
+  </a> &nbsp;
+  <a href="https://api.entur.io/journey-planner/v3/debug/">
+    <img src="https://api.entur.io/journey-planner/v3/version-badge.svg?label=PROD&amp;color=crimson" alt="OTP Version PROD"/>
+  </a>
+</p>
+<p align="center">
   <a href="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml"><img src="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-a-otp-release.yml/badge.svg" alt="Release new OTP version 🛠️"/></a> &nbsp;
   <a href="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-b-docker-build.yml"><img src="https://github.com/entur/OpenTripPlanner/actions/workflows/entur-b-docker-build.yml/badge.svg" alt="Build and push docker image 🎁"/></a>
 </p>
