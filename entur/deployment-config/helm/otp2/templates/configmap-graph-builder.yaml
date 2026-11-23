@@ -91,7 +91,7 @@ data:
             ]
           },
           "bicycle": {
-            "maxDurationAllowAllModes": "8m",
+            "maxDurationAllowAllModes": "12m",
             "maxDuration": "30m",
             "profiles": [
               { "id": "BICYCLE s=5.0 r=5.0 walk(r=10.0)", "userPreferences": { "speed": 5.0, "reluctance": 5.0, "walk": { "reluctance": 10.0 } } }
@@ -100,7 +100,12 @@ data:
               { "id": "BICYCLE s=8.0 r=5.0 walk(r=10.0)", "userPreferences": { "speed": 8.0, "reluctance": 5.0, "walk": { "reluctance": 10.0 } } }
             ]
           },
-          "car": { "maxDuration": "3h" },
+          "car": {
+            "maxDuration": "3h",
+            "profiles": [
+              { "id": "CAR r=4.0", "userPreferences": { "reluctance": 4.0 } }
+            ]
+          },
           "flex": { "maxDuration": "5m" }
         },
         // Old config - remove at least after 1.1.2027
