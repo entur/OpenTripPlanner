@@ -48,7 +48,7 @@ spec:
           value: {{ . }}
           effect: NoSchedule
       {{- end }}
-      serviceAccountName: application
+      serviceAccountName: otp2-app
       automountServiceAccountToken: false
       containers:
       - image: {{ .Values.image.identifier }}
