@@ -20,7 +20,7 @@ spec:
     spec:
       template:
         spec:
-          serviceAccountName: application
+          serviceAccountName: otp2-cj
           containers:
             - command:
                 - ./redeploy_on_change_deployment.sh
