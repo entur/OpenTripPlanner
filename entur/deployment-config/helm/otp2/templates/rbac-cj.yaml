@@ -20,7 +20,7 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: cronjob-redeploy-{{ template "app.name" . }}
+  name: cj-redeploy-{{ template "app.name" . }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "common.labels" . | indent 4 }}
