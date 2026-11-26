@@ -44,6 +44,9 @@ ingress:
   otpDebug:
     domainName: .entur.org
 
+morningScaleUp:
+  enabled: true
+
 cronjobRedeployOtp2:
   environmentValues:
     cloudsdkCoreProject: kub-ent-jp-prd
