@@ -38,7 +38,20 @@ percentage is the share of the ops, unless it says time.
 - raptor, memory (`needs time`): `TripScheduleAlightSearch` (the reverse heuristic search) has 7 %
   of the time and little of the ops: the departure times of large patterns are read from memory.
 - raptor, memory: `TripPatternForDates.getTripSchedule` allocates a `TripScheduleWithOffset` for
-  every boarding, 17 % of the allocated bytes.
+  every boarding, 17 % of the allocated bytes. A form that shares nothing between threads:
+  `TripScheduleBoardSearch` (and `TripScheduleAlightSearch`), which is created for each visit of a
+  route, keeps the last schedule it created with its trip index, and returns it again when the next
+  search finds the same trip (several arrivals at a stop board the same trip). Try with `--alloc`;
+  the results stay identical if no code compares two schedules with `==`.
+- raptor, memory (`needs time`): `MultiCriteriaRoutingStrategy.alightOnlyRegularTransferExist` has
+  8 % of the time and 1 % of the ops. For every ride at every stop it reads
+  `TripPatternForDates.arrivalTimes[stopPos * nTrips + trip]`: the times of a trip are `nTrips`
+  ints apart, a new cache line for each stop. No change is designed yet: an array by trip then
+  stop makes the alighting sequential and the trip search at a stop strided.
+- raptor, memory: the samples of `IntIterators.intIncIterator` (4.4 % of the time) are most likely
+  the first reads of a route in `routeTransit`: `TripPatternForDates`, its `RoutingTripPattern`
+  (stop indexes, slack index), the two `BitSet`s with their `long[]` and the time arrays are ten
+  cache lines apart for each visit of a route. Fewer objects for what a visit reads first.
 - raptor, memory: `RaptorRoutingRequestTransitData.routeIndexIterator` allocates a `BitSet` of all
   patterns in every round, and `patternStopIterator` an iterator for every pattern
   (`IntIterators.intIncIterator` has 4.4 % of the time, 1.4 % of the allocated bytes).
