@@ -40,9 +40,9 @@ upstream.
 
 ## The loop
 
-Each experiment is a branch off `perf-rig`, worked on in this worktree. All commands run from the
-repo root, one at a time (a second one stops, or waits with `--wait`), and use the dataset `oslo`
-unless `--dataset norway` comes first.
+Experiments are worked on in this worktree, on a branch off `perf-rig` (see "A series of
+experiments"). All commands run from the repo root, one at a time (a second one stops, or waits
+with `--wait`), and use the dataset `oslo` unless `--dataset norway` comes first.
 
 **0. Baseline, once per base commit**, from a clean tree (35 min with Norway and the OTP tests):
 
@@ -88,6 +88,22 @@ python perf-rig/rig.py bench --levels e2e,raptor,street --forks 5
 python perf-rig/rig.py --dataset norway check --repeat --threads 8 --tests none
 python perf-rig/rig.py test --scope all         # the whole OTP test suite
 ```
+
+**A series of experiments** (the skill `perf-loop` in `.claude/skills` runs the loop this way):
+
+- `perf-rig/JOURNAL.md` has every idea that was tried, accepted or not, and the ideas not tried
+  yet. Read it before picking an idea. The result of an idea is written there as its own commit,
+  also when the idea is rejected and its code is thrown away.
+- A series is a branch `perf/<name>` off `perf-rig`, with one commit for each accepted idea. Stay
+  on it: the gains add up, and the profile after a gain shows the next one.
+- Start a new branch off `perf-rig` for another design of code the series already changed (the
+  two are then compared with `base`), for a rewrite that later ideas should not build on yet, or
+  when several ideas in a row gave nothing. It starts with the journal of the branch it leaves:
+  `git checkout perf/<old> -- perf-rig/JOURNAL.md`, so the journal of the branch worked on last
+  is always the whole one.
+- An accepted idea is frozen as `step<N>`, N being its number in the journal. The frozen builds
+  are in the data directory only; the journal has the commit of each, to build it again.
+- To get a gain upstream, cherry-pick its commit to a branch off `dev-2.x`.
 
 **Rules**
 

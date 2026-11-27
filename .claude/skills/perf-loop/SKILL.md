@@ -1,0 +1,106 @@
+---
+name: perf-loop
+description: Work continuously on finding OTP performance gains with the perf-rig - profile, pick an idea, try it, accept or reject it, commit, write the journal, and go on with the next idea until they run out. Use when asked to find or continue finding performance improvements in OTP with the rig, to run the perf loop, or to speed up a level (raptor, street, link, e2e).
+---
+
+# perf-loop
+
+Find performance gains in OTP, one proven idea at a time, and keep going until a stop condition.
+The argument is the level to work on: `raptor` (default), `street`, `link` or `e2e`.
+
+The rig decides what a gain is, not you: an idea counts when `try` and `accept` say so, and it is
+written in the journal whether it worked or not.
+
+Read first, every session:
+
+- `perf-rig/README.md`, "The loop" and "Rules": the commands, what each proves, and the rules for
+  branches and the journal ("A series of experiments").
+- `perf-rig/JOURNAL.md`: what was tried, what was accepted, and the ideas not tried yet.
+
+## Start
+
+Work in this worktree only, from the repo root, one rig command at a time, in the foreground. Do
+not edit `perf-rig/rig.py` or `perf-rig/src` while a rig command runs.
+
+1. `git status` must be clean. If it is not, stop and say what is there: it may be someone's work.
+2. `python perf-rig/rig.py builds`: build `base` must be of the commit the journal names. If it is
+   missing or of another commit, stop: a new baseline is the user's decision.
+3. The branch:
+   - on `perf/<name>`: continue that series, unless the README rules say a new branch;
+   - on `perf-rig`: start a series with `git switch -c perf/<level>-<n>`;
+   - a new branch that leaves a series starts with that series' journal, see the README.
+4. After a switch to another commit, run a full `python perf-rig/rig.py build` (the checkout
+   clears the compiled classes). If a command says the sources changed after the build:
+   `python perf-rig/rig.py build --fast`.
+5. The build to compare with is the last accepted step in the journal (`step<N>`), or `base` if the
+   series has none, or if `rig.py builds` does not list that step.
+
+## One round
+
+1. **Pick an idea.** Take one from "Ideas not tried yet" in the journal. If there are none worth
+   trying, run `python perf-rig/rig.py profile --quick --levels <level>`, read the code of the top
+   methods, and add the ideas you see to that list (commit it). Never pick an idea listed under
+   "Tried", unless what made it fail has changed; then say what.
+2. **Know what the rig would miss.** The first time a series changes a file:
+   `python perf-rig/rig.py coverage --quick`, then
+   `python perf-rig/rig.py mutate <file> --count 10`. A bug that is NOT FOUND in the code the idea
+   touches means a mistake there goes unnoticed: add a case that runs it (below), or pick another
+   idea.
+3. **Change the code.** Only what the idea needs: no clean-up, no renames. The results must stay
+   identical; an idea that changes a result, a default or a config value is not a performance idea.
+4. **Try**: `python perf-rig/rig.py try --levels <level> --against <step or base>`. Read:
+   - the check: `CHECK PASSED`, else the idea is wrong;
+   - the ops table: `B/A total` and `mismatch` 0, and the methods whose work changed: is it the
+     work you meant to remove?
+   Adjust and try again, at most three rounds for one idea.
+5. **Decide.**
+   - Accept when `B/A total` is 0.999 or lower at the level and the code is no harder to read than
+     the gain is worth.
+   - An idea about memory (fewer allocations, a denser layout) does not show in the ops. Judge it
+     with `python perf-rig/rig.py bench --levels <level> --forks 5 --baseline <step or base>`
+     (20 min, nothing else running on the machine): it needs the verdict `B faster`.
+   - Anything else is rejected. A rejected idea is as useful in the journal as an accepted one.
+6. **Accepted**: `python perf-rig/rig.py accept` must pass (if it does not: fix the idea, or reject
+   it). Commit the code alone. `python perf-rig/rig.py freeze step<N>`, N being the number of the
+   journal entry. Then write the entry and commit the journal.
+   **Rejected**: undo the change (`git restore` the files of the idea), write the entry with the
+   reason, commit the journal.
+7. **Time check**, when the steps since the last one add up to 3 % of the ops, or after five
+   accepted steps: `python perf-rig/rig.py bench --levels <level> --forks 5` (base against the
+   working tree). Write the verdict in the journal. If the time does not follow the ops, find the
+   step with `bench --baseline step<a> --candidate step<b>`, `git revert` it, and write why.
+
+Then the next round.
+
+## Adding a case
+
+A case for code no case runs goes in `perf-rig/cases/<dataset>.extra.json`. Then
+`python perf-rig/rig.py unit` and
+`python perf-rig/rig.py record base --build base --repeat --threads 8`: the frozen `base` build
+makes the expected results, never the working tree. Commit the case alone.
+
+## Never
+
+- Never `freeze base`, never record `base` with another build than `base`, never change a case,
+  the rig or `perf-rig/mutations` to make a check pass. A difference means the idea is wrong.
+- Never push, and never change anything outside this worktree and `../perf-rig-data`.
+- Never change or skip an OTP test to get through `accept`.
+
+## Commits
+
+One line each, no body and no trailer. The code of an idea is one commit with nothing else in it,
+worded so it could go upstream as it is. The journal entry is the next commit
+(`perf-rig: journal: <N> <accepted|rejected>`).
+
+## Stop
+
+Stop and report when:
+
+- five ideas in a row were rejected and the ideas left are no better: the level is dry on this
+  branch (the README says when a new branch is the answer);
+- a check differs and you cannot explain it from your change, or the rig itself fails: that is a
+  problem with the rig or with OTP, not something to work around;
+- the user's budget of time or rounds is used.
+
+The report: the steps accepted with their ops and time numbers, the ideas rejected and why in a
+line each, and the ideas left in the journal.
