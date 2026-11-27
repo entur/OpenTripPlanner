@@ -201,9 +201,12 @@ comparison of `try`: it needs `B faster`.
   priority. The forks of a frozen build are kept and used again, like its ops. `try --alloc` adds
   it to a round, for an idea that is about allocation.
 - `rig.py bench` (time): 3 forks per build, on the fastest cores only (`--cpus fast`, the P-cores
-  of a hybrid CPU; `--cpus all`, or a list like `2-9`), at high priority and with `-Xbatch`. The
-  report gives the time of each fork, and warns if a fork was uneven or other processes used the
-  CPU. Both kinds of benchmark write `summary.json` next to the report.
+  of a hybrid CPU; `--cpus all`, or a list like `2-9`), at high priority and with `-Xbatch`. A
+  fork during which other processes used more than half a core is run again, but not more forks
+  than a build has: a machine that stays in use is not waited for. The report gives the time of
+  each fork, and warns if a fork was uneven or other processes used the CPU. Both kinds of
+  benchmark write `summary.json` next to the report.
+- Windows does not go to sleep while a rig command runs (but it does when the lid is closed).
 - `rig.py mutate FILE... [--count N]`: needs `coverage [--quick]` first, and checks each bug with
   the same cases. "found: the run fails" is a bug that makes a request fail.
 - `rig.py test [--scope changed|all]` runs the OTP tests (`changed`: the modules changed since the

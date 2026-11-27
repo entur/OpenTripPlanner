@@ -32,9 +32,10 @@ ALLOC_TOLERANCE = 0.001
 # run. With background compilation on the few pinned cores, the Raptor forks of the same code
 # differed by 2.1 % (standard deviation) instead of 0.8 %, and were 10 % slower.
 TIME_JVM = ["-Xbatch"]
-# A time benchmark is not reliable if other processes use more than this many cores meanwhile,
+# A time benchmark is not reliable if other processes use more than this many cores meanwhile
+# (measured: forks at 0.3-0.4 cores agreed to 0.3 %, forks at 0.5-1.0 were 2-4 % slower),
 # or if the slowest fork takes this much longer than the fastest
-OTHER_CPU_LIMIT = 1.0
+OTHER_CPU_LIMIT = 0.5
 UNEVEN_FORKS = 1.15
 CASES_DIR = REPO / "perf-rig" / "cases"
 MAIN = "org.opentripplanner.perfrig.RigMain"
@@ -1334,21 +1335,28 @@ def other_cpu_use(out, forks):
     browser that runs during some of the forks makes their timings slower.
     """
     f = out / "meta.json"
-    machine = json.loads(f.read_text(encoding="utf-8")).get("machine", {}) if f.exists() else {}
+    meta = json.loads(f.read_text(encoding="utf-8")) if f.exists() else {}
     cores = {}
     for side in "AB":
         for i, r in enumerate(forks[side]):
-            m = machine.get(f"{side}{i}")
+            m = meta.get("machine", {}).get(f"{side}{i}")
             if m and m["cpuSeconds"] and "processCpuSeconds" in r["meta"]:
-                cores[f"{side}{i}"] = max(0.0, m["cpuSeconds"] - r["meta"]["processCpuSeconds"]) / m["seconds"]
+                cores[f"{side}{i}"] = other_cores(r, m)
     if not cores:
         return []
     lines = ["CPU used by other processes during each fork, in cores: "
              + ", ".join(f"{k} {v:.2f}" for k, v in cores.items())]
+    if meta.get("repeated"):
+        lines.append("Run again, because other processes used the CPU: " + ", ".join(meta["repeated"]))
     if max(cores.values()) > OTHER_CPU_LIMIT:
         lines.append(f"WARNING: other processes used more than {OTHER_CPU_LIMIT} cores during a fork; "
                      "the timings are not reliable, run the benchmark again on a quiet machine")
     return lines
+
+
+def other_cores(result, machine):
+    """The cores that other processes used during a fork: what the machine used less what the fork used."""
+    return max(0.0, machine["cpuSeconds"] - result["meta"].get("processCpuSeconds", 0)) / machine["seconds"]
 
 
 def parse_cpus(spec, classes):
@@ -1431,6 +1439,10 @@ def cmd_bench(args):
         start_recorder(out)
         jvm = jvm + ["--enable-native-access=ALL-UNNAMED"]  # the id of the thread is read from Windows
         common = common + ["--thread-id"]
+    # A fork of a time benchmark that other processes disturbed is run again, but not more forks
+    # than the benchmark has for a build: a machine that stays in use is not waited for
+    repeats_left = forks if kind == "time" else 0
+    builds["repeated"] = []
     for build, side, f in order:
         result = out / f"{side}-{f}.json"
         known = known_result(kind, build, args.dataset, common, f)
@@ -1438,25 +1450,35 @@ def cmd_bench(args):
             log(f"Fork {side}{f} ({build}): known from an earlier benchmark")
             shutil.copyfile(known, result)
             continue
-        log(f"Fork {side}{f} ({build})")
         # The allocations of a flight recording say which methods allocate
         recording = out / f"{side}-{f}.jfr"
         record = ["--jfr", win(recording)] if kind == "alloc" else []
         trace = out / f"{side}-{f}.etl"
-        if args.counters:
-            ask_recorder(out, "start", "started")
-        started, cpu_before = datetime.datetime.now(), machine_cpu_seconds()
-        code = run_rig(build, common + record + ["--out", win(result), "--graph", win(graph_file(args.dataset, build)),
-                                                 "--label", f"{side}{f}:{build}"],
-                       out / f"{side}-{f}.log", args.heap, jvm, high_priority=kind != "alloc")
-        if code != 0:
-            print(tail(out / f"{side}-{f}.log"))
-            die(f"Fork {side}{f} failed")
-        builds["machine"][f"{side}{f}"] = {"cpuSeconds": machine_cpu_seconds() - cpu_before,
-                                           "seconds": (datetime.datetime.now() - started).total_seconds()}
+        while True:
+            log(f"Fork {side}{f} ({build})")
+            if args.counters:
+                ask_recorder(out, "start", "started")
+            started, cpu_before = datetime.datetime.now(), machine_cpu_seconds()
+            code = run_rig(build, common + record + ["--out", win(result), "--graph", win(graph_file(args.dataset, build)),
+                                                     "--label", f"{side}{f}:{build}"],
+                           out / f"{side}-{f}.log", args.heap, jvm, high_priority=kind != "alloc")
+            if code != 0:
+                print(tail(out / f"{side}-{f}.log"))
+                die(f"Fork {side}{f} failed")
+            machine = {"cpuSeconds": machine_cpu_seconds() - cpu_before,
+                       "seconds": (datetime.datetime.now() - started).total_seconds()}
+            if args.counters:
+                ask_recorder(out, "stop", "stopped", str(trace))
+            others = other_cores(json.loads(result.read_text(encoding="utf-8")), machine)
+            if not repeats_left or others <= OTHER_CPU_LIMIT:
+                break
+            repeats_left -= 1
+            builds["repeated"].append(f"{side}{f} ({others:.2f} cores)")
+            log(f"Fork {side}{f} is run again: other processes used {others:.2f} cores meanwhile")
+            trace.unlink(missing_ok=True)
+        builds["machine"][f"{side}{f}"] = machine
         (out / "meta.json").write_text(json.dumps(builds, indent=2), encoding="utf-8")
         if args.counters:
-            ask_recorder(out, "stop", "stopped", str(trace))
             add_counters(result, trace)
             trace.unlink()
         if kind == "alloc":
@@ -2249,6 +2271,10 @@ def main():
         return
     lock = acquire_lock(args.command, args.wait)
     os.environ["PERF_RIG_LOCKED"] = "1"  # the commands this one starts run under its lock
+    if os.name == "nt":
+        import ctypes
+        # Windows does not go to sleep while this command runs: 0x80000001 is "continuous, system required"
+        ctypes.windll.kernel32.SetThreadExecutionState(0x80000001)
     try:
         left = unplant()
         if left:
