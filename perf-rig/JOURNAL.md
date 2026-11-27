@@ -106,19 +106,7 @@ predict.
 
 ## Being tried
 
-- raptor, `ParetoSet.add` and `qualify` ask the comparator directly: no `ParetoComparator.compare`
-  with `ParetoDominance.of` and a switch on the enum (1.0 % of the ops and more), and no private
-  helper methods (`leftVectorDominatesRightVector`, `leftDominanceExist`, `rightDominanceExist`).
-  The JIT log of step9 (`-XX:+PrintInlining`, `bench/20261127-211203-step8-vs-wt/B-0.log`) shows
-  that `ParetoSet.qualify` is inlined in the destination pruning and its loop too (the comparator
-  of the destination arrivals is 96 % of the calls of `ParetoComparator.compare`), but the test
-  of `goodElement` is two calls that are not inlined ("failed to inline: virtual call"): the
-  helper methods are shared by `add` (the pattern rides) and `qualify` (the destination
-  arrivals), so the JIT compiler sees several comparators there. 44 M probes of a pass take that
-  path. With the calls written where they are used, `qualify` has call sites that only the
-  destination arrivals use, and `add` sites that the pattern rides dominate. The same
-  comparisons in the same order, so the results are identical by construction.
-
+Nothing.
 
 ## Tried
 
@@ -291,3 +279,24 @@ predict.
   (0.7480 to 0.8055), branch mispredictions 1.0204 (1.0026 to 1.0386). Allocated bytes 0.567.
   The cores ran at 4.1 to 4.25 GHz in all ten forks. The gain is memory: the same instructions,
   22 % fewer cache misses, 0.349 to 0.326 cycles for an instruction.
+
+### 10. accepted: ParetoSet asks its comparator directly for the dominance in each direction
+- where: raptor, `ParetoSet.add`, `qualify` and `removeDominatedElementsFromRestOfSetAndAddNewElement`
+- result: ops raptor 0.9833 against step9 (0.8264 against base, the product of the steps), results
+  identical; `accept`: 550 results identical, also repeated and on 8 threads, and all 9687 OTP
+  tests pass
+- commit: a87b62705b on perf/raptor-1, build step10
+- note: `add` and `qualify` called `ParetoComparator.compare`, which calls the comparator twice,
+  makes a `ParetoDominance` of the two answers and is followed by a switch on it; and they tested
+  `goodElement` through three private helper methods. Now they call `leftDominanceExist` twice
+  and branch on the two booleans: the same comparisons in the same order. The ops that are gone
+  are those of `compare` (1.0 %), `ParetoDominance.of` (0.5 %) and the helpers (0.9 %).
+  The reason to try it was the JIT log of step9 (`-XX:+PrintInlining` with `RIG_JAVA_OPTS`, the
+  fork log `bench/20261127-211203-step8-vs-wt/B-0.log`): `ParetoSet.qualify` is inlined in the
+  destination pruning with its loop, but the two calls of the test of `goodElement` were "failed
+  to inline: virtual call", because the helper methods were shared by `add` (the pattern rides)
+  and `qualify` (the destination arrivals) and saw the comparators of both. 44 M probes of a
+  pass take that path. `qualify` is only used for the destination arrivals, so its own call sites
+  see their comparator alone. What the time and the instructions say is in the time check below.
+  `ParetoComparator.compare` and `ParetoDominance` are still used by tests and by
+  `ParetoComparator.dominanceExist`.
