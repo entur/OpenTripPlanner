@@ -82,6 +82,15 @@ cronjobRedeployGraphBuilder:
     xmx: 20g
     xms: 512m
 
+# Raises the HPA minReplicas before the weekday morning rush, then restores
+# horizontalPodAutoscaler.minReplicas.
+morningScaleUp:
+  enabled: false
+  minReplicas: 20
+  startSchedule: "45 5 * * 1-5"
+  endSchedule: "0 9 * * 1-5"
+  timeZone: Europe/Oslo
+
 cronjobRedeployOtp2:
   enabled: true
   concurrencyPolicy: Replace

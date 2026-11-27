@@ -42,6 +42,9 @@ ingress:
   otpApi:
     domainName: -gcp2.entur.io
 
+morningScaleUp:
+  enabled: true
+
 cronjobRedeployOtp2:
   environmentValues:
     cloudsdkCoreProject: kub-ent-jp-prd

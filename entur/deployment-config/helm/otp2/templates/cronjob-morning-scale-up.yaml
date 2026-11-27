@@ -1,0 +1,111 @@
+{{- if and .Values.journeyPlanner.enabled .Values.horizontalPodAutoscaler.enabled (gt .Values.replicas 1.0) .Values.morningScaleUp.enabled }}
+{{- $jobs := list
+  (dict "name" "start" "schedule" .Values.morningScaleUp.startSchedule "minReplicas" .Values.morningScaleUp.minReplicas)
+  (dict "name" "end" "schedule" .Values.morningScaleUp.endSchedule "minReplicas" .Values.horizontalPodAutoscaler.minReplicas)
+}}
+{{- range $jobs }}
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: cronjob-morning-scale-up-{{ .name }}-{{ template "app.name" $ }}
+  namespace: {{ $.Release.Namespace }}
+  labels:
+    {{- include "common.labels" $ | indent 4 }}
+  annotations:
+    {{- include "common.annotations" $ | indent 4 }}
+spec:
+  schedule: {{ .schedule | quote }}
+  timeZone: {{ $.Values.morningScaleUp.timeZone }}
+  concurrencyPolicy: Replace
+  failedJobsHistoryLimit: 1
+  successfulJobsHistoryLimit: 1
+  suspend: false
+  jobTemplate:
+    metadata:
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+      labels:
+        {{- include "common.labels" $ | indent 8 }}
+    spec:
+      template:
+        spec:
+          serviceAccountName: otp2-cj
+          containers:
+            - name: morning-scale-up-{{ .name }}
+              command:
+                - ./update_hpa_min_replicas.sh
+              env:
+                - name: CLOUDSDK_CORE_PROJECT
+                  value: {{ $.Values.cronjobRedeployOtp2.environmentValues.cloudsdkCoreProject }}
+                - name: HPA
+                  value: {{ template "app.name" $ }}
+                - name: MIN_REPLICAS
+                  value: {{ .minReplicas | quote }}
+              envFrom:
+                - secretRef:
+                    name: otp2-secrets
+              image: {{ $.Values.cronjobRedeployOtp2.image.repo }}
+              imagePullPolicy: IfNotPresent
+              resources:
+                limits:
+                  cpu: {{ $.Values.cronjobRedeployOtp2.resources.cpuLimit }}
+                  memory: {{ $.Values.cronjobRedeployOtp2.resources.memLimit }}
+                requests:
+                  cpu: {{ $.Values.cronjobRedeployOtp2.resources.cpuRequest }}
+                  memory: {{ $.Values.cronjobRedeployOtp2.resources.memRequest }}
+              securityContext:
+                allowPrivilegeEscalation: false
+                runAsNonRoot: true
+                capabilities:
+                  drop: [ "ALL" ]
+                seccompProfile:
+                  type: RuntimeDefault
+          restartPolicy: Never
+          securityContext:
+            runAsGroup: 1000
+            runAsNonRoot: true
+            runAsUser: 1000
+            seccompProfile:
+              type: RuntimeDefault
+          terminationGracePeriodSeconds: 30
+{{- end }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: cj-morning-scale-up-{{ template "app.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels" . | indent 4 }}
+  annotations:
+    {{- include "common.annotations" . | indent 4 }}
+rules:
+  - apiGroups:
+      - autoscaling
+    resources:
+      - horizontalpodautoscalers
+    resourceNames:
+      - {{ template "app.name" . }}
+    verbs:
+      - get
+      - patch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: cj-morning-scale-up-{{ template "app.name" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "common.labels" . | indent 4 }}
+  annotations:
+    {{- include "common.annotations" . | indent 4 }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: cj-morning-scale-up-{{ template "app.name" . }}
+subjects:
+  - kind: ServiceAccount
+    name: otp2-cj
+    namespace: {{ .Release.Namespace }}
+{{- end }}
