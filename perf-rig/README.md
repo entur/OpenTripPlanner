@@ -279,8 +279,12 @@ inputs are hard links to the `otp-data` files. A new dataset: `rig.py --dataset 
   build the instructions differed by 0.1-0.2 % (standard deviation) and the branch mispredictions
   by 0.2-0.6 %, but the cycles by 1.5-3 %, like the time, and the cache misses by 4-5 %: other
   processes share the cache and the two threads of a core. So the instructions show a difference
-  of 0.6 % on a busy machine, the cycles one of 9 % and the cache misses one of 17 %; a quiet
-  machine and more forks are still needed for those. A trace of 10 s of this laptop is 28 MB
+  of 0.6 % on a busy machine, the cycles one of 9 % and the cache misses one of 17 %. With the
+  other programs closed, the forks that ran while other processes used less than half a core
+  differed by 0.3 % in cycles and in time and by 0.7 % in cache misses, so four such forks of
+  each build show 1 % in cycles and 2 % in cache misses. But three of eight forks were disturbed
+  all the same (0.5-1.0 cores, the benchmark warns) and up to 4 % off: the machine must be quiet
+  for the whole benchmark. A trace of 10 s of this laptop is 28 MB
   (209 000 context switches) and is read in 1.5 s; the trace of a fork is deleted when it is read.
 - The ops against the CPU, same benchmark: steps 1 and 2 of `perf/raptor-1` have 4.8 % fewer ops
   and 2.9 % fewer instructions (2.4 to 3.5), and no difference in cycles or time that the
