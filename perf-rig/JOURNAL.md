@@ -57,4 +57,12 @@ is the share of the ops, unless it says time.
 - result: ops raptor 0.9792 against step1 (0.9519 against base, the product of the two steps),
   results identical
 - commit: f04139771a on perf/raptor-1, build step2
-- note: `BitSet.get` with its helpers is 3.5 % of the ops of base now.
+- note: `BitSet.get` with its helpers is 3.6 % of the ops of base now.
+
+### 3. time check: stopped early, not conclusive
+- where: raptor, step2 (f04139771a) against base, `bench --levels raptor --forks 5`
+- result: raptor: no significant difference, time B/A 0.989 (99 % interval 0.608 to 1.611),
+  allocated bytes 0.997, results identical, from 2+2 of the 5+5 forks
+- note: stopped after 38 min: a fork took 8.5 min, so the 10 forks take 85 min, not 20. The laptop
+  was in use: other processes used 1.9 to 2.8 cores during each fork, and the benchmark warns that
+  the timings are not reliable. A time check on a quiet machine is still owed for steps 1 and 2.
