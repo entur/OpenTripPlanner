@@ -35,9 +35,6 @@ percentage is the share of the ops, unless it says time.
   trips overtake each other, so it needs to know that the departures at the stop are sorted.
 - raptor, `BitSet.get` with `checkInvariants` and `wordIndex` is still 3.8 %: the boarding and
   alighting checks of `TripPatternForDates` and the reached stops of the standard search.
-- raptor, memory (`needs time`): `ArrivalParetoSetComparatorFactory.compareC1RelaxedOnC2Dominance`
-  has 20 % of the time and 1.5 % of the ops: the stop arrivals of a pareto set are spread over the
-  heap. Keep the criteria of the elements in int arrays in the set.
 - raptor, memory (`needs time`): `TripScheduleAlightSearch` (the reverse heuristic search) has 7 %
   of the time and little of the ops: the departure times of large patterns are read from memory.
 - raptor, memory: `TripPatternForDates.getTripSchedule` allocates a `TripScheduleWithOffset` for
@@ -51,7 +48,16 @@ percentage is the share of the ops, unless it says time.
 
 ## Being tried
 
-Nothing.
+- raptor, memory (`needs time`): `ArrivalParetoSetComparatorFactory.compareC1RelaxedOnC2Dominance`
+  has 20 % of the time and 1.5 % of the ops: the stop arrivals of a pareto set are spread over the
+  heap. Keep the criteria of the elements in int arrays in the set. How: a set of its own for the
+  stop arrivals (`StopArrivalParetoSet` in `rangeraptor.multicriteria.arrivals`, used by
+  `McStopArrivals` only) that does what `ParetoSet.add` does, in the same order and with the same
+  events for the listener, but compares the new arrival with a copy of the four criteria (arrival
+  time, round, c1, c2) of each element in one `int[]`, and with a copy of the criteria of
+  `goodElement` in fields. The comparators of `ArrivalParetoSetComparatorFactory` get a form that
+  takes the eight ints. The arrived-on-board criterion (egress and via stops only) still asks the
+  element. Tried with a full build, `check --quick` and a time benchmark against step6.
 
 ## Tried
 
