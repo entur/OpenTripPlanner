@@ -66,3 +66,15 @@ is the share of the ops, unless it says time.
 - note: stopped after 38 min: a fork took 8.5 min, so the 10 forks take 85 min, not 20. The laptop
   was in use: other processes used 1.9 to 2.8 cores during each fork, and the benchmark warns that
   the timings are not reliable. A time check on a quiet machine is still owed for steps 1 and 2.
+
+### 4. time check: fewer instructions confirmed, time not conclusive
+- where: raptor, step2 (f04139771a) against base, `bench --quick --levels raptor --counters`, 3+3
+  forks
+- result: time B/A 0.996 (99 % interval 0.930 to 1.066): no significant difference. Of the CPU:
+  instructions 0.9709 (0.9654 to 0.9764), cycles 0.9987 (0.909 to 1.097), cache misses 1.034
+  (0.879 to 1.216), branch mispredictions 1.006 (0.989 to 1.024). Results identical.
+- note: the laptop was in use, and the benchmark warns that the timings are not reliable. The two
+  steps remove 2.9 % of the instructions the CPU executes, against 4.8 % of the ops, and the
+  cycles for an instruction went from 0.339 to 0.349: what was removed was cheap. Whether any time
+  is gained is open: a time check on a quiet machine, with more forks, is still owed for steps 1
+  and 2.
