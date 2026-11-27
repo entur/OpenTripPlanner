@@ -8,8 +8,8 @@ description: Work continuously on finding OTP performance gains with the perf-ri
 Find performance gains in OTP, one proven idea at a time, and keep going until the user interrupts
 or the session ends. There is no budget, and nothing to ask the user on the way.
 
-The arguments: the level to start with, `raptor` (default), `street`, `link` or `e2e`, and
-`idle` if the user gives the laptop away.
+The arguments: the level to work on, `raptor` (default), `street`, `link` or `e2e`, and `idle` if
+the user gives the laptop away. Stay on that level for the whole session.
 
 - **Normal mode**: the laptop is in use. The loop measures the work done (ops) and the allocated
   bytes, which a busy machine does not change. It measures no time, closes nothing, and leaves
@@ -106,10 +106,18 @@ Then the next round.
 
 ## Keep going
 
-Do not stop because ideas run out. When five ideas in a row were rejected and the ideas left are
-no better, the level is dry on this branch: say so in the journal, and go on with another level
-(profile it: `raptor`, `street`, `e2e` for the rest of a request, `link`), or with a new branch
-where the README says one is the answer.
+Ideas do not run out, and the level does not change: when the ones a profile shows at once are
+tried, think harder about the same level. There is no limit to how long you may think about it.
+
+- Read the whole path of a search, not only the methods at the top of the profile, and ask what
+  work the result does not need. Work that is not done gains more than work done faster.
+- Profile with more methods (`--top 60`), and compare the three lists: a method with far more of
+  the time than of the ops waits for memory.
+- Look at which cases cost most in the report of `bench --ops`, and why those.
+- Profile the other dataset (`--dataset norway`): long searches spend their work elsewhere.
+- Read why an idea was rejected: another form of it may work.
+- A larger change, of an algorithm or of how the data is laid out, goes on a new branch, as the
+  README says.
 
 Stop by yourself only when a check differs and you cannot explain it from your change, or when
 the rig itself fails: that is a problem with the rig or with OTP, not something to work around.
