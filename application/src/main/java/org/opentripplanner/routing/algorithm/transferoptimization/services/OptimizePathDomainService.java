@@ -1,9 +1,7 @@
 package org.opentripplanner.routing.algorithm.transferoptimization.services;
 
-import static java.util.stream.Collectors.toSet;
-
 import java.util.Comparator;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -120,7 +118,12 @@ public class OptimizePathDomainService<T extends RaptorTripSchedule> {
 
     setC2IfNotSet(originalPath, filteredTails);
 
-    return filteredTails.stream().map(OptimizedPathTail::build).collect(toSet());
+    // Insertion ordered, here and for the tails: several tails can have the same cost, and their
+    // order must not depend on identity hash codes
+    return filteredTails
+      .stream()
+      .map(OptimizedPathTail::build)
+      .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   private static <T> T last(List<T> list) {
@@ -173,7 +176,7 @@ public class OptimizePathDomainService<T extends RaptorTripSchedule> {
       var tailSelector = new TransitPathLegSelector<>(filter, tails);
 
       // Reset the result set to an empty set
-      tails = new HashSet<>();
+      tails = new LinkedHashSet<>();
 
       for (TripToTripTransfer<T> tx : transfers) {
         // Skip transfers happening before the earliest possible board time

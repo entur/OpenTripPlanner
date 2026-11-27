@@ -1,6 +1,6 @@
 package org.opentripplanner.routing.algorithm.transferoptimization.services;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 import org.opentripplanner.routing.algorithm.transferoptimization.model.OptimizedPathTail;
@@ -37,8 +37,9 @@ class TransitPathLegSelector<T extends RaptorTripSchedule> {
 
   TransitPathLegSelector(final PathTailFilter<T> filter, final Set<OptimizedPathTail<T>> legs) {
     this.filter = filter;
-    this.remindingLegs = Set.copyOf(legs);
-    this.selectedLegs = new HashSet<>();
+    // Insertion ordered: the order of legs with the same cost must not depend on hash codes
+    this.remindingLegs = new LinkedHashSet<>(legs);
+    this.selectedLegs = new LinkedHashSet<>();
   }
 
   Set<OptimizedPathTail<T>> next(final int fromStopPosition) {
@@ -53,8 +54,8 @@ class TransitPathLegSelector<T extends RaptorTripSchedule> {
     }
     prevStopPosition = fromStopPosition;
 
-    Set<OptimizedPathTail<T>> candidates = new HashSet<>();
-    Set<OptimizedPathTail<T>> rest = new HashSet<>();
+    Set<OptimizedPathTail<T>> candidates = new LinkedHashSet<>();
+    Set<OptimizedPathTail<T>> rest = new LinkedHashSet<>();
 
     for (OptimizedPathTail<T> it : remindingLegs) {
       if (fromStopPosition < it.head().toStopPos()) {

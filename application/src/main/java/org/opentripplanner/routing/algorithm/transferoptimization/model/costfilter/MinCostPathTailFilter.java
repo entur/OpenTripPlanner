@@ -1,6 +1,6 @@
 package org.opentripplanner.routing.algorithm.transferoptimization.model.costfilter;
 
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.ToIntFunction;
@@ -49,7 +49,8 @@ class MinCostPathTailFilter<T extends RaptorTripSchedule> implements PathTailFil
     Set<OptimizedPathTail<T>> elements,
     ToIntFunction<OptimizedPathTail<T>> costFunction
   ) {
-    var result = new HashSet<OptimizedPathTail<T>>();
+    // Insertion ordered: the order of tails with the same cost must not depend on hash codes
+    var result = new LinkedHashSet<OptimizedPathTail<T>>();
     int minCost = Integer.MAX_VALUE;
 
     for (var it : elements) {

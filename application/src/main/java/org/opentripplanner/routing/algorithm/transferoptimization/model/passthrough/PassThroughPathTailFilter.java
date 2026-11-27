@@ -1,8 +1,7 @@
 package org.opentripplanner.routing.algorithm.transferoptimization.model.passthrough;
 
-import static java.util.stream.Collectors.toSet;
-
-import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -66,15 +65,17 @@ public class PassThroughPathTailFilter<T extends RaptorTripSchedule> implements 
     Set<OptimizedPathTail<T>> elements,
     int boardStopPosition
   ) {
+    // Insertion ordered: the order of tails with the same cost must not depend on hash codes
     Map<Integer, Set<OptimizedPathTail<T>>> elementsByC2Value = elements
       .stream()
       .collect(
         Collectors.groupingBy(
           it -> c2Calculator.calculateC2AtStopPos(it, boardStopPosition),
-          toSet()
+          LinkedHashMap::new,
+          Collectors.toCollection(LinkedHashSet::new)
         )
       );
-    var result = new HashSet<OptimizedPathTail<T>>();
+    var result = new LinkedHashSet<OptimizedPathTail<T>>();
     for (var set : elementsByC2Value.values()) {
       result.addAll(filterChain.filterIntermediateResult(set, boardStopPosition));
     }
@@ -87,7 +88,7 @@ public class PassThroughPathTailFilter<T extends RaptorTripSchedule> implements 
       .stream()
       .peek(c2Calculator::calculateC2)
       .filter(it -> it.head().c2() == 0)
-      .collect(toSet());
+      .collect(Collectors.toCollection(LinkedHashSet::new));
 
     return filterChain.filterFinalResult(result);
   }
