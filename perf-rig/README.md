@@ -80,14 +80,27 @@ all cases, also repeated and on 8 threads, with the OTP tests of the changed mod
 the results are always checked against the record of `base`. Each benchmark adds a line per level
 to `bench/history.tsv`.
 
-**6. Confirm in time, at a milestone** (when the ops say the total is several percent; a quiet
-machine):
+**6. The time check**, a check of its own and not a part of a series: when it is asked for, the ops
+say the total is several percent, and the machine does nothing else.
 
 ```bash
-python perf-rig/rig.py bench --levels e2e,raptor,street --forks 5
+python perf-rig/rig.py bench --quick --levels raptor --forks 5   # the levels the steps changed; half an hour
 python perf-rig/rig.py --dataset norway check --repeat --threads 8 --tests none
 python perf-rig/rig.py test --scope all         # the whole OTP test suite
 ```
+
+The benchmark compares `base` with the working tree. Without `--quick` a fork takes 8 min, not 3.
+
+- `B faster`: the gain is confirmed.
+- A warning about other processes or uneven forks: no result, run it again.
+- `no significant difference` with the ops ratio inside the interval: time can not show a gain
+  that small. More forks make the interval narrower.
+- `B slower`, or an interval that lies above the ops ratio: a step costs time that the ops do not
+  show. Compare the steps one by one (`bench --quick --forks 5 --baseline step1 --candidate step2`).
+
+The result is an entry in the journal, with the steps it covers. An idea marked `needs time` in
+the journal is tried here too, with this benchmark against the last step in place of the ops
+comparison of `try`: it needs `B faster`.
 
 **A series of experiments** (the skill `perf-loop` in `.claude/skills` runs the loop this way):
 
@@ -99,6 +112,8 @@ python perf-rig/rig.py test --scope all         # the whole OTP test suite
   checkout, on `perf-rig`.
 - A series is a branch `perf/<name>` off `perf-rig`, with one commit for each accepted idea. Stay
   on it: the gains add up, and the profile after a gain shows the next one.
+- An idea is accepted on the work done (ops), which a busy machine does not change. The time is
+  not measured in a series: that is the time check (6).
 - Start a new branch off `perf-rig` for another design of code the series already changed (the
   two are then compared with `base`), for a rewrite that later ideas should not build on yet, or
   when several ideas in a row gave nothing.

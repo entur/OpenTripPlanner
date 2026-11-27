@@ -1,6 +1,6 @@
 ---
 name: perf-loop
-description: Work continuously on finding OTP performance gains with the perf-rig - profile, pick an idea, try it, accept or reject it, commit, write the journal, and go on with the next idea until they run out. Use when asked to find or continue finding performance improvements in OTP with the rig, to run the perf loop, or to speed up a level (raptor, street, link, e2e).
+description: Work continuously on finding OTP performance gains with the perf-rig - profile, pick an idea, try it, accept or reject it, commit, write the journal, and go on with the next idea until they run out. Use when asked to find or continue finding performance improvements in OTP with the rig, to run the perf loop, or to speed up a level (raptor, street, link, e2e). Also says how the separate time check of the accepted steps is done, when the user asks for that.
 ---
 
 # perf-loop
@@ -9,7 +9,9 @@ Find performance gains in OTP, one proven idea at a time, and keep going until a
 The argument is the level to work on: `raptor` (default), `street`, `link` or `e2e`.
 
 The rig decides what a gain is, not you: an idea counts when `try` and `accept` say so, and it is
-written in the journal whether it worked or not.
+written in the journal whether it worked or not. The loop measures the work done (ops), which is
+the same on a busy machine. It never measures time: that is a check of its own, see "The time
+check".
 
 Read first, every session:
 
@@ -44,7 +46,9 @@ runs: it stops when the sources no longer match the build.
    trying, run `python perf-rig/rig.py profile --quick --levels <level>`, read the code of the top
    methods, and add the ideas you see to that list (`rig.py journal "perf-rig: journal: ideas"`).
    Never pick an idea listed under
-   "Tried", unless what made it fail has changed; then say what.
+   "Tried", unless what made it fail has changed; then say what. An idea that only time can judge
+   (fewer allocations, a denser layout) does not show in the ops: mark it `needs time` in the list
+   and leave it for the time check.
 2. **Know what the rig would miss.** The first time a series changes a file:
    `python perf-rig/rig.py coverage --quick`, then
    `python perf-rig/rig.py mutate <file> --count 10`. A bug that is NOT FOUND in the code the idea
@@ -60,21 +64,21 @@ runs: it stops when the sources no longer match the build.
 5. **Decide.**
    - Accept when `B/A total` is 0.999 or lower at the level and the code is no harder to read than
      the gain is worth.
-   - An idea about memory (fewer allocations, a denser layout) does not show in the ops. Judge it
-     with `python perf-rig/rig.py bench --levels <level> --forks 5 --baseline <step or base>`
-     (20 min, nothing else running on the machine): it needs the verdict `B faster`.
    - Anything else is rejected. A rejected idea is as useful in the journal as an accepted one.
 6. **Accepted**: `python perf-rig/rig.py accept` must pass (if it does not: fix the idea, or reject
    it). Commit the code alone. `python perf-rig/rig.py freeze step<N>`, N being the number of the
    journal entry. Then write the entry and commit the journal (below).
    **Rejected**: undo the change (`git restore` the files of the idea), write the entry with the
    reason, and commit the journal.
-7. **Time check**, when the steps since the last one add up to 3 % of the ops, or after five
-   accepted steps: `python perf-rig/rig.py bench --levels <level> --forks 5` (base against the
-   working tree). Write the verdict in the journal. If the time does not follow the ops, find the
-   step with `bench --baseline step<a> --candidate step<b>`, `git revert` it, and write why.
 
 Then the next round.
+
+## The time check
+
+Not a part of the loop. Do it only when the user asks for it, on a machine that does nothing else:
+it is step 6 of "The loop" in the README (the time of the accepted steps, the Norway cases, the
+whole OTP test suite). Its result is a journal entry, committed with
+`python perf-rig/rig.py journal "perf-rig: journal: <N> time check"`.
 
 ## Adding a case
 
@@ -111,5 +115,5 @@ Stop and report when:
   problem with the rig or with OTP, not something to work around;
 - the user's budget of time or rounds is used.
 
-The report: the steps accepted with their ops and time numbers, the ideas rejected and why in a
-line each, and the ideas left in the journal.
+The report: the steps accepted with their ops numbers, the ideas rejected and why in a line each,
+the ideas left in the journal, and the steps that have had no time check yet.
