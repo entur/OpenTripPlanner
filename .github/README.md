@@ -3,14 +3,14 @@
   Open Trip Planner (OTP) - Entur Fork
 </h1>
 <p align="center">
-  <a href="https://otp2debug.dev.entur.org/">  
-    <img src="http://otp2debug.dev.entur.org/otp/version-badge.svg?label=DEV&color=limegreen&l=0" alt="OTP Version DEV">
+  <a href="https://api.dev.entur.io/journey-planner/v3/debug/">
+    <img src="https://api.dev.entur.io/journey-planner/v3/version-badge.svg?label=DEV&amp;color=limegreen&amp;l=0" alt="OTP Version DEV">
   </a> &nbsp;
-  <a href="https://otp2debug.staging.entur.org/">
-    <img src="http://otp2debug.staging.entur.org/otp/version-badge.svg?label=TEST&color=orange&l=0" alt="OTP Version TEST"/>
+  <a href="https://api.staging.entur.io/journey-planner/v3/debug/">
+    <img src="https://api.staging.entur.io/journey-planner/v3/version-badge.svg?label=TEST&amp;color=orange&amp;l=0" alt="OTP Version TEST"/>
   </a> &nbsp;
-  <a href="https://otp2debug.entur.org/">
-    <img src="http://otp2debug.entur.org/otp/version-badge.svg?label=PROD&color=crimson" alt="OTP Version PROD"/>
+  <a href="https://api.entur.io/journey-planner/v3/debug/">
+    <img src="https://api.entur.io/journey-planner/v3/version-badge.svg?label=PROD&amp;color=crimson" alt="OTP Version PROD"/>
   </a>
 </p>
 <p align="center">
@@ -20,17 +20,17 @@
 <p align="center">
   <b>
     OTP Debug ・ 
-    <a href="https://otp2debug.dev.entur.org/">DEV</a> ・
-    <a href="https://otp2debug.staging.entur.org/">TEST</a> ・
-    <a href="https://otp2debug.entur.org/">PROD</a>
+    <a href="https://api.dev.entur.io/journey-planner/v3/debug/">DEV</a> ・
+    <a href="https://api.staging.entur.io/journey-planner/v3/debug/">TEST</a> ・
+    <a href="https://api.entur.io/journey-planner/v3/debug/">PROD</a>
   </b>
 </p>
 <p align="center">
   <b>
     OTP GraphQL Explorer ・ 
-    <a href="https://otp2debug.dev.entur.org/graphiql?flavor=transmodel">DEV</a> ・
-    <a href="https://otp2debug.staging.entur.org/graphiql?flavor=transmodel">TEST</a> ・
-    <a href="https://otp2debug.entur.org/graphiql?flavor=transmodel">PROD</a>
+    <a href="https://api.dev.entur.io/journey-planner/v3/debug/graphiql?flavor=transmodel&amp;transmodelEndpoint=/journey-planner/v3/graphql">DEV</a> ・
+    <a href="https://api.staging.entur.io/journey-planner/v3/debug/graphiql?flavor=transmodel&amp;transmodelEndpoint=/journey-planner/v3/graphql">TEST</a> ・
+    <a href="https://api.entur.io/journey-planner/v3/debug/graphiql?flavor=transmodel&amp;transmodelEndpoint=/journey-planner/v3/graphql">PROD</a>
   </b>
 </p>
 <p align="center">
