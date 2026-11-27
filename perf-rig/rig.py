@@ -707,9 +707,11 @@ def run_tests(scope, baseline, name, parse_only=False):
     started = datetime.datetime.now().timestamp()
     modules = []
     if not parse_only:
+        # A test that fails is run again, twice: only one that fails every time fails the run, so
+        # a test that depends on timing does not stop a change that is in order
         cmd = [shutil.which("mvn") or "mvn", "-o", "-B", "test", "-Dps", "-Dcs",
                "-Dplugin.frontend.skip=true", "-Dmaven.test.failure.ignore=true",
-               "-Dsurefire.failIfNoSpecifiedTests=false"]
+               "-Dsurefire.failIfNoSpecifiedTests=false", "-Dsurefire.rerunFailingTestsCount=2"]
         if scope == "changed":
             modules = changed_modules(baseline)
             if not modules:

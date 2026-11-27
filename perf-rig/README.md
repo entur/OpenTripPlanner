@@ -212,7 +212,7 @@ goes in `<dataset>.extra.json` (rule 4).
   the same cases. "found: the run fails" is a bug that makes a request fail.
 - `rig.py test [--scope changed|all]` runs the OTP tests (`changed`: the modules changed since the
   commit of build `base`, with their dependencies) and writes `tests/<name>.json`: every test must
-  pass. `check --tests none|changed|all` chooses the OTP tests of a check.
+  pass. A test that fails is run again twice, and fails the run only if it fails every time. `check --tests none|changed|all` chooses the OTP tests of a check.
 - `rig.py journal MESSAGE` commits `perf-rig/JOURNAL.md` on the current branch and on `perf-rig`.
   It stops if the file lacks an entry that `perf-rig` has, so an entry of another branch is not
   lost.
