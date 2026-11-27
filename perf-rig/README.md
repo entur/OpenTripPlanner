@@ -96,8 +96,6 @@ skill, or when it is asked for.
 
 ```bash
 python perf-rig/rig.py bench --quick --levels raptor --forks 5 --counters   # the levels the steps changed; half an hour
-python perf-rig/rig.py --dataset norway check --repeat --threads 8 --tests none
-python perf-rig/rig.py test --scope all         # the whole OTP test suite
 ```
 
 The benchmark compares `base` with the working tree. Without `--quick` a fork takes 8 min, not 3.
