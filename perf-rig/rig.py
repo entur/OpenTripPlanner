@@ -665,7 +665,7 @@ def cmd_check(args):
         else:
             tests_ok = run_tests(tests, args.baseline, f"check-{args.build}")
     ok = same and code == 0 and tests_ok
-    log("CHECK PASSED" if ok else "CHECK FAILED")
+    log("TESTS PASSED" if ok else "TESTS FAILED")
     if ok and build_meta(args.build).get("fast"):
         log(f"Build '{args.build}' was compiled with --fast, which can leave classes out of date: "
             f"before the change counts as correct, run a full build and check again")
@@ -673,9 +673,7 @@ def cmd_check(args):
 
 
 # ---------------------------------------------------------------------------------------------
-# The OTP tests. Some fail on Windows on every build (e.g. the env-var config tests), so a run
-# is compared with the test record of the baseline: a test that passed there and fails or is
-# gone now is a regression.
+# The OTP tests: every test must pass.
 
 
 def tests_dir():
@@ -705,7 +703,7 @@ def modules_of(files, root):
 
 
 def run_tests(scope, baseline, name, parse_only=False):
-    """Run the OTP tests ('changed' modules or 'all'), record them, compare with the baseline."""
+    """Run the OTP tests ('changed' modules or 'all') and record them: True if every test passed."""
     started = datetime.datetime.now().timestamp()
     modules = []
     if not parse_only:
@@ -741,32 +739,16 @@ def run_tests(scope, baseline, name, parse_only=False):
     record_file.write_text(json.dumps({"time": now(), "scope": scope, "modules": modules,
                                        "build": describe_build(WORKTREE_BUILD), "results": results},
                                       indent=1, sort_keys=True), encoding="utf-8")
-    baseline_file = tests_dir() / f"{baseline}.json"
-    if not baseline_file.exists():
-        failing = sorted(k for k, v in results.items() if v in ("failure", "error"))
-        log(f"No test record '{baseline}' to compare with; {len(failing)} failing: " + " ".join(failing[:20]))
-        return not failing
-    expected = json.loads(baseline_file.read_text(encoding="utf-8"))["results"]
-    return compare_tests(expected, results)
+    failing = failing_tests(results)
+    for k in failing[:30]:
+        log(f"  FAILING: {k}")
+    log(f"OTP tests: {len(failing)} failing -> {'PASSED' if not failing else 'FAILED'}")
+    return not failing
 
 
-def compare_tests(expected, actual):
-    run_modules = {k.split("::")[0] for k in actual}
-    newly_failing = sorted(k for k, v in actual.items()
-                           if v in ("failure", "error") and expected.get(k) not in ("failure", "error"))
-    gone = sorted(k for k, v in expected.items()
-                  if k.split("::")[0] in run_modules and k not in actual and v == "pass")
-    fixed = sorted(k for k, v in actual.items() if v == "pass" and expected.get(k) in ("failure", "error"))
-    for k in newly_failing[:30]:
-        log(f"  NEWLY FAILING: {k}")
-    for k in gone[:30]:
-        log(f"  GONE (passed in the baseline, not run now): {k}")
-    for k in fixed[:10]:
-        log(f"  now passing: {k}")
-    ok = not newly_failing and not gone
-    log(f"Tests compared with the baseline: {len(newly_failing)} newly failing, {len(gone)} gone, "
-        f"{len(fixed)} fixed -> {'OK' if ok else 'REGRESSION'}")
-    return ok
+def failing_tests(results):
+    """The tests that failed or ended with an error; a skipped test is not failing."""
+    return sorted(k for k, v in results.items() if v in ("failure", "error"))
 
 
 def read_surefire_reports(since, root=REPO):
@@ -1036,9 +1018,8 @@ def cmd_try(args):
 
 def cmd_accept(args):
     """
-    What a change must pass before it is committed: a full build, and all cases, also repeated and
-    concurrent, with all OTP tests: a change of one module can break a test of a module that uses
-    it. Whether the cases run the changed code is a question for improving the cases, not for this.
+    What a change must pass before it is committed: a full build, and all tests: every case of the
+    rig gives the recorded result, also repeated and on 8 threads, and every OTP test passes.
     """
     run_steps(args, [["build"], ["check", "--repeat", "--threads", "8", "--tests", "all"]])
 
@@ -2174,7 +2155,7 @@ def main():
         s.add_argument("--threads", help="run again on N threads and compare")
         s.set_defaults(func=func)
 
-    s = sub.add_parser("test", help="run the OTP tests and compare with the test record of the baseline")
+    s = sub.add_parser("test", help="run the OTP tests: every test must pass")
     s.add_argument("--scope", choices=["changed", "all"], default="changed")
     s.add_argument("--baseline", default="base")
     s.add_argument("--name", default=WORKTREE_BUILD, help="name of the test record to write")
@@ -2206,7 +2187,7 @@ def main():
     s.add_argument("--alloc", action="store_true", help="compare the allocated bytes too (bench --alloc --quick)")
     s.set_defaults(func=cmd_try)
 
-    s = sub.add_parser("accept", help="before a commit: build, coverage, check --repeat --threads 8 --tests all")
+    s = sub.add_parser("accept", help="before a commit: build, then all tests (check --repeat --threads 8 --tests all)")
     s.set_defaults(func=cmd_accept)
 
     s = sub.add_parser("journal", help="commit perf-rig/JOURNAL.md on this branch and on branch 'perf-rig'")

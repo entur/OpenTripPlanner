@@ -4,11 +4,15 @@ A correctness and performance rig for experimenting with OTP: refactor aggressiv
 that every routing result is unchanged and measure what got faster. Not OTP-style code; not for
 upstream.
 
+A change is valid when all tests pass and it makes OTP faster, nothing else. The tests are the
+OTP tests, every one of which must pass, and the cases of the rig: each case is a test whose
+expected result is the result of the baseline build, also when run again and on 8 threads.
+
 ## What it does
 
-- **Correctness (`check`)**: loads a real graph the way `OTPMain --load` does (same Dagger wiring,
-  same config), runs a few hundred varied Transmodel `trip` queries and writes three layers per
-  query, which are compared with a recorded baseline:
+- **Tests (`check`)**: loads a real graph the way `OTPMain --load` does (same Dagger wiring,
+  same config), runs a few hundred varied Transmodel `trip` queries (the cases) and writes three
+  layers per query; a case passes when all three equal the result recorded with the baseline:
   - `api`: the full GraphQL JSON (every leg, estimated call, polyline, step, cost, page cursor)
   - `routing`: every field of every itinerary/leg of the `RoutingResponse`, exact doubles,
     geometries as hashes of all coordinates, walk steps with the hash of the edges they traverse
@@ -57,18 +61,14 @@ Experiments are worked on in this worktree, on a branch off `perf-rig` (see "A s
 experiments"). All commands run from the repo root, one at a time (a second one stops, or waits
 with `--wait`), and use the dataset `oslo` unless `--dataset norway` comes first.
 
-**0. Baseline, once per base commit**, from a clean tree (35 min with Norway and the OTP tests):
+**0. Baseline, once per base commit**, from a clean tree (25 min with Norway):
 
 ```bash
 python perf-rig/rig.py build                    # full Maven compile + rig: build 'wt'
 python perf-rig/rig.py freeze base --force      # freeze it as 'base'
 python perf-rig/rig.py record base --build base --repeat --threads 8   # golden results
 python perf-rig/rig.py --dataset norway record base --build base --repeat --threads 8
-python perf-rig/rig.py test --scope all --name base   # OTP test record of the baseline
 ```
-
-The test record is needed because some OTP tests fail on Windows on every build; later runs are
-compared with it, not with "no failures".
 
 **1. Find where the work is** (4-6 min): `rig.py profile --quick --levels raptor` (or `street`,
 `e2e`) lists the methods with the most time samples, allocated bytes and ops. A method with a far
@@ -119,7 +119,7 @@ comparison of `try`: it needs `B faster`.
 **Improving the cases** is work of its own, not a part of the loop: `rig.py coverage --quick`, then
 `rig.py mutate FILE... --count 10` plants small bugs in the executed code of the files (1.5 min
 per bug). A bug that is NOT FOUND shows what a mistake there gets away with; a case that finds it
-goes in `<dataset>.extra.json` (rule 5).
+goes in `<dataset>.extra.json` (rule 4).
 
 **A series of experiments** (the skill `perf-loop` in `.claude/skills` runs the loop this way):
 
@@ -145,17 +145,16 @@ goes in `<dataset>.extra.json` (rule 5).
 
 1. A difference is a regression until explained. An intended change of results gets a new
    baseline (step 0, with a note why), never a silent one.
-2. A performance claim needs 0 result mismatches, and a time `bench` with a verdict "B faster",
-   i.e. a confidence interval that excludes 1.0. `bench --ops` finds and explains a change of the
-   work done, but less work is not always less time, and a gain from memory layout does not show
-   in the ops at all. Measure at the level the change is in (`raptor`, `street`, `link`).
-3. Code that no case runs is checked by the OTP tests alone. A case that runs it
-   (`<dataset>.extra.json`) is added apart from the loop, see "Improving the cases".
-4. A change of graph building or of the serialized graph: build a graph per build
+2. A change is valid when all tests pass and it makes OTP faster, at the level the change is in
+   (`raptor`, `street`, `link`): in the loop, less work (`bench --ops`, `B/A total` 0.999 or
+   lower); a time `bench` with the verdict "B faster" confirms it on a quiet machine, and a
+   verdict "B slower" takes the change out again. Less work is not always less time, and a gain
+   from memory layout does not show in the ops at all: such a change needs "B faster".
+3. A change of graph building or of the serialized graph: build a graph per build
    (`rig.py graph --build base`, `rig.py graph`) and compare them with `graph-fingerprint` and
    `graph-diff`, then `check` on the new graph: the fingerprint does not include the transfers.
-5. After changing the rig or the cases: `rig.py unit` (unit tests of the rig, seconds),
-   `rig.py selftest --fast --quick`, then a new baseline.
+4. After changing the rig: `rig.py unit` (unit tests of the rig, seconds) must pass. After
+   changing the cases, or what is recorded of a result: a new baseline.
 
 ## Layout
 
@@ -212,8 +211,8 @@ goes in `<dataset>.extra.json` (rule 5).
 - `rig.py mutate FILE... [--count N]`: needs `coverage [--quick]` first, and checks each bug with
   the same cases. "found: the run fails" is a bug that makes a request fail.
 - `rig.py test [--scope changed|all]` runs the OTP tests (`changed`: the modules changed since the
-  commit of build `base`, with their dependencies), writes `tests/<name>.json` and compares it with
-  `tests/base.json`. `check --tests none|changed|all` chooses the tests of a check.
+  commit of build `base`, with their dependencies) and writes `tests/<name>.json`: every test must
+  pass. `check --tests none|changed|all` chooses the OTP tests of a check.
 - `rig.py journal MESSAGE` commits `perf-rig/JOURNAL.md` on the current branch and on `perf-rig`.
   It stops if the file lacks an entry that `perf-rig` has, so an entry of another branch is not
   lost.

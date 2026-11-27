@@ -79,31 +79,13 @@ class DiffRecordsTest(TempDirTest):
         self.assertFalse(quiet(rig.diff_records, self.write("a"), self.write("b", extra), subset=True))
 
 
-class CompareTestsTest(unittest.TestCase):
-    EXPECTED = {
-        "app::A#ok": "pass",
-        "app::A#broken": "failure",
-        "app::A#other": "pass",
-        "street::B#ok": "pass",
-    }
+class FailingTestsTest(unittest.TestCase):
+    def test_failures_and_errors_fail_skipped_does_not(self):
+        results = {"app::A#ok": "pass", "app::A#broken": "failure", "app::A#crash": "error", "app::A#off": "skipped"}
+        self.assertEqual(["app::A#broken", "app::A#crash"], rig.failing_tests(results))
 
-    def compare(self, actual):
-        return quiet(rig.compare_tests, self.EXPECTED, actual)
-
-    def test_same_results_including_the_known_failure(self):
-        self.assertTrue(self.compare({"app::A#ok": "pass", "app::A#broken": "failure", "app::A#other": "pass"}))
-
-    def test_newly_failing(self):
-        self.assertFalse(self.compare({"app::A#ok": "error", "app::A#broken": "failure", "app::A#other": "pass"}))
-
-    def test_new_test_that_fails(self):
-        self.assertFalse(self.compare({"app::A#ok": "pass", "app::A#other": "pass", "app::A#new": "failure"}))
-
-    def test_test_gone_from_a_module_that_ran(self):
-        self.assertFalse(self.compare({"app::A#ok": "pass", "app::A#broken": "failure"}))
-
-    def test_module_not_run_is_not_gone(self):
-        self.assertTrue(self.compare({"app::A#ok": "pass", "app::A#broken": "pass", "app::A#other": "pass"}))
+    def test_all_passing(self):
+        self.assertEqual([], rig.failing_tests({"app::A#ok": "pass", "app::A#off": "skipped"}))
 
 
 class SurefireReportsTest(TempDirTest):

@@ -17,8 +17,10 @@ the user gives the laptop away. Stay on that level for the whole session.
 - **Idle mode**: nobody uses the laptop. The same loop, and also the time and the CPU counters:
   see "Idle mode".
 
-The rig decides what a gain is, not you: an idea counts when `try` and `accept` say so, and it is
-written in the journal whether it worked or not.
+An idea is valid when all tests pass and it makes OTP faster, and nothing else decides it: the
+tests are every OTP test and every case of the rig (`TESTS PASSED`), and faster is less work at
+the level (`try`), confirmed in time in the idle mode. It is written in the journal whether it
+worked or not.
 
 Read first, every session:
 
@@ -79,23 +81,22 @@ to apply when the command has ended. Commit nothing while it runs.
 2. **Change the code.** Only what the idea needs: no clean-up, no renames. The results must stay
    identical; an idea that changes a result, a default or a config value is not a performance idea.
 3. **Try**: `python perf-rig/rig.py try --levels <level> --against <step or base>`. Read:
-   - the check: `CHECK PASSED`, else the idea is wrong;
+   - the tests: `TESTS PASSED`, else the idea is wrong;
    - the ops table: `B/A total` and `mismatch` 0, and the methods whose work changed: is it the
      work you meant to remove?
    - for an idea about allocation, with `--alloc` added to the command: the verdict of the
      allocated bytes, and the methods whose allocated bytes changed.
    Adjust and try again, at most three rounds for one idea.
 4. **Decide.**
-   - Accept when `B/A total` of the ops is 0.999 or lower at the level and the code is no harder
-     to read than the gain is worth.
+   - Accept when the tests pass and `B/A total` of the ops is 0.999 or lower at the level.
    - Accept an idea about allocation when the verdict is `B allocates less` and the ops are not
      more (`B/A total` at most 1.001). `no verdict: the forks of A and B overlap` is no gain: the
      JIT compiler removes that allocation in some runs already.
    - Anything else is rejected. A rejected idea is as useful in the journal as an accepted one.
 5. **Accepted**: `python perf-rig/rig.py accept` must pass (if it does not: fix the idea, or reject
-   it). The check is that: the OTP tests, and results identical to `base`. Whether the cases run
-   enough of the code (`coverage`, `mutate`, new cases) is work of its own, not a part of the loop.
-   Commit the code alone. `python perf-rig/rig.py freeze step<N>`, N being the number of
+   it): a full build and all tests. Nothing else is checked: whether the cases run enough of the
+   code (`coverage`, `mutate`, new cases) is work of its own, not a part of the loop. Commit the
+   code alone. `python perf-rig/rig.py freeze step<N>`, N being the number of
    the journal entry. Then write the entry, take the idea out of "Being tried", and commit the
    journal (below). In the entry, the ratio against `base` is the product of the ratios of the
    steps, not a measurement.
