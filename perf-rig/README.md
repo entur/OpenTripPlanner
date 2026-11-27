@@ -57,7 +57,7 @@ python perf-rig/rig.py test --scope all --name base   # OTP test record of the b
 The test record is needed because some OTP tests fail on Windows on every build; later runs are
 compared with it, not with "no failures".
 
-**1. Find where the work is** (4 min): `rig.py profile --quick --levels raptor` (or `street`,
+**1. Find where the work is** (4-6 min): `rig.py profile --quick --levels raptor` (or `street`,
 `e2e`) lists the methods with the most time samples, allocated bytes and ops. A method with a far
 larger share of the time than of the ops waits for memory; the other way round it is cheap code.
 
@@ -65,7 +65,7 @@ larger share of the time than of the ops waits for memory; the other way round i
 `rig.py coverage --quick`, then `rig.py mutate FILE... --count 10` plants small bugs in the
 executed code of the files. A bug that is NOT FOUND shows what a mistake there gets away with.
 
-**3. Change the code, then one round** (4-7 min): `rig.py try --levels raptor` compiles the changed
+**3. Change the code, then one round** (5-8 min): `rig.py try --levels raptor` compiles the changed
 files (`build --fast`), checks every 4th case against the baseline (`check --quick`) and compares
 the work done with `base` (`bench --ops --quick`): are the results identical, how much less work,
 in which methods. Repeat until the change does what was intended.
