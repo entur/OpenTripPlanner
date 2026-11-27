@@ -15,18 +15,17 @@ import org.opentripplanner.raptor.api.view.ArrivalView;
 import org.opentripplanner.raptor.rangeraptor.debug.DebugHandlerFactory;
 import org.opentripplanner.raptor.rangeraptor.internalapi.OnTripAccessArrivals;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.McRangeRaptorWorkerState;
+import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.ArrivalCriteriaComparator;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.ArrivalParetoSetComparatorFactory;
 import org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop.McStopArrival;
 import org.opentripplanner.raptor.spi.IntIterator;
 import org.opentripplanner.raptor.spi.IntIterators;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
-import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
-import org.opentripplanner.raptor.util.paretoset.ParetoSet;
 import org.opentripplanner.raptor.util.paretoset.ParetoSetEventListener;
 
 /**
  * Holds the multi-criteria stop arrival state for all stops. Each stop has its own
- * {@link ParetoSet} of {@link McStopArrival}s, keeping only Pareto-optimal arrivals across arrival
+ * pareto set of {@link McStopArrival}s, keeping only Pareto-optimal arrivals across arrival
  * time, round, and cost. Stops that need to distinguish on-board arrivals (e.g. for via-connection
  * pass-through) use an extended comparator.
  * <p>
@@ -38,14 +37,14 @@ import org.opentripplanner.raptor.util.paretoset.ParetoSetEventListener;
  */
 public final class McStopArrivals<T extends RaptorTripSchedule> {
 
-  private final ParetoSet<McStopArrival<T>>[] arrivals;
+  private final StopArrivalParetoSet<T>[] arrivals;
   private final IntObjectMap<OnTripAccessArrivals<T>> onBoardTripArrivalsByRouteQueue;
 
   private final BitSet touchedStops;
 
   private final DebugHandlerFactory<T> debugHandlerFactory;
   private final DebugStopArrivalsStatistics debugStats;
-  private final ParetoComparator<McStopArrival<T>> comparator;
+  private final ArrivalCriteriaComparator comparator;
 
   /**
    * @param nStops              total number of stops in the transit network.
@@ -64,27 +63,30 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
     DebugHandlerFactory<T> debugHandlerFactory
   ) {
     //noinspection unchecked
-    this.arrivals = (ParetoSet<McStopArrival<T>>[]) new ParetoSet[nStops];
+    this.arrivals = (StopArrivalParetoSet<T>[]) new StopArrivalParetoSet[nStops];
     this.onBoardTripArrivalsByRouteQueue = new IntObjectHashMap<>();
     this.touchedStops = new BitSet(nStops);
-    this.comparator = comparatorFactory.compareArrivalTimeRoundAndCost();
+    this.comparator = comparatorFactory.compareCriteria();
     this.debugHandlerFactory = debugHandlerFactory;
     this.debugStats = new DebugStopArrivalsStatistics(debugHandlerFactory.debugLogger());
 
-    // Comparator for stops that have arrival listeners with a on-board trip-to-trip via
-    // connection.
-    var onBoardComparator = comparatorFactory.compareArrivalTimeRoundCostAndOnBoardArrival();
+    // The sets for stops that have arrival listeners with a on-board trip-to-trip via
+    // connection also compare the arrived-on-board criterion.
     for (var cursor : arrivalListeners.keys()) {
       int stop = cursor.value;
-      var comp = onBoardArrivalStops.contains(stop) ? onBoardComparator : comparator;
-      this.arrivals[stop] = ParetoSet.of(comp, arrivalListeners.get(stop));
+      this.arrivals[stop] = new StopArrivalParetoSet<>(
+        comparator,
+        onBoardArrivalStops.contains(stop),
+        arrivalListeners.get(stop)
+      );
     }
 
     for (var cursor : onBoardArrivalStops) {
       int stop = cursor.value;
       if (this.arrivals[stop] == null) {
-        this.arrivals[stop] = ParetoSet.of(
-          onBoardComparator,
+        this.arrivals[stop] = new StopArrivalParetoSet<>(
+          comparator,
+          true,
           debugHandlerFactory.paretoSetStopArrivalListener(stop)
         );
       }
@@ -260,10 +262,11 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
 
   /* private methods */
 
-  private ParetoSet<McStopArrival<T>> findOrCreateSet(final int stop) {
+  private StopArrivalParetoSet<T> findOrCreateSet(final int stop) {
     if (arrivals[stop] == null) {
-      arrivals[stop] = ParetoSet.of(
+      arrivals[stop] = new StopArrivalParetoSet<>(
         comparator,
+        false,
         debugHandlerFactory.paretoSetStopArrivalListener(stop)
       );
     }

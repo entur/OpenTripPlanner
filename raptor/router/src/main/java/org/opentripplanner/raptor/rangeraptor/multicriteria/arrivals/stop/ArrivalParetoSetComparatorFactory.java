@@ -14,25 +14,39 @@ import org.opentripplanner.raptor.util.paretoset.ParetoComparator;
  */
 public final class ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>> {
 
+  private final ArrivalCriteriaComparator compareCriteria;
   private final ParetoComparator<T> compareRegularStopArrivals;
   private final ParetoComparator<T> compareStopArrivalsIncludingOnBoardCriteria;
 
-  public ArrivalParetoSetComparatorFactory(ParetoComparator<T> compareArrivalTimeRoundAndC1) {
-    this.compareRegularStopArrivals = compareArrivalTimeRoundAndC1;
+  private ArrivalParetoSetComparatorFactory(ArrivalCriteriaComparator compareCriteria) {
+    this.compareCriteria = compareCriteria;
+    this.compareRegularStopArrivals = (l, r) ->
+      compareCriteria.leftDominanceExist(
+        l.arrivalTime(),
+        l.round(),
+        l.c1(),
+        l.c2(),
+        r.arrivalTime(),
+        r.round(),
+        r.c1(),
+        r.c2()
+      );
     this.compareStopArrivalsIncludingOnBoardCriteria = compareFunctionWithArrivedOnBoard(
-      compareArrivalTimeRoundAndC1
+      compareRegularStopArrivals
     );
   }
 
   public static <T extends McStopArrival<?>> ArrivalParetoSetComparatorFactory<T> ofCompareC1() {
-    return new ArrivalParetoSetComparatorFactory<>((l, r) -> compareC1(l, r));
+    return new ArrivalParetoSetComparatorFactory<>((lt, lr, lc1, lc2, rt, rr, rc1, rc2) ->
+      compareC1(lt, lr, lc1, rt, rr, rc1)
+    );
   }
 
   public static <T extends McStopArrival<?>> ArrivalParetoSetComparatorFactory<T> ofCompareC1AndC2(
     final DominanceFunction c2DominanceFunction
   ) {
-    return new ArrivalParetoSetComparatorFactory<>((l, r) ->
-      compareC1AndC2(c2DominanceFunction, l, r)
+    return new ArrivalParetoSetComparatorFactory<>((lt, lr, lc1, lc2, rt, rr, rc1, rc2) ->
+      compareC1AndC2(c2DominanceFunction, lt, lr, lc1, lc2, rt, rr, rc1, rc2)
     );
   }
 
@@ -40,9 +54,29 @@ public final class ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>>
     final RelaxFunction relaxC1,
     final DominanceFunction c2DominanceFunction
   ) {
-    return new ArrivalParetoSetComparatorFactory<>((l, r) ->
-      compareC1RelaxedOnC2Dominance(relaxC1, c2DominanceFunction, l, r)
+    return new ArrivalParetoSetComparatorFactory<>((lt, lr, lc1, lc2, rt, rr, rc1, rc2) ->
+      compareC1RelaxedOnC2Dominance(
+        relaxC1,
+        c2DominanceFunction,
+        lt,
+        lr,
+        lc1,
+        lc2,
+        rt,
+        rr,
+        rc1,
+        rc2
+      )
     );
+  }
+
+  /**
+   * This comparator compares the criteria of two regular stop arrivals: {@code arrivalTime},
+   * {@code paretoRound}, {@code c1} and, if the factory is created with it, {@code c2}. It is the
+   * comparison {@link #compareArrivalTimeRoundAndCost()} does, with the criteria passed as values.
+   */
+  public ArrivalCriteriaComparator compareCriteria() {
+    return compareCriteria;
   }
 
   /**
@@ -77,53 +111,62 @@ public final class ArrivalParetoSetComparatorFactory<T extends McStopArrival<?>>
   /**
    * Compare arrivalTime, paretoRound and c1.
    */
-  private static <T extends McStopArrival<?>> boolean compareC1(T l, T r) {
+  private static boolean compareC1(int lt, int lr, int lc1, int rt, int rr, int rc1) {
     // This is important with respect to performance. Using the short-circuit logical OR(||) is
     // faster than bitwise inclusive OR(|) (even between boolean expressions)
-    return l.arrivalTime() < r.arrivalTime() || l.round() < r.round() || l.c1() < r.c1();
+    return lt < rt || lr < rr || lc1 < rc1;
   }
 
   /**
    * Compare arrivalTime, paretoRound, c1, and c21.
    */
-  private static <T extends McStopArrival<?>> boolean compareC1AndC2(
+  private static boolean compareC1AndC2(
     DominanceFunction c2Function,
-    T l,
-    T r
+    int lt,
+    int lr,
+    int lc1,
+    int lc2,
+    int rt,
+    int rr,
+    int rc1,
+    int rc2
   ) {
-    return (
-      l.arrivalTime() < r.arrivalTime() ||
-      l.round() < r.round() ||
-      l.c1() < r.c1() ||
-      c2Function.leftDominateRight(l.c2(), r.c2())
-    );
+    return lt < rt || lr < rr || lc1 < rc1 || c2Function.leftDominateRight(lc2, rc2);
   }
 
   /**
    * Compare arrivalTime, paretoRound and c1, relaxing c1.
    */
-  private static <T extends McStopArrival<?>> boolean compareC1Relaxed(
+  private static boolean compareC1Relaxed(
     final RelaxFunction relaxC1,
-    T l,
-    T r
+    int lt,
+    int lr,
+    int lc1,
+    int rt,
+    int rr,
+    int rc1
   ) {
-    return (
-      l.arrivalTime() < r.arrivalTime() || l.round() < r.round() || l.c1() < relaxC1.relax(r.c1())
-    );
+    return lt < rt || lr < rr || lc1 < relaxC1.relax(rc1);
   }
 
   /**
    * Compare arrivalTime, paretoRound, and c1 relaxed if c2 dominates.
    */
-  private static <T extends McStopArrival<?>> boolean compareC1RelaxedOnC2Dominance(
+  private static boolean compareC1RelaxedOnC2Dominance(
     final RelaxFunction relaxC1,
     DominanceFunction c2Function,
-    T l,
-    T r
+    int lt,
+    int lr,
+    int lc1,
+    int lc2,
+    int rt,
+    int rr,
+    int rc1,
+    int rc2
   ) {
-    return c2Function.leftDominateRight(l.c2(), r.c2())
-      ? compareC1Relaxed(relaxC1, l, r)
-      : compareC1(l, r);
+    return c2Function.leftDominateRight(lc2, rc2)
+      ? compareC1Relaxed(relaxC1, lt, lr, lc1, rt, rr, rc1)
+      : compareC1(lt, lr, lc1, rt, rr, rc1);
   }
 
   /**
