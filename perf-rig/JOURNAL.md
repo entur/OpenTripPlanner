@@ -78,3 +78,16 @@ is the share of the ops, unless it says time.
   cycles for an instruction went from 0.339 to 0.349: what was removed was cheap. Whether any time
   is gained is open: a time check on a quiet machine, with more forks, is still owed for steps 1
   and 2.
+
+### 5. time check: laptop with the other programs closed, still no time gain shown
+- where: raptor, step2 (f04139771a) against base, `bench --quick --levels raptor --forks 4
+  --counters`
+- result: time B/A 0.979 (99 % interval 0.947 to 1.011): no significant difference. Of the CPU:
+  instructions 0.9751 (0.9646 to 0.9858), cycles 0.9866 (0.9549 to 1.0192), cache misses 1.001
+  (0.939 to 1.068), branch mispredictions 1.003 (0.992 to 1.014). Allocated bytes 1.000. Results
+  identical.
+- note: other processes still used 0.5 to 1.0 cores during three of the four forks of base (the
+  benchmark warns), and those forks are up to 4 % off in cycles. The four forks of step2 were not
+  disturbed and agree to 0.3 % in time and cycles. The one fork of base that was not disturbed is
+  as fast as the forks of step2: steps 1 and 2 gain a percent or two of time at most, and it is
+  not shown.
