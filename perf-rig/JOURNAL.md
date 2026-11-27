@@ -270,3 +270,10 @@ Nothing.
   instructions than the other four forks of step9 (2.397e11 against 2.305e11 to 2.317e11): the
   JIT compiler does not compile the same in every fork. Among the forks at the same frequency
   step9 has 5 % fewer cycles and 4 % less time than step8, but that is not a verdict.
+- time check: `B faster (5.3%)` against step8, the same benchmark again (22:31 to 23:03), no
+  warning (fork A1 was run again, 0.64 cores of other processes): time B/A 0.947 (99 % interval
+  0.925 to 0.970), B/A of the total time 0.929 (0.907 to 0.951, computed by hand). Of the CPU:
+  instructions 0.9922 (0.9751 to 1.0096), cycles 0.9246 (0.9011 to 0.9486), cache misses 0.7762
+  (0.7480 to 0.8055), branch mispredictions 1.0204 (1.0026 to 1.0386). Allocated bytes 0.567.
+  The cores ran at 4.1 to 4.25 GHz in all ten forks. The gain is memory: the same instructions,
+  22 % fewer cache misses, 0.349 to 0.326 cycles for an instruction.
