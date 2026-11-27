@@ -83,11 +83,18 @@ public class OtpConfigLoaderTest {
     // Given: Search for a environment variable name containing only alphanumeric characters
     //        and a value with less than 30 characters (avoid long values like paths for
     //        readability). We will use this to insert it in the JSON and later see if the
-    //        ConfigLoader is able to replace the placeholder with the expected value.
+    //        ConfigLoader is able to replace the placeholder with the expected value. The value
+    //        must not contain a backslash or a quote, which JSON reads as an escape or as the end
+    //        of the string (a Windows path like C:\nvm4w\nodejs).
     Map.Entry<String, String> envVar = System.getenv()
       .entrySet()
       .stream()
-      .filter(e -> e.getKey().matches("\\w+") && e.getValue().length() < 30)
+      .filter(
+        e ->
+          e.getKey().matches("\\w+") &&
+          e.getValue().length() < 30 &&
+          e.getValue().matches("[^\\\\\"]*")
+      )
       .findFirst()
       .orElse(null);
 
