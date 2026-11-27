@@ -50,6 +50,7 @@ public class DestinationArrivalConfig<T extends RaptorTripSchedule> {
       );
     return new DestinationArrivalPaths<>(
       comparator,
+      arrivalTimeIsCriterion(),
       ctx.calculator(),
       null,
       createDepartureTimeCalculator(ParetoSetCost.NONE),
@@ -82,6 +83,7 @@ public class DestinationArrivalConfig<T extends RaptorTripSchedule> {
       );
     return new DestinationArrivalPaths<>(
       comparator,
+      arrivalTimeIsCriterion(),
       ctx.calculator(),
       costConfig.useC1() ? ctx.costCalculator() : null,
       createDepartureTimeCalculator(costConfig),
@@ -113,6 +115,13 @@ public class DestinationArrivalConfig<T extends RaptorTripSchedule> {
     return preferLatestDeparture
       ? ParetoSetTime.USE_DEPARTURE_TIME
       : ParetoSetTime.USE_ARRIVAL_TIME;
+  }
+
+  private boolean arrivalTimeIsCriterion() {
+    return DestinationArrivalParetoSetComparators.arrivalTimeIsCriterion(
+      paretoSetTimeConfig(),
+      ctx.searchDirection()
+    );
   }
 
   /**

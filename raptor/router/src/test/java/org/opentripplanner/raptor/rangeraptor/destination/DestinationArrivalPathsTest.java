@@ -3,6 +3,7 @@ package org.opentripplanner.raptor.rangeraptor.destination;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.opentripplanner.raptor.rangeraptor.destination.DestinationArrivalParetoSetComparators.arrivalTimeIsCriterion;
 import static org.opentripplanner.raptor.rangeraptor.destination.DestinationArrivalParetoSetComparators.paretoComparator;
 import static org.opentripplanner.raptor.rangeraptor.internalapi.ParetoSetCost.NONE;
 import static org.opentripplanner.raptor.rangeraptor.internalapi.ParetoSetCost.USE_C1;
@@ -406,15 +407,11 @@ class DestinationArrivalPathsTest {
     RaptorTransitCalculator<RaptorTripSchedule> calculator,
     TimeShiftedDepartureTime<RaptorTripSchedule> departureTimeCalculator
   ) {
+    var direction = calculator.searchForward() ? SearchDirection.FORWARD : SearchDirection.REVERSE;
     return init(
       new DestinationArrivalPaths<>(
-        paretoComparator(
-          time,
-          calculator.searchForward() ? SearchDirection.FORWARD : SearchDirection.REVERSE,
-          cost,
-          RelaxFunction.NORMAL,
-          null
-        ),
+        paretoComparator(time, direction, cost, RelaxFunction.NORMAL, null),
+        arrivalTimeIsCriterion(time, direction),
         calculator,
         null,
         departureTimeCalculator,

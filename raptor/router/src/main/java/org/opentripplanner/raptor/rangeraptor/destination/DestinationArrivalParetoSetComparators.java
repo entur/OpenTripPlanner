@@ -144,6 +144,23 @@ public final class DestinationArrivalParetoSetComparators {
     };
   }
 
+  /**
+   * Return {@code true} if the arrival time is a criterion of the comparator that
+   * {@link #paretoComparator} creates for the given time config and search direction. Then an
+   * arrival with a better arrival time than every arrival in a set is dominated by none of them.
+   * The better arrival time is the earlier in a forward search, and the later in a reverse search.
+   */
+  public static boolean arrivalTimeIsCriterion(
+    ParetoSetTime timeConfig,
+    SearchDirection direction
+  ) {
+    return switch (timeConfig) {
+      case USE_TIMETABLE -> true;
+      case USE_ARRIVAL_TIME -> direction.isForward();
+      case USE_DEPARTURE_TIME -> direction.isInReverse();
+    };
+  }
+
   private static int calculateDuration(DestinationArrival<?> a) {
     return Math.abs(a.arrivalTime() - a.departureTime());
   }

@@ -50,6 +50,18 @@ public class DestinationArrivalPaths<T extends RaptorTripSchedule> {
 
   private final ParetoSet<DestinationArrival<T>> arrivals;
 
+  /**
+   * {@code true} if the arrival time is a criterion of the comparator of {@link #arrivals}, see
+   * {@link #qualify}.
+   */
+  private final boolean arrivalTimeIsCriterion;
+
+  /**
+   * The best arrival time of all arrivals accepted into {@link #arrivals}, also of those dropped
+   * from it later.
+   */
+  private int bestArrivalTime;
+
   /** Reused by {@link #qualify}; never added to {@link #arrivals}. Not thread-safe. */
   private final DestinationArrival<T> probe = DestinationArrival.createProbe();
 
@@ -63,8 +75,14 @@ public class DestinationArrivalPaths<T extends RaptorTripSchedule> {
   @Nullable
   private final TimeShiftedDepartureTime<T> departureTimeCalculator;
 
+  /**
+   * @param arrivalTimeIsCriterion {@code true} if the arrival time is a criterion of the
+   *                               {@code arrivalComparator}, see
+   *                               {@link DestinationArrivalParetoSetComparators#arrivalTimeIsCriterion}.
+   */
   public DestinationArrivalPaths(
     ParetoComparator<DestinationArrival<T>> arrivalComparator,
+    boolean arrivalTimeIsCriterion,
     RaptorTransitCalculator<T> transitCalculator,
     @Nullable RaptorCostCalculator<T> costCalculator,
     @Nullable TimeShiftedDepartureTime<T> departureTimeCalculator,
@@ -78,6 +96,8 @@ public class DestinationArrivalPaths<T extends RaptorTripSchedule> {
       arrivalComparator,
       debugHandlerFactory.paretoSetDestinationArrivalListener()
     );
+    this.arrivalTimeIsCriterion = arrivalTimeIsCriterion;
+    this.bestArrivalTime = transitCalculator.unreachedTime();
     this.departureTimeCalculator = departureTimeCalculator;
     this.transitCalculator = transitCalculator;
     this.costCalculator = costCalculator;
@@ -110,6 +130,9 @@ public class DestinationArrivalPaths<T extends RaptorTripSchedule> {
   private void addDestinationArrivalToPaths(DestinationArrival<T> destArrival) {
     if (arrivals.add(destArrival)) {
       reachedCurrentRound = true;
+      if (transitCalculator.isBefore(destArrival.arrivalTime(), bestArrivalTime)) {
+        bestArrivalTime = destArrival.arrivalTime();
+      }
     }
   }
 
@@ -147,6 +170,11 @@ public class DestinationArrivalPaths<T extends RaptorTripSchedule> {
    * probe per call.
    */
   public boolean qualify(int arrivalTime, int numberOfTransfers, int cost, int c2) {
+    // An arrival time better than that of every arrival accepted so far is better than each
+    // arrival in the set, so none of them dominates the given arrival.
+    if (arrivalTimeIsCriterion && transitCalculator.isBefore(arrivalTime, bestArrivalTime)) {
+      return true;
+    }
     // The probe uses the iteration departure time, which is never later than the actual
     // (time-shifted) departure time. The duration of the probe is therefore too long, and it is
     // not a lower bound. A journey that is optimal on duration can be pruned if a journey with
