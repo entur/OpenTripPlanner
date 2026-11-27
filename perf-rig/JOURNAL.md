@@ -258,7 +258,7 @@ Nothing.
   for a nanosecond). A difference of 3 % in time is below what 5 forks show, in cycles it is far
   above.
 - time check, first try, no result: `bench --quick --levels raptor --forks 5 --counters
-  --baseline step8 --candidate step9` (22:07 to 22:38) is UNEVEN, and fork A3 was run again
+  --baseline step8 --candidate step9` (22:07 to 22:30) is UNEVEN, and fork A3 was run again
   (0.51 cores of other processes). Time B/A 0.982 (0.865 to 1.115), instructions 1.0023 (0.9767
   to 1.0287), cycles 0.9550 (0.9101 to 1.0021), cache misses 0.8430 (0.8054 to 0.8823), branch
   mispredictions 1.0316 (0.9925 to 1.0723), allocated bytes 0.571. The cores ran at 3.5 to
@@ -270,7 +270,7 @@ Nothing.
   instructions than the other four forks of step9 (2.397e11 against 2.305e11 to 2.317e11): the
   JIT compiler does not compile the same in every fork. Among the forks at the same frequency
   step9 has 5 % fewer cycles and 4 % less time than step8, but that is not a verdict.
-- time check: `B faster (5.3%)` against step8, the same benchmark again (22:31 to 23:03), no
+- time check: `B faster (5.3%)` against step8, the same benchmark again (22:31 to 22:52), no
   warning (fork A1 was run again, 0.64 cores of other processes): time B/A 0.947 (99 % interval
   0.925 to 0.970), B/A of the total time 0.929 (0.907 to 0.951, computed by hand). Of the CPU:
   instructions 0.9922 (0.9751 to 1.0096), cycles 0.9246 (0.9011 to 0.9486), cache misses 0.7762
