@@ -56,6 +56,17 @@ percentage is the share of the ops, unless it says time.
   20 % of the ops of `step2`. A probe that arrives before every destination arrival accepted so
   far is dominated by none of them when the arrival time is a criterion, so it qualifies without
   the loop over them.
+  - state (session ended 2026-11-27): the code is written and NOT committed: `DestinationArrivalPaths`,
+    `DestinationArrivalParetoSetComparators.arrivalTimeIsCriterion`, `DestinationArrivalConfig`, and
+    the new constructor argument in `DestinationArrivalPathsTest`. `try --against step2`: CHECK
+    PASSED, ops raptor 0.8799 against step2 (geomean 0.9566), mismatch 0; the work removed is the
+    loop of `ParetoSet.qualify` over the destination arrivals. Next: `accept`, then commit, freeze
+    `step6` and write entry 6.
+  - for the case work apart from the loop: `mutate` found 8 of 9 bugs in `DestinationArrivalPaths`
+    and `DestinationArrivalConfig` (the one not found only decides whether a cost-mismatch warning
+    is logged), and 4 of 10 in `DestinationArrivalParetoSetComparators`: not found were `||` to `&&`
+    in the comparators of lines 88, 94, 95, 103 and 106 (reverse and departure-time configurations)
+    and `<` to `<=` in `lowC1RelaxedIfC2IsOptimal` (line 207).
 
 ## Tried
 
