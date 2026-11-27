@@ -1,0 +1,13 @@
+diff --git a/application/src/main/java/org/opentripplanner/routing/algorithm/raptoradapter/transit/request/TripScheduleBoardSearch.java b/application/src/main/java/org/opentripplanner/routing/algorithm/raptoradapter/transit/request/TripScheduleBoardSearch.java
+index ed9ba61dbe..82e57b079d 100644
+--- a/application/src/main/java/org/opentripplanner/routing/algorithm/raptoradapter/transit/request/TripScheduleBoardSearch.java
++++ b/application/src/main/java/org/opentripplanner/routing/algorithm/raptoradapter/transit/request/TripScheduleBoardSearch.java
+@@ -163,7 +163,7 @@ public final class TripScheduleBoardSearch<T extends RaptorTripSchedule> impleme
+     int tripIndexUpperBound
+   ) {
+     for (int i = tripIndexUpperBound - 1; i >= 0; --i) {
+-      if (timetable.departureTime(stopPositionInPattern, i) >= earliestBoardTime) {
++      if (timetable.departureTime(stopPositionInPattern, i) > earliestBoardTime) {
+         candidateTripIndex = i;
+       } else {
+         // this trip arrives too early. We can break out of the loop since

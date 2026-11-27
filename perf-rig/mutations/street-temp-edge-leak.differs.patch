@@ -1,0 +1,13 @@
+diff --git a/street/src/main/java/org/opentripplanner/street/linking/VertexLinker.java b/street/src/main/java/org/opentripplanner/street/linking/VertexLinker.java
+index d94a3ed7e8..81c351c3d7 100644
+--- a/street/src/main/java/org/opentripplanner/street/linking/VertexLinker.java
++++ b/street/src/main/java/org/opentripplanner/street/linking/VertexLinker.java
+@@ -799,7 +799,7 @@ public class VertexLinker {
+       areaEdgeBuilder.withNoThruTrafficTraverseMode(tm);
+     }
+     AreaEdge areaEdge = areaEdgeBuilder.buildAndConnect();
+-    if (scope != Scope.PERMANENT) {
++    if (scope == Scope.PERMANENT) {
+       tempEdges.addEdge(areaEdge);
+     }
+ 

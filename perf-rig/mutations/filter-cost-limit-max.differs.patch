@@ -1,0 +1,13 @@
+diff --git a/application/src/main/java/org/opentripplanner/routing/algorithm/filterchain/filters/transit/GeneralizedCostLimit.java b/application/src/main/java/org/opentripplanner/routing/algorithm/filterchain/filters/transit/GeneralizedCostLimit.java
+index 5032a266c7..c52fab977f 100644
+--- a/application/src/main/java/org/opentripplanner/routing/algorithm/filterchain/filters/transit/GeneralizedCostLimit.java
++++ b/application/src/main/java/org/opentripplanner/routing/algorithm/filterchain/filters/transit/GeneralizedCostLimit.java
+@@ -44,7 +44,7 @@ class GeneralizedCostLimit {
+   private Cost getWaitTimeCost(Itinerary a, Itinerary b) {
+     return Cost.costOfSeconds(
+       intervalRelaxFactor *
+-        Math.min(
++        Math.max(
+           Math.abs(ChronoUnit.SECONDS.between(a.startTime(), b.startTime())),
+           Math.abs(ChronoUnit.SECONDS.between(a.endTime(), b.endTime()))
+         )

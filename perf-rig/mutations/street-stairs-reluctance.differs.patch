@@ -1,0 +1,13 @@
+diff --git a/street/src/main/java/org/opentripplanner/street/model/edge/StreetEdgeReluctanceCalculator.java b/street/src/main/java/org/opentripplanner/street/model/edge/StreetEdgeReluctanceCalculator.java
+index 1c53e69863..e9929e9d99 100644
+--- a/street/src/main/java/org/opentripplanner/street/model/edge/StreetEdgeReluctanceCalculator.java
++++ b/street/src/main/java/org/opentripplanner/street/model/edge/StreetEdgeReluctanceCalculator.java
+@@ -34,7 +34,7 @@ class StreetEdgeReluctanceCalculator {
+   }
+ 
+   private static double computeWalkReluctance(WalkRequest req, boolean edgeIsStairs) {
+-    return req.reluctance() * (edgeIsStairs ? req.stairsReluctance() : 1);
++    return req.reluctance() * (edgeIsStairs ? req.stairsReluctance() * 1.01 : 1);
+   }
+ 
+   private static double computeBikeWalkingReluctance(

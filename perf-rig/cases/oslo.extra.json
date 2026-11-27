@@ -1,0 +1,69 @@
+{
+  "source": "Hand-written: the triangle optimisation of bicycles, which no generated case uses",
+  "cases": [
+    {
+      "id": "bike-triangle-001",
+      "category": "bike-triangle",
+      "description": "Majorstuen to Grünerløkka, mostly safe",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.9296,
+            "longitude": 10.715
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.9225,
+            "longitude": 10.759
+          }
+        },
+        "dateTime": "2026-12-02T08:00:00+01:00",
+        "modes": {
+          "directMode": "bicycle",
+          "transportModes": []
+        },
+        "bikePreferences": {
+          "optimisationMethod": "triangle",
+          "triangleFactors": {
+            "safety": 0.6,
+            "slope": 0.2,
+            "time": 0.2
+          }
+        }
+      }
+    },
+    {
+      "id": "bike-triangle-002",
+      "category": "bike-triangle",
+      "description": "Bygdøy to Tøyen, mostly flat",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.905,
+            "longitude": 10.685
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.915,
+            "longitude": 10.772
+          }
+        },
+        "dateTime": "2026-12-05T11:30:00+01:00",
+        "modes": {
+          "directMode": "bicycle",
+          "transportModes": []
+        },
+        "bikePreferences": {
+          "optimisationMethod": "triangle",
+          "triangleFactors": {
+            "safety": 0.2,
+            "slope": 0.6,
+            "time": 0.2
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,13 @@
+diff --git a/application/src/main/java/org/opentripplanner/apis/transmodel/model/plan/LegType.java b/application/src/main/java/org/opentripplanner/apis/transmodel/model/plan/LegType.java
+index b8b1d82005..fcf16d8707 100644
+--- a/application/src/main/java/org/opentripplanner/apis/transmodel/model/plan/LegType.java
++++ b/application/src/main/java/org/opentripplanner/apis/transmodel/model/plan/LegType.java
+@@ -200,7 +200,7 @@ public class LegType {
+           .name("distance")
+           .description("The distance traveled while traversing the leg in meters.")
+           .type(new GraphQLNonNull(Scalars.GraphQLFloat))
+-          .dataFetcher(env -> leg(env).distanceMeters())
++          .dataFetcher(env -> (double) Math.round(leg(env).distanceMeters()))
+           .build()
+       )
+       .field(

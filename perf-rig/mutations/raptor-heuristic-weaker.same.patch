@@ -1,0 +1,13 @@
+diff --git a/application/src/main/java/org/opentripplanner/routing/algorithm/raptoradapter/transit/cost/DefaultCostCalculator.java b/application/src/main/java/org/opentripplanner/routing/algorithm/raptoradapter/transit/cost/DefaultCostCalculator.java
+index 9930923cd0..939777ea79 100644
+--- a/application/src/main/java/org/opentripplanner/routing/algorithm/raptoradapter/transit/cost/DefaultCostCalculator.java
++++ b/application/src/main/java/org/opentripplanner/routing/algorithm/raptoradapter/transit/cost/DefaultCostCalculator.java
+@@ -130,7 +130,7 @@ public final class DefaultCostCalculator<T extends DefaultTripSchedule> implemen
+   ) {
+     if (minNumTransfers > -1) {
+       return (
+-        boardCostOnly +
++        0 +
+         boardAndTransferCost * minNumTransfers +
+         transitFactors.minFactor() * minTravelDuration
+       );
