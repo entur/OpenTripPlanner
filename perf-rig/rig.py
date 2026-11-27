@@ -1465,6 +1465,8 @@ def cmd_bench(args):
         if known:
             known.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(result, known)
+    for answer in ("ready", "started", "stopped"):  # of the recorder
+        (out / answer).unlink(missing_ok=True)
     print(bench_report(out, args.metric))
     append_history(out)
 

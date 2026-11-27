@@ -274,10 +274,18 @@ inputs are hard links to the `otp-data` files. A new dataset: `rig.py --dataset 
   four forks agreed to 0.001 %, but on 6.757 GB: a quarter of the bytes Raptor allocates as it is
   written (`ParetoSet.tailIterator`, lambdas) are never allocated in a normal run, and an idea that
   removes those gains nothing.
-- `bench --counters` has not been run from start to end yet (2026-11-27): reading a recorded trace
-  and every other step are tested, the recorder with administrator rights is not. A trace of 10 s
-  of this laptop is 28 MB (209 000 context switches) and is read in 1.5 s; the trace of a fork is
-  deleted when its counters are read.
+- `bench --counters`, measured 2026-11-27 with the Raptor searches of every 4th case, 3 forks of
+  each build, on this laptop while it was in use (the benchmark warned). Between the forks of a
+  build the instructions differed by 0.1-0.2 % (standard deviation) and the branch mispredictions
+  by 0.2-0.6 %, but the cycles by 1.5-3 %, like the time, and the cache misses by 4-5 %: other
+  processes share the cache and the two threads of a core. So the instructions show a difference
+  of 0.6 % on a busy machine, the cycles one of 9 % and the cache misses one of 17 %; a quiet
+  machine and more forks are still needed for those. A trace of 10 s of this laptop is 28 MB
+  (209 000 context switches) and is read in 1.5 s; the trace of a fork is deleted when it is read.
+- The ops against the CPU, same benchmark: steps 1 and 2 of `perf/raptor-1` have 4.8 % fewer ops
+  and 2.9 % fewer instructions (2.4 to 3.5), and no difference in cycles or time that the
+  benchmark could show. The cycles for an instruction went from 0.339 to 0.349: the instructions
+  that were removed were cheap ones.
 - Thread CPU time on Windows has 15.6 ms ticks, so the reports use wall time.
 - `mutate` with 40 bugs in 16 core files (Raptor, A*, street edges, linking, transfer optimization,
   itinerary mapping), 2026-11-27: `check --quick` found 26. Of the others, 6 can not change a
