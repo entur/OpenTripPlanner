@@ -224,13 +224,16 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule> implem
 
     var onBoardArrivals = transitWorker.consumeStartOnBoardStopArrivalsForRoute(routeIndex);
 
+    // Nothing is on board before the first attempt to board the pattern
+    boolean boardingAttempted = false;
+
     while (stopPositions.hasNext()) {
       int stopPos = stopPositions.next();
       int stopIndex = pattern.stopIndex(stopPos);
 
       // attempt to alight if we're on board, this is done above the board search
       // so that we don't alight on first stop boarded
-      if (calculator.alightingPossibleAt(pattern, stopPos)) {
+      if (boardingAttempted && calculator.alightingPossibleAt(pattern, stopPos)) {
         if (enableTransferConstraints && txSearch.transferExistSourceStop(stopPos)) {
           transitWorker.alightConstrainedTransferExist(stopIndex, stopPos, alightSlack);
         } else {
@@ -241,6 +244,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule> implem
       // attempt to board using on-board trip access/pass-though. This happens after
       // the alight at the given stop position.
       if (onBoardArrivals != null && onBoardArrivals.arrivalExistForStopPosition(stopPos)) {
+        boardingAttempted = true;
         for (var arrival : onBoardArrivals.listArrivals(stopPos)) {
           var boarding = arrival.boardingConstraint();
           var trip = route.timetable().getTripSchedule(boarding.tripScheduleIndex());
@@ -256,6 +260,7 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule> implem
       // Allow to reboard the same pattern - a pattern may loop and visit the same stop twice
       if (state.isStopReachedInPreviousRound(stopIndex)) {
         if (calculator.boardingPossibleAt(pattern, stopPos)) {
+          boardingAttempted = true;
           // has constrained transfers
           if (enableTransferConstraints && txSearch.transferExistTargetStop(stopPos)) {
             transitWorker.boardWithConstrainedTransfer(stopIndex, stopPos, boardSlack, txSearch);
