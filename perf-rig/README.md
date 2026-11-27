@@ -81,7 +81,8 @@ executed code of the files. A bug that is NOT FOUND shows what a mistake there g
 **3. Change the code, then one round** (5-8 min): `rig.py try --levels raptor` compiles the changed
 files (`build --fast`), checks every 4th case against the baseline (`check --quick`) and compares
 the work done with `base` (`bench --ops --quick`): are the results identical, how much less work,
-in which methods. Repeat until the change does what was intended.
+in which methods. Repeat until the change does what was intended. For an idea about allocation,
+`try --alloc` compares the allocated bytes too (8 min more, and as much for a new baseline).
 
 **4. Accept, then commit** (25 min): `rig.py accept` does a full build (Dagger, changed
 signatures), needs every changed method to be executed by a case (`coverage`), and runs all cases,

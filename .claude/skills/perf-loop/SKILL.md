@@ -49,9 +49,10 @@ runs: it stops when the sources no longer match the build.
    `python perf-rig/rig.py profile --quick --levels <level>`, read the code of the top methods, add
    the ideas you see to the list, and write there which build the profile is of
    (`rig.py journal "perf-rig: journal: ideas"`). Then take the idea that promises most. Never
-   pick an idea listed under "Tried", unless what made it fail has changed; then say what. An idea that only time can judge
-   (fewer allocations, a denser layout) does not show in the ops: mark it `needs time` in the list
-   and leave it for the time check.
+   pick an idea listed under "Tried", unless what made it fail has changed; then say what. An
+   idea about allocation (fewer objects) does not show in the ops: try it with `--alloc`, see
+   below. An idea about memory layout (the same objects, closer together) shows in neither: mark
+   it `needs time` in the list and leave it for the time check.
 2. **Know what the rig would miss.** The first time a series changes a file:
    `python perf-rig/rig.py coverage --quick`, then
    `python perf-rig/rig.py mutate <file> --count 10` (it tries the places the file has, at most 10,
@@ -65,10 +66,15 @@ runs: it stops when the sources no longer match the build.
    - the check: `CHECK PASSED`, else the idea is wrong;
    - the ops table: `B/A total` and `mismatch` 0, and the methods whose work changed: is it the
      work you meant to remove?
+   - for an idea about allocation, with `--alloc` added to the command: the verdict of the
+     allocated bytes, and the methods whose allocated bytes changed.
    Adjust and try again, at most three rounds for one idea.
 5. **Decide.**
-   - Accept when `B/A total` is 0.999 or lower at the level and the code is no harder to read than
-     the gain is worth.
+   - Accept when `B/A total` of the ops is 0.999 or lower at the level and the code is no harder
+     to read than the gain is worth.
+   - Accept an idea about allocation when the verdict is `B allocates less` and the ops are not
+     more (`B/A total` at most 1.001). `no verdict: the forks of A and B overlap` is no gain: the
+     JIT compiler removes that allocation in some runs already.
    - Anything else is rejected. A rejected idea is as useful in the journal as an accepted one.
 6. **Accepted**: `python perf-rig/rig.py accept` must pass (if it does not: fix the idea, or reject
    it). Commit the code alone. `python perf-rig/rig.py freeze step<N>`, N being the number of the
