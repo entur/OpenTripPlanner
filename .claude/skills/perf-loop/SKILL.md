@@ -19,8 +19,10 @@ Read first, every session:
 
 ## Start
 
-Work in this worktree only, from the repo root, one rig command at a time, in the foreground. Do
-not edit `perf-rig/rig.py` or `perf-rig/src` while a rig command runs.
+Work in this worktree only, from the repo root, one rig command at a time. A command takes from a
+minute to half an hour (`accept`, `mutate`, a time `bench`): start it in the background, so no tool
+timeout cuts it off, and wait until it has ended. Do not edit any source file while a rig command
+runs: it stops when the sources no longer match the build.
 
 1. `git status` must be clean. If it is not, stop and say what is there: it may be someone's work.
 2. `python perf-rig/rig.py builds`: build `base` must be of the commit the journal names. If it is
