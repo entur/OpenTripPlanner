@@ -115,14 +115,24 @@ predict.
   one. The same checks in the same order with the same values, so the results are identical by
   construction. Tried with `try --alloc` against step8. Draft:
   `../perf-rig-data/drafts/create-stop-arrival-when-accepted.md`.
-  State 2026-11-27 20:40: the code is in the working tree (new `StopArrivalCandidates`, changes in
-  `McRangeRaptorWorkerState`, `StopArrivalParetoSet`, `McStopArrivals`, `HeuristicsProvider`, the
-  two stop arrival factories; tests `StopArrivalCandidatesTest`, `StopArrivalParetoSetTest`).
-  `try --alloc`: results identical, `B allocates less (43.0%)` (5.229 GB to 2.982 GB), but the ops
-  are 1.0256: storing seven values for a candidate is more bytecodes than a constructor, and the
-  ops count `Arrays.fill` of the clear element by element. Not accepted on that; it needs
-  `B faster` of a time benchmark with `--counters` against step8 (after a full build and
-  `check --quick`), which is the next command.
+  State 2026-11-27 22:10, third form of the code, in the working tree: `StopArrivalCandidates`
+  (new) keeps the candidates and commits them itself; changes in `McRangeRaptorWorkerState`,
+  `StopArrivalParetoSet`, `McStopArrivals`, `HeuristicsProvider` and the two stop arrival
+  factories; tests `StopArrivalCandidatesTest`, `StopArrivalParetoSetTest`.
+  - First form (two object slots and five values for every candidate, the commit loop in the
+    worker state with a method for one candidate): results identical, `B allocates less (43.0%)`,
+    ops 1.0256. Time benchmark against step8, 5 forks, `--counters`, no warning: time B/A 0.987
+    (0.959 to 1.016), no significant difference; instructions 1.0275 (1.0138 to 1.0415), cycles
+    0.9652 (0.9571 to 0.9734), cache misses 0.8330 (0.7897 to 0.8787), branch mispredictions
+    1.0097 (0.9968 to 1.0228). The cycles of the forks of a build agree to 0.5 %, the time does
+    not: the frequency of the cores was 3.43 to 3.71 GHz in the forks (cycles for a nanosecond).
+    `-XX:+PrintInlining` (`RIG_JAVA_OPTS`, one fork) showed that the method for one candidate was
+    not inlined in the loop ("already compiled into a big method"), a call with six arguments for
+    every candidate.
+  - Third form (one object slot for an arrival by transit, the loop in `StopArrivalCandidates`
+    reading its arrays): `try --alloc` against step8: results identical, ops 0.97302,
+    `B allocates less (43.3%)`. Accepted on that; `accept` is running, then commit, freeze
+    `step9`, entry 9 and a time benchmark against step8.
 
 ## Tried
 
