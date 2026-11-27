@@ -14,6 +14,7 @@ import zipfile
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+import counters  # noqa: E402
 import rig  # noqa: E402
 
 
@@ -222,6 +223,19 @@ class BenchReportTest(TempDirTest):
         self.assertIn("no significant difference", report)
         self.assertIn("UNEVEN", report)
 
+    def test_the_cpu_counters_of_the_measured_thread(self):
+        rnd = random.Random(1)
+        for n in range(2):
+            for side, instructions in (("A", 1000), ("B", 900)):
+                self.fork(side, n, 1.0, rnd)
+                f = self.tmp / f"{side}-{n}.json"
+                result = json.loads(f.read_text())
+                result["counters"] = {"raptor": {"InstructionRetired": instructions, "TotalCycles": 500}}
+                f.write_text(json.dumps(result))
+        report = rig.bench_report(self.tmp, "wall")
+        self.assertRegex(report, r"instructions +1000 +900 +0\.9000 \[0\.9000, 0\.9000\]")
+        self.assertIn("cycles for an instruction: A 0.500, B 0.556", report)
+
     def test_no_interval_from_one_fork_of_each_build(self):
         gm, lo, hi = rig.ratio_interval([{"x": 1.0}], [{"x": 2.0}], ["x"])
         self.assertEqual(2.0, gm)
@@ -271,6 +285,19 @@ class OpsReportTest(TempDirTest):
     def test_method_name(self):
         self.assertEqual("org.x.Foo.bar(Baz, int, long[])", rig.method_name("org/x/Foo.bar(Lorg/x/Baz;I[J)V"))
         self.assertEqual("org.x.Foo.<init>()", rig.method_name("org/x/Foo.<init>()V"))
+
+
+class CountersTest(unittest.TestCase):
+    def test_what_a_thread_used_between_its_context_switches(self):
+        switches = [  # time, processor, the thread that was switched out, two counters of the processor
+            (100, 0, 9, (10, 100)),
+            (200, 0, 7, (15, 160)),  # thread 7 ran on processor 0 from 100 to 200
+            (300, 0, 8, (20, 200)),
+            (400, 0, 7, (26, 230)),  # and from 300 to 400
+            (450, 1, 7, (99, 999)),  # the first switch of processor 1: what was before it is not known
+            (900, 0, 7, (30, 300)),  # after the window
+        ]
+        self.assertEqual({"raptor": [11, 90]}, counters.used_by_thread(switches, 7, {"raptor": [(150, 500)]}))
 
 
 class AllocReportTest(TempDirTest):

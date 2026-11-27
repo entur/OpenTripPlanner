@@ -1393,6 +1393,8 @@ def cmd_bench(args):
     if args.ops and args.alloc:
         die("Either --ops or --alloc")
     kind = "ops" if args.ops else "alloc" if args.alloc else "time"
+    if args.counters and kind != "time":
+        die("--counters goes with a time benchmark")
     for build in (a, b):
         require_current(build)
         read_classpath(build)  # compiles the rig if it changed, so that is not part of a fork
@@ -1425,6 +1427,10 @@ def cmd_bench(args):
     for f in range(forks):
         order += [(a, "A", f), (b, "B", f)] if f % 2 == 0 else [(b, "B", f), (a, "A", f)]
     builds["machine"] = {}
+    if args.counters:
+        start_recorder(out)
+        jvm = jvm + ["--enable-native-access=ALL-UNNAMED"]  # the id of the thread is read from Windows
+        common = common + ["--thread-id"]
     for build, side, f in order:
         result = out / f"{side}-{f}.json"
         known = known_result(kind, build, args.dataset, common, f)
@@ -1436,6 +1442,9 @@ def cmd_bench(args):
         # The allocations of a flight recording say which methods allocate
         recording = out / f"{side}-{f}.jfr"
         record = ["--jfr", win(recording)] if kind == "alloc" else []
+        trace = out / f"{side}-{f}.etl"
+        if args.counters:
+            ask_recorder(out, "start", "started")
         started, cpu_before = datetime.datetime.now(), machine_cpu_seconds()
         code = run_rig(build, common + record + ["--out", win(result), "--graph", win(graph_file(args.dataset, build)),
                                                  "--label", f"{side}{f}:{build}"],
@@ -1446,6 +1455,10 @@ def cmd_bench(args):
         builds["machine"][f"{side}{f}"] = {"cpuSeconds": machine_cpu_seconds() - cpu_before,
                                            "seconds": (datetime.datetime.now() - started).total_seconds()}
         (out / "meta.json").write_text(json.dumps(builds, indent=2), encoding="utf-8")
+        if args.counters:
+            ask_recorder(out, "stop", "stopped", str(trace))
+            add_counters(result, trace)
+            trace.unlink()
         if kind == "alloc":
             add_allocation_by_method(result, recording)
             recording.unlink()
@@ -1475,6 +1488,54 @@ def known_result(kind, build, dataset, bench_args, fork):
                  [str(a) for a in bench_args], *os.environ.get("RIG_JAVA_OPTS", "").split()]
     key = hashlib.sha256(json.dumps(made_from).encode()).hexdigest()[:16]
     return DATA / "bench" / f"known-{kind}" / f"{build}-{key}.json"
+
+
+def start_recorder(out):
+    """
+    Start the process that records the CPU counters of the machine when it is asked to
+    (counters.py). Recording needs administrator rights: Windows asks the user for them. The
+    process ends when this one does.
+    """
+    import ctypes
+    if os.name != "nt":
+        die("The CPU counters are read with the Windows Performance Recorder")
+    arguments = f'"{Path(__file__).with_name("counters.py")}" record "{out}" {os.getpid()}'
+    # Above 32: started. 0 as the last argument: without a window
+    if ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, arguments, None, 0) <= 32:
+        die("Recording the CPU counters needs administrator rights, and they were not given")
+    wait_for_recorder(out, "ready")
+
+
+def ask_recorder(out, request, answer, text=""):
+    """Ask the recorder to 'start' or to 'stop' (the text is the trace file to write) and wait for its answer."""
+    (out / answer).unlink(missing_ok=True)
+    (out / "request").write_text(text, encoding="utf-8")
+    os.replace(out / "request", out / request)  # the recorder never sees a file that is not written yet
+    wait_for_recorder(out, answer)
+
+
+def wait_for_recorder(out, answer, seconds=600):
+    import time
+    deadline = time.time() + seconds
+    while not (out / answer).exists():
+        if (out / "failed").exists():
+            die("Recording the CPU counters failed: " + (out / "failed").read_text(encoding="utf-8"))
+        if time.time() > deadline:
+            die("The recorder of the CPU counters does not answer")
+        time.sleep(0.1)
+
+
+def add_counters(result_file, trace):
+    """Add what the measured thread used of each CPU counter in each level to the result of a fork, from its trace."""
+    import counters
+    result = json.loads(result_file.read_text(encoding="utf-8"))
+    try:
+        names, switches = counters.context_switches(trace)
+    except OSError as e:
+        die(str(e))
+    used = counters.used_by_thread(switches, result["meta"]["threadId"], result["windows"])
+    result["counters"] = {level: dict(zip(names, sums)) for level, sums in used.items() if sums}
+    result_file.write_text(json.dumps(result), encoding="utf-8")
 
 
 def add_allocation_by_method(result_file, recording):
@@ -1574,6 +1635,7 @@ def bench_report(out, metric="wall"):
         details += by_search(level, a_items, b_items, ids)
         if ids:
             details.append(uneven_forks(forks, level, ids, metric))
+        details += counter_lines(forks, level, summary[level])
     lines.append("")
     lines += details
     lines.append("")
@@ -1948,10 +2010,17 @@ def ratio_interval(a_forks, b_forks, ids):
     t-interval of the difference between the forks of A and the forks of B, so it is wide with few
     forks, and there is none with one fork each.
     """
-    nan = float("nan")
     if not ids:
-        return nan, nan, nan
-    a, b = fork_levels(a_forks, ids), fork_levels(b_forks, ids)
+        return float("nan"), float("nan"), float("nan")
+    return log_interval(fork_levels(a_forks, ids), fork_levels(b_forks, ids))
+
+
+def log_interval(a, b):
+    """
+    The ratio B/A of two samples of logarithms (one value for each fork), with its 99 %
+    t-interval; no interval from one value of each.
+    """
+    nan = float("nan")
     mean_a, mean_b = sum(a) / len(a), sum(b) / len(b)
     freedom = len(a) + len(b) - 2
     if freedom < 1:
@@ -1976,6 +2045,33 @@ def uneven_forks(forks, level, ids, metric):
     if max(relative) / min(relative) > UNEVEN_FORKS:
         line += "  UNEVEN: a fork ran on slower cores or was disturbed; run it again"
     return line
+
+
+COUNTERS = {"InstructionRetired": "instructions", "TotalCycles": "cycles", "LLCMisses": "cache misses",
+            "BranchMispredictions": "branch mispredictions"}
+
+
+def counter_lines(forks, level, summary):
+    """
+    Report lines with what the measured thread used of each CPU counter (bench --counters): the
+    median of the forks of A and of B, and B/A with the 99 % interval of the forks, as for the
+    time. The ratios are added to the summary of the level.
+    """
+    a = [r["counters"][level] for r in forks["A"] if level in r.get("counters", {})]
+    b = [r["counters"][level] for r in forks["B"] if level in r.get("counters", {})]
+    if not a or not b:
+        return []
+    lines = [f"{level}: what the measured thread used of the CPU: A, B, B/A [99% CI]"]
+    summary["counters"] = {}
+    for name in a[0]:
+        ratio, lo, hi = log_interval([math.log(f[name]) for f in a], [math.log(f[name]) for f in b])
+        lines.append(f"  {COUNTERS.get(name, name):22} {median([f[name] for f in a]):10.4g} "
+                     f"{median([f[name] for f in b]):10.4g}  {ratio:.4f} [{lo:.4f}, {hi:.4f}]")
+        summary["counters"][name] = ratio
+    if "TotalCycles" in a[0] and "InstructionRetired" in a[0]:
+        per_instruction = [median([f["TotalCycles"] / f["InstructionRetired"] for f in side]) for side in (a, b)]
+        lines.append(f"  cycles for an instruction: A {per_instruction[0]:.3f}, B {per_instruction[1]:.3f}")
+    return lines
 
 
 def fmt_ns(ns):
@@ -2115,6 +2211,9 @@ def main():
                    help="count the bytecode instructions executed instead of measuring time: no noise")
     s.add_argument("--alloc", action="store_true",
                    help="compare the allocated bytes instead of the time: a busy machine does not change them")
+    s.add_argument("--counters", action="store_true",
+                   help="with the time: the instructions, cycles, cache misses and branch mispredictions of the "
+                        "measured thread, from the counters of the CPU; Windows asks for administrator rights")
     s.add_argument("--forks", type=int, help="default 3, with --ops 1")
     s.add_argument("--warmup", help="default 2, with --ops 1")
     s.add_argument("--iterations", help="default 3, with --ops or --alloc 2")

@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The counters of the CPU at every context switch: what each thread used while it ran. -->
+<WindowsPerformanceRecorder Version="1.0" Author="perf-rig" Comments="CPU counters at each context switch">
+  <Profiles>
+    <SystemCollector Id="SystemCollector" Name="NT Kernel Logger">
+      <BufferSize Value="1024"/>
+      <Buffers Value="128"/>
+    </SystemCollector>
+    <SystemProvider Id="SystemProvider">
+      <Keywords>
+        <Keyword Value="CSwitch"/>
+        <Keyword Value="ProcessThread"/>
+      </Keywords>
+    </SystemProvider>
+    <HardwareCounter Id="HardwareCounters" Base="" Strict="true">
+      <Counters>
+        <Counter Value="InstructionRetired"/>
+        <Counter Value="TotalCycles"/>
+        <Counter Value="LLCMisses"/>
+        <Counter Value="BranchMispredictions"/>
+      </Counters>
+      <Events>
+        <Event Value="CSwitch"/>
+      </Events>
+    </HardwareCounter>
+    <Profile Id="Counters.Verbose.File" Name="Counters" Description="CPU counters at each context switch"
+             LoggingMode="File" DetailLevel="Verbose">
+      <Collectors>
+        <SystemCollectorId Value="SystemCollector">
+          <SystemProviderId Value="SystemProvider"/>
+          <HardwareCounterId Value="HardwareCounters"/>
+        </SystemCollectorId>
+      </Collectors>
+    </Profile>
+  </Profiles>
+</WindowsPerformanceRecorder>

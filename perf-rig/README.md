@@ -36,6 +36,13 @@ upstream.
   confidence interval is the 99 % t-interval of the difference between the forks of A and of B.
   Two JVM runs of the same code differ by 1-2 %, so time confirms a gain of a few percent, not a
   small one, see Notes.
+- **CPU counters (`bench --counters`)**, with the time: the instructions, cycles, cache misses
+  (last level) and branch mispredictions that the measured thread used while the items of a level
+  were measured, with the same interval over the forks as the time. They are the counters of the
+  processor at every context switch of the machine (Windows Performance Recorder, a part of
+  Windows), so they leave out what other threads did on the core. For an idea about memory layout:
+  fewer cache misses and cycles for the same instructions. Recording needs administrator rights:
+  Windows asks for them once in a benchmark, and only the recorder (`counters.py`) gets them.
 - **Profile (`profile`)**: the methods of a build with the most time samples, allocated bytes and
   ops, per level: where to look for a gain.
 - Both benchmarks and the profile measure these levels, and fingerprint every result, so a gain
@@ -91,7 +98,7 @@ to `bench/history.tsv`.
 say the total is several percent, and the machine does nothing else.
 
 ```bash
-python perf-rig/rig.py bench --quick --levels raptor --forks 5   # the levels the steps changed; half an hour
+python perf-rig/rig.py bench --quick --levels raptor --forks 5 --counters   # the levels the steps changed; half an hour
 python perf-rig/rig.py --dataset norway check --repeat --threads 8 --tests none
 python perf-rig/rig.py test --scope all         # the whole OTP test suite
 ```
@@ -104,6 +111,9 @@ The benchmark compares `base` with the working tree. Without `--quick` a fork ta
   that small. More forks make the interval narrower.
 - `B slower`, or an interval that lies above the ops ratio: a step costs time that the ops do not
   show. Compare the steps one by one (`bench --quick --forks 5 --baseline step1 --candidate step2`).
+- The counters say why: the instructions follow the ops, and the cycles the time. Cycles that
+  change more than the instructions are waiting for memory (cache misses) or wrong guesses of
+  branches.
 
 The result is an entry in the journal, with the steps it covers. An idea marked `needs time` in
 the journal is tried here too, with this benchmark against the last step in place of the ops
@@ -154,6 +164,8 @@ comparison of `try`: it needs `B faster`.
   for it earlier (with a warning). A few classes live in OTP packages to reach package-private
   code (`RigRaptorServiceFactory`, `RigStreetSearch`).
 - `perf-rig/agent`: the agent of `bench --ops`, `coverage` and `profile`.
+- `perf-rig/counters.py` and `counters.wprp`: the recorder and the reader of the CPU counters of
+  `bench --counters`, and what is recorded.
 - `perf-rig/cases/<dataset>.json`: the cases (Transmodel trip query variables), generated with a
   seed by `gen-cases`; `<dataset>.extra.json`: hand-written cases, kept when the cases are
   generated again.
@@ -261,6 +273,10 @@ inputs are hard links to the `otp-data` files. A new dataset: `rig.py --dataset 
   four forks agreed to 0.001 %, but on 6.757 GB: a quarter of the bytes Raptor allocates as it is
   written (`ParetoSet.tailIterator`, lambdas) are never allocated in a normal run, and an idea that
   removes those gains nothing.
+- `bench --counters` has not been run from start to end yet (2026-11-27): reading a recorded trace
+  and every other step are tested, the recorder with administrator rights is not. A trace of 10 s
+  of this laptop is 28 MB (209 000 context switches) and is read in 1.5 s; the trace of a fork is
+  deleted when its counters are read.
 - Thread CPU time on Windows has 15.6 ms ticks, so the reports use wall time.
 - `mutate` with 40 bugs in 16 core files (Raptor, A*, street edges, linking, transfer optimization,
   itinerary mapping), 2026-11-27: `check --quick` found 26. Of the others, 6 can not change a

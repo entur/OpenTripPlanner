@@ -1,5 +1,10 @@
 package org.opentripplanner.perfrig;
 
+import java.lang.foreign.Arena;
+import java.lang.foreign.FunctionDescriptor;
+import java.lang.foreign.Linker;
+import java.lang.foreign.SymbolLookup;
+import java.lang.foreign.ValueLayout;
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.lang.ref.WeakReference;
@@ -143,6 +148,11 @@ final class BenchCommand {
     meta.put("gcCountWarmup", gcStart[0] - gcBefore[0]);
     meta.put("gcCountMeasure", gcEnd[0] - gcStart[0]);
     meta.put("gcMillisMeasure", gcEnd[1] - gcStart[1]);
+
+    if (args.flag("thread-id")) {
+      // The items were measured on this thread: to find it in a trace of the system
+      meta.put("threadId", osThreadId());
+    }
 
     var root = new LinkedHashMap<String, Object>();
     meta.put("ops", OpsCounter.active());
@@ -528,6 +538,19 @@ final class BenchCommand {
     var recording = new Recording(Configuration.getConfiguration("profile"));
     recording.start();
     return recording;
+  }
+
+  /** The id that Windows has for the current thread. */
+  private static long osThreadId() {
+    try {
+      var getCurrentThreadId = Linker.nativeLinker().downcallHandle(
+        SymbolLookup.libraryLookup("kernel32", Arena.global()).find("GetCurrentThreadId").orElseThrow(),
+        FunctionDescriptor.of(ValueLayout.JAVA_INT)
+      );
+      return Integer.toUnsignedLong((int) getCurrentThreadId.invokeExact());
+    } catch (Throwable e) {
+      throw new IllegalStateException("Can not read the id of the thread", e);
+    }
   }
 
   private static long epochNanos() {
