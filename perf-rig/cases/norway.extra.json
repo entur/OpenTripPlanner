@@ -1,0 +1,1139 @@
+{
+  "source": "test/performance/norway/travelSearch.csv, without the scooter rental cases",
+  "cases": [
+    {
+      "id": "speedtest-001",
+      "category": "speedtest-transit",
+      "description": "Intercity Notodden to Oslo",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.556698,
+            "longitude": 9.25651
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.91177,
+            "longitude": 10.757994
+          }
+        },
+        "dateTime": "2026-12-01T08:00:00+01:00",
+        "searchWindow": 120
+      }
+    },
+    {
+      "id": "speedtest-002",
+      "category": "speedtest-transit",
+      "description": "Intercity Gol to Oslo",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 60.69917,
+            "longitude": 8.97123
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.874783,
+            "longitude": 10.483057
+          }
+        },
+        "dateTime": "2026-12-01T11:00:00+01:00",
+        "searchWindow": 60
+      }
+    },
+    {
+      "id": "speedtest-003",
+      "category": "speedtest-transit",
+      "description": "Oslo local, Slependen to city center",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.87577,
+            "longitude": 10.500488
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.91177,
+            "longitude": 10.757994
+          }
+        },
+        "dateTime": "2026-12-01T15:00:00+01:00",
+        "searchWindow": 90
+      }
+    },
+    {
+      "id": "speedtest-004",
+      "category": "speedtest-transit",
+      "description": "Outskirts Sponvika to Skjærhalden",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.09267,
+            "longitude": 11.229988
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.025497,
+            "longitude": 11.036771
+          }
+        },
+        "dateTime": "2026-12-01T16:00:00+01:00",
+        "searchWindow": 60
+      }
+    },
+    {
+      "id": "speedtest-005",
+      "category": "speedtest-transit",
+      "description": "Rural Ørje to Skjønhaug, Østold",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.480717,
+            "longitude": 11.656314
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.641224,
+            "longitude": 11.315405
+          }
+        },
+        "dateTime": "2026-12-01T13:00:00+01:00",
+        "searchWindow": 70
+      }
+    },
+    {
+      "id": "speedtest-006",
+      "category": "speedtest-transit",
+      "description": "Commuter Borud to Lillestrøm",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.700043,
+            "longitude": 11.196891
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.953896,
+            "longitude": 11.043521
+          }
+        },
+        "dateTime": "2026-12-01T13:30:00+01:00",
+        "searchWindow": 60
+      }
+    },
+    {
+      "id": "speedtest-007",
+      "category": "speedtest-transit",
+      "description": "Oslo outskirts Prinsdal to Solemskogen",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.834175,
+            "longitude": 10.807415
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.979305,
+            "longitude": 10.817612
+          }
+        },
+        "dateTime": "2026-12-01T17:00:00+01:00",
+        "searchWindow": 120
+      }
+    },
+    {
+      "id": "speedtest-008",
+      "category": "speedtest-transit",
+      "description": "Rural Drevsjø to Dalsbygda",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 61.886,
+            "longitude": 12.030646
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 62.527782,
+            "longitude": 11.108747
+          }
+        },
+        "dateTime": "2026-12-01T08:00:00+01:00",
+        "searchWindow": 120
+      }
+    },
+    {
+      "id": "speedtest-009",
+      "category": "speedtest-transit",
+      "description": "Intercity Gjøvik to Lillehammer",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 61.13245,
+            "longitude": 10.454416
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 61.099922,
+            "longitude": 10.47955
+          }
+        },
+        "dateTime": "2026-12-01T15:00:00+01:00",
+        "searchWindow": 90
+      }
+    },
+    {
+      "id": "speedtest-010",
+      "category": "speedtest-transit",
+      "description": "Commuter Hokksund to Fossekallveien, Buskerud",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.767204,
+            "longitude": 9.910567
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 60.178715,
+            "longitude": 10.257535
+          }
+        },
+        "dateTime": "2026-12-01T08:00:00+01:00",
+        "searchWindow": 300
+      }
+    },
+    {
+      "id": "speedtest-011",
+      "category": "speedtest-transit",
+      "description": "Commuter Torggata to Høyjord, Vestfold",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.417572,
+            "longitude": 10.482581
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.366146,
+            "longitude": 10.120965
+          }
+        },
+        "dateTime": "2026-12-01T13:00:00+01:00",
+        "searchWindow": 60
+      }
+    },
+    {
+      "id": "speedtest-012",
+      "category": "speedtest-transit",
+      "description": "Commuter Meieritorvet to Sykehjemet, Telemark",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.13879,
+            "longitude": 9.648428
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.213493,
+            "longitude": 9.596075
+          }
+        },
+        "dateTime": "2026-12-01T10:00:00+01:00",
+        "searchWindow": 60
+      }
+    },
+    {
+      "id": "speedtest-013",
+      "category": "speedtest-transit",
+      "description": "Rural Hastensund to Kolbjørnsvik, Agder",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 58.50631,
+            "longitude": 8.922674
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 58.451637,
+            "longitude": 8.76895
+          }
+        },
+        "dateTime": "2026-12-01T09:30:00+01:00",
+        "searchWindow": 60
+      }
+    },
+    {
+      "id": "speedtest-014",
+      "category": "speedtest-transit",
+      "description": "Rural Hauge to Heskestad, Rogaland",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 58.343338,
+            "longitude": 6.29508
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 58.490974,
+            "longitude": 6.361217
+          }
+        },
+        "dateTime": "2026-12-01T08:00:00+01:00",
+        "searchWindow": 240
+      }
+    },
+    {
+      "id": "speedtest-015",
+      "category": "speedtest-transit",
+      "description": "Bergen local, Melkeplassen to Starefossbakken",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 60.376045,
+            "longitude": 5.303988
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 60.387913,
+            "longitude": 5.35192
+          }
+        },
+        "dateTime": "2026-12-01T16:00:00+01:00",
+        "searchWindow": 90
+      }
+    },
+    {
+      "id": "speedtest-016",
+      "category": "speedtest-transit",
+      "description": "Rural fjords, Helgheim to Vik",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 61.231983,
+            "longitude": 7.115655
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 61.08844,
+            "longitude": 6.579569
+          }
+        },
+        "dateTime": "2026-12-01T14:00:00+01:00",
+        "searchWindow": 120
+      }
+    },
+    {
+      "id": "speedtest-017",
+      "category": "speedtest-transit",
+      "description": "Local, Ålesund",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 62.461693,
+            "longitude": 6.16515
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 62.47539,
+            "longitude": 6.191737
+          }
+        },
+        "dateTime": "2026-12-01T08:00:00+01:00",
+        "searchWindow": 75
+      }
+    },
+    {
+      "id": "speedtest-018",
+      "category": "speedtest-transit",
+      "description": "Rural via Trondheim, Meldal-Fillan",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 63.04669,
+            "longitude": 9.713128
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 63.60113,
+            "longitude": 8.973342
+          }
+        },
+        "dateTime": "2026-12-01T07:00:00+01:00",
+        "searchWindow": 480
+      }
+    },
+    {
+      "id": "speedtest-019",
+      "category": "speedtest-transit",
+      "description": "Rural Verrabotn to Snåsa, Trøndelag",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 63.802647,
+            "longitude": 10.581465
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 64.245766,
+            "longitude": 12.380184
+          }
+        },
+        "dateTime": "2026-12-01T06:00:00+01:00",
+        "searchWindow": 240
+      }
+    },
+    {
+      "id": "speedtest-020",
+      "category": "speedtest-transit",
+      "description": "Harstad local",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 68.801636,
+            "longitude": 16.534492
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 68.81136,
+            "longitude": 16.507952
+          }
+        },
+        "dateTime": "2026-12-01T15:00:00+01:00",
+        "searchWindow": 110
+      }
+    },
+    {
+      "id": "speedtest-021",
+      "category": "speedtest-transit",
+      "description": "Rural Billefjord to Karasjok, Finnmark",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 70.31518,
+            "longitude": 25.046686
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 69.472664,
+            "longitude": 25.5169
+          }
+        },
+        "dateTime": "2026-12-01T08:00:00+01:00",
+        "searchWindow": 480
+      }
+    },
+    {
+      "id": "speedtest-022",
+      "category": "speedtest-transit",
+      "description": "Outskirts, Hamar-Oslo",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 61.768383,
+            "longitude": 9.527959
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.897415,
+            "longitude": 10.792623
+          }
+        },
+        "dateTime": "2026-12-01T09:00:00+01:00",
+        "searchWindow": 180
+      }
+    },
+    {
+      "id": "speedtest-023",
+      "category": "speedtest-transit",
+      "description": "Train, Trondheim-Brønnøysund",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 63.436462,
+            "longitude": 10.398694
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 65.4755,
+            "longitude": 12.211214
+          }
+        },
+        "dateTime": "2026-12-01T04:00:00+01:00",
+        "searchWindow": 720
+      }
+    },
+    {
+      "id": "speedtest-024",
+      "category": "speedtest-transit",
+      "description": "Fly, Sogndal-Molde",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 61.157547,
+            "longitude": 7.137634
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 62.746407,
+            "longitude": 7.260933
+          }
+        },
+        "dateTime": "2026-12-01T08:00:00+01:00",
+        "searchWindow": 240
+      }
+    },
+    {
+      "id": "speedtest-025",
+      "category": "speedtest-transit",
+      "description": "Express bus, Haugesund-Trysil",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.416233,
+            "longitude": 5.27443
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 61.318344,
+            "longitude": 12.260398
+          }
+        },
+        "dateTime": "2026-12-01T00:01:00+01:00",
+        "searchWindow": 600
+      }
+    },
+    {
+      "id": "speedtest-026",
+      "category": "speedtest-transit",
+      "description": "Express bus, Skjærhalden-Lærdal",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.025497,
+            "longitude": 11.036771
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 61.09855,
+            "longitude": 7.480798
+          }
+        },
+        "dateTime": "2026-12-01T08:00:00+01:00",
+        "searchWindow": 420
+      }
+    },
+    {
+      "id": "speedtest-027",
+      "category": "speedtest-transit",
+      "description": "Express bus, Tromsø-Hammerfest",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 69.647705,
+            "longitude": 18.959843
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 70.66445,
+            "longitude": 23.680502
+          }
+        },
+        "dateTime": "2026-12-01T15:00:00+01:00",
+        "searchWindow": 180
+      }
+    },
+    {
+      "id": "speedtest-028",
+      "category": "speedtest-transit",
+      "description": "Oslo high frequency",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.932322,
+            "longitude": 10.724663
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.928979,
+            "longitude": 10.769432
+          }
+        },
+        "dateTime": "2026-12-01T16:05:00+01:00",
+        "searchWindow": 120
+      }
+    },
+    {
+      "id": "speedtest-029",
+      "category": "speedtest-transit",
+      "description": "Too high heuristic cost OTP#3835",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.845947,
+            "longitude": 10.803125
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.75957,
+            "longitude": 9.961188
+          }
+        },
+        "dateTime": "2026-12-01T19:30:00+01:00",
+        "searchWindow": 30
+      }
+    },
+    {
+      "id": "speedtest-030",
+      "category": "speedtest-transit",
+      "description": "Crossing Oslo to Asker",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.9559,
+            "longitude": 11.0509
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.8367,
+            "longitude": 10.4249
+          }
+        },
+        "dateTime": "2026-12-01T09:00:00+01:00",
+        "searchWindow": 120
+      }
+    },
+    {
+      "id": "speedtest-031",
+      "category": "speedtest-transit",
+      "description": "Crossing Oslo to Hokksund",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.9559,
+            "longitude": 11.0509
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.7705,
+            "longitude": 9.9088
+          }
+        },
+        "dateTime": "2026-12-01T09:00:00+01:00",
+        "searchWindow": 120
+      }
+    },
+    {
+      "id": "speedtest-032",
+      "category": "speedtest-transit",
+      "description": "Sarpsborg to Bergen",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.277108,
+            "longitude": 11.1401367
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 60.3920207,
+            "longitude": 5.329484
+          }
+        },
+        "dateTime": "2026-12-01T09:00:00+01:00",
+        "searchWindow": 120
+      }
+    },
+    {
+      "id": "speedtest-033",
+      "category": "speedtest-transit",
+      "description": "Stavanger to Bergen",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 58.9698356,
+            "longitude": 5.7278252
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 60.3920207,
+            "longitude": 5.329484
+          }
+        },
+        "dateTime": "2026-12-01T09:00:00+01:00",
+        "searchWindow": 120
+      }
+    },
+    {
+      "id": "speedtest-034",
+      "category": "speedtest-transit",
+      "description": "Trondheim to Oslo",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 63.4210307,
+            "longitude": 10.50292
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.8889369,
+            "longitude": 10.7885742
+          }
+        },
+        "dateTime": "2026-12-01T09:00:00+01:00",
+        "searchWindow": 720
+      }
+    },
+    {
+      "id": "speedtest-035",
+      "category": "speedtest-transit",
+      "description": "Oslo to Tromsø",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.9299041,
+            "longitude": 9.9088
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 69.6551766,
+            "longitude": 18.9486
+          }
+        },
+        "dateTime": "2026-12-01T09:00:00+01:00",
+        "searchWindow": 720
+      }
+    },
+    {
+      "id": "speedtest-036",
+      "category": "speedtest-transit",
+      "description": "Drammen to Ålesund",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.7176376,
+            "longitude": 10.2612305
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 62.486953,
+            "longitude": 6.130371
+          }
+        },
+        "dateTime": "2026-12-01T10:00:00+01:00",
+        "searchWindow": 720
+      }
+    },
+    {
+      "id": "speedtest-040",
+      "category": "speedtest-transit",
+      "description": "Carl Berners Plass to Kolbotn - arrive by",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.9261,
+            "longitude": 10.7753
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.8112,
+            "longitude": 10.7986
+          }
+        },
+        "dateTime": "2026-12-01T19:00:00+01:00",
+        "arriveBy": true
+      }
+    },
+    {
+      "id": "speedtest-041",
+      "category": "speedtest-transit",
+      "description": "Spikkestad to Gardemoen - arrive by",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.7453,
+            "longitude": 10.3417
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 60.1931,
+            "longitude": 11.0968
+          }
+        },
+        "dateTime": "2026-12-01T17:00:00+01:00",
+        "arriveBy": true,
+        "modes": {
+          "accessMode": "foot",
+          "egressMode": "foot",
+          "directMode": "foot",
+          "transportModes": [
+            {
+              "transportMode": "rail"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "speedtest-101",
+      "category": "speedtest-p-and-r",
+      "description": "P+R into Oslo, Slemmestad",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.779213,
+            "longitude": 10.495719
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.9299041,
+            "longitude": 10.74874
+          }
+        },
+        "dateTime": "2026-12-01T10:00:00+01:00",
+        "searchWindow": 180,
+        "modes": {
+          "accessMode": "car_park",
+          "egressMode": "foot",
+          "directMode": "foot"
+        }
+      }
+    },
+    {
+      "id": "speedtest-102",
+      "category": "speedtest-p-and-r",
+      "description": "P+R into Bergen, Nordvik",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 60.23425,
+            "longitude": 5.3580665
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 60.388416,
+            "longitude": 5.321159
+          }
+        },
+        "dateTime": "2026-12-01T14:00:00+01:00",
+        "searchWindow": 180,
+        "modes": {
+          "accessMode": "car_park",
+          "egressMode": "foot",
+          "directMode": "foot"
+        }
+      }
+    },
+    {
+      "id": "speedtest-103",
+      "category": "speedtest-p-and-r",
+      "description": "P+R into Trondheim, Venn",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 63.2510938,
+            "longitude": 10.0528335
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 63.4291709,
+            "longitude": 10.40096
+          }
+        },
+        "dateTime": "2026-12-01T14:00:00+01:00",
+        "searchWindow": 180,
+        "modes": {
+          "accessMode": "car_park",
+          "egressMode": "foot",
+          "directMode": "foot"
+        }
+      }
+    },
+    {
+      "id": "speedtest-104",
+      "category": "speedtest-p-and-r",
+      "description": "P+R into Stavanger, Verdalen",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 58.7850184,
+            "longitude": 5.6150436
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 58.9698356,
+            "longitude": 5.72782516
+          }
+        },
+        "dateTime": "2026-12-01T10:00:00+01:00",
+        "searchWindow": 180,
+        "modes": {
+          "accessMode": "car_park",
+          "egressMode": "foot",
+          "directMode": "foot"
+        }
+      }
+    },
+    {
+      "id": "speedtest-105",
+      "category": "speedtest-p-and-r",
+      "description": "P+R into Oslo, Hønefoss",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 60.1688416,
+            "longitude": 10.2612305
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.9299041,
+            "longitude": 10.74874
+          }
+        },
+        "dateTime": "2026-12-01T10:00:00+01:00",
+        "searchWindow": 180,
+        "modes": {
+          "accessMode": "car_park",
+          "egressMode": "foot",
+          "directMode": "foot"
+        }
+      }
+    },
+    {
+      "id": "speedtest-106",
+      "category": "speedtest-p-and-r",
+      "description": "P+R into Oslo, Moss",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.431808,
+            "longitude": 10.664978
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.9299041,
+            "longitude": 10.74874
+          }
+        },
+        "dateTime": "2026-12-01T10:00:00+01:00",
+        "searchWindow": 180,
+        "modes": {
+          "accessMode": "car_park",
+          "egressMode": "foot",
+          "directMode": "foot"
+        }
+      }
+    },
+    {
+      "id": "speedtest-107",
+      "category": "speedtest-p-and-r",
+      "description": "P+R Drammen to Ålesund",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.7176376,
+            "longitude": 10.2612305
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 62.486953,
+            "longitude": 6.130371
+          }
+        },
+        "dateTime": "2026-12-01T10:00:00+01:00",
+        "searchWindow": 180,
+        "modes": {
+          "accessMode": "car_park",
+          "egressMode": "foot",
+          "directMode": "foot"
+        }
+      }
+    },
+    {
+      "id": "speedtest-301",
+      "category": "speedtest-direct-car",
+      "description": "Direct car, Bergen to Stavanger",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 60.3912,
+            "longitude": 5.3245
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 58.9701,
+            "longitude": 5.7331
+          }
+        },
+        "dateTime": "2026-12-01T10:00:00+01:00",
+        "modes": {
+          "directMode": "car",
+          "transportModes": []
+        }
+      }
+    },
+    {
+      "id": "speedtest-302",
+      "category": "speedtest-direct-car",
+      "description": "Direct car, Ålesund to Molde",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 62.4722,
+            "longitude": 6.1495
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 62.7375,
+            "longitude": 7.161
+          }
+        },
+        "dateTime": "2026-12-01T10:00:00+01:00",
+        "modes": {
+          "directMode": "car",
+          "transportModes": []
+        }
+      }
+    },
+    {
+      "id": "speedtest-303",
+      "category": "speedtest-direct-car",
+      "description": "Direct car, Haugesund to Odda",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.4138,
+            "longitude": 5.268
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 60.0693,
+            "longitude": 6.5455
+          }
+        },
+        "dateTime": "2026-12-01T10:00:00+01:00",
+        "modes": {
+          "directMode": "car",
+          "transportModes": []
+        }
+      }
+    },
+    {
+      "id": "speedtest-401",
+      "category": "speedtest-direct-walk",
+      "description": "Direct walk, Grünerløkka to Majorstuen",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.9225,
+            "longitude": 10.759
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.93,
+            "longitude": 10.713
+          }
+        },
+        "dateTime": "2026-12-01T10:00:00+01:00",
+        "modes": {
+          "directMode": "foot",
+          "transportModes": []
+        }
+      }
+    },
+    {
+      "id": "speedtest-402",
+      "category": "speedtest-direct-walk",
+      "description": "Direct walk, Jernbanetorget to Grønland",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.9112,
+            "longitude": 10.7503
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.9133,
+            "longitude": 10.762
+          }
+        },
+        "dateTime": "2026-12-01T10:00:00+01:00",
+        "modes": {
+          "directMode": "foot",
+          "transportModes": []
+        }
+      }
+    },
+    {
+      "id": "speedtest-403",
+      "category": "speedtest-direct-walk",
+      "description": "Direct walk, Frogner to Aker Brygge",
+      "variables": {
+        "from": {
+          "coordinates": {
+            "latitude": 59.9265,
+            "longitude": 10.705
+          }
+        },
+        "to": {
+          "coordinates": {
+            "latitude": 59.911,
+            "longitude": 10.727
+          }
+        },
+        "dateTime": "2026-12-01T10:00:00+01:00",
+        "modes": {
+          "directMode": "foot",
+          "transportModes": []
+        }
+      }
+    }
+  ]
+}
