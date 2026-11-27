@@ -2044,7 +2044,8 @@ def log_interval(a, b):
 def uneven_forks(forks, level, ids, metric):
     """
     A report line with the speed of each fork relative to the mean of all forks. A fork far from
-    the others ran on slower cores or was disturbed, whatever build it ran.
+    the other forks of its build ran on slower cores or was disturbed. The forks of one build are
+    not compared with those of the other: they differ when one build is faster.
     """
     names = [f"{side}{i}" for side in "AB" for i in range(len(forks[side]))]
     levels = fork_levels(per_fork(forks["A"] + forks["B"], level, metric), ids)
@@ -2052,7 +2053,8 @@ def uneven_forks(forks, level, ids, metric):
     relative = [math.exp(x - mean) for x in levels]
     line = f"{level}: time of each fork relative to the mean: " + ", ".join(
         f"{name} {value:.3f}" for name, value in zip(names, relative))
-    if max(relative) / min(relative) > UNEVEN_FORKS:
+    builds = relative[:len(forks["A"])], relative[len(forks["A"]):]
+    if any(max(build) / min(build) > UNEVEN_FORKS for build in builds):
         line += "  UNEVEN: a fork ran on slower cores or was disturbed; run it again"
     return line
 

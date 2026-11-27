@@ -205,6 +205,12 @@ class BenchReportTest(TempDirTest):
         self.assertIn("no significant difference", report)
         self.assertIn("UNEVEN", report)
 
+    def test_a_faster_build_is_not_an_uneven_fork(self):
+        # Measured 2026-11-27: a build 20 % faster, the forks of each build within 5 %
+        report = self.report(0.8, forks=5, fork_noise=0.02)
+        self.assertIn("B faster", report)
+        self.assertNotIn("UNEVEN", report)
+
     def test_the_cpu_counters_of_the_measured_thread(self):
         rnd = random.Random(1)
         for n in range(2):
