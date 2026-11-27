@@ -55,7 +55,8 @@ to apply when the command has ended. Commit nothing while it runs.
    - `git status` is not clean and no idea is being tried: stop and say what is there. It may be
      someone's work.
 3. `python perf-rig/rig.py builds`: build `base` must be of the commit the journal names. If it is
-   missing or of another commit, stop: a new baseline is the user's decision.
+   missing or of another commit, make the baseline again from that commit, see "When a test
+   fails".
 4. After a switch to another commit, or if a command says that classes are gone, run a full
    `python perf-rig/rig.py build`. If a command says the sources changed after the build:
    `python perf-rig/rig.py build --fast`.
@@ -86,15 +87,16 @@ to apply when the command has ended. Commit nothing while it runs.
      work you meant to remove?
    - for an idea about allocation, with `--alloc` added to the command: the verdict of the
      allocated bytes, and the methods whose allocated bytes changed.
-   Adjust and try again, at most three rounds for one idea.
+   A test that fails: see "When a test fails". Adjust and try again, at most three rounds for one
+   idea.
 4. **Decide.**
    - Accept when the tests pass and `B/A total` of the ops is 0.999 or lower at the level.
    - Accept an idea about allocation when the verdict is `B allocates less` and the ops are not
      more (`B/A total` at most 1.001). `no verdict: the forks of A and B overlap` is no gain: the
      JIT compiler removes that allocation in some runs already.
    - Anything else is rejected. A rejected idea is as useful in the journal as an accepted one.
-5. **Accepted**: `python perf-rig/rig.py accept` must pass (if it does not: fix the idea, or reject
-   it): a full build and all tests. Nothing else is checked: whether the cases run enough of the
+5. **Accepted**: `python perf-rig/rig.py accept` must pass: a full build and all tests. If a test
+   fails, see "When a test fails". Nothing else is checked: whether the cases run enough of the
    code (`coverage`, `mutate`, new cases) is work of its own, not a part of the loop. Commit the
    code alone. `python perf-rig/rig.py freeze step<N>`, N being the number of
    the journal entry. Then write the entry, take the idea out of "Being tried", and commit the
@@ -120,10 +122,32 @@ tried, think harder about the same level. There is no limit to how long you may 
 - A larger change, of an algorithm or of how the data is laid out, goes on a new branch, as the
   README says.
 
-Stop by yourself only when a check differs and you cannot explain it from your change, or when
-the rig itself fails: that is a problem with the rig or with OTP, not something to work around.
-Then report: the steps accepted with their numbers, the ideas rejected and why in a line each, the
+Stop by yourself only for a problem outside the repository that you can not repair: a full disk,
+a dependency missing from the offline Maven repository, a dataset or graph that is gone. Then
+report: the steps accepted with their numbers, the ideas rejected and why in a line each, the
 ideas left, and the steps that have had no time check.
+
+## When a test fails
+
+A failing test, an OTP test or a case of the rig, never stops the loop: repair it, or reject the
+idea, and go on. First find out whose failure it is: run the same test, or the same cases
+(`check --build base --only <case>`), on the `base` build.
+
+- **It fails with the idea only**: the idea causes it. Repair the idea's code until the tests pass.
+  A test of an API the idea changed (a constructor, a signature) may be adapted to it, but what a
+  test asserts about the behaviour stays, and so do the recorded results of the cases. If the
+  tests pass only when an assertion or a result changes, the idea changes routing: reject it,
+  write why, and take the next idea.
+- **It fails without the idea too**: the baseline has the problem, for example a test that depends
+  on Windows, the time or the environment, an order that depends on hash codes, state shared
+  between requests that the repeated or concurrent runs show, or a bug of the rig. Fix it in OTP
+  or in the rig, as a commit of its own on `perf-rig` and on the branch, then make it part of the
+  baseline: a full `rig.py build`, `rig.py freeze base --force`,
+  `rig.py record base --build base --repeat --threads 8` for oslo and for norway, then the last
+  accepted step built again from its commit (`git checkout`, `rig.py build`,
+  `rig.py freeze step<N> --force`, back to the branch), so the next comparison has the fix on both
+  sides. Write it as a journal entry of its own (`### <N>. baseline: <what was fixed>`), with the
+  new commit of `base`, and go on with the idea.
 
 ## Idle mode
 
@@ -162,11 +186,12 @@ Windows does not go to sleep while a rig command runs, but it does if the lid is
 
 ## Never
 
-- Never `freeze base`, never record `base` with another build than `base`, never change a case,
-  the rig or `perf-rig/mutations` to make a check pass. A difference means the idea is wrong.
+- Never make a baseline again to make a difference of the idea go away, never record `base` with
+  another build than `base`, never change a case, the rig or `perf-rig/mutations` to make a test of
+  the idea pass: a difference that the `base` build does not have means the idea is wrong.
 - Never push, and never change anything outside this worktree and `../perf-rig-data`. Stopping
   programs in the idle mode is the one exception.
-- Never change or skip an OTP test to get through `accept`.
+- Never skip an OTP test, and never change what it asserts, to get through `accept`.
 
 ## Commits
 
