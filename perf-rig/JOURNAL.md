@@ -28,6 +28,14 @@ they are.
 From the raptor profile of build `step2` (oslo, `profile --quick --levels raptor --top 60`). A
 percentage is the share of the ops, unless it says time.
 
+- raptor, memory: create a stop arrival only when it is accepted. `transitToStop` and
+  `transferToStop` of `McRangeRaptorWorkerState` create an arrival for every candidate (31 % and
+  22 % of the allocated bytes) and keep it in a list until the commit, where most are rejected.
+  Keep a candidate as values (ride or from-arrival and transfer, stop, arrival time, c1) and let
+  the heuristic check and `StopArrivalParetoSet.add` work on the values; the object is created
+  when the set accepts it, or when a listener or the debugger needs a rejected one. The same
+  checks in the same order with the same values, so the results are identical by construction.
+  Try with `--alloc`. Draft: `../perf-rig-data/drafts/create-stop-arrival-when-accepted.md`.
 - raptor, `ParetoSet.add` and `qualify`: branch on the two `leftDominanceExist` results instead of
   `ParetoComparator.compare` (2.7 %), `ParetoDominance.of` (1.4 %) and a switch on the enum.
 - raptor, `TripScheduleBoardSearch`: the linear scan after the binary search is 3.8 %, and
