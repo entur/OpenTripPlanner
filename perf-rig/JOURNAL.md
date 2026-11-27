@@ -60,8 +60,12 @@ percentage is the share of the ops, unless it says time.
     `DestinationArrivalParetoSetComparators.arrivalTimeIsCriterion`, `DestinationArrivalConfig`, and
     the new constructor argument in `DestinationArrivalPathsTest`. `try --against step2`: CHECK
     PASSED, ops raptor 0.8799 against step2 (geomean 0.9566), mismatch 0; the work removed is the
-    loop of `ParetoSet.qualify` over the destination arrivals. Next: `accept`, then commit, freeze
-    `step6` and write entry 6.
+    loop of `ParetoSet.qualify` over the destination arrivals. `accept` stopped at its coverage
+    step: no case runs `DestinationArrivalConfig.createDestArrivalPathsStdSearch` (the standard
+    search with paths), changed only by the new constructor argument. Waiting for the user: leave
+    that line unchanged (the McRaptor setup turns the shortcut on after construction), or accept
+    with the OTP tests as the only check of that line. Then `accept`, commit, freeze `step6`,
+    entry 6.
   - for the case work apart from the loop: `mutate` found 8 of 9 bugs in `DestinationArrivalPaths`
     and `DestinationArrivalConfig` (the one not found only decides whether a cost-mismatch warning
     is logged), and 4 of 10 in `DestinationArrivalParetoSetComparators`: not found were `||` to `&&`
