@@ -1,7 +1,6 @@
-
-  # Describe where terraform will store the state of infrastructure
-  terraform {
-    backend "gcs" {
+# One workspace per environment (dev, tst, prd). The kub-ent-jp-* workspaces are obsolete.
+terraform {
+  backend "gcs" {
     bucket = "ent-gcs-tfa-otp2"
-    }
   }
+}
