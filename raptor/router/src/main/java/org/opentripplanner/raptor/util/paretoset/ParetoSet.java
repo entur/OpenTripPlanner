@@ -93,29 +93,34 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
     }
 
     // Quick shortcut, one element probably dominate most of the new elements
-    if (goodElement != null && leftVectorDominatesRightVector(goodElement, newValue)) {
+    if (
+      goodElement != null &&
+      comparator.leftDominanceExist(goodElement, newValue) &&
+      !comparator.leftDominanceExist(newValue, goodElement)
+    ) {
       notifyElementRejected(newValue, goodElement);
       return false;
     }
 
-    loop: for (int i = 0; i < size; ++i) {
+    for (int i = 0; i < size; ++i) {
       T it = elements[i];
+      boolean newValueIsBetter = comparator.leftDominanceExist(newValue, it);
+      boolean elementIsBetter = comparator.leftDominanceExist(it, newValue);
 
-      switch (comparator.compare(newValue, it)) {
-        case MUTUAL:
-          continue loop;
-        case LEFT:
-          removeDominatedElementsFromRestOfSetAndAddNewElement(newValue, i);
-          return true;
-        case RIGHT:
-          goodElement = it;
-          notifyElementRejected(newValue, it);
-          return false;
-        case NONE:
-          // newValue is strictly equal to an existing value
-          notifyElementRejected(newValue, it);
-          return false;
+      if (newValueIsBetter) {
+        if (elementIsBetter) {
+          // Mutual dominance
+          continue;
+        }
+        removeDominatedElementsFromRestOfSetAndAddNewElement(newValue, i);
+        return true;
       }
+      // The element dominates newValue, or newValue is strictly equal to it
+      if (elementIsBetter) {
+        goodElement = it;
+      }
+      notifyElementRejected(newValue, it);
+      return false;
     }
 
     assertEnoughSpaceInSet();
@@ -146,24 +151,31 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
     }
 
     // Quick shortcut, one element probably dominate most of the new elements
-    if (goodElement != null && leftVectorDominatesRightVector(goodElement, newValue)) {
+    if (
+      goodElement != null &&
+      comparator.leftDominanceExist(goodElement, newValue) &&
+      !comparator.leftDominanceExist(newValue, goodElement)
+    ) {
       return false;
     }
 
-    loop: for (int i = size - 1; i >= 0; --i) {
+    for (int i = size - 1; i >= 0; --i) {
       var it = elements[i];
+      boolean newValueIsBetter = comparator.leftDominanceExist(newValue, it);
+      boolean elementIsBetter = comparator.leftDominanceExist(it, newValue);
 
-      switch (comparator.compare(newValue, it)) {
-        case MUTUAL:
-          continue loop;
-        case LEFT:
-          return true;
-        case RIGHT:
-          goodElement = it;
-          return false;
-        case NONE:
-          return false;
+      if (newValueIsBetter) {
+        if (elementIsBetter) {
+          // Mutual dominance
+          continue;
+        }
+        return true;
       }
+      // The element dominates newValue, or newValue is strictly equal to it
+      if (elementIsBetter) {
+        goodElement = it;
+      }
+      return false;
     }
     return true;
   }
@@ -251,7 +263,10 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
     while (j < size) {
       notifyElementMoved(j, i);
       // Move next element(j) forward if it is not dominated by the new value
-      if (!leftVectorDominatesRightVector(newValue, elements[j])) {
+      if (
+        !comparator.leftDominanceExist(newValue, elements[j]) ||
+        comparator.leftDominanceExist(elements[j], newValue)
+      ) {
         elements[i] = elements[j];
         ++i;
       } else {
@@ -266,10 +281,6 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
     size = i + 1;
   }
 
-  private boolean leftVectorDominatesRightVector(T left, T right) {
-    return leftDominanceExist(left, right) && !rightDominanceExist(left, right);
-  }
-
   private void acceptAndAppendValue(T newValue) {
     notifyElementAccepted(newValue);
     elements[size++] = newValue;
@@ -279,14 +290,6 @@ public sealed class ParetoSet<T> extends AbstractCollection<T> permits ParetoSet
     if (size == elements.length) {
       elements = Arrays.copyOf(elements, elements.length * 2);
     }
-  }
-
-  private boolean leftDominanceExist(T left, T right) {
-    return comparator.leftDominanceExist(left, right);
-  }
-
-  private boolean rightDominanceExist(T left, T right) {
-    return comparator.leftDominanceExist(right, left);
   }
 
   protected void notifyElementAccepted(T newElement) {}
