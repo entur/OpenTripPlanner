@@ -115,6 +115,14 @@ predict.
   one. The same checks in the same order with the same values, so the results are identical by
   construction. Tried with `try --alloc` against step8. Draft:
   `../perf-rig-data/drafts/create-stop-arrival-when-accepted.md`.
+  State 2026-11-27 20:40: the code is in the working tree (new `StopArrivalCandidates`, changes in
+  `McRangeRaptorWorkerState`, `StopArrivalParetoSet`, `McStopArrivals`, `HeuristicsProvider`, the
+  two stop arrival factories; tests `StopArrivalCandidatesTest`, `StopArrivalParetoSetTest`).
+  `try --alloc`: results identical, `B allocates less (43.0%)` (5.229 GB to 2.982 GB), but the ops
+  are 1.0256: storing seven values for a candidate is more bytecodes than a constructor, and the
+  ops count `Arrays.fill` of the clear element by element. Not accepted on that; it needs
+  `B faster` of a time benchmark with `--counters` against step8 (after a full build and
+  `check --quick`), which is the next command.
 
 ## Tried
 
