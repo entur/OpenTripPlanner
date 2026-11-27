@@ -67,6 +67,15 @@ public sealed interface VertexLabel {
   ) implements VertexLabel {
     private static final String TEMPLATE = "osm:node:%s:%s:%s";
 
+    /**
+     * The generated hash code uses the identity hash code of the enum, which is different in each
+     * JVM run, and so is the iteration order of the vertices of the graph.
+     */
+    @Override
+    public int hashCode() {
+      return 31 * (31 * Long.hashCode(nodeId) + osmEntityType.ordinal()) + Long.hashCode(entityId);
+    }
+
     @Override
     public String toString() {
       return TEMPLATE.formatted(nodeId, osmEntityType, entityId);
