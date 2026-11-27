@@ -298,5 +298,5 @@ Nothing.
   and `qualify` (the destination arrivals) and saw the comparators of both. 44 M probes of a
   pass take that path. `qualify` is only used for the destination arrivals, so its own call sites
   see their comparator alone. What the time and the instructions say is in the time check below.
-  `ParetoComparator.compare` and `ParetoDominance` are still used by tests and by
-  `ParetoComparator.dominanceExist`.
+  `ParetoComparator.compare` and `ParetoDominance` are still used by `RaptorViaLocation` and by
+  tests.
