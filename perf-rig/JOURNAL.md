@@ -122,3 +122,19 @@ Nothing.
   in the comparators of lines 88, 94, 95, 103 and 106 (reverse and departure-time configurations)
   and `<` to `<=` in `lowC1RelaxedIfC2IsOptimal`. No case runs
   `DestinationArrivalConfig.createDestArrivalPathsStdSearch` (the standard search with paths).
+
+### 7. time check: steps 1, 2 and 6 on a quiet laptop: fewer cycles, the time gain is not shown
+- where: raptor, step6 (a148179598) against base, `bench --quick --levels raptor --forks 5
+  --counters`, in the idle mode, started as administrator
+- result: time B/A 0.997 (99 % interval 0.961 to 1.033): no significant difference. Of the CPU:
+  instructions 0.9255 (0.9160 to 0.9352), cycles 0.9667 (0.9511 to 0.9826), cache misses 1.000
+  (0.966 to 1.036), branch mispredictions 0.9947 (0.9849 to 1.0046). Allocated bytes 1.000.
+  Results identical.
+- note: no warning: other processes used 0.14 to 0.23 cores during a fork, once 0.42. The three
+  steps have 16 % fewer ops, 7.4 % fewer instructions and 3.3 % fewer cycles (0.322 to 0.338
+  cycles for an instruction). The verdict is of the geometric mean of the items, where a short
+  search counts as much as a long one, and the gain of step 6 is in the long searches: the total
+  time of a fork is 0.963 (0.922 to 1.005, the same interval over the forks, computed by hand),
+  and of the third of the items that take longest (47 to 621 ms, 85 % of the time) 0.951. The
+  forks of a build differed by up to 2.4 % from their mean in time. Steps 1, 2 and 6 have their
+  time check now: nothing is slower, and the cycles confirm a gain of 3 %.
