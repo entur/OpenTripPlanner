@@ -1,0 +1,120 @@
+name: "H - Terraform 🏗️"
+# Plans on pull requests; applies from main_config after approval, dev then tst then prd.
+on:
+  pull_request:
+    paths:
+      - "entur/deployment-config/terraform/**"
+      - ".github/workflows/entur-h-terraform.yml"
+  push:
+    branches:
+      - main_config
+    paths:
+      - "entur/deployment-config/terraform/**"
+      - ".github/workflows/entur-h-terraform.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+  pull-requests: write
+
+concurrency:
+  group: terraform-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  terraform-lint:
+    if: github.repository_owner == 'entur'
+    uses: entur/gha-terraform/.github/workflows/lint.yml@v3.0.0
+    with:
+      directory: entur/deployment-config/terraform
+
+  tf-plan-dev:
+    needs: [ terraform-lint ]
+    name: Terraform Plan DEV
+    uses: entur/gha-terraform/.github/workflows/plan.yml@v3.0.0
+    with:
+      directory: entur/deployment-config/terraform
+      environment: dev
+
+  tf-approval-dev:
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && github.event_name != 'pull_request' && github.ref == 'refs/heads/main_config' && needs.tf-plan-dev.outputs.has_changes == 'true' }}
+    needs: [ tf-plan-dev ]
+    runs-on: ubuntu-latest
+    permissions: {}
+    timeout-minutes: 10
+    environment: Approve
+    steps:
+      - name: Manual approval
+        shell: bash
+        run: echo "Approve DEV tf plan"
+
+  tf-apply-dev:
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && github.event_name != 'pull_request' && github.ref == 'refs/heads/main_config' && needs.tf-plan-dev.outputs.has_changes == 'true' }}
+    needs: [ tf-plan-dev, tf-approval-dev ]
+    name: Terraform Apply DEV
+    uses: entur/gha-terraform/.github/workflows/apply.yml@v3.0.0
+    with:
+      directory: entur/deployment-config/terraform
+      environment: dev
+      has_changes: ${{ needs.tf-plan-dev.outputs.has_changes }}
+
+  tf-plan-tst:
+    needs: [ terraform-lint ]
+    name: Terraform Plan TST
+    uses: entur/gha-terraform/.github/workflows/plan.yml@v3.0.0
+    with:
+      directory: entur/deployment-config/terraform
+      environment: tst
+
+  tf-approval-tst:
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && github.event_name != 'pull_request' && github.ref == 'refs/heads/main_config' && needs.tf-plan-tst.outputs.has_changes == 'true' }}
+    needs: [ tf-plan-tst, tf-apply-dev ]
+    runs-on: ubuntu-latest
+    permissions: {}
+    timeout-minutes: 10
+    environment: Approve
+    steps:
+      - name: Manual approval
+        shell: bash
+        run: echo "Approve TST tf plan"
+
+  tf-apply-tst:
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && github.event_name != 'pull_request' && github.ref == 'refs/heads/main_config' && needs.tf-plan-tst.outputs.has_changes == 'true' }}
+    needs: [ tf-plan-tst, tf-approval-tst ]
+    name: Terraform Apply TST
+    uses: entur/gha-terraform/.github/workflows/apply.yml@v3.0.0
+    with:
+      directory: entur/deployment-config/terraform
+      environment: tst
+      has_changes: ${{ needs.tf-plan-tst.outputs.has_changes }}
+
+  tf-plan-prd:
+    needs: [ terraform-lint ]
+    name: Terraform Plan PRD
+    uses: entur/gha-terraform/.github/workflows/plan.yml@v3.0.0
+    with:
+      directory: entur/deployment-config/terraform
+      environment: prd
+
+  tf-approval-prd:
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && github.event_name != 'pull_request' && github.ref == 'refs/heads/main_config' && needs.tf-plan-prd.outputs.has_changes == 'true' }}
+    needs: [ tf-plan-prd, tf-apply-tst ]
+    runs-on: ubuntu-latest
+    permissions: {}
+    timeout-minutes: 10
+    environment: Approve
+    steps:
+      - name: Manual approval
+        shell: bash
+        run: echo "Approve PRD tf plan"
+
+  tf-apply-prd:
+    if: ${{ !cancelled() && !contains(needs.*.result, 'failure') && github.event_name != 'pull_request' && github.ref == 'refs/heads/main_config' && needs.tf-plan-prd.outputs.has_changes == 'true' }}
+    needs: [ tf-plan-prd, tf-approval-prd ]
+    name: Terraform Apply PRD
+    uses: entur/gha-terraform/.github/workflows/apply.yml@v3.0.0
+    with:
+      directory: entur/deployment-config/terraform
+      environment: prd
+      has_changes: ${{ needs.tf-plan-prd.outputs.has_changes }}
