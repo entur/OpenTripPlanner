@@ -252,10 +252,10 @@ public final class DefaultRangeRaptorWorker<T extends RaptorTripSchedule> implem
         }
       }
 
-      if (calculator.boardingPossibleAt(pattern, stopPos)) {
-        // Don't attempt to board if this stop was not reached in the last round.
-        // Allow to reboard the same pattern - a pattern may loop and visit the same stop twice
-        if (state.isStopReachedInPreviousRound(stopIndex)) {
+      // Don't attempt to board if this stop was not reached in the last round.
+      // Allow to reboard the same pattern - a pattern may loop and visit the same stop twice
+      if (state.isStopReachedInPreviousRound(stopIndex)) {
+        if (calculator.boardingPossibleAt(pattern, stopPos)) {
           // has constrained transfers
           if (enableTransferConstraints && txSearch.transferExistTargetStop(stopPos)) {
             transitWorker.boardWithConstrainedTransfer(stopIndex, stopPos, boardSlack, txSearch);
