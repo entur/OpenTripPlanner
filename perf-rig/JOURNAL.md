@@ -49,18 +49,6 @@ predict.
     criterion) has no such limit; it is a rewrite of the 18 lambdas into one method, to be
     checked with `DestinationArrivalParetoSetComparatorsTest`. The cases of the rig are 96 % one
     configuration, so the rig shows no gain of it; it is for production.
-- raptor, `TripScheduleBoardSearch`: the linear scan after the binary search is 4.2 % of the ops
-  and 8.9 % of the time, `TripPatternForDates.departureTime` 3.1 %, the binary search 2.0 % of the
-  time. Where the departures at every stop are in the order of the trips (to be computed when
-  `TripPatternForDates` fills its arrays, as a flag of `TripSearchTimetable`), the first trip at
-  or after a time is found by a binary search to the end with the same result: the linear scan
-  finds the lowest index of the run of trips that depart late enough, which is the first such
-  trip when the departures are sorted. Only for the unbounded search: with a trip index bound
-  (the standard search, already on a trip) the scan is one or two steps. Same for
-  `TripScheduleAlightSearch` with the arrivals. Caution: the ops will say 6 % less, but a binary
-  search has a branch that is hard to predict in every step and the scan has one; the threshold
-  of 50 was tuned on time. Try a binary search without a branch (`base = time < t ? base + half :
-  base`), and decide on the cycles and the branch mispredictions of `--counters`.
 - raptor, the order of the two checks of a candidate (after "create a stop arrival only when it
   is accepted"): the heuristic check runs for all 62 M candidates and rejects 37 %, the set of
   the stop then rejects 84 % of the rest with a far cheaper check. The set first would save most
@@ -106,7 +94,20 @@ predict.
 
 ## Being tried
 
-Nothing.
+- raptor, `TripScheduleBoardSearch`: the linear scan after the binary search is 4.2 % of the ops
+  and 8.9 % of the time, `TripPatternForDates.departureTime` 3.1 %, the binary search 2.0 % of the
+  time. Where the departures at every stop are in the order of the trips (to be computed when
+  `TripPatternForDates` fills its arrays, as a flag of `TripSearchTimetable`), the first trip at
+  or after a time is found by a binary search to the end with the same result: the linear scan
+  finds the lowest index of the run of trips that depart late enough, which is the first such
+  trip when the departures are sorted. Only for the unbounded search: with a trip index bound
+  (the standard search, already on a trip) the scan is one or two steps. Same for
+  `TripScheduleAlightSearch` with the arrivals. Caution: the ops will say 6 % less, but a binary
+  search has a branch that is hard to predict in every step and the scan has one; the threshold
+  of 50 was tuned on time. Try a binary search without a branch (`base = time < t ? base + half :
+  base`), and decide on the cycles and the branch mispredictions of `--counters`.
+  Draft: `../perf-rig-data/drafts/trip-search-binary-when-in-trip-order.md`. Tried with `try`
+  against step10.
 
 ## Tried
 
