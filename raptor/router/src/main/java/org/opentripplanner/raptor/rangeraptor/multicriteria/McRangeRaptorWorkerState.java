@@ -3,9 +3,7 @@ package org.opentripplanner.raptor.rangeraptor.multicriteria;
 import static org.opentripplanner.raptor.api.view.PathLegType.ACCESS;
 import static org.opentripplanner.raptor.api.view.PathLegType.TRANSIT;
 
-import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.model.RaptorStartOnBoardAccess;
@@ -67,8 +65,8 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule> implem
   private final DestinationArrivalPaths<T> paths;
   private final HeuristicsProvider<T> heuristics;
   private final McStopArrivalFactory<T> stopArrivalFactory;
-  private final List<McStopArrival<T>> transitArrivalsCache = new ArrayList<>();
-  private final List<McStopArrival<T>> transferArrivalsCache = new ArrayList<>();
+  private final StopArrivalCandidates<T> transitArrivalsCache;
+  private final StopArrivalCandidates<T> transferArrivalsCache;
   private final RaptorCostCalculator<T> calculatorGeneralizedCost;
   private final RaptorTransitCalculator<T> transitCalculator;
 
@@ -89,6 +87,16 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule> implem
     this.paths = paths;
     this.heuristics = heuristics;
     this.stopArrivalFactory = stopArrivalFactory;
+    this.transitArrivalsCache = StopArrivalCandidates.ofTransitArrivals(
+      stopArrivalFactory,
+      heuristics,
+      arrivals
+    );
+    this.transferArrivalsCache = StopArrivalCandidates.ofTransferArrivals(
+      stopArrivalFactory,
+      heuristics,
+      arrivals
+    );
     this.calculatorGeneralizedCost = calculatorGeneralizedCost;
     this.transitCalculator = transitCalculator;
 
@@ -184,14 +192,7 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule> implem
 
     final int c1 = calculateC1(ride, alightStop, alightTime, alightSlack);
 
-    var transitState = stopArrivalFactory.createTransitStopArrival(
-      ride,
-      alightStop,
-      stopArrivalTime,
-      c1
-    );
-
-    transitArrivalsCache.add(transitState);
+    transitArrivalsCache.addTransitArrival(ride, alightStop, stopArrivalTime, c1);
   }
 
   /* private methods */
@@ -229,24 +230,17 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule> implem
       int arrivalTime = it.arrivalTime() + transferTimeInSeconds;
 
       if (!exceedsTimeLimit(arrivalTime)) {
-        var arrival = stopArrivalFactory.createTransferStopArrival(it, transfer, arrivalTime);
-        transferArrivalsCache.add(arrival);
+        transferArrivalsCache.addTransferArrival(it, transfer, arrivalTime);
       }
     }
   }
 
   private void commitTransitArrivals() {
-    for (McStopArrival<T> arrival : transitArrivalsCache) {
-      addStopArrival(arrival);
-    }
-    transitArrivalsCache.clear();
+    transitArrivalsCache.commit();
   }
 
   private void commitTransferArrivals() {
-    for (McStopArrival<T> arrival : transferArrivalsCache) {
-      addStopArrival(arrival);
-    }
-    transferArrivalsCache.clear();
+    transferArrivalsCache.commit();
   }
 
   /**
@@ -287,11 +281,11 @@ public final class McRangeRaptorWorkerState<T extends RaptorTripSchedule> implem
    */
   void addViaArrival(McStopArrival<T> arrival) {
     if (arrival.arrivedBy(TRANSIT)) {
-      transitArrivalsCache.add(arrival);
+      transitArrivalsCache.addArrival(arrival);
     } else if (arrival.arrivedBy(ACCESS)) {
       addStopArrival(arrival);
     } else {
-      transferArrivalsCache.add(arrival);
+      transferArrivalsCache.addArrival(arrival);
     }
   }
 

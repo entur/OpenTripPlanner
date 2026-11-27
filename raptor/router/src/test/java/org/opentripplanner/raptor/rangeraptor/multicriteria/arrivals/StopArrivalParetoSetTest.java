@@ -7,6 +7,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -103,6 +104,97 @@ class StopArrivalParetoSetTest {
         }
       }
     }
+  }
+
+  /**
+   * An arrival can be added as its criteria and a supplier of the arrival. The set must do the
+   * same as with the arrival, and create the arrival only when it is added, or when it is rejected
+   * and the listener is notified.
+   */
+  @ParameterizedTest(name = "{0}, compare arrived on-board: {2}")
+  @MethodSource("testCases")
+  void createsAnArrivalOnlyWhenItIsNeeded(
+    String name,
+    ArrivalParetoSetComparatorFactory<McStopArrival<TestTripSchedule>> comparatorFactory,
+    boolean compareArrivedOnBoard
+  ) {
+    for (int seed = 0; seed < N_SEQUENCES; ++seed) {
+      var random = new Random(seed);
+      var ids = new IdentityHashMap<McStopArrival<TestTripSchedule>, Integer>();
+      var expectedEvents = new EventLog(ids);
+      var events = new EventLog(ids);
+      var comparator = comparatorFactory.compareCriteria();
+
+      var expected = new StopArrivalParetoSet<TestTripSchedule>(
+        comparator,
+        compareArrivedOnBoard,
+        expectedEvents
+      );
+      var subject = new StopArrivalParetoSet<TestTripSchedule>(
+        comparator,
+        compareArrivedOnBoard,
+        events
+      );
+      var subjectWithoutListener = new StopArrivalParetoSet<TestTripSchedule>(
+        comparator,
+        compareArrivedOnBoard,
+        null
+      );
+
+      for (int i = 0; i < N_ARRIVALS; ++i) {
+        var arrival = randomArrival(random);
+        ids.put(arrival, i);
+        String step = "sequence " + seed + ", arrival " + i + " " + arrival;
+        int[] created = { 0 };
+        Supplier<McStopArrival<TestTripSchedule>> supplier = () -> {
+          ++created[0];
+          return arrival;
+        };
+
+        boolean added = expected.add(arrival);
+
+        // Added, or rejected with an event for the listener: created once
+        assertEquals(added, add(subject, arrival, supplier), step);
+        assertEquals(1, created[0], step);
+        assertEquals(expectedEvents.events, events.events, step);
+        assertEquals(ids(ids, expected.stream()), ids(ids, subject.stream()), step);
+
+        // Without a listener a rejected arrival is not created
+        created[0] = 0;
+        assertEquals(added, add(subjectWithoutListener, arrival, supplier), step);
+        assertEquals(added ? 1 : 0, created[0], step);
+        assertEquals(ids(ids, expected.stream()), ids(ids, subjectWithoutListener.stream()), step);
+        assertEquals(
+          ids(ids, StreamSupport.stream(expected.elementsAfterMarker().spliterator(), false)),
+          ids(
+            ids,
+            StreamSupport.stream(subjectWithoutListener.elementsAfterMarker().spliterator(), false)
+          ),
+          step
+        );
+
+        if (random.nextInt(8) == 0) {
+          expected.markAtEndOfSet();
+          subject.markAtEndOfSet();
+          subjectWithoutListener.markAtEndOfSet();
+        }
+      }
+    }
+  }
+
+  private static boolean add(
+    StopArrivalParetoSet<TestTripSchedule> set,
+    McStopArrival<TestTripSchedule> arrival,
+    Supplier<McStopArrival<TestTripSchedule>> supplier
+  ) {
+    return set.add(
+      arrival.arrivalTime(),
+      arrival.round(),
+      arrival.c1(),
+      arrival.c2(),
+      arrival.arrivedOnBoard(),
+      supplier
+    );
   }
 
   private static McStopArrival<TestTripSchedule> randomArrival(Random random) {

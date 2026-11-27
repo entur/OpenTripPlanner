@@ -3,6 +3,7 @@ package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.Objects;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
@@ -118,19 +119,58 @@ final class StopArrivalParetoSet<T extends RaptorTripSchedule> {
    * @return {@code true} if the arrival is added.
    */
   boolean add(McStopArrival<T> newValue) {
-    final int arrivalTime = newValue.arrivalTime();
-    final int round = newValue.round();
-    final int c1 = newValue.c1();
-    final int c2 = newValue.c2();
+    return add(
+      newValue.arrivalTime(),
+      newValue.round(),
+      newValue.c1(),
+      newValue.c2(),
+      compareArrivedOnBoard && newValue.arrivedOnBoard(),
+      newValue,
+      null
+    );
+  }
 
+  /**
+   * Add an arrival that is not created yet, if it is pareto-optimal, and drop the elements it
+   * dominates. The criteria given must be those of the arrival the supplier creates. The arrival
+   * is created at most once: when it is added, or when it is rejected and the listener is
+   * notified.
+   *
+   * @return {@code true} if the arrival is added.
+   */
+  boolean add(
+    int arrivalTime,
+    int round,
+    int c1,
+    int c2,
+    boolean arrivedOnBoard,
+    Supplier<McStopArrival<T>> newValueSupplier
+  ) {
+    return add(arrivalTime, round, c1, c2, arrivedOnBoard, null, newValueSupplier);
+  }
+
+  /**
+   * @param newValue         the arrival to add, or {@code null} if it is not created yet.
+   * @param newValueSupplier creates the arrival to add if {@code newValue} is {@code null}.
+   */
+  private boolean add(
+    final int arrivalTime,
+    final int round,
+    final int c1,
+    final int c2,
+    final boolean arrivedOnBoard,
+    @Nullable McStopArrival<T> newValue,
+    @Nullable Supplier<McStopArrival<T>> newValueSupplier
+  ) {
     if (size == 0) {
+      newValue = newValue != null ? newValue : newValueSupplier.get();
       acceptAndAppendValue(newValue, arrivalTime, round, c1, c2);
       return true;
     }
 
     // With the arrived-on-board criterion, the new arrival is either better than the elements that
     // arrived on-street, or worse than the elements that arrived on-board
-    final boolean onBoard = compareArrivedOnBoard && newValue.arrivedOnBoard();
+    final boolean onBoard = compareArrivedOnBoard && arrivedOnBoard;
     final boolean onStreet = compareArrivedOnBoard && !onBoard;
 
     // Quick shortcut, one element probably dominate most of the new elements
@@ -139,7 +179,10 @@ final class StopArrivalParetoSet<T extends RaptorTripSchedule> {
       goodElementIsBetter(arrivalTime, round, c1, c2, onStreet) &&
       !newValueIsBetterThanGoodElement(arrivalTime, round, c1, c2, onBoard)
     ) {
-      notifyElementRejected(newValue, goodElement);
+      if (eventListener != null) {
+        newValue = newValue != null ? newValue : newValueSupplier.get();
+        eventListener.notifyElementRejected(newValue, goodElement);
+      }
       return false;
     }
 
@@ -152,6 +195,7 @@ final class StopArrivalParetoSet<T extends RaptorTripSchedule> {
           // Mutual dominance
           continue;
         }
+        newValue = newValue != null ? newValue : newValueSupplier.get();
         removeDominatedElementsFromRestOfSetAndAddNewElement(
           newValue,
           arrivalTime,
@@ -169,12 +213,14 @@ final class StopArrivalParetoSet<T extends RaptorTripSchedule> {
         setGoodElement(i);
       }
       if (eventListener != null) {
+        newValue = newValue != null ? newValue : newValueSupplier.get();
         eventListener.notifyElementRejected(newValue, elements[i]);
       }
       return false;
     }
 
     assertEnoughSpaceInSet();
+    newValue = newValue != null ? newValue : newValueSupplier.get();
     acceptAndAppendValue(newValue, arrivalTime, round, c1, c2);
     return true;
   }
@@ -417,12 +463,6 @@ final class StopArrivalParetoSet<T extends RaptorTripSchedule> {
   private void notifyElementDropped(McStopArrival<T> element, McStopArrival<T> droppedByElement) {
     if (eventListener != null) {
       eventListener.notifyElementDropped(element, droppedByElement);
-    }
-  }
-
-  private void notifyElementRejected(McStopArrival<T> element, McStopArrival<T> rejectByElement) {
-    if (eventListener != null) {
-      eventListener.notifyElementRejected(element, rejectByElement);
     }
   }
 }

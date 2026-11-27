@@ -1,6 +1,7 @@
 package org.opentripplanner.raptor.rangeraptor.multicriteria.heuristic;
 
 import java.util.Objects;
+import java.util.function.Supplier;
 import org.opentripplanner.raptor.api.request.Optimization;
 import org.opentripplanner.raptor.rangeraptor.debug.DebugHandlerFactory;
 import org.opentripplanner.raptor.rangeraptor.destination.DestinationArrivalPaths;
@@ -59,6 +60,29 @@ public final class HeuristicsProvider<T extends RaptorTripSchedule> {
 
     if (rejected) {
       debugRejectByOptimization(arrival);
+    }
+    return rejected;
+  }
+
+  /**
+   * The same as {@link #rejectDestinationArrivalBasedOnHeuristic(McStopArrival)} for an arrival
+   * that is not created yet. The values given must be those of the arrival the supplier creates;
+   * it is created only if the arrival is rejected and the stop is debugged.
+   */
+  public boolean rejectDestinationArrivalBasedOnHeuristic(
+    int stop,
+    int arrivalTime,
+    int c1,
+    int c2,
+    Supplier<McStopArrival<T>> arrival
+  ) {
+    if (heuristics == null || paths.isEmpty()) {
+      return false;
+    }
+    boolean rejected = !qualify(stop, arrivalTime, c1, c2);
+
+    if (rejected && debugHandlerFactory.isDebugStopArrival(stop)) {
+      debugRejectByOptimization(arrival.get());
     }
     return rejected;
   }

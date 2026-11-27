@@ -2,6 +2,7 @@ package org.opentripplanner.raptor.rangeraptor.multicriteria.arrivals.stop;
 
 import org.opentripplanner.raptor.api.model.RaptorAccessEgress;
 import org.opentripplanner.raptor.api.view.PatternRideView;
+import org.opentripplanner.raptor.spi.RaptorConstants;
 import org.opentripplanner.raptor.spi.RaptorTransfer;
 import org.opentripplanner.raptor.spi.RaptorTripSchedule;
 
@@ -33,6 +34,11 @@ public class StopArrivalFactoryC1<T extends RaptorTripSchedule> implements McSto
       ride.boardStopPosition(),
       ride.trip()
     );
+  }
+
+  @Override
+  public int transitStopArrivalC2(PatternRideView<T, McStopArrival<T>> ride) {
+    return RaptorConstants.NOT_SET;
   }
 
   @Override

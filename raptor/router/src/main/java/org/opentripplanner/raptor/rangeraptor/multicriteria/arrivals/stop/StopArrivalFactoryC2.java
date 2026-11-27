@@ -38,6 +38,11 @@ public class StopArrivalFactoryC2<T extends RaptorTripSchedule> implements McSto
   }
 
   @Override
+  public int transitStopArrivalC2(PatternRideView<T, McStopArrival<T>> ride) {
+    return ride.c2();
+  }
+
+  @Override
   public McStopArrival<T> createTransferStopArrival(
     McStopArrival<T> previous,
     RaptorTransfer transfer,

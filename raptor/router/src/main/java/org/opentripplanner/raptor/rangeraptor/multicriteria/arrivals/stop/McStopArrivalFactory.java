@@ -15,6 +15,13 @@ public interface McStopArrivalFactory<T extends RaptorTripSchedule> {
     int c1
   );
 
+  /**
+   * The {@code c2} of the stop arrival that
+   * {@link #createTransitStopArrival(PatternRideView, int, int, int)} creates for the given ride.
+   * It is the same at every stop of the ride.
+   */
+  int transitStopArrivalC2(PatternRideView<T, McStopArrival<T>> ride);
+
   McStopArrival<T> createTransferStopArrival(
     McStopArrival<T> previous,
     RaptorTransfer transfer,

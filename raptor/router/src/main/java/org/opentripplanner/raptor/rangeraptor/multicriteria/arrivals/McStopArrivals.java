@@ -8,6 +8,7 @@ import com.carrotsearch.hppc.IntSet;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
 import org.opentripplanner.raptor.api.model.RaptorTripScheduleStopPosition;
@@ -156,6 +157,28 @@ public final class McStopArrivals<T extends RaptorTripSchedule> {
 
     if (added) {
       touchedStops.set(arrival.stop());
+    }
+  }
+
+  /**
+   * Add a stop arrival that is not created yet in the Pareto set for its stop. The criteria given
+   * must be those of the arrival the supplier creates. The arrival is created at most once: when
+   * it is accepted, or when it is rejected and a listener of the stop is notified. If the arrival
+   * is accepted, the stop is marked as touched.
+   */
+  public void addStopArrival(
+    int stop,
+    int arrivalTime,
+    int round,
+    int c1,
+    int c2,
+    boolean arrivedOnBoard,
+    Supplier<McStopArrival<T>> arrival
+  ) {
+    boolean added = findOrCreateSet(stop).add(arrivalTime, round, c1, c2, arrivedOnBoard, arrival);
+
+    if (added) {
+      touchedStops.set(stop);
     }
   }
 
