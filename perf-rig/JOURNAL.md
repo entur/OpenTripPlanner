@@ -19,6 +19,10 @@ An entry, numbered in the order the ideas were tried, on any branch:
 A rejected idea has `why:` instead of `commit:`. A time check is an entry too (`### 8. time check`),
 with the verdict of the benchmark for each level.
 
+The idea a session works on is under "Being tried" from before it changes the code until its entry
+is written: a session that was interrupted leaves changes behind, and the next one must know whose
+they are.
+
 ## Ideas not tried yet
 
 From the raptor profile at the start of `perf/raptor-1` (oslo, the code of `base`). A percentage
@@ -40,6 +44,10 @@ is the share of the ops, unless it says time.
 - raptor, memory: `RaptorRoutingRequestTransitData.routeIndexIterator` allocates a `BitSet` of all
   patterns in every round, and `patternStopIterator` an iterator for every pattern (5 % of the
   time).
+
+## Being tried
+
+Nothing.
 
 ## Tried
 
