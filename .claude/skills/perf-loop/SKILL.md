@@ -31,7 +31,8 @@ runs: it stops when the sources no longer match the build.
    missing or of another commit, stop: a new baseline is the user's decision.
 3. The branch:
    - on `perf/<name>`: continue that series, unless the README rules say a new branch;
-   - on `perf-rig`: start a series with `git switch -c perf/<level>-<n>`.
+   - on `perf-rig`: start a series with `git switch -c perf/<level>-<n>`, n being the first number
+     that no `perf/<level>-` branch has.
 
    Then get the whole journal: `git checkout perf-rig -- perf-rig/JOURNAL.md`.
 4. After a switch to another commit, run a full `python perf-rig/rig.py build` (the checkout
@@ -53,9 +54,11 @@ runs: it stops when the sources no longer match the build.
    and leave it for the time check.
 2. **Know what the rig would miss.** The first time a series changes a file:
    `python perf-rig/rig.py coverage --quick`, then
-   `python perf-rig/rig.py mutate <file> --count 10`. A bug that is NOT FOUND in the code the idea
-   touches means a mistake there goes unnoticed: add a case that runs it (below), or pick another
-   idea.
+   `python perf-rig/rig.py mutate <file> --count 10` (it tries the places the file has, at most 10,
+   and ends with exit code 1 if a bug is NOT FOUND). A bug that is not found because it can not
+   change any result is no gap: say why in the journal entry. Any other bug that is not found in
+   the code the idea touches, or right next to it, means a mistake there goes unnoticed: add a case
+   that finds it (below), or pick another idea.
 3. **Change the code.** Only what the idea needs: no clean-up, no renames. The results must stay
    identical; an idea that changes a result, a default or a config value is not a performance idea.
 4. **Try**: `python perf-rig/rig.py try --levels <level> --against <step or base>`. Read:
@@ -69,7 +72,8 @@ runs: it stops when the sources no longer match the build.
    - Anything else is rejected. A rejected idea is as useful in the journal as an accepted one.
 6. **Accepted**: `python perf-rig/rig.py accept` must pass (if it does not: fix the idea, or reject
    it). Commit the code alone. `python perf-rig/rig.py freeze step<N>`, N being the number of the
-   journal entry. Then write the entry and commit the journal (below).
+   journal entry. Then write the entry and commit the journal (below). In the entry, the ratio
+   against `base` is the product of the ratios of the steps, not a measurement.
    **Rejected**: undo the change (`git restore` the files of the idea), write the entry with the
    reason, and commit the journal.
 
