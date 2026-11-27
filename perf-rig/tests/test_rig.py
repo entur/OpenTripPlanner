@@ -516,5 +516,44 @@ class MedianTest(unittest.TestCase):
         self.assertEqual(2.5, rig.median([4, 1, 2, 3]))
 
 
+class JournalTest(TempDirTest):
+    """Branch perf-rig has the whole journal, whatever branch an idea was tried on."""
+
+    def setUp(self):
+        super().setUp()
+        self.journal = self.tmp / "perf-rig" / "JOURNAL.md"
+        self.git("init", "-q", "-b", "perf-rig")
+        self.git("config", "user.name", "t")
+        self.git("config", "user.email", "t@t")
+        self.journal.parent.mkdir()
+        self.journal.write_text("### 1. accepted: a\n")
+        (self.tmp / "A.java").write_text("a")
+        self.git("add", ".")
+        self.git("commit", "-qm", "first")
+        self.git("switch", "-qc", "perf/raptor-1")
+
+    def git(self, *args):
+        return subprocess.run(["git", *args], cwd=self.tmp, check=True, capture_output=True, text=True).stdout
+
+    def test_an_entry_of_a_series_is_committed_on_both_branches(self):
+        self.journal.write_text("### 1. accepted: a\n### 2. rejected: b\n")
+        rig.commit_journal("journal: 2 rejected", self.tmp)
+
+        self.assertIn("2. rejected: b", self.git("show", "perf-rig:perf-rig/JOURNAL.md"))
+        self.assertEqual("a", self.git("show", "perf-rig:A.java"), "the rest of perf-rig is as it was")
+        self.assertEqual("", self.git("status", "--porcelain"))
+        self.assertEqual("perf/raptor-1", self.git("branch", "--show-current").strip())
+
+    def test_an_entry_of_another_series_is_not_lost(self):
+        self.journal.write_text("### 1. accepted: a\n### 2. rejected: b\n")
+        rig.commit_journal("journal: 2 rejected", self.tmp)
+        self.git("switch", "-qc", "perf/street-1", "perf-rig~1")
+
+        self.journal.write_text("### 1. accepted: a\n### 2. accepted: c\n")
+        with self.assertRaises(SystemExit), contextlib.redirect_stderr(io.StringIO()):
+            rig.commit_journal("journal: 2 accepted", self.tmp)
+        self.assertNotIn("2. accepted: c", self.git("show", "perf-rig:perf-rig/JOURNAL.md"))
+
+
 if __name__ == "__main__":
     unittest.main()

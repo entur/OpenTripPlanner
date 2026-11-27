@@ -10,6 +10,7 @@ import re
 import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -51,8 +52,8 @@ def now():
     return datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
 
 
-def git(*args, cwd=REPO):
-    return subprocess.run(["git", *args], cwd=cwd, capture_output=True, encoding="utf-8", errors="replace",
+def git(*args, cwd=REPO, env=None):
+    return subprocess.run(["git", *args], cwd=cwd, env=env, capture_output=True, encoding="utf-8", errors="replace",
                           check=True).stdout.strip()
 
 
@@ -1021,6 +1022,53 @@ def cmd_accept(args):
 
 
 # ---------------------------------------------------------------------------------------------
+# Journal: branch 'perf-rig' has the whole journal of the experiments, whatever branch they are on
+
+JOURNAL = "perf-rig/JOURNAL.md"
+RIG_BRANCH = "perf-rig"
+
+
+def cmd_journal(args):
+    commit_journal(args.message)
+    log(f"The journal is committed, also on branch '{RIG_BRANCH}'")
+
+
+def commit_journal(message, repo=REPO):
+    """
+    Commit the journal file on the branch worked on and, if that is another branch, on branch
+    'perf-rig' too, without checking it out. Stops if the file lacks an entry of the journal of
+    'perf-rig': an entry another branch added would be lost.
+    """
+    branch = git("rev-parse", "--abbrev-ref", "HEAD", cwd=repo)
+    missing = journal_entries(git("show", f"{RIG_BRANCH}:{JOURNAL}", cwd=repo)) \
+        - journal_entries((repo / JOURNAL).read_text(encoding="utf-8"))
+    if missing:
+        die(f"{JOURNAL} lacks entries of the journal of branch '{RIG_BRANCH}':\n  " + "\n  ".join(sorted(missing))
+            + f"\nGet them, then add yours again: git checkout {RIG_BRANCH} -- {JOURNAL}")
+    worktrees = git("worktree", "list", "--porcelain", cwd=repo).splitlines()
+    if branch != RIG_BRANCH and f"branch refs/heads/{RIG_BRANCH}" in worktrees:
+        die(f"Branch '{RIG_BRANCH}' is checked out in another worktree; it can not be committed to from here")
+    if git("status", "--porcelain", "--", JOURNAL, cwd=repo):
+        git("commit", "-q", "-m", message, "--", JOURNAL, cwd=repo)
+    blob = git("rev-parse", f"HEAD:{JOURNAL}", cwd=repo)
+    if blob == git("rev-parse", f"{RIG_BRANCH}:{JOURNAL}", cwd=repo):
+        return
+    # The tree of 'perf-rig' with the journal replaced, made in an index of its own
+    with tempfile.TemporaryDirectory() as tmp:
+        env = dict(os.environ, GIT_INDEX_FILE=str(Path(tmp) / "index"))
+        git("read-tree", RIG_BRANCH, cwd=repo, env=env)
+        git("update-index", "--cacheinfo", f"100644,{blob},{JOURNAL}", cwd=repo, env=env)
+        tree = git("write-tree", cwd=repo, env=env)
+    commit = git("commit-tree", tree, "-p", RIG_BRANCH, "-m", message, cwd=repo)
+    git("update-ref", f"refs/heads/{RIG_BRANCH}", commit, cwd=repo)
+
+
+def journal_entries(text):
+    """The headings of the entries of a journal."""
+    return set(re.findall(r"^### .*$", text, re.M))
+
+
+# ---------------------------------------------------------------------------------------------
 # Coverage: the OTP code the cases execute, from the counts of the ops agent. A check that passes
 # says nothing about code that no case executes.
 
@@ -1909,6 +1957,10 @@ def main():
 
     s = sub.add_parser("accept", help="before a commit: build, coverage, check --repeat --threads 8")
     s.set_defaults(func=cmd_accept)
+
+    s = sub.add_parser("journal", help="commit perf-rig/JOURNAL.md on this branch and on branch 'perf-rig'")
+    s.add_argument("message")
+    s.set_defaults(func=cmd_journal)
 
     s = sub.add_parser("coverage", help="the OTP code no case executes: changed methods, and by package")
     s.add_argument("--build", default=WORKTREE_BUILD)

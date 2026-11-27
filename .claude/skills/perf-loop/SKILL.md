@@ -27,8 +27,9 @@ not edit `perf-rig/rig.py` or `perf-rig/src` while a rig command runs.
    missing or of another commit, stop: a new baseline is the user's decision.
 3. The branch:
    - on `perf/<name>`: continue that series, unless the README rules say a new branch;
-   - on `perf-rig`: start a series with `git switch -c perf/<level>-<n>`;
-   - a new branch that leaves a series starts with that series' journal, see the README.
+   - on `perf-rig`: start a series with `git switch -c perf/<level>-<n>`.
+
+   Then get the whole journal: `git checkout perf-rig -- perf-rig/JOURNAL.md`.
 4. After a switch to another commit, run a full `python perf-rig/rig.py build` (the checkout
    clears the compiled classes). If a command says the sources changed after the build:
    `python perf-rig/rig.py build --fast`.
@@ -39,7 +40,8 @@ not edit `perf-rig/rig.py` or `perf-rig/src` while a rig command runs.
 
 1. **Pick an idea.** Take one from "Ideas not tried yet" in the journal. If there are none worth
    trying, run `python perf-rig/rig.py profile --quick --levels <level>`, read the code of the top
-   methods, and add the ideas you see to that list (commit it). Never pick an idea listed under
+   methods, and add the ideas you see to that list (`rig.py journal "perf-rig: journal: ideas"`).
+   Never pick an idea listed under
    "Tried", unless what made it fail has changed; then say what.
 2. **Know what the rig would miss.** The first time a series changes a file:
    `python perf-rig/rig.py coverage --quick`, then
@@ -62,9 +64,9 @@ not edit `perf-rig/rig.py` or `perf-rig/src` while a rig command runs.
    - Anything else is rejected. A rejected idea is as useful in the journal as an accepted one.
 6. **Accepted**: `python perf-rig/rig.py accept` must pass (if it does not: fix the idea, or reject
    it). Commit the code alone. `python perf-rig/rig.py freeze step<N>`, N being the number of the
-   journal entry. Then write the entry and commit the journal.
+   journal entry. Then write the entry and commit the journal (below).
    **Rejected**: undo the change (`git restore` the files of the idea), write the entry with the
-   reason, commit the journal.
+   reason, and commit the journal.
 7. **Time check**, when the steps since the last one add up to 3 % of the ops, or after five
    accepted steps: `python perf-rig/rig.py bench --levels <level> --forks 5` (base against the
    working tree). Write the verdict in the journal. If the time does not follow the ops, find the
@@ -89,8 +91,13 @@ makes the expected results, never the working tree. Commit the case alone.
 ## Commits
 
 One line each, no body and no trailer. The code of an idea is one commit with nothing else in it,
-worded so it could go upstream as it is. The journal entry is the next commit
-(`perf-rig: journal: <N> <accepted|rejected>`).
+worded so it could go upstream as it is.
+
+The journal is never committed with `git commit`, but with
+`python perf-rig/rig.py journal "perf-rig: journal: <N> <accepted|rejected>"`, which commits it on
+this branch and on `perf-rig`: `perf-rig` has the whole journal, whatever branch the idea was
+tried on. If it says the file lacks entries, another branch added them: get the journal again as
+in "Start" and write your entry once more.
 
 ## Stop
 

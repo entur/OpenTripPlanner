@@ -91,16 +91,17 @@ python perf-rig/rig.py test --scope all         # the whole OTP test suite
 
 **A series of experiments** (the skill `perf-loop` in `.claude/skills` runs the loop this way):
 
-- `perf-rig/JOURNAL.md` has every idea that was tried, accepted or not, and the ideas not tried
-  yet. Read it before picking an idea. The result of an idea is written there as its own commit,
-  also when the idea is rejected and its code is thrown away.
+- `perf-rig/JOURNAL.md` on branch `perf-rig` has every idea that was tried on any branch, accepted
+  or not, and the ideas not tried yet. Before working on a branch, get it:
+  `git checkout perf-rig -- perf-rig/JOURNAL.md`, and read it before picking an idea.
+- The result of an idea is written there, also when the idea is rejected and its code is thrown
+  away, and committed with `rig.py journal "<message>"`: on the branch worked on and, without a
+  checkout, on `perf-rig`.
 - A series is a branch `perf/<name>` off `perf-rig`, with one commit for each accepted idea. Stay
   on it: the gains add up, and the profile after a gain shows the next one.
 - Start a new branch off `perf-rig` for another design of code the series already changed (the
   two are then compared with `base`), for a rewrite that later ideas should not build on yet, or
-  when several ideas in a row gave nothing. It starts with the journal of the branch it leaves:
-  `git checkout perf/<old> -- perf-rig/JOURNAL.md`, so the journal of the branch worked on last
-  is always the whole one.
+  when several ideas in a row gave nothing.
 - An accepted idea is frozen as `step<N>`, N being its number in the journal. The frozen builds
   are in the data directory only; the journal has the commit of each, to build it again.
 - To get a gain upstream, cherry-pick its commit to a branch off `dev-2.x`.
@@ -170,6 +171,9 @@ python perf-rig/rig.py test --scope all         # the whole OTP test suite
 - `rig.py test [--scope changed|all]` runs the OTP tests (`changed`: the modules changed since the
   commit of build `base`, with their dependencies), writes `tests/<name>.json` and compares it with
   `tests/base.json`. `check --tests none|changed|all` chooses the tests of a check.
+- `rig.py journal MESSAGE` commits `perf-rig/JOURNAL.md` on the current branch and on `perf-rig`.
+  It stops if the file lacks an entry that `perf-rig` has, so an entry of another branch is not
+  lost.
 - `rig.py selftest [--fast] [--quick]` applies each patch in `perf-rig/mutations`, builds, checks
   and reverts: every planted bug (`*.differs.patch`) must be found, a change that keeps all results
   (`*.same.patch`) must not be. Run it after changing the rig or the cases. A mutation that gives
