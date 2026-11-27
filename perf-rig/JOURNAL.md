@@ -32,6 +32,18 @@ what each idea promises in time, not in ops: since entry 8 the ops are known to 
 where code is shared between uses (calls that are not inlined) and where branches are hard to
 predict.
 
+- raptor, ask the pareto set of the stop before the destination pruning: the heuristic check
+  runs for all 62 M candidates of a pass and rejects 23 M (12 % of the time in the profile of
+  step8), the set of the stop then rejects 33 M of the other 39 M with a far cheaper check. A
+  candidate is accepted iff both pass, so the set can go first and the destination pruning is
+  asked only where the set would accept, right before the arrival is created. A set with a
+  listener (via, egress and debugged stops) keeps the order of today, because its listener gets
+  events for rejected arrivals. Not identical by construction but by an argument: what differs
+  is which probes update `goodElement` of the two sets, and that hint changes no result when the
+  dominance is transitive, which the shortcut in `ParetoSet` relies on already and which holds
+  for the relax function and the c2 dominance OTP uses. Draft with the design and the argument:
+  `../perf-rig-data/drafts/stop-set-before-destination-pruning.md`. Promises most of what is
+  listed here: about 8 % of the ops and of the time.
 - raptor, `HeuristicsProvider` and `DestinationArrivalPaths.qualify`, the destination pruning of
   every candidate: 12 % of the time (`HeuristicsProvider.get` 3.0 %, `ParetoSet.leftDominanceExist`
   4.1 %, `ParetoSet.qualify` 2.0 %, `ParetoComparator.compare` 1.9 %, the comparator 1.1 %) and
@@ -49,13 +61,6 @@ predict.
     criterion) has no such limit; it is a rewrite of the 18 lambdas into one method, to be
     checked with `DestinationArrivalParetoSetComparatorsTest`. The cases of the rig are 96 % one
     configuration, so the rig shows no gain of it; it is for production.
-- raptor, the order of the two checks of a candidate (after "create a stop arrival only when it
-  is accepted"): the heuristic check runs for all 62 M candidates and rejects 37 %, the set of
-  the stop then rejects 84 % of the rest with a far cheaper check. The set first would save most
-  of the 12 % of the destination pruning. Not identical by construction: a rejection updates
-  `goodElement` in the set it happens in, and a set with a listener (via stops) gets an event
-  for a rejected arrival, so the sets with a listener must keep the order, and the rest needs
-  the argument that `goodElement` never changes a result.
 - raptor, `BitSet.get` with `checkInvariants` and `wordIndex` is 4.2 %: the boarding and
   alighting checks of `TripPatternForDates` and the reached stops of the standard search.
 - raptor, "is the stop reached in the previous round" for every stop of every route visited:
