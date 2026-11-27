@@ -42,11 +42,13 @@ runs: it stops when the sources no longer match the build.
 
 ## One round
 
-1. **Pick an idea.** Take one from "Ideas not tried yet" in the journal. If there are none worth
-   trying, run `python perf-rig/rig.py profile --quick --levels <level>`, read the code of the top
-   methods, and add the ideas you see to that list (`rig.py journal "perf-rig: journal: ideas"`).
-   Never pick an idea listed under
-   "Tried", unless what made it fail has changed; then say what. An idea that only time can judge
+1. **Pick an idea.** The list "Ideas not tried yet" in the journal says which build its profile is
+   of. If that is not the build you compare with (an idea was accepted since: the profile is
+   another one now), or nothing in the list is worth trying, run
+   `python perf-rig/rig.py profile --quick --levels <level>`, read the code of the top methods, add
+   the ideas you see to the list, and write there which build the profile is of
+   (`rig.py journal "perf-rig: journal: ideas"`). Then take the idea that promises most. Never
+   pick an idea listed under "Tried", unless what made it fail has changed; then say what. An idea that only time can judge
    (fewer allocations, a denser layout) does not show in the ops: mark it `needs time` in the list
    and leave it for the time check.
 2. **Know what the rig would miss.** The first time a series changes a file:
