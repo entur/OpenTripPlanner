@@ -257,3 +257,16 @@ Nothing.
   does not, because the frequency of the cores differs between forks (3.43 to 3.71 GHz, cycles
   for a nanosecond). A difference of 3 % in time is below what 5 forks show, in cycles it is far
   above.
+- time check, first try, no result: `bench --quick --levels raptor --forks 5 --counters
+  --baseline step8 --candidate step9` (22:07 to 22:38) is UNEVEN, and fork A3 was run again
+  (0.51 cores of other processes). Time B/A 0.982 (0.865 to 1.115), instructions 1.0023 (0.9767
+  to 1.0287), cycles 0.9550 (0.9101 to 1.0021), cache misses 0.8430 (0.8054 to 0.8823), branch
+  mispredictions 1.0316 (0.9925 to 1.0723), allocated bytes 0.571. The cores ran at 3.5 to
+  3.8 GHz in the first seven forks and at 4.0 to 4.1 GHz in the last three (A3, A4, B4), which
+  were 9 % faster in time for it: the system log has "exiting Modern Standby" at 22:22:40 and
+  "entering Modern Standby" at 22:23:29, between fork 7 and 8. The screen is off while nobody
+  uses the laptop, and Windows changes how fast the cores run when it comes on and goes off; such
+  events are in the log every 10 to 20 minutes of this evening. Fork B0 executed 4 % more
+  instructions than the other four forks of step9 (2.397e11 against 2.305e11 to 2.317e11): the
+  JIT compiler does not compile the same in every fork. Among the forks at the same frequency
+  step9 has 5 % fewer cycles and 4 % less time than step8, but that is not a verdict.
