@@ -19,6 +19,10 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * The search use a binary search if the number of trip schedules is above a given threshold. A
  * linear search is slow when the number of schedules is very large, let say more than 300 trip
  * schedules.
+ * <p>
+ * If the trips arrive at every stop in the order of their index, see
+ * {@link TripSearchTimetable#arrivalsInTripOrder()}, the last trip to alight from is found with a
+ * binary search alone. It is the trip the scan finds.
  *
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
@@ -29,6 +33,7 @@ public final class TripScheduleAlightSearch<T extends RaptorTripSchedule> implem
   private final TripSearchTimetable<T> timetable;
   private final int nTrips;
   private final int binarySearchThreshold;
+  private final boolean arrivalsInTripOrder;
 
   private int latestAlightTime;
   private int stopPositionInPattern;
@@ -44,6 +49,7 @@ public final class TripScheduleAlightSearch<T extends RaptorTripSchedule> implem
     this.timetable = timetable;
     this.nTrips = timetable.numberOfTripSchedules();
     this.binarySearchThreshold = binarySearchThreshold;
+    this.arrivalsInTripOrder = timetable.arrivalsInTripOrder();
   }
 
   /* TripScheduleBoardOrAlightEvent implementation using fly-weight pattern */
@@ -106,6 +112,9 @@ public final class TripScheduleAlightSearch<T extends RaptorTripSchedule> implem
 
     // No previous trip is found
     if (tripIndexLowerBound == UNBOUNDED_TRIP_INDEX) {
+      if (arrivalsInTripOrder) {
+        return findLastAlightingInTripOrder();
+      }
       if (nTrips > binarySearchThreshold) {
         return findFirstBoardingOptimizedForLargeSetOfTrips();
       } else {
@@ -130,6 +139,32 @@ public final class TripScheduleAlightSearch<T extends RaptorTripSchedule> implem
   }
 
   /* private methods */
+
+  /**
+   * Find the last trip arriving at or before the {@code latestAlightTime} with a binary search.
+   * The arrival times at the stop must be in the order of the trips; the trips that arrive early
+   * enough are then the first ones, and the last of them is the trip the scan finds.
+   */
+  private RaptorBoardOrAlightEvent<T> findLastAlightingInTripOrder() {
+    // All trips before 'lower' arrive early enough, all trips from 'upper' arrive too late
+    int lower = 0;
+    int upper = nTrips;
+
+    while (lower < upper) {
+      int m = (lower + upper) >>> 1;
+
+      if (timetable.arrivalTime(stopPositionInPattern, m) <= latestAlightTime) {
+        lower = m + 1;
+      } else {
+        upper = m;
+      }
+    }
+    if (lower > 0) {
+      candidateTripIndex = lower - 1;
+      candidateTrip = timetable.getTripSchedule(lower - 1);
+    }
+    return this;
+  }
 
   private RaptorBoardOrAlightEvent<T> findFirstBoardingOptimizedForLargeSetOfTrips() {
     int indexBestGuess = binarySearchForTripIndex();

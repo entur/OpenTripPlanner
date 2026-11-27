@@ -23,4 +23,17 @@ public interface TripSearchTimetable<T extends RaptorTripSchedule> extends Rapto
    * search date.
    */
   int departureTime(int stopPositionInPattern, int tripIndex);
+
+  /**
+   * {@code true} if no trip departs from a stop before a trip with a lower trip index: at every
+   * stop the departure times are in the order of the trips. Trips that overtake each other break
+   * the order.
+   */
+  boolean departuresInTripOrder();
+
+  /**
+   * {@code true} if no trip arrives at a stop before a trip with a lower trip index, see
+   * {@link #departuresInTripOrder()}.
+   */
+  boolean arrivalsInTripOrder();
 }

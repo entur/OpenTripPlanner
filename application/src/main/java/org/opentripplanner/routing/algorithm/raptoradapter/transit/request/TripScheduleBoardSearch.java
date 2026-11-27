@@ -17,6 +17,10 @@ import org.opentripplanner.utils.tostring.ToStringBuilder;
  * The search uses a binary search if the number of trip schedules is above a given threshold. A
  * linear search is slow when the number of schedules is very large, let say more than 300 trip
  * schedules.
+ * <p>
+ * If the trips depart from every stop in the order of their index, see
+ * {@link TripSearchTimetable#departuresInTripOrder()}, the first trip to board is found with a
+ * binary search alone. It is the trip the scan finds.
  *
  * @param <T> The TripSchedule type defined by the user of the raptor API.
  */
@@ -27,6 +31,7 @@ public final class TripScheduleBoardSearch<T extends RaptorTripSchedule> impleme
   private final TripSearchTimetable<T> timetable;
   private final int nTrips;
   private final int binarySearchThreshold;
+  private final boolean departuresInTripOrder;
 
   private int earliestBoardTime;
   private int stopPositionInPattern;
@@ -42,6 +47,7 @@ public final class TripScheduleBoardSearch<T extends RaptorTripSchedule> impleme
     this.timetable = timetable;
     this.nTrips = timetable.numberOfTripSchedules();
     this.binarySearchThreshold = binarySearchThreshold;
+    this.departuresInTripOrder = timetable.departuresInTripOrder();
   }
 
   /* TripScheduleBoardOrAlightEvent implementation using fly-weight pattern */
@@ -106,6 +112,9 @@ public final class TripScheduleBoardSearch<T extends RaptorTripSchedule> impleme
 
     // No previous trip is found
     if (tripIndexUpperBound == UNBOUNDED_TRIP_INDEX) {
+      if (departuresInTripOrder) {
+        return findFirstBoardingInTripOrder();
+      }
       if (nTrips > binarySearchThreshold) {
         return findFirstBoardingOptimizedForLargeSetOfTrips();
       } else {
@@ -129,6 +138,32 @@ public final class TripScheduleBoardSearch<T extends RaptorTripSchedule> impleme
   }
 
   /* private methods */
+
+  /**
+   * Find the first trip departing at or after the {@code earliestBoardTime} with a binary search.
+   * The departure times at the stop must be in the order of the trips; the trips that can be
+   * boarded are then the last ones, and the first of them is the trip the scan finds.
+   */
+  private RaptorBoardOrAlightEvent<T> findFirstBoardingInTripOrder() {
+    // All trips before 'lower' depart too early, all trips from 'upper' can be boarded
+    int lower = 0;
+    int upper = nTrips;
+
+    while (lower < upper) {
+      int m = (lower + upper) >>> 1;
+
+      if (timetable.departureTime(stopPositionInPattern, m) >= earliestBoardTime) {
+        upper = m;
+      } else {
+        lower = m + 1;
+      }
+    }
+    if (lower < nTrips) {
+      candidateTripIndex = lower;
+      candidateTrip = timetable.getTripSchedule(lower);
+    }
+    return this;
+  }
 
   private RaptorBoardOrAlightEvent<T> findFirstBoardingOptimizedForLargeSetOfTrips() {
     int indexBestGuess = binarySearchForTripIndex();

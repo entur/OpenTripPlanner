@@ -171,6 +171,27 @@ public class TripScheduleBoardSearchTest implements RaptorTestConstants {
     }
   }
 
+  /**
+   * The trips depart from the first stop in the order A, B, C and from the second in the order
+   * C, B, A. At the second stop the search steps back from the last trip, and stops at the first
+   * trip that departs too early.
+   */
+  @Test
+  public void tripsThatOvertakeEachOtherAreScannedFromTheLastTrip() {
+    withTrips(
+      schedule().departures(1000, 2000).build(),
+      schedule().departures(1100, 1900).build(),
+      schedule().departures(1200, 1800).build()
+    );
+
+    // The first stop: the trips are in order
+    searchForTrip(1050, STOP_POS_0).assertTripFound().withIndex(TRIP_B).withBoardTime(1100);
+
+    // The second stop: trip C departs before 1850, the search does not look at A and B
+    searchForTrip(1850, STOP_POS_1).assertNoTripFound();
+    searchForTrip(1800, STOP_POS_1).assertTripFound().withIndex(TRIP_A).withBoardTime(2000);
+  }
+
   private void withTrips(TestTripSchedule... schedules) {
     useTripPattern(TestRoute.route(pattern).withTimetable(schedules));
   }

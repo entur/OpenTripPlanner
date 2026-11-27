@@ -55,6 +55,9 @@ public class TripPatternForDates
    */
   private final int[] departureTimes;
 
+  private final boolean arrivalsInTripOrder;
+  private final boolean departuresInTripOrder;
+
   private final Accessibility[] wheelchairBoardings;
 
   // bit arrays with boarding/alighting information for all stops on trip pattern,
@@ -97,6 +100,8 @@ public class TripPatternForDates
     this.departureTimes = new int[nStops * numberOfTripSchedules];
 
     var tripIndex = createTripTimesForDaysIndex(tripPatternForDates, offsets);
+    boolean arrivalsInTripOrder = true;
+    boolean departuresInTripOrder = true;
 
     for (int i = 0; i < tripIndex.size(); ++i) {
       int day = tripIndex.day(i);
@@ -105,10 +110,21 @@ public class TripPatternForDates
 
       wheelchairBoardings[i] = tt.getWheelchairAccessibility();
       for (int s = 0; s < nStops; s++) {
-        this.arrivalTimes[s * numberOfTripSchedules + i] = tt.getArrivalTime(s) + offset;
-        this.departureTimes[s * numberOfTripSchedules + i] = tt.getDepartureTime(s) + offset;
+        int index = s * numberOfTripSchedules + i;
+        int arrivalTime = tt.getArrivalTime(s) + offset;
+        int departureTime = tt.getDepartureTime(s) + offset;
+        this.arrivalTimes[index] = arrivalTime;
+        this.departureTimes[index] = departureTime;
+
+        // The trip before this one is the element before it in the arrays
+        if (i > 0) {
+          arrivalsInTripOrder &= this.arrivalTimes[index - 1] <= arrivalTime;
+          departuresInTripOrder &= this.departureTimes[index - 1] <= departureTime;
+        }
       }
     }
+    this.arrivalsInTripOrder = arrivalsInTripOrder;
+    this.departuresInTripOrder = departuresInTripOrder;
   }
 
   public RoutingTripPattern getTripPattern() {
@@ -212,6 +228,16 @@ public class TripPatternForDates
   @Override
   public int departureTime(int stopPositionInPattern, int tripIndex) {
     return departureTimes[stopPositionInPattern * numberOfTripSchedules + tripIndex];
+  }
+
+  @Override
+  public boolean departuresInTripOrder() {
+    return departuresInTripOrder;
+  }
+
+  @Override
+  public boolean arrivalsInTripOrder() {
+    return arrivalsInTripOrder;
   }
 
   @Override

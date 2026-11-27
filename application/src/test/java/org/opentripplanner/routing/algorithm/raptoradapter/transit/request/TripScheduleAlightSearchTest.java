@@ -196,6 +196,27 @@ public class TripScheduleAlightSearchTest implements RaptorTestConstants {
     searchForTrip(TIME_A2, STOP_POS_1).assertTripFound().withIndex(indexA).withAlightTime(TIME_A2);
   }
 
+  /**
+   * The trips arrive at the first stop in the order A, B, C and at the second in the order
+   * C, B, A. At the second stop the search steps forward from the first trip, and stops at the
+   * first trip that arrives too late.
+   */
+  @Test
+  public void tripsThatOvertakeEachOtherAreScannedFromTheFirstTrip() {
+    withTrips(
+      schedule().arrivals(1000, 2000).build(),
+      schedule().arrivals(1100, 1900).build(),
+      schedule().arrivals(1200, 1800).build()
+    );
+
+    // The first stop: the trips are in order
+    searchForTrip(1150, STOP_POS_0).assertTripFound().withIndex(TRIP_B).withAlightTime(1100);
+
+    // The second stop: trip A arrives after 1950, the search does not look at B and C
+    searchForTrip(1950, STOP_POS_1).assertNoTripFound();
+    searchForTrip(2000, STOP_POS_1).assertTripFound().withIndex(TRIP_C).withAlightTime(1800);
+  }
+
   private void withTrips(TestTripSchedule... schedules) {
     useRoute(TestRoute.route(pattern).withTimetable(schedules));
   }

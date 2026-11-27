@@ -95,6 +95,11 @@ public class TestTripSchedule implements TripSchedule {
     return pattern;
   }
 
+  /** The number of stops the schedule has times for, which can be fewer than the pattern has. */
+  public int numberOfStopTimes() {
+    return arrivalTimes.length;
+  }
+
   @Override
   public int transitReluctanceFactorIndex() {
     return transitReluctanceIndex;
