@@ -40,10 +40,15 @@ predict.
     reads from memory that depend on each other, for every candidate. Keep the three values
     (min travel duration, min number of transfers, min cost) of a stop in one `int[]`
     (`needs time`).
-  - The destination set is a generic `ParetoSet`: `qualify` calls the comparator through
-    `ParetoComparator.compare`, which every kind of set shares, so it is not inlined (as the
-    stop arrivals before entry 8). A check of its own for the destination arrivals, with the
-    criteria of the probe as values. Decide it with `--counters` (instructions), not the ops.
+  - The destination set is a generic `ParetoSet`, and the comparator of the destination
+    arrivals is one of 18 lambdas (`DestinationArrivalParetoSetComparators`), a class of its own
+    for each configuration. A JVM that serves several configurations (depart after and arrive
+    by, with and without transit group priority) has several of them at the call sites of
+    `qualify`, and the JIT compiler inlines none if no one has 90 % of the calls. One comparator
+    class with the configuration in fields (which time criteria, duration or not, which cost
+    criterion) has no such limit; it is a rewrite of the 18 lambdas into one method, to be
+    checked with `DestinationArrivalParetoSetComparatorsTest`. The cases of the rig are 96 % one
+    configuration, so the rig shows no gain of it; it is for production.
 - raptor, `TripScheduleBoardSearch`: the linear scan after the binary search is 4.2 % of the ops
   and 8.9 % of the time, `TripPatternForDates.departureTime` 3.1 %, the binary search 2.0 % of the
   time. Where the departures at every stop are in the order of the trips (to be computed when
@@ -63,9 +68,6 @@ predict.
   `goodElement` in the set it happens in, and a set with a listener (via stops) gets an event
   for a rejected arrival, so the sets with a listener must keep the order, and the rest needs
   the argument that `goodElement` never changes a result.
-- raptor, `ParetoSet.add` and `qualify`: branch on the two `leftDominanceExist` results instead of
-  `ParetoComparator.compare` (1.0 %), `ParetoDominance.of` and a switch on the enum. The stop
-  arrivals no longer use it (entry 8); left are the pattern rides and the destination arrivals.
 - raptor, `BitSet.get` with `checkInvariants` and `wordIndex` is 4.2 %: the boarding and
   alighting checks of `TripPatternForDates` and the reached stops of the standard search.
 - raptor, "is the stop reached in the previous round" for every stop of every route visited:
@@ -104,7 +106,19 @@ predict.
 
 ## Being tried
 
-Nothing.
+- raptor, `ParetoSet.add` and `qualify` ask the comparator directly: no `ParetoComparator.compare`
+  with `ParetoDominance.of` and a switch on the enum (1.0 % of the ops and more), and no private
+  helper methods (`leftVectorDominatesRightVector`, `leftDominanceExist`, `rightDominanceExist`).
+  The JIT log of step9 (`-XX:+PrintInlining`, `bench/20261127-211203-step8-vs-wt/B-0.log`) shows
+  that `ParetoSet.qualify` is inlined in the destination pruning and its loop too (the comparator
+  of the destination arrivals is 96 % of the calls of `ParetoComparator.compare`), but the test
+  of `goodElement` is two calls that are not inlined ("failed to inline: virtual call"): the
+  helper methods are shared by `add` (the pattern rides) and `qualify` (the destination
+  arrivals), so the JIT compiler sees several comparators there. 44 M probes of a pass take that
+  path. With the calls written where they are used, `qualify` has call sites that only the
+  destination arrivals use, and `add` sites that the pattern rides dominate. The same
+  comparisons in the same order, so the results are identical by construction.
+
 
 ## Tried
 
