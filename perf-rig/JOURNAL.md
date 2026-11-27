@@ -51,26 +51,7 @@ percentage is the share of the ops, unless it says time.
 
 ## Being tried
 
-- raptor, destination pruning (`HeuristicsProvider.rejectDestinationArrivalBasedOnHeuristic`,
-  `DestinationArrivalPaths.qualify`, `ParetoSet.qualify` and the destination comparator): about
-  20 % of the ops of `step2`. A probe that arrives before every destination arrival accepted so
-  far is dominated by none of them when the arrival time is a criterion, so it qualifies without
-  the loop over them.
-  - state (session ended 2026-11-27): the code is written and NOT committed: `DestinationArrivalPaths`,
-    `DestinationArrivalParetoSetComparators.arrivalTimeIsCriterion`, `DestinationArrivalConfig`, and
-    the new constructor argument in `DestinationArrivalPathsTest`. `try --against step2`: CHECK
-    PASSED, ops raptor 0.8799 against step2 (geomean 0.9566), mismatch 0; the work removed is the
-    loop of `ParetoSet.qualify` over the destination arrivals. `accept` stopped at its coverage
-    step: no case runs `DestinationArrivalConfig.createDestArrivalPathsStdSearch` (the standard
-    search with paths), changed only by the new constructor argument. Waiting for the user: leave
-    that line unchanged (the McRaptor setup turns the shortcut on after construction), or accept
-    with the OTP tests as the only check of that line. Then `accept`, commit, freeze `step6`,
-    entry 6.
-  - for the case work apart from the loop: `mutate` found 8 of 9 bugs in `DestinationArrivalPaths`
-    and `DestinationArrivalConfig` (the one not found only decides whether a cost-mismatch warning
-    is logged), and 4 of 10 in `DestinationArrivalParetoSetComparators`: not found were `||` to `&&`
-    in the comparators of lines 88, 94, 95, 103 and 106 (reverse and departure-time configurations)
-    and `<` to `<=` in `lowC1RelaxedIfC2IsOptimal` (line 207).
+Nothing.
 
 ## Tried
 
@@ -122,3 +103,22 @@ percentage is the share of the ops, unless it says time.
   disturbed and agree to 0.3 % in time and cycles. The one fork of base that was not disturbed is
   as fast as the forks of step2: steps 1 and 2 gain a percent or two of time at most, and it is
   not shown.
+
+### 6. accepted: an arrival that arrives before every destination arrival qualifies without the loop
+- where: raptor, `DestinationArrivalPaths.qualify` (the destination pruning of McRaptor)
+- result: ops raptor 0.8799 against step2 (geomean 0.9566; 0.8376 against base, the product of the
+  steps), results identical; `accept`: 550 results identical, also repeated and on 8 threads, and
+  all 9671 OTP tests pass
+- commit: a148179598 on perf/raptor-1, build step6
+- note: the set keeps the best arrival time of every arrival it accepted. When the arrival time is
+  a criterion of the destination comparator (timetable, or arrival time forward, or departure
+  time in reverse), a probe with a better arrival time than that is dominated by no element and
+  by no stale `goodElement`, so the loop over the set returns true anyway. The work removed is
+  the loop of `ParetoSet.qualify` with the comparator, `ParetoDominance.of` and the probe set-up.
+  `DestinationArrivalPathsTest` got the new constructor argument only. For the case work apart
+  from the loop: `mutate` found 8 of 9 bugs in `DestinationArrivalPaths` and
+  `DestinationArrivalConfig` (the one not found only decides whether a cost-mismatch warning is
+  logged), and 4 of 10 in `DestinationArrivalParetoSetComparators`: not found were `||` to `&&`
+  in the comparators of lines 88, 94, 95, 103 and 106 (reverse and departure-time configurations)
+  and `<` to `<=` in `lowC1RelaxedIfC2IsOptimal`. No case runs
+  `DestinationArrivalConfig.createDestArrivalPathsStdSearch` (the standard search with paths).
