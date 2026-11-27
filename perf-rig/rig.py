@@ -1016,9 +1016,10 @@ def cmd_try(args):
 def cmd_accept(args):
     """
     What a change must pass before it is committed: a full build, every changed method executed
-    by a case, and all cases, also repeated and concurrent, with the OTP tests of the changed modules.
+    by a case, and all cases, also repeated and concurrent, with all OTP tests: a change of one
+    module can break a test of a module that uses it.
     """
-    run_steps(args, [["build"], ["coverage"], ["check", "--repeat", "--threads", "8"]])
+    run_steps(args, [["build"], ["coverage"], ["check", "--repeat", "--threads", "8", "--tests", "all"]])
 
 
 # ---------------------------------------------------------------------------------------------
@@ -1955,7 +1956,7 @@ def main():
     s.add_argument("--against", default="base", help="the build to compare the work done with")
     s.set_defaults(func=cmd_try)
 
-    s = sub.add_parser("accept", help="before a commit: build, coverage, check --repeat --threads 8")
+    s = sub.add_parser("accept", help="before a commit: build, coverage, check --repeat --threads 8 --tests all")
     s.set_defaults(func=cmd_accept)
 
     s = sub.add_parser("journal", help="commit perf-rig/JOURNAL.md on this branch and on branch 'perf-rig'")

@@ -70,10 +70,11 @@ files (`build --fast`), checks every 4th case against the baseline (`check --qui
 the work done with `base` (`bench --ops --quick`): are the results identical, how much less work,
 in which methods. Repeat until the change does what was intended.
 
-**4. Accept, then commit** (10 min, plus the OTP tests): `rig.py accept` does a full build (Dagger,
-changed signatures), needs every changed method to be executed by a case (`coverage`), and runs
-all cases, also repeated and on 8 threads, with the OTP tests of the changed modules
-(`check --repeat --threads 8`). One idea per commit.
+**4. Accept, then commit** (25 min): `rig.py accept` does a full build (Dagger, changed
+signatures), needs every changed method to be executed by a case (`coverage`), and runs all cases,
+also repeated and on 8 threads, with all OTP tests (`check --repeat --threads 8 --tests all`): the
+tests of the changed module alone would not notice what breaks in a module that uses it. One idea
+per commit.
 
 **5. Compound**: `rig.py freeze step1` after an accepted change. The next
 `rig.py try --against step1` shows what the next change gains alone, `--against base` the total;
