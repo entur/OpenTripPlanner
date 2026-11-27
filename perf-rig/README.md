@@ -25,6 +25,12 @@ upstream.
   the same build gives the same total within 0.01 % in another JVM run, so a 0.1 % change of the
   work shows, and the report says in which methods. It does not show memory, cache and JIT
   effects.
+- **Allocated bytes (`bench --alloc`)**: the bytes the measured thread allocates for each item, as
+  the JIT compiler leaves them: an allocation it removes does not count. A busy machine does not
+  change them, and a fork allocates the same in every iteration. But the JIT compiler does not
+  remove the same allocations in every fork of a build, see Notes, so B allocates less only if
+  every one of its three forks is below every fork of A. The report says which methods allocate
+  (sampled). Fewer bytes are not always less time.
 - **Time (`bench`)**: replays the same queries in interleaved A/B forks (ABBA) with warmup and
   iterations: wall time and allocated bytes per item. A fork is one sample of a build: the
   confidence interval is the 99 % t-interval of the difference between the forks of A and of B.
@@ -178,6 +184,9 @@ comparison of `try`: it needs `B faster`.
 - `rig.py bench --ops`: one fork per build, 1 warmup and 2 iterations; the report has the totals
   per level, the items with more or less work, the methods with the most work and the methods
   whose work changed. `noise` is the difference between the iterations of one build.
+- `rig.py bench --alloc`: 3 forks per build, 2 warmups and 2 iterations, on any cores at normal
+  priority. The forks of a frozen build are kept and used again, like its ops. `try --alloc` adds
+  it to a round, for an idea that is about allocation.
 - `rig.py bench` (time): 3 forks per build, on the fastest cores only (`--cpus fast`, the P-cores
   of a hybrid CPU; `--cpus all`, or a list like `2-9`), at high priority and with `-Xbatch`. The
   report gives the time of each fork, and warns if a fork was uneven or other processes used the
@@ -245,6 +254,13 @@ inputs are hard links to the `otp-data` files. A new dataset: `rig.py --dataset 
   - So 3 forks of each build show a Raptor difference from about 3 %, 5 forks from 2 %, and the
     street searches need two to three times that. The allocated bytes usually differ by 1 % or
     less (once 7 % for the street searches).
+- Allocated bytes, measured 2026-11-27 with the Raptor searches of every 4th case: the forks of one
+  build allocated 5.138 GB or 5.172 GB (0.7 % more), about as often, and the street searches once
+  14 % more: the JIT compiler removes an allocation in one fork and not in another. So a difference
+  below a percent does not show. With `RIG_JAVA_OPTS=-XX:-DoEscapeAnalysis` it removes none, and
+  four forks agreed to 0.001 %, but on 6.757 GB: a quarter of the bytes Raptor allocates as it is
+  written (`ParetoSet.tailIterator`, lambdas) are never allocated in a normal run, and an idea that
+  removes those gains nothing.
 - Thread CPU time on Windows has 15.6 ms ticks, so the reports use wall time.
 - `mutate` with 40 bugs in 16 core files (Raptor, A*, street edges, linking, transfer optimization,
   itinerary mapping), 2026-11-27: `check --quick` found 26. Of the others, 6 can not change a

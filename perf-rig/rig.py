@@ -22,6 +22,12 @@ OPS_PACKAGES = ("org/opentripplanner/,java/util/,java/time/,com/carrotsearch/hpp
                 "com/google/common/,graphql/")
 # Counts of the same work differ a little between JVM runs; a larger difference is a change
 OPS_TOLERANCE = 0.001
+# Allocated bytes are the same in every iteration of a fork, and the same to the fifth digit in most
+# forks of a build. But the JIT compiler does not remove the same allocations in every fork: the
+# Raptor searches of one build allocate 5.138 GB in some forks and 5.172 GB in others, the street
+# searches once 14 % more. So B allocates less only if every fork of B is below every fork of A,
+# by more than this.
+ALLOC_TOLERANCE = 0.001
 # A time benchmark compiles in the foreground: the JIT compiler then compiles the same way in each
 # run. With background compilation on the few pinned cores, the Raptor forks of the same code
 # differed by 2.1 % (standard deviation) instead of 0.8 %, and were 10 % slower.
@@ -1020,10 +1026,11 @@ def run_steps(args, steps):
 def cmd_try(args):
     """
     One round of an experiment: compile the changed files, check every 4th case against the
-    baseline, and compare the work done with another build.
+    baseline, and compare the work done, and the allocated bytes if asked for, with another build.
     """
-    run_steps(args, [["build", "--fast"], ["check", "--quick"],
-                     ["bench", "--ops", "--quick", "--levels", args.levels, "--baseline", args.against]])
+    bench = ["--quick", "--levels", args.levels, "--baseline", args.against]
+    run_steps(args, [["build", "--fast"], ["check", "--quick"], ["bench", "--ops"] + bench]
+              + ([["bench", "--alloc"] + bench] if args.alloc else []))
 
 
 def cmd_accept(args):
@@ -1383,24 +1390,30 @@ def pin_to_cpus(spec):
 
 def cmd_bench(args):
     a, b = args.baseline, args.candidate
+    if args.ops and args.alloc:
+        die("Either --ops or --alloc")
+    kind = "ops" if args.ops else "alloc" if args.alloc else "time"
     for build in (a, b):
         require_current(build)
         read_classpath(build)  # compiles the rig if it changed, so that is not part of a fork
-    out = DATA / "bench" / f"{now()}-{a}-vs-{b}{'-ops' if args.ops else ''}"
+    out = DATA / "bench" / f"{now()}-{a}-vs-{b}{'' if kind == 'time' else '-' + kind}"
     out.mkdir(parents=True)
     levels = args.levels
     # Counted instructions do not depend on the JIT compiler or the machine: one short fork is enough.
     # Time differs more between forks than between the iterations of a fork: more forks, each short.
-    forks = args.forks or (1 if args.ops else 3)
-    warmup = args.warmup or ("1" if args.ops else "2")
-    iterations = args.iterations or ("2" if args.ops else "3")
-    jvm = ops_jvm() if args.ops else TIME_JVM
+    # Allocated bytes are the same in every iteration, but not in every fork: see ALLOC_TOLERANCE.
+    forks = args.forks or (1 if kind == "ops" else 3)
+    warmup = args.warmup or ("1" if kind == "ops" else "2")
+    iterations = args.iterations or ("3" if kind == "time" else "2")
+    jvm = ops_jvm() if kind == "ops" else TIME_JVM
     common = ["bench", "--dataset", win(dataset_dir(args.dataset)), "--cases", win(cases_file(args.dataset)),
               "--levels", levels, "--warmup", warmup, "--iterations", iterations,
               "--raptor-chunk", dataset_settings(args.dataset).get("raptorChunk", 25)] + selection_args(args)
     log(f"Benchmark {a} (A) vs {b} (B), levels {levels}, {forks} forks each, results in {out}")
-    builds = {"A": f"{a}: {describe_build(a)}", "B": f"{b}: {describe_build(b)}", "dataset": args.dataset}
-    cpus = None if args.ops else pin_to_cpus(args.cpus)
+    builds = {"A": f"{a}: {describe_build(a)}", "B": f"{b}: {describe_build(b)}", "dataset": args.dataset,
+              "kind": kind}
+    # Only the time depends on the cores and on what else runs on the machine
+    cpus = pin_to_cpus(args.cpus) if kind == "time" else None
     if cpus:
         builds["cpus"] = cpus
         log(f"Running on the logical processors {cpus}")
@@ -1414,42 +1427,67 @@ def cmd_bench(args):
     builds["machine"] = {}
     for build, side, f in order:
         result = out / f"{side}-{f}.json"
-        known = known_ops(build, args.dataset, common) if args.ops else None
+        known = known_result(kind, build, args.dataset, common, f)
         if known and known.exists():
-            log(f"Fork {side}{f} ({build}): its counts are known from an earlier benchmark")
+            log(f"Fork {side}{f} ({build}): known from an earlier benchmark")
             shutil.copyfile(known, result)
             continue
         log(f"Fork {side}{f} ({build})")
+        # The allocations of a flight recording say which methods allocate
+        recording = out / f"{side}-{f}.jfr"
+        record = ["--jfr", win(recording)] if kind == "alloc" else []
         started, cpu_before = datetime.datetime.now(), machine_cpu_seconds()
-        code = run_rig(build, common + ["--out", win(result), "--graph", win(graph_file(args.dataset, build)),
-                                        "--label", f"{side}{f}:{build}"],
-                       out / f"{side}-{f}.log", args.heap, jvm, high_priority=True)
+        code = run_rig(build, common + record + ["--out", win(result), "--graph", win(graph_file(args.dataset, build)),
+                                                 "--label", f"{side}{f}:{build}"],
+                       out / f"{side}-{f}.log", args.heap, jvm, high_priority=kind != "alloc")
         if code != 0:
             print(tail(out / f"{side}-{f}.log"))
             die(f"Fork {side}{f} failed")
         builds["machine"][f"{side}{f}"] = {"cpuSeconds": machine_cpu_seconds() - cpu_before,
                                            "seconds": (datetime.datetime.now() - started).total_seconds()}
         (out / "meta.json").write_text(json.dumps(builds, indent=2), encoding="utf-8")
+        if kind == "alloc":
+            add_allocation_by_method(result, recording)
+            recording.unlink()
         if known:
             known.parent.mkdir(parents=True, exist_ok=True)
             shutil.copyfile(result, known)
-    print(ops_report(out) if args.ops else bench_report(out, args.metric))
+    print(bench_report(out, args.metric))
     append_history(out)
 
 
-def known_ops(build, dataset, bench_args):
+def known_result(kind, build, dataset, bench_args, fork):
     """
-    The file with the counts of a frozen build for a benchmark with these arguments, there or not.
-    The counts are the same in every run, so 'try' counts the baseline once, not in every round.
+    The file with the result of a fork of a frozen build for a benchmark with these arguments,
+    there or not; None where a result is not kept. The counted instructions are the same in every
+    run, and the allocated bytes of a fork do not depend on the machine, so 'try' measures the
+    baseline once, not in every round. A time is measured every time.
     """
-    if build == WORKTREE_BUILD:
+    if build == WORKTREE_BUILD or kind == "time":
         return None
     graph = graph_file(dataset, build)
-    made_from = [build_meta(build), rig_sources_hash(), ops_jvm(), (ops_agent().parent / "sources.sha").read_text(),
+    if kind == "ops":
+        measured_with = [ops_jvm(), (ops_agent().parent / "sources.sha").read_text()]
+    else:
+        measured_with = [TIME_JVM, f"fork {fork}"]  # the forks of a build do not all allocate the same
+    made_from = [build_meta(build), rig_sources_hash(), *measured_with,
                  cases_sha(dataset), str(graph), graph.stat().st_size, int(graph.stat().st_mtime),
-                 [str(a) for a in bench_args]]
+                 [str(a) for a in bench_args], *os.environ.get("RIG_JAVA_OPTS", "").split()]
     key = hashlib.sha256(json.dumps(made_from).encode()).hexdigest()[:16]
-    return DATA / "bench" / "known-ops" / f"{build}-{key}.json"
+    return DATA / "bench" / f"known-{kind}" / f"{build}-{key}.json"
+
+
+def add_allocation_by_method(result_file, recording):
+    """Add the bytes that each method allocated in each level to the result of a fork, from its flight recording."""
+    result = json.loads(result_file.read_text(encoding="utf-8"))
+    _, allocations = flight_events(recording)
+    result["allocByMethod"] = {}
+    for level, windows in result["windows"].items():
+        methods = result["allocByMethod"].setdefault(level, {})
+        for nanos, method, _, weight in allocations:
+            if any(start <= nanos <= end for start, end in windows):
+                methods[method] = methods.get(method, 0) + weight
+    result_file.write_text(json.dumps(result), encoding="utf-8")
 
 
 def append_history(out):
@@ -1482,6 +1520,9 @@ def bench_report(out, metric="wall"):
         return "No results"
     if forks["A"][0]["meta"].get("ops"):
         return ops_report(out)
+    meta_file = out / "meta.json"
+    if meta_file.exists() and json.loads(meta_file.read_text(encoding="utf-8")).get("kind") == "alloc":
+        return alloc_report(out)
     lines = [f"Benchmark {out.name}"] + builds_of(out)
     lines += [f"metric: {metric} time; per item the median over the iterations of a fork, then the median over "
               f"the forks", ""]
@@ -1584,7 +1625,7 @@ def ops_report(out):
             details.append(f"{level}: least B/A: " + ", ".join(f"{i} {ratio(i):.3f}" for i in sorted(ids, key=ratio)[:5]))
             details.append(f"{level}: most B/A: " + ", ".join(f"{i} {ratio(i):.3f}" for i in sorted(ids, key=ratio)[-5:][::-1]))
         details += by_search(level, a_ops, b_ops, ids)
-        details += ops_by_method(forks, level)
+        details += by_method(forks, level, "opsByMethod", "ops", OPS_TOLERANCE / 10, method_name)
     lines += [""] + details + [f"B/A < 1 means B does less work. less/more: the items that differ by more than "
                                f"{OPS_TOLERANCE:.1%}; maps keyed by identity hash make the counts of two JVM runs "
                                f"differ by about 0.01%."]
@@ -1592,6 +1633,76 @@ def ops_report(out):
     (out / "report.txt").write_text(text, encoding="utf-8")
     (out / "summary.json").write_text(json.dumps({"kind": "ops", "levels": summary}, indent=2), encoding="utf-8")
     return text
+
+
+def alloc_report(out):
+    """
+    The report of a benchmark of the allocated bytes (bench --alloc). The forks of a build do not
+    all allocate the same (see ALLOC_TOLERANCE), so there is a difference only if no fork of one
+    build is in the range of the forks of the other.
+    """
+    forks = read_forks(out)
+    if not forks["A"] or not forks["B"]:
+        return "No results"
+    lines = [f"Benchmark {out.name}"] + builds_of(out)
+    lines += ["metric: the bytes the measured thread allocates, as the JIT compiler leaves them: an allocation "
+              "it removes does not count. A busy machine does not change them. Fewer bytes are not always less "
+              "time.", "", f"forks: {len(forks['A'])}+{len(forks['B'])}", ""]
+    lines.append(f"{'level':7} {'items':>5} {'A bytes':>10} {'B bytes':>10} {'B/A total':>9} {'less':>5} {'more':>5} "
+                 f"{'mismatch':>8}  verdict")
+    details, summary = [], {}
+    for level in forks["A"][0]["levels"]:
+        a_forks, b_forks = per_fork(forks["A"], level, "alloc"), per_fork(forks["B"], level, "alloc")
+        ids = [i for i in a_forks[0] if all(i in f for f in a_forks + b_forks)]
+        a_totals, b_totals = ([sum(f[i] for i in ids) for f in side] for side in (a_forks, b_forks))
+        a_tot, b_tot = median(a_totals), median(b_totals)
+        ratio = b_tot / max(1, a_tot)
+        a_items, b_items = median_over_forks(a_forks), median_over_forks(b_forks)
+        less = [i for i in ids if b_items[i] < a_items[i] * (1 - ALLOC_TOLERANCE)]
+        more = [i for i in ids if b_items[i] > a_items[i] * (1 + ALLOC_TOLERANCE)]
+        mismatches = fingerprint_mismatches(forks, level)
+        everything = a_totals + b_totals
+        if mismatches:
+            verdict = "INVALID: results differ"
+        elif min(len(a_totals), len(b_totals)) < 3:
+            # With fewer forks, two builds that allocate the same are too often apart by chance
+            verdict = "no verdict (fewer than 3 forks of each build)"
+        elif max(b_totals) < min(a_totals) * (1 - ALLOC_TOLERANCE):
+            verdict = f"B allocates less ({1 - ratio:.1%})"
+        elif min(b_totals) > max(a_totals) * (1 + ALLOC_TOLERANCE):
+            verdict = f"B allocates more ({ratio - 1:.1%})"
+        elif max(everything) <= min(everything) * (1 + ALLOC_TOLERANCE):
+            verdict = "the same"
+        else:
+            verdict = "no verdict: the forks of A and B overlap"
+        lines.append(f"{level:7} {len(ids):5} {fmt_bytes(a_tot):>10} {fmt_bytes(b_tot):>10} {ratio:9.5f} "
+                     f"{len(less):5} {len(more):5} {len(mismatches):8}  {verdict}")
+        summary[level] = {"items": len(ids), "ratio": ratio, "less": len(less), "more": len(more),
+                          "mismatches": len(mismatches), "verdict": verdict}
+        if mismatches:
+            details.append(f"{level}: results differ between the forks or from the first run, or are missing in a "
+                           f"fork, for {len(mismatches)} items: " + " ".join(mismatches[:30]))
+        names = [f"{side}{i}" for side in "AB" for i in range(len(forks[side]))]
+        details.append(f"{level}: bytes of each fork relative to the median of A: "
+                       + ", ".join(f"{name} {t / max(1, a_tot):.4f}" for name, t in zip(names, everything)))
+        ratio_of = lambda i: b_items[i] / max(1, a_items[i])
+        if less or more:
+            details.append(f"{level}: least B/A: " + ", ".join(f"{i} {ratio_of(i):.3f}" for i in sorted(ids, key=ratio_of)[:5]))
+            details.append(f"{level}: most B/A: " + ", ".join(f"{i} {ratio_of(i):.3f}" for i in sorted(ids, key=ratio_of)[-5:][::-1]))
+        details += by_search(level, a_items, b_items, ids)
+        # Sampled allocations: a method that differs by less than a percent of the level may not differ
+        details += by_method(forks, level, "allocByMethod", "allocated bytes (sampled)", 0.01)
+    lines += [""] + details + [f"B/A is the ratio of the medians of the forks; below 1, B allocates less. less/more: "
+                               f"the items that differ by more than {ALLOC_TOLERANCE:.1%}. The forks of a build "
+                               f"differ where the JIT compiler removed other allocations."]
+    text = "\n".join(lines) + "\n"
+    (out / "report.txt").write_text(text, encoding="utf-8")
+    (out / "summary.json").write_text(json.dumps({"kind": "alloc", "levels": summary}, indent=2), encoding="utf-8")
+    return text
+
+
+def fmt_bytes(n):
+    return f"{n / 1e9:.3f} GB" if n >= 1e9 else f"{n / 1e6:.2f} MB" if n >= 1e6 else f"{n / 1e3:.1f} kB"
 
 
 def ops_samples(results, level):
@@ -1611,27 +1722,32 @@ def total_spread(samples, ids):
     return (max(totals) - min(totals)) / max(1, min(totals))
 
 
-def ops_by_method(forks, level, top=12):
-    """The methods that do the most work in A, and the ones whose work changed most in B."""
+def by_method(forks, level, key, what, smallest, name=str, top=12):
+    """
+    The methods with the most ops or allocated bytes (the key of a fork result) in A, and the ones
+    that changed most in B, if by more than the smallest share of the level that is a change.
+    """
     def mean(side):
         sums = {}
         for r in forks[side]:
-            for method, count in r.get("opsByMethod", {}).get(level, {}).items():
+            for method, count in r.get(key, {}).get(level, {}).items():
                 sums[method] = sums.get(method, 0) + count / len(forks[side])
         return sums
 
     a, b = mean("A"), mean("B")
+    if not a:
+        return []
     total = max(1, sum(a.values()))
-    lines = [f"{level}: the methods with the most ops in A (share of the level)"]
+    lines = [f"{level}: the methods with the most {what} in A (share of the level)"]
     for m in sorted(a, key=a.get, reverse=True)[:top]:
-        lines.append(f"  {a[m] / total:6.2%}  {method_name(m)}")
+        lines.append(f"  {a[m] / total:6.2%}  {name(m)}")
     diffs = {m: b.get(m, 0) - a.get(m, 0) for m in set(a) | set(b)}
     changed = [m for m in sorted(diffs, key=lambda m: abs(diffs[m]), reverse=True)[:top]
-               if abs(diffs[m]) > total * OPS_TOLERANCE / 10]
+               if abs(diffs[m]) > total * smallest]
     if changed:
-        lines.append(f"{level}: the methods whose ops changed most, B - A (share of the level)")
+        lines.append(f"{level}: the methods whose {what} changed most, B - A (share of the level)")
         for m in changed:
-            lines.append(f"  {diffs[m] / total:+7.3%}  {method_name(m)}")
+            lines.append(f"  {diffs[m] / total:+7.3%}  {name(m)}")
     return lines + [""]
 
 
@@ -1967,6 +2083,7 @@ def main():
     s = sub.add_parser("try", help="one round of an experiment: build --fast, check --quick, bench --ops --quick")
     s.add_argument("--levels", default="raptor")
     s.add_argument("--against", default="base", help="the build to compare the work done with")
+    s.add_argument("--alloc", action="store_true", help="compare the allocated bytes too (bench --alloc --quick)")
     s.set_defaults(func=cmd_try)
 
     s = sub.add_parser("accept", help="before a commit: build, coverage, check --repeat --threads 8 --tests all")
@@ -1996,9 +2113,11 @@ def main():
     s.add_argument("--levels", default="e2e,raptor,street")
     s.add_argument("--ops", action="store_true",
                    help="count the bytecode instructions executed instead of measuring time: no noise")
+    s.add_argument("--alloc", action="store_true",
+                   help="compare the allocated bytes instead of the time: a busy machine does not change them")
     s.add_argument("--forks", type=int, help="default 3, with --ops 1")
     s.add_argument("--warmup", help="default 2, with --ops 1")
-    s.add_argument("--iterations", help="default 3, with --ops 2")
+    s.add_argument("--iterations", help="default 3, with --ops or --alloc 2")
     s.add_argument("--metric", default="wall", choices=["wall", "cpu", "alloc"])
     s.add_argument("--cpus", default="fast",
                    help="the logical processors a time benchmark runs on: fast (default: the fastest cores, the "

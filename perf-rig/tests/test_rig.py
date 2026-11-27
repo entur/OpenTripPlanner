@@ -273,6 +273,39 @@ class OpsReportTest(TempDirTest):
         self.assertEqual("org.x.Foo.<init>()", rig.method_name("org/x/Foo.<init>()V"))
 
 
+class AllocReportTest(TempDirTest):
+    """B allocates less only if every fork of B is below every fork of A."""
+
+    def forks(self, a_bytes, b_bytes):
+        for side, totals in (("A", a_bytes), ("B", b_bytes)):
+            for n, total in enumerate(totals):
+                items = [{"id": "x", "fingerprint": "f", "alloc": [total - 500, total - 500]},
+                         {"id": "y", "fingerprint": "f", "alloc": [500, 500]}]
+                by_method = {"raptor": {"o.Foo.bar": total - 300, "o.Foo.baz": 300}}
+                result = {"meta": {}, "levels": {"raptor": items}, "allocByMethod": by_method}
+                (self.tmp / f"{side}-{n}.json").write_text(json.dumps(result))
+        report = rig.alloc_report(self.tmp)
+        return report, next(line for line in report.splitlines() if line.startswith("raptor "))
+
+    def test_fewer_bytes_in_one_method(self):
+        report, row = self.forks([1500, 1500, 1500], [1200, 1200, 1200])
+        self.assertIn("0.80000", row)
+        self.assertIn("B allocates less (20.0%)", row)
+        self.assertIn("-20.000%  o.Foo.bar", report)
+
+    def test_the_same_bytes(self):
+        self.assertIn("the same", self.forks([1500, 1500, 1500], [1500, 1500, 1500])[1])
+
+    def test_a_fork_of_the_same_code_that_allocates_more_is_not_a_difference(self):
+        # Measured 2026-11-27: two of three forks of a build allocated 0.7 % more than the forks of the other build
+        report, row = self.forks([1510, 1510, 1500], [1500, 1500, 1500])
+        self.assertIn("no verdict: the forks of A and B overlap", row)
+        self.assertIn("A2 0.9934", report)
+
+    def test_fewer_than_three_forks_give_no_verdict(self):
+        self.assertIn("no verdict (fewer than 3 forks", self.forks([1500, 1500], [1200, 1200])[1])
+
+
 class CoverageTest(unittest.TestCase):
     METHODS = [
         ("org/opentripplanner/street/Foo.used(I)V", 10, 20, 500),
