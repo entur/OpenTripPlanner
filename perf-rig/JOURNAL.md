@@ -32,18 +32,6 @@ what each idea promises in time, not in ops: since entry 8 the ops are known to 
 where code is shared between uses (calls that are not inlined) and where branches are hard to
 predict.
 
-- raptor, ask the pareto set of the stop before the destination pruning: the heuristic check
-  runs for all 62 M candidates of a pass and rejects 23 M (12 % of the time in the profile of
-  step8), the set of the stop then rejects 33 M of the other 39 M with a far cheaper check. A
-  candidate is accepted iff both pass, so the set can go first and the destination pruning is
-  asked only where the set would accept, right before the arrival is created. A set with a
-  listener (via, egress and debugged stops) keeps the order of today, because its listener gets
-  events for rejected arrivals. Not identical by construction but by an argument: what differs
-  is which probes update `goodElement` of the two sets, and that hint changes no result when the
-  dominance is transitive, which the shortcut in `ParetoSet` relies on already and which holds
-  for the relax function and the c2 dominance OTP uses. Draft with the design and the argument:
-  `../perf-rig-data/drafts/stop-set-before-destination-pruning.md`. Promises most of what is
-  listed here: about 8 % of the ops and of the time.
 - raptor, `HeuristicsProvider` and `DestinationArrivalPaths.qualify`, the destination pruning of
   every candidate: 12 % of the time (`HeuristicsProvider.get` 3.0 %, `ParetoSet.leftDominanceExist`
   4.1 %, `ParetoSet.qualify` 2.0 %, `ParetoComparator.compare` 1.9 %, the comparator 1.1 %) and
@@ -99,7 +87,21 @@ predict.
 
 ## Being tried
 
-Nothing.
+- raptor, ask the pareto set of the stop before the destination pruning: the heuristic check
+  runs for all 62 M candidates of a pass and rejects 23 M (12 % of the time in the profile of
+  step8), the set of the stop then rejects 33 M of the other 39 M with a far cheaper check. A
+  candidate is accepted iff both pass, so the set can go first and the destination pruning is
+  asked only where the set would accept, right before the arrival is created. A set with a
+  listener (via, egress and debugged stops) keeps the order of today, because its listener gets
+  events for rejected arrivals. Not identical by construction but by an argument: what differs
+  is which probes update `goodElement` of the two sets, and that hint changes no result when the
+  dominance is transitive, which the shortcut in `ParetoSet` relies on already and which holds
+  for the relax function and the c2 dominance OTP uses. Draft with the design and the argument:
+  `../perf-rig-data/drafts/stop-set-before-destination-pruning.md`. Promises most of what is
+  listed here: about 8 % of the ops and of the time.
+  Tried with `try` against step11. The time check of step11 (against step10) is owed and runs
+  before the `try`, while the code of this idea is in the working tree: the laptop is hot after
+  the `accept` of step11, see the time check of entry 10.
 
 ## Tried
 
