@@ -24,10 +24,6 @@ with the verdict of the benchmark for each level.
 From the raptor profile at the start of `perf/raptor-1` (oslo, the code of `base`). A percentage
 is the share of the ops, unless it says time.
 
-- raptor, `DefaultRangeRaptorWorker.boardAndAlightRoute`: ask `isStopReachedInPreviousRound` before
-  `boardingPossibleAt`. Few stops of a pattern are reached, and boarding is possible at almost all
-  of them. `BitSet.get` with its helpers is 6.7 %, most of it from the boarding and alighting
-  checks.
 - raptor, `DefaultRangeRaptorWorker.boardAndAlightRoute`: skip the alighting until the pattern was
   boarded: nothing is on board before that.
 - raptor, `ParetoSet.add` and `qualify`: branch on the two `leftDominanceExist` results instead of
@@ -49,4 +45,11 @@ is the share of the ops, unless it says time.
 
 ## Tried
 
-Nothing yet.
+### 1. accepted: ask if the stop is reached before asking if boarding is possible
+- where: raptor, `DefaultRangeRaptorWorker.boardAndAlightRoute`
+- result: ops raptor 0.9721 against base, results identical
+- commit: cf2efa9c3a on perf/raptor-1, build step1
+- note: `BitSet.get` with its helpers went from 6.7 % to 4.6 % of the ops of base; the rest is
+  mostly the alighting check. `mutate` of the file: 5 places, 4 found. Not found: `&&` to `||` in the
+  choice between `alightConstrainedTransferExist` and `alightOnlyRegularTransferExist`, which do
+  the same in the multi-criteria search.
