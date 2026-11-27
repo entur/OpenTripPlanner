@@ -25,29 +25,37 @@ they are.
 
 ## Ideas not tried yet
 
-From the raptor profile at the start of `perf/raptor-1` (oslo, the code of `base`). A percentage
-is the share of the ops, unless it says time.
+From the raptor profile of build `step2` (oslo, `profile --quick --levels raptor --top 60`). A
+percentage is the share of the ops, unless it says time.
 
 - raptor, `ParetoSet.add` and `qualify`: branch on the two `leftDominanceExist` results instead of
-  `ParetoComparator.compare` (2.6 %), `ParetoDominance.of` (1.3 %) and a switch on the enum.
-- raptor, `TripScheduleBoardSearch`: the linear scan after the binary search is 3.6 %, and
-  `TripPatternForDates.departureTime` 2.7 %. A binary search to the end gives another trip where
+  `ParetoComparator.compare` (2.7 %), `ParetoDominance.of` (1.4 %) and a switch on the enum.
+- raptor, `TripScheduleBoardSearch`: the linear scan after the binary search is 3.8 %, and
+  `TripPatternForDates.departureTime` 2.8 %. A binary search to the end gives another trip where
   trips overtake each other, so it needs to know that the departures at the stop are sorted.
-- raptor, destination pruning (`HeuristicsProvider.rejectDestinationArrivalBasedOnHeuristic`,
-  `ParetoSet.qualify` and the destination comparator): about 20 %. A probe that arrives before
-  every destination arrival qualifies without the loop over them.
-- raptor, memory: `ArrivalParetoSetComparatorFactory.compareC1RelaxedOnC2Dominance` has 18 % of the
-  time and 1.4 % of the ops: the stop arrivals of a pareto set are spread over the heap. Keep the
-  criteria of the elements in int arrays in the set.
+- raptor, `BitSet.get` with `checkInvariants` and `wordIndex` is still 3.8 %: the boarding and
+  alighting checks of `TripPatternForDates` and the reached stops of the standard search.
+- raptor, memory (`needs time`): `ArrivalParetoSetComparatorFactory.compareC1RelaxedOnC2Dominance`
+  has 20 % of the time and 1.5 % of the ops: the stop arrivals of a pareto set are spread over the
+  heap. Keep the criteria of the elements in int arrays in the set.
+- raptor, memory (`needs time`): `TripScheduleAlightSearch` (the reverse heuristic search) has 7 %
+  of the time and little of the ops: the departure times of large patterns are read from memory.
 - raptor, memory: `TripPatternForDates.getTripSchedule` allocates a `TripScheduleWithOffset` for
-  every boarding, 16 % of the allocated bytes.
+  every boarding, 17 % of the allocated bytes.
 - raptor, memory: `RaptorRoutingRequestTransitData.routeIndexIterator` allocates a `BitSet` of all
-  patterns in every round, and `patternStopIterator` an iterator for every pattern (5 % of the
-  time).
+  patterns in every round, and `patternStopIterator` an iterator for every pattern
+  (`IntIterators.intIncIterator` has 4.4 % of the time, 1.4 % of the allocated bytes).
+- raptor, `MinTravelDurationRoutingStrategy.alightOnlyRegularTransferExist` (4.2 % of the time)
+  and `StdTransferEarlyPruning.updateArrival` (`IntIntHashMap.getOrDefault`, 1.3 % of the time):
+  the standard (heuristic) searches.
 
 ## Being tried
 
-Nothing.
+- raptor, destination pruning (`HeuristicsProvider.rejectDestinationArrivalBasedOnHeuristic`,
+  `DestinationArrivalPaths.qualify`, `ParetoSet.qualify` and the destination comparator): about
+  20 % of the ops of `step2`. A probe that arrives before every destination arrival accepted so
+  far is dominated by none of them when the arrival time is a criterion, so it qualifies without
+  the loop over them.
 
 ## Tried
 
