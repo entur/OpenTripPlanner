@@ -24,8 +24,6 @@ with the verdict of the benchmark for each level.
 From the raptor profile at the start of `perf/raptor-1` (oslo, the code of `base`). A percentage
 is the share of the ops, unless it says time.
 
-- raptor, `DefaultRangeRaptorWorker.boardAndAlightRoute`: skip the alighting until the pattern was
-  boarded: nothing is on board before that.
 - raptor, `ParetoSet.add` and `qualify`: branch on the two `leftDominanceExist` results instead of
   `ParetoComparator.compare` (2.6 %), `ParetoDominance.of` (1.3 %) and a switch on the enum.
 - raptor, `TripScheduleBoardSearch`: the linear scan after the binary search is 3.6 %, and
@@ -53,3 +51,10 @@ is the share of the ops, unless it says time.
   mostly the alighting check. `mutate` of the file: 5 places, 4 found. Not found: `&&` to `||` in the
   choice between `alightConstrainedTransferExist` and `alightOnlyRegularTransferExist`, which do
   the same in the multi-criteria search.
+
+### 2. accepted: no alighting before the first attempt to board the pattern
+- where: raptor, `DefaultRangeRaptorWorker.boardAndAlightRoute`
+- result: ops raptor 0.9792 against step1 (0.9519 against base, the product of the two steps),
+  results identical
+- commit: f04139771a on perf/raptor-1, build step2
+- note: `BitSet.get` with its helpers is 3.5 % of the ops of base now.
