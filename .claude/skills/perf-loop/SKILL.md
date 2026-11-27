@@ -30,7 +30,7 @@ Read first, every session:
 ## Start
 
 Work in this worktree only, from the repo root, one rig command at a time. A command takes from a
-minute to half an hour (`accept`, `mutate`, a time `bench`): start it in the background, so no tool
+minute to half an hour (`accept`, a time `bench`): start it in the background, so no tool
 timeout cuts it off, and wait until it has ended. Do not edit any source file while a rig command
 runs: it stops when the sources no longer match the build.
 
@@ -58,47 +58,41 @@ runs: it stops when the sources no longer match the build.
 
 ## One round
 
-1. **Pick an idea.** The list "Ideas not tried yet" in the journal says which build its profile is
-   of. If that is not the build you compare with (an idea was accepted since: the profile is
-   another one now), or nothing in the list is worth trying, run
-   `python perf-rig/rig.py profile --quick --levels <level>`, read the code of the top methods, add
-   the ideas you see to the list, and write there which build the profile is of. Then take the
-   idea that promises most, move it to "Being tried", and commit the journal
-   (`rig.py journal "perf-rig: journal: trying <the idea>"`). Never pick an idea listed under
-   "Tried", unless what made it fail has changed; then say what.
+1. **Pick an idea** from the list "Ideas not tried yet" in the journal. Only when nothing in it is
+   worth trying, run `python perf-rig/rig.py profile --quick --levels <level>`, read the code of
+   the top methods, add the ideas you see to the list, and write there which build the profile is
+   of. An accepted idea changes the shares of the list a little, not which ideas there are: it is
+   no reason to profile again. Then take the idea that promises most, move it to "Being tried",
+   and commit the journal (`rig.py journal "perf-rig: journal: trying <the idea>"`). Never pick an
+   idea listed under "Tried", unless what made it fail has changed; then say what.
    - An idea about allocation (fewer objects) does not show in the ops: try it with `--alloc`,
      see below.
    - An idea about memory layout (the same objects, closer together) shows in neither. In the
      normal mode, mark it `needs time` in the list and take another idea. In the idle mode it is
      tried with a time benchmark, see "Idle mode".
-2. **Know what the rig would miss.** The first time a series changes a file:
-   `python perf-rig/rig.py coverage --quick`, then
-   `python perf-rig/rig.py mutate <file> --count 10` (it tries the places the file has, at most 10,
-   and ends with exit code 1 if a bug is NOT FOUND). A bug that is not found because it can not
-   change any result is no gap: say why in the journal entry. Any other bug that is not found in
-   the code the idea touches, or right next to it, means a mistake there goes unnoticed: add a case
-   that finds it (below), or pick another idea.
-3. **Change the code.** Only what the idea needs: no clean-up, no renames. The results must stay
+2. **Change the code.** Only what the idea needs: no clean-up, no renames. The results must stay
    identical; an idea that changes a result, a default or a config value is not a performance idea.
-4. **Try**: `python perf-rig/rig.py try --levels <level> --against <step or base>`. Read:
+3. **Try**: `python perf-rig/rig.py try --levels <level> --against <step or base>`. Read:
    - the check: `CHECK PASSED`, else the idea is wrong;
    - the ops table: `B/A total` and `mismatch` 0, and the methods whose work changed: is it the
      work you meant to remove?
    - for an idea about allocation, with `--alloc` added to the command: the verdict of the
      allocated bytes, and the methods whose allocated bytes changed.
    Adjust and try again, at most three rounds for one idea.
-5. **Decide.**
+4. **Decide.**
    - Accept when `B/A total` of the ops is 0.999 or lower at the level and the code is no harder
      to read than the gain is worth.
    - Accept an idea about allocation when the verdict is `B allocates less` and the ops are not
      more (`B/A total` at most 1.001). `no verdict: the forks of A and B overlap` is no gain: the
      JIT compiler removes that allocation in some runs already.
    - Anything else is rejected. A rejected idea is as useful in the journal as an accepted one.
-6. **Accepted**: `python perf-rig/rig.py accept` must pass (if it does not: fix the idea, or reject
-   it). Commit the code alone. `python perf-rig/rig.py freeze step<N>`, N being the number of the
-   journal entry. Then write the entry, take the idea out of "Being tried", and commit the journal
-   (below). In the entry, the ratio against `base` is the product of the ratios of the steps, not
-   a measurement.
+5. **Accepted**: `python perf-rig/rig.py accept` must pass (if it does not: fix the idea, or reject
+   it). If it stops because no case runs a method the idea changed, leave that change out or
+   reject the idea: improving the cases (`mutate`, new cases) is work of its own, not a part of
+   the loop. Commit the code alone. `python perf-rig/rig.py freeze step<N>`, N being the number of
+   the journal entry. Then write the entry, take the idea out of "Being tried", and commit the
+   journal (below). In the entry, the ratio against `base` is the product of the ratios of the
+   steps, not a measurement.
    **Rejected**: undo the change (`git restore` the files of the idea), write the entry with the
    reason, take the idea out of "Being tried", and commit the journal.
 
@@ -137,7 +131,7 @@ cycles and 0.7 % in cache misses, on one in use they do not.
 - **Keep it quiet**: while a time benchmark runs, do nothing. Start it in the background, end your
   turn and wait for the notification: output in the terminal and other commands disturb it.
 - **A time benchmark** is `python perf-rig/rig.py bench --quick --levels <level> --forks 5
-  --counters --baseline <build>`; the README, step 6, says how to read it. The counters need a
+  --counters --baseline <build>`; the README, step 5, says how to read it. The counters need a
   session that was started as administrator; if the benchmark says the rights were not given,
   leave `--counters` out. A fork that was disturbed is run again by the rig. If the report still
   has the WARNING about other processes, the laptop is in use after all: its result does not
@@ -158,13 +152,6 @@ What the idle mode does, in this order, and then again from the top:
    accepted if the time shows no difference; `B slower` takes it out again (`git revert`).
 
 Windows does not go to sleep while a rig command runs, but it does if the lid is closed.
-
-## Adding a case
-
-A case for code no case runs goes in `perf-rig/cases/<dataset>.extra.json`. Then
-`python perf-rig/rig.py unit` and
-`python perf-rig/rig.py record base --build base --repeat --threads 8`: the frozen `base` build
-makes the expected results, never the working tree. Commit the case alone.
 
 ## Never
 

@@ -74,28 +74,24 @@ compared with it, not with "no failures".
 `e2e`) lists the methods with the most time samples, allocated bytes and ops. A method with a far
 larger share of the time than of the ops waits for memory; the other way round it is cheap code.
 
-**2. Before changing a file, see what the rig would notice there** (1.5 min per bug):
-`rig.py coverage --quick`, then `rig.py mutate FILE... --count 10` plants small bugs in the
-executed code of the files. A bug that is NOT FOUND shows what a mistake there gets away with.
-
-**3. Change the code, then one round** (5-8 min): `rig.py try --levels raptor` compiles the changed
+**2. Change the code, then one round** (5-8 min): `rig.py try --levels raptor` compiles the changed
 files (`build --fast`), checks every 4th case against the baseline (`check --quick`) and compares
 the work done with `base` (`bench --ops --quick`): are the results identical, how much less work,
 in which methods. Repeat until the change does what was intended. For an idea about allocation,
 `try --alloc` compares the allocated bytes too (8 min more, and as much for a new baseline).
 
-**4. Accept, then commit** (25 min): `rig.py accept` does a full build (Dagger, changed
+**3. Accept, then commit** (25 min): `rig.py accept` does a full build (Dagger, changed
 signatures), needs every changed method to be executed by a case (`coverage`), and runs all cases,
 also repeated and on 8 threads, with all OTP tests (`check --repeat --threads 8 --tests all`): the
 tests of the changed module alone would not notice what breaks in a module that uses it. One idea
 per commit.
 
-**5. Compound**: `rig.py freeze step1` after an accepted change. The next
+**4. Compound**: `rig.py freeze step1` after an accepted change. The next
 `rig.py try --against step1` shows what the next change gains alone, `--against base` the total;
 the results are always checked against the record of `base`. Each benchmark adds a line per level
 to `bench/history.tsv`.
 
-**6. The time check**: only when the machine does nothing else, which is the idle mode of the
+**5. The time check**: only when the machine does nothing else, which is the idle mode of the
 skill, or when it is asked for.
 
 ```bash
@@ -120,6 +116,11 @@ The result is an entry in the journal, with the steps it covers. An idea marked 
 the journal is tried here too, with this benchmark against the last step in place of the ops
 comparison of `try`: it needs `B faster`.
 
+**Improving the cases** is work of its own, not a part of the loop: `rig.py coverage --quick`, then
+`rig.py mutate FILE... --count 10` plants small bugs in the executed code of the files (1.5 min
+per bug). A bug that is NOT FOUND shows what a mistake there gets away with; a case that finds it
+goes in `<dataset>.extra.json` (rule 5).
+
 **A series of experiments** (the skill `perf-loop` in `.claude/skills` runs the loop this way):
 
 - `perf-rig/JOURNAL.md` on branch `perf-rig` has every idea that was tried on any branch, accepted
@@ -132,7 +133,7 @@ comparison of `try`: it needs `B faster`.
 - A series is a branch `perf/<name>` off `perf-rig`, with one commit for each accepted idea. Stay
   on it: the gains add up, and the profile after a gain shows the next one.
 - An idea is accepted on the work done (ops), which a busy machine does not change. The time is
-  measured only while nobody uses the machine: that is the time check (6).
+  measured only while nobody uses the machine: that is the time check (5).
 - Start a new branch off `perf-rig` for another design of code the series already changed (the
   two are then compared with `base`), for a rewrite that later ideas should not build on yet, or
   when several ideas in a row gave nothing.
@@ -148,8 +149,9 @@ comparison of `try`: it needs `B faster`.
    i.e. a confidence interval that excludes 1.0. `bench --ops` finds and explains a change of the
    work done, but less work is not always less time, and a gain from memory layout does not show
    in the ops at all. Measure at the level the change is in (`raptor`, `street`, `link`).
-3. Code that no case runs is not checked: if `coverage` lists a changed method, add a case that
-   runs it (`<dataset>.extra.json`), or say that only the OTP tests cover the change.
+3. Code that no case runs is not checked, and `accept` refuses a change of a method that no case
+   runs. A case that runs it (`<dataset>.extra.json`) is added apart from the loop, see "Improving
+   the cases".
 4. A change of graph building or of the serialized graph: build a graph per build
    (`rig.py graph --build base`, `rig.py graph`) and compare them with `graph-fingerprint` and
    `graph-diff`, then `check` on the new graph: the fingerprint does not include the transfers.
