@@ -4,6 +4,7 @@ import dagger.BindsInstance;
 import dagger.Component;
 import graphql.schema.GraphQLSchema;
 import jakarta.inject.Singleton;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.opentripplanner.apis.gtfs.configure.GtfsSchema;
 import org.opentripplanner.apis.gtfs.configure.GtfsSchemaModule;
@@ -19,6 +20,7 @@ import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.carpooling.configure.CarpoolingModule;
 import org.opentripplanner.ext.carpooling.routing.RoutableCarpoolTripResolver;
+import org.opentripplanner.ext.dataoverlay.configuration.DataOverlayParameterBindings;
 import org.opentripplanner.ext.dataoverlay.configure.DataOverlayParameterBindingsModule;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.emission.configure.EmissionServiceModule;
@@ -27,17 +29,22 @@ import org.opentripplanner.ext.empiricaldelay.configure.EmpiricalDelayServiceMod
 import org.opentripplanner.ext.geocoder.LuceneIndex;
 import org.opentripplanner.ext.geocoder.configure.GeocoderModule;
 import org.opentripplanner.ext.interactivelauncher.configuration.InteractiveLauncherModule;
+import org.opentripplanner.ext.ridehailing.RideHailingService;
 import org.opentripplanner.ext.ridehailing.configure.RideHailingServicesModule;
 import org.opentripplanner.ext.sorlandsbanen.SorlandsbanenNorwayService;
 import org.opentripplanner.ext.sorlandsbanen.configure.SorlandsbanenNorwayModule;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
+import org.opentripplanner.ext.stopconsolidation.StopConsolidationService;
 import org.opentripplanner.ext.stopconsolidation.configure.StopConsolidationServiceModule;
 import org.opentripplanner.ext.taxi.TaxiRepository;
+import org.opentripplanner.ext.taxi.TaxiService;
 import org.opentripplanner.ext.taxi.configure.TaxiServiceModule;
 import org.opentripplanner.framework.transaction.configure.TransactionModule;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueSummary;
 import org.opentripplanner.place.api.NearbyStop;
 import org.opentripplanner.raptor.RaptorServiceFactory;
+import org.opentripplanner.routing.algorithm.filterchain.ext.EmissionDecorator;
+import org.opentripplanner.routing.algorithm.filterchain.framework.spi.ItineraryDecorator;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.RaptorTransitData;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.routing.api.request.RouteRequest;
@@ -224,6 +231,22 @@ public interface ConstructApplicationFactory {
   DeduplicatorService deduplicatorService();
 
   WarmupLauncher warmupLauncher();
+
+  // perf-rig: the bindings it needs to wire DefaultRoutingService like RequestScopedModule does
+  List<RideHailingService> rideHailingServices();
+
+  @Nullable
+  DataOverlayParameterBindings dataOverlayParameterBindings();
+
+  @Nullable
+  TaxiService taxiService();
+
+  @Nullable
+  @EmissionDecorator
+  ItineraryDecorator emissionItineraryDecorator();
+
+  @Nullable
+  StopConsolidationService stopConsolidationService();
 
   @Component.Builder
   interface Builder {

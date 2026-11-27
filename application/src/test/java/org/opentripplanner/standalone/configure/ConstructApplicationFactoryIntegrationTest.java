@@ -16,15 +16,21 @@ import org.opentripplanner.ext.carpooling.CarpoolingParameters;
 import org.opentripplanner.ext.carpooling.CarpoolingRepository;
 import org.opentripplanner.ext.carpooling.CarpoolingService;
 import org.opentripplanner.ext.carpooling.routing.RoutableCarpoolTripResolver;
+import org.opentripplanner.ext.dataoverlay.configuration.DataOverlayParameterBindings;
 import org.opentripplanner.ext.emission.EmissionRepository;
 import org.opentripplanner.ext.empiricaldelay.EmpiricalDelayRepository;
 import org.opentripplanner.ext.geocoder.LuceneIndex;
+import org.opentripplanner.ext.ridehailing.RideHailingService;
 import org.opentripplanner.ext.sorlandsbanen.SorlandsbanenNorwayService;
 import org.opentripplanner.ext.stopconsolidation.StopConsolidationRepository;
+import org.opentripplanner.ext.stopconsolidation.StopConsolidationService;
 import org.opentripplanner.ext.taxi.TaxiRepository;
+import org.opentripplanner.ext.taxi.TaxiService;
 import org.opentripplanner.graph_builder.issue.api.DataImportIssueSummary;
 import org.opentripplanner.place.api.NearbyStop;
 import org.opentripplanner.raptor.RaptorServiceFactory;
+import org.opentripplanner.routing.algorithm.filterchain.ext.EmissionDecorator;
+import org.opentripplanner.routing.algorithm.filterchain.framework.spi.ItineraryDecorator;
 import org.opentripplanner.routing.algorithm.raptoradapter.transit.TripSchedule;
 import org.opentripplanner.routing.api.request.RouteRequest;
 import org.opentripplanner.routing.fares.FareServiceFactory;
@@ -116,7 +122,12 @@ class ConstructApplicationFactoryIntegrationTest {
     of(RoutableCarpoolTripResolver.class),
     of(SorlandsbanenNorwayService.class),
     of(StopConsolidationRepository.class),
-    of(TaxiRepository.class)
+    of(TaxiRepository.class),
+    // Exposed for perf-rig
+    of(new GenericType<List<RideHailingService>>() {}),
+    of(DataOverlayParameterBindings.class),
+    of(StopConsolidationService.class),
+    of(TaxiService.class)
   );
 
   /**
@@ -131,7 +142,9 @@ class ConstructApplicationFactoryIntegrationTest {
 
   /** Dagger subcomponent builders are cheap and mutable — a fresh one every call is by design. */
   private static final List<DaggerBindingKey> PROTOTYPE_BY_DESIGN = List.of(
-    of(RequestScopedFactory.Builder.class)
+    of(RequestScopedFactory.Builder.class),
+    // Exposed for perf-rig; a stateless decorator, made for each routing service
+    of(ItineraryDecorator.class, EmissionDecorator.class)
   );
 
   @Test
