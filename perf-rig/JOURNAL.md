@@ -104,35 +104,7 @@ predict.
 
 ## Being tried
 
-- raptor, memory: create a stop arrival only when it is accepted. `transitToStop` and
-  `transferToStop` of `McRangeRaptorWorkerState` create an arrival for every candidate (31 % and
-  21 % of the allocated bytes) and keep it in a list until the commit. Measured with the ops of
-  the profile of step8: 62 M arrivals are created (34 M transit, 29 M transfer), the heuristic
-  check rejects 23 M, the set of the stop gets 39 M and accepts 6.3 M: nine of ten are created
-  for nothing. Keep a candidate as values (ride or from-arrival and transfer, stop, arrival
-  time, c1) and let the heuristic check and `StopArrivalParetoSet.add` work on the values; the
-  object is created when the set accepts it, or when a listener or the debugger needs a rejected
-  one. The same checks in the same order with the same values, so the results are identical by
-  construction. Tried with `try --alloc` against step8. Draft:
-  `../perf-rig-data/drafts/create-stop-arrival-when-accepted.md`.
-  State 2026-11-27 22:10, third form of the code, in the working tree: `StopArrivalCandidates`
-  (new) keeps the candidates and commits them itself; changes in `McRangeRaptorWorkerState`,
-  `StopArrivalParetoSet`, `McStopArrivals`, `HeuristicsProvider` and the two stop arrival
-  factories; tests `StopArrivalCandidatesTest`, `StopArrivalParetoSetTest`.
-  - First form (two object slots and five values for every candidate, the commit loop in the
-    worker state with a method for one candidate): results identical, `B allocates less (43.0%)`,
-    ops 1.0256. Time benchmark against step8, 5 forks, `--counters`, no warning: time B/A 0.987
-    (0.959 to 1.016), no significant difference; instructions 1.0275 (1.0138 to 1.0415), cycles
-    0.9652 (0.9571 to 0.9734), cache misses 0.8330 (0.7897 to 0.8787), branch mispredictions
-    1.0097 (0.9968 to 1.0228). The cycles of the forks of a build agree to 0.5 %, the time does
-    not: the frequency of the cores was 3.43 to 3.71 GHz in the forks (cycles for a nanosecond).
-    `-XX:+PrintInlining` (`RIG_JAVA_OPTS`, one fork) showed that the method for one candidate was
-    not inlined in the loop ("already compiled into a big method"), a call with six arguments for
-    every candidate.
-  - Third form (one object slot for an arrival by transit, the loop in `StopArrivalCandidates`
-    reading its arrays): `try --alloc` against step8: results identical, ops 0.97302,
-    `B allocates less (43.3%)`. Accepted on that; `accept` is running, then commit, freeze
-    `step9`, entry 9 and a time benchmark against step8.
+Nothing.
 
 ## Tried
 
@@ -252,3 +224,36 @@ predict.
   The report of the benchmark first said UNEVEN: the rig compared the forks of both builds with
   each other, so a gain above 15 % looked like a disturbed fork. Fixed in the rig (ff788f6095 on
   this branch, ed2a433518 on perf-rig): a fork is compared with the forks of its own build.
+
+### 9. accepted: a stop arrival is created when its stop accepts it, not for every candidate
+- where: raptor, `McRangeRaptorWorkerState` with the new `StopArrivalCandidates`,
+  `StopArrivalParetoSet.add`, `McStopArrivals`, `HeuristicsProvider`
+- result: ops raptor 0.9730 against step8 (0.8405 against base, the product of the steps), and
+  `B allocates less (43.3%)` (5.229 GB to 2.965 GB). Results identical; `accept`: 550 results
+  identical, also repeated and on 8 threads, and all 9687 OTP tests pass
+- commit: c637f400a1 on perf/raptor-1, build step9
+- note: measured with the ops of the profile of step8: 62 M arrivals were created (34 M by
+  transit, 29 M by transfer), the heuristic check rejected 23 M, the set of the stop got 39 M and
+  accepted 6.3 M. Now `transitToStop` and `transferToStop` add a candidate to a
+  `StopArrivalCandidates`: what the arrival is created from (the ride, or the arrival and the
+  transfer) and its stop, arrival time, round, c1 and c2 in an `int[]`. `commit()` runs the same
+  two checks in the same order on the values, and the set calls a supplier for the arrival when
+  it accepts it, or when it rejects it and has a listener (the via stops need the rejected
+  arrival), as the heuristic check does when the stop is debugged. The arrivals of a segment
+  before (via searches) are kept in the same list, so the order is as it was. The c2 of an
+  arrival by transit is asked of the stop arrival factory (`transitStopArrivalC2`): with c1 only
+  the arrival has `NOT_SET` where the ride has 0.
+  Three forms were tried. The first (two object slots and five values for every candidate, the
+  loop in the worker state calling a method for one candidate): `B allocates less (43.0%)` but
+  ops 1.0256, and in a time benchmark against step8 (5 forks, `--counters`, no warning) time B/A
+  0.987 (0.959 to 1.016), no significant difference, instructions 1.0275 (1.0138 to 1.0415),
+  cycles 0.9652 (0.9571 to 0.9734), cache misses 0.8330 (0.7897 to 0.8787). `-XX:+PrintInlining`
+  (`RIG_JAVA_OPTS`, one fork of each build, the fork logs have it) showed why: the method for one
+  candidate was "already compiled into a big method" and not inlined in the loop, a call with six
+  arguments for every candidate. The second form (one object slot for an arrival by transit, the
+  check written in the loop): ops 1.0080. The third, accepted, has the loop in
+  `StopArrivalCandidates`, reading its arrays without a call: ops 0.9730.
+  What that benchmark also showed: the cycles of the forks of a build agree to 0.5 %, the time
+  does not, because the frequency of the cores differs between forks (3.43 to 3.71 GHz, cycles
+  for a nanosecond). A difference of 3 % in time is below what 5 forks show, in cycles it is far
+  above.
