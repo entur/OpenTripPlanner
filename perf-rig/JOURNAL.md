@@ -99,20 +99,7 @@ predict.
 
 ## Being tried
 
-- raptor, `TripScheduleBoardSearch`: the linear scan after the binary search is 4.2 % of the ops
-  and 8.9 % of the time, `TripPatternForDates.departureTime` 3.1 %, the binary search 2.0 % of the
-  time. Where the departures at every stop are in the order of the trips (to be computed when
-  `TripPatternForDates` fills its arrays, as a flag of `TripSearchTimetable`), the first trip at
-  or after a time is found by a binary search to the end with the same result: the linear scan
-  finds the lowest index of the run of trips that depart late enough, which is the first such
-  trip when the departures are sorted. Only for the unbounded search: with a trip index bound
-  (the standard search, already on a trip) the scan is one or two steps. Same for
-  `TripScheduleAlightSearch` with the arrivals. Caution: the ops will say 6 % less, but a binary
-  search has a branch that is hard to predict in every step and the scan has one; the threshold
-  of 50 was tuned on time. Try a binary search without a branch (`base = time < t ? base + half :
-  base`), and decide on the cycles and the branch mispredictions of `--counters`.
-  Draft: `../perf-rig-data/drafts/trip-search-binary-when-in-trip-order.md`. Tried with `try`
-  against step10.
+Nothing.
 
 ## Tried
 
@@ -319,3 +306,25 @@ predict.
   quarter of an hour: a time benchmark should not start right after `accept` or a full build.
   (The "Modern Standby" events in the system log are at about the same times, 23:41 to 23:43
   here, but there was one in the benchmark at 4.1 to 4.25 GHz too, without any change.)
+
+### 11. accepted: the trip to board is found with a binary search where the times are in trip order
+- where: raptor (the code is in `application`), `TripScheduleBoardSearch`,
+  `TripScheduleAlightSearch`, `TripPatternForDates`, `TripSearchTimetable`
+- result: ops raptor 0.9578 against step10 (0.7916 against base, the product of the steps),
+  results identical; `accept`: 550 results identical, also repeated and on 8 threads, and all 9689
+  OTP tests pass
+- commit: a9999e6d92 on perf/raptor-1, build step11
+- note: the unbounded search did a binary search until 50 trips were left and then stepped
+  through them (15 steps on average, 13 M searches in a pass). `TripPatternForDates` now notes,
+  while it fills its arrays, whether the arrivals and the departures at every stop are in the
+  order of the trips (`TripSearchTimetable.arrivalsInTripOrder()`, `departuresInTripOrder()`).
+  Where they are, the trips that depart late enough are the last ones, the stepping ends at the
+  first of them, and a binary search over all trips finds the same trip. Where trips overtake
+  each other the search is as before (a test in each of the two search tests has such trips),
+  and so is the search with a trip index bound (the standard search that is already on a trip:
+  one or two steps). The alight search of the reverse searches is the mirror image.
+  The flags cost two comparisons for each stop time when the transit data of a request is
+  made, which is not in the raptor level; `e2e` has not been measured.
+  Open, for the time check: a binary search has a branch that is hard to predict in every step,
+  the stepping had one for a search. If the cycles or the branch mispredictions are worse, try
+  the search without a branch, or step through the last 8 trips.
