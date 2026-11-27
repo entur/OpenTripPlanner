@@ -257,13 +257,16 @@ def cmd_build(args):
 
 
 def write_build_meta(target, sources, fast):
-    head = git("rev-parse", "HEAD")
+    meta = dict(git_state(), time=now(), sources=sources, fast=fast, serializationVersion=serialization_version())
+    (target / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+
+
+def git_state():
+    """The commit of the working tree and whether it has uncommitted changes: the label of a build."""
     status = git("status", "--porcelain", "--untracked-files=no")
     diff_hash = hashlib.sha256(git("diff", "HEAD").encode()).hexdigest()[:12] if status else ""
-    meta = {"head": head, "dirty": bool(status), "diffHash": diff_hash,
-            "branch": git("rev-parse", "--abbrev-ref", "HEAD"), "time": now(), "sources": sources, "fast": fast,
-            "serializationVersion": serialization_version()}
-    (target / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
+    return {"head": git("rev-parse", "HEAD"), "dirty": bool(status), "diffHash": diff_hash,
+            "branch": git("rev-parse", "--abbrev-ref", "HEAD")}
 
 
 def source_state(repo=REPO):
@@ -339,7 +342,10 @@ def cmd_freeze(args):
         else:
             frozen.append(entry)
     (target / "otp-classpath.txt").write_text("\n".join(frozen) + "\n", encoding="utf-8")
-    shutil.copy2(source / "meta.json", target / "meta.json")
+    # The sources are still those of the build (require_current), so it gets the label of the working
+    # tree as it is now: changes that were committed after the build are in that commit
+    meta = dict(build_meta(WORKTREE_BUILD), **git_state())
+    (target / "meta.json").write_text(json.dumps(meta, indent=2), encoding="utf-8")
     log(f"Froze the working-tree build as '{name}' ({describe_build(name)})")
     if build_meta(name)["dirty"]:
         log("WARNING: built from uncommitted changes, so no commit has the code of this build. "
