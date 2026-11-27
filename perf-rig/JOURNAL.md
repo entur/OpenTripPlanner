@@ -69,16 +69,7 @@ percentage is the share of the ops, unless it says time.
 
 ## Being tried
 
-- raptor, memory (`needs time`): `ArrivalParetoSetComparatorFactory.compareC1RelaxedOnC2Dominance`
-  has 20 % of the time and 1.5 % of the ops: the stop arrivals of a pareto set are spread over the
-  heap. Keep the criteria of the elements in int arrays in the set. How: a set of its own for the
-  stop arrivals (`StopArrivalParetoSet` in `rangeraptor.multicriteria.arrivals`, used by
-  `McStopArrivals` only) that does what `ParetoSet.add` does, in the same order and with the same
-  events for the listener, but compares the new arrival with a copy of the four criteria (arrival
-  time, round, c1, c2) of each element in one `int[]`, and with a copy of the criteria of
-  `goodElement` in fields. The comparators of `ArrivalParetoSetComparatorFactory` get a form that
-  takes the eight ints. The arrived-on-board criterion (egress and via stops only) still asks the
-  element. Tried with a full build, `check --quick` and a time benchmark against step6.
+Nothing.
 
 ## Tried
 
@@ -165,3 +156,36 @@ percentage is the share of the ops, unless it says time.
   and of the third of the items that take longest (47 to 621 ms, 85 % of the time) 0.951. The
   forks of a build differed by up to 2.4 % from their mean in time. Steps 1, 2 and 6 have their
   time check now: nothing is slower, and the cycles confirm a gain of 3 %.
+
+### 8. accepted: the pareto set of the stop arrivals keeps the criteria of its elements in an int array
+- where: raptor, `McStopArrivals` with the new `StopArrivalParetoSet`, and
+  `ArrivalParetoSetComparatorFactory`
+- result: time raptor `B faster (12.6%)` against step6: B/A 0.874 (99 % interval 0.833 to 0.917),
+  B/A of the total time 0.803 (0.762 to 0.847, computed by hand). Of the CPU: instructions 0.8087
+  (0.8027 to 0.8148), cycles 0.7909 (0.7390 to 0.8464), cache misses 0.8554 (0.8004 to 0.9141),
+  branch mispredictions 0.9945 (0.9863 to 1.0027). Allocated bytes 1.011. Ops raptor 1.0313
+  against step6 (0.8638 against base, the product of the steps): more ops, see the note. Results
+  identical; `accept`: 550 results identical, also repeated and on 8 threads, and all 9677 OTP
+  tests pass
+- commit: b27fe977ee on perf/raptor-1, build step8
+- note: tried as a `needs time` idea in the idle mode: `bench --quick --levels raptor --forks 5
+  --counters --baseline step6`, no warning (other processes used 0.13 to 0.41 cores during a
+  fork). The set does what `ParetoSet.add` does, in the same order and with the same events, but
+  compares a new arrival with a copy of the arrival time, round, c1 and c2 of each element in one
+  `int[]`, and with a copy of the criteria of `goodElement` in fields; the arrived-on-board
+  criterion of the egress and via stops still asks the element. `StopArrivalParetoSetTest` adds
+  random arrivals to the new set and to a `ParetoSet` with the comparator of the factory, and
+  compares the elements, the marker and the events after each.
+  The ops count 3 % more work, and the processor executes 19 % fewer instructions: the gain is
+  not only the memory (14 % fewer cache misses). `ParetoSet.add` calls its comparator from one
+  place for every kind of set (stop arrivals, pattern rides, destination arrivals, paths), so the
+  JIT compiler sees many comparators there and inlines none; the set of the stop arrivals has
+  call sites of its own now, with one or two comparators. The ops do not show a call that is not
+  inlined. What follows for the next ideas: the instructions of `--counters` show a difference of
+  1 % (the time one of 4 %), and hot code that is shared between uses with different lambdas or
+  implementations is worth a look even where the ops are few.
+  The initial capacity of the set is 8 elements (16 in `ParetoSet`): the criteria take 16 bytes
+  for an element, and the allocated bytes are 1.1 % more.
+  The report of the benchmark first said UNEVEN: the rig compared the forks of both builds with
+  each other, so a gain above 15 % looked like a disturbed fork. Fixed in the rig (ff788f6095 on
+  this branch, ed2a433518 on perf-rig): a fork is compared with the forks of its own build.
