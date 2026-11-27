@@ -291,12 +291,19 @@ def source_state(repo=REPO):
 
 
 def require_current(build):
-    """Stop if build 'wt' is used after the OTP sources changed: its classes are not that code."""
+    """
+    Stop if build 'wt' is used after the OTP sources changed: its classes are not that code. Or
+    after its classes were removed: the checkout of another commit clears them (a git hook).
+    """
     if build != WORKTREE_BUILD:
         return
     meta = build_meta(build)
     if meta and meta.get("sources") != source_state():
         die("The OTP sources changed after build 'wt' was compiled. Run: rig.py build [--fast]")
+    classpath = build_dir(build) / "otp-classpath.txt"
+    entries = [Path(e) for e in classpath.read_text(encoding="utf-8").split() if e.startswith(win(REPO))]
+    if any(not e.exists() or (e.is_dir() and not any(e.iterdir())) for e in entries):
+        die("Classes of build 'wt' are gone (the checkout of another commit removes them). Run: rig.py build")
 
 
 def serialization_version():
