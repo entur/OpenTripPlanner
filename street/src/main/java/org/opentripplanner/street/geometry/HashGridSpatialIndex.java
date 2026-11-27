@@ -9,6 +9,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -103,7 +104,8 @@ public class HashGridSpatialIndex<T> implements Serializable {
   }
 
   public final List<T> query(Envelope envelope) {
-    final Set<T> ret = new HashSet<>(1024);
+    // Insertion ordered: the order of the result must not depend on identity hash codes
+    final Set<T> ret = new LinkedHashSet<>(1024);
     visit(envelope, false, (bin, mapKey) -> {
       ret.addAll(bin);
       return false;

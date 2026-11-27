@@ -5,6 +5,7 @@ import static java.util.Objects.requireNonNull;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -244,7 +245,7 @@ public class StreetNearbyStopFinder implements NearbyStopFinder {
       .filter(TransitStopVertex.class::isInstance)
       .map(TransitStopVertex.class::cast)
       .filter(v -> !ignoreStops.contains(v.getId()))
-      .collect(Collectors.toSet());
+      .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   public static class Builder {

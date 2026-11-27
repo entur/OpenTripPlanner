@@ -2,8 +2,10 @@ package org.opentripplanner.street.linking;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -358,7 +360,7 @@ public class VertexLinker {
       .stream()
       .map(ce -> snapAndLink(vertex, ce.edge(), xscale, scope, direction, tempEdges, linkedAreas))
       .filter(Objects::nonNull)
-      .collect(Collectors.toSet());
+      .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 
   /**
@@ -381,7 +383,7 @@ public class VertexLinker {
     // other half lost. It seems like this was based on some incorrect premises about floating point calculations
     // being non-deterministic.
 
-    Set<CandidateEdge> closestEdges = new HashSet<>();
+    Set<CandidateEdge> closestEdges = new LinkedHashSet<>();
     for (TraverseMode mode : traverseModeSet.getModes()) {
       TraverseModeSet modeSet = new TraverseModeSet(mode);
       // There is at least one appropriate edge within range.
@@ -413,7 +415,7 @@ public class VertexLinker {
         candidateEdgesForMode
           .stream()
           .filter(ce -> ce.squaredDistanceDegreesLat() <= bandSquared)
-          .collect(Collectors.toSet())
+          .collect(Collectors.toCollection(LinkedHashSet::new))
       );
     }
     return closestEdges;
@@ -628,6 +630,16 @@ public class VertexLinker {
   }
 
   /**
+   * Nearest first; the label breaks ties, so the order does not depend on the identity hash codes
+   * of a set of vertices.
+   */
+  private Comparator<Vertex> byDistanceThenLabel(Vertex from) {
+    return Comparator.<Vertex>comparingDouble(v -> distSquared(v, from)).thenComparing(
+      Vertex::getLabelString
+    );
+  }
+
+  /**
    * Inaccurate but fast distance estimate for sorting
    */
   private double distSquared(Vertex a, Vertex b) {
@@ -659,21 +671,17 @@ public class VertexLinker {
       // heuristics to ensure reasonable computation time
       // The more complex the area polygon is, the less visibility connections should be tried
       var areaComplexity = polygon.getNumPoints();
-      var totalCount = visibilityVertices.size();
       // take min. 6 closest visibility points
       var appliedCount = (long) Math.max(
         6,
         Math.floor((2 * maxAreaNodes * maxAreaNodes) / areaComplexity)
       );
-      if (appliedCount < totalCount) {
-        visibilityVertices = visibilityVertices
-          .stream()
-          .sorted((v1, v2) ->
-            Double.compare(distSquared(v1, newVertex), distSquared(v2, newVertex))
-          )
-          .limit(appliedCount)
-          .collect(Collectors.toSet());
-      }
+      // Always sorted: the vertices kept and their order must not depend on the set order
+      visibilityVertices = visibilityVertices
+        .stream()
+        .sorted(byDistanceThenLabel(newVertex))
+        .limit(appliedCount)
+        .collect(Collectors.toCollection(LinkedHashSet::new));
     }
     for (IntersectionVertex v : visibilityVertices) {
       if (addVisibilityEdges(newVertex, v, area, scope, tempEdges, false)) {
@@ -689,15 +697,17 @@ public class VertexLinker {
           .visibilityVertices()
           .stream()
           .filter(v -> distSquared(v, newVertex) >= DUPLICATE_NODE_EPSILON_DEGREES_SQUARED)
-          .sorted((v1, v2) ->
-            Double.compare(distSquared(v1, newVertex), distSquared(v2, newVertex))
-          )
+          .sorted(byDistanceThenLabel(newVertex))
           .findFirst();
         if (!nearest.isPresent()) {
           // This can happen when all (probably the single one) visibility points are very close
           // to the linked vertex. Such situation can arise in boarding location linking which skips
           // the snapping logic of normal linking and calls addPermanentAreaVertex directly
-          nearest = areaGroup.visibilityVertices().stream().findFirst();
+          nearest = areaGroup
+            .visibilityVertices()
+            .stream()
+            .sorted(byDistanceThenLabel(newVertex))
+            .findFirst();
         }
         if (nearest.isPresent()) {
           return addVisibilityEdges(newVertex, nearest.get(), area, scope, tempEdges, true);

@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -271,7 +271,7 @@ public class LinkingContextFactory {
       .distinct()
       .toList();
 
-    var results = new HashSet<Vertex>();
+    var results = new LinkedHashSet<Vertex>();
     if (location.stopId() != null) {
       if (!modes.stream().allMatch(TraverseMode::isDrivingIsh)) {
         results.addAll(getStreetVerticesForStop(location));
@@ -316,7 +316,10 @@ public class LinkingContextFactory {
     // in the regular case you want to resolve a (multi-modal) station into its child stops
     var childVertices = findStopOrChildStopVertices(location.stopId());
     if (!childVertices.isEmpty()) {
-      return childVertices.stream().map(Vertex.class::cast).collect(Collectors.toUnmodifiableSet());
+      return childVertices
+        .stream()
+        .map(Vertex.class::cast)
+        .collect(Collectors.toCollection(LinkedHashSet::new));
     }
     return Set.of();
   }
@@ -430,6 +433,6 @@ public class LinkingContextFactory {
       .findStopOrChildIds(stopId)
       .stream()
       .flatMap(id -> graph.findStopVertex(id).stream())
-      .collect(Collectors.toUnmodifiableSet());
+      .collect(Collectors.toCollection(LinkedHashSet::new));
   }
 }
