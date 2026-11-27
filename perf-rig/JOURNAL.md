@@ -300,3 +300,18 @@ Nothing.
   see their comparator alone. What the time and the instructions say is in the time check below.
   `ParetoComparator.compare` and `ParetoDominance` are still used by `RaptorViaLocation` and by
   tests.
+- time check: no significant difference in time, fewer instructions and cycles. `bench --quick
+  --levels raptor --forks 5 --counters --baseline step9 --candidate step10` (23:29 to 23:50), no
+  warning (fork B3 was run again, 0.54 cores of other processes): time B/A 0.982 (99 % interval
+  0.913 to 1.055). Of the CPU: instructions 0.9418 (0.9181 to 0.9661), cycles 0.9598 (0.9349 to
+  0.9855), cache misses 0.981 (0.937 to 1.027), branch mispredictions 0.997 (0.971 to 1.024).
+  Allocated bytes 1.000. The ops said 1.7 % less work, the processor executes 5.8 % fewer
+  instructions: the calls that are inlined now.
+  The time interval is wide because the cores ran at 3.7 to 3.8 GHz in the first seven forks and
+  at 4.0 GHz in the last three, as in the first time check of entry 9. Both benchmarks started
+  right after `accept`, which loads all cores for twenty minutes (the build and the OTP tests);
+  the benchmark of entry 9 that started after another benchmark ran at 4.1 to 4.25 GHz from the
+  first fork. So the laptop is hot after `accept` and runs slower until it has cooled, about a
+  quarter of an hour: a time benchmark should not start right after `accept` or a full build.
+  (The "Modern Standby" events in the system log are at about the same times, 23:41 to 23:43
+  here, but there was one in the benchmark at 4.1 to 4.25 GHz too, without any change.)
