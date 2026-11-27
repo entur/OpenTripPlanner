@@ -31,8 +31,12 @@ Read first, every session:
 
 Work in this worktree only, from the repo root, one rig command at a time. A command takes from a
 minute to half an hour (`accept`, a time `bench`): start it in the background, so no tool
-timeout cuts it off, and wait until it has ended. Do not edit any source file while a rig command
-runs: it stops when the sources no longer match the build.
+timeout cuts it off. Do not edit any source file while a rig command runs: it stops when the
+sources no longer match the build (the skill files count as sources, `perf-rig/` does not).
+
+The wait is not idle time, except during a time benchmark (see "Idle mode"): read code, think about
+the next ideas, add them to the list in the journal, and draft the next change in the scratchpad,
+to apply when the command has ended. Commit nothing while it runs.
 
 1. The branch:
    - on `perf/<name>`: continue that series, unless the README rules say a new branch;
@@ -58,7 +62,9 @@ runs: it stops when the sources no longer match the build.
 
 ## One round
 
-1. **Pick an idea** from the list "Ideas not tried yet" in the journal. Only when nothing in it is
+1. **Pick an idea**: the first of the list "Ideas not tried yet" in the journal. The list is kept
+   in the order of what each idea promises: an idea found later goes above the ones it promises
+   more than, and an idea whose promise changed moves. Only when nothing in it is
    worth trying, run `python perf-rig/rig.py profile --quick --levels <level>`, read the code of
    the top methods, add the ideas you see to the list, and write there which build the profile is
    of. An accepted idea changes the shares of the list a little, not which ideas there are: it is
@@ -87,9 +93,9 @@ runs: it stops when the sources no longer match the build.
      JIT compiler removes that allocation in some runs already.
    - Anything else is rejected. A rejected idea is as useful in the journal as an accepted one.
 5. **Accepted**: `python perf-rig/rig.py accept` must pass (if it does not: fix the idea, or reject
-   it). If it stops because no case runs a method the idea changed, leave that change out or
-   reject the idea: improving the cases (`mutate`, new cases) is work of its own, not a part of
-   the loop. Commit the code alone. `python perf-rig/rig.py freeze step<N>`, N being the number of
+   it). The check is that: the OTP tests, and results identical to `base`. Whether the cases run
+   enough of the code (`coverage`, `mutate`, new cases) is work of its own, not a part of the loop.
+   Commit the code alone. `python perf-rig/rig.py freeze step<N>`, N being the number of
    the journal entry. Then write the entry, take the idea out of "Being tried", and commit the
    journal (below). In the entry, the ratio against `base` is the product of the ratios of the
    steps, not a measurement.

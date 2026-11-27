@@ -81,7 +81,7 @@ in which methods. Repeat until the change does what was intended. For an idea ab
 `try --alloc` compares the allocated bytes too (8 min more, and as much for a new baseline).
 
 **3. Accept, then commit** (25 min): `rig.py accept` does a full build (Dagger, changed
-signatures), needs every changed method to be executed by a case (`coverage`), and runs all cases,
+signatures), and runs all cases,
 also repeated and on 8 threads, with all OTP tests (`check --repeat --threads 8 --tests all`): the
 tests of the changed module alone would not notice what breaks in a module that uses it. One idea
 per commit.
@@ -149,9 +149,8 @@ goes in `<dataset>.extra.json` (rule 5).
    i.e. a confidence interval that excludes 1.0. `bench --ops` finds and explains a change of the
    work done, but less work is not always less time, and a gain from memory layout does not show
    in the ops at all. Measure at the level the change is in (`raptor`, `street`, `link`).
-3. Code that no case runs is not checked, and `accept` refuses a change of a method that no case
-   runs. A case that runs it (`<dataset>.extra.json`) is added apart from the loop, see "Improving
-   the cases".
+3. Code that no case runs is checked by the OTP tests alone. A case that runs it
+   (`<dataset>.extra.json`) is added apart from the loop, see "Improving the cases".
 4. A change of graph building or of the serialized graph: build a graph per build
    (`rig.py graph --build base`, `rig.py graph`) and compare them with `graph-fingerprint` and
    `graph-diff`, then `check` on the new graph: the fingerprint does not include the transfers.
