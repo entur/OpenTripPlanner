@@ -25,51 +25,96 @@ they are.
 
 ## Ideas not tried yet
 
-From the raptor profile of build `step2` (oslo, `profile --quick --levels raptor --top 60`). A
-percentage is the share of the ops, unless it says time.
+From the raptor profiles of build `step2` and of build `step8` (oslo, `profile --quick --levels
+raptor --top 60`, the last one is `profile/20261127-200513-wt`). A percentage is the share of the
+ops, unless it says time; the shares are of step8 where they were measured again. The order is
+what each idea promises in time, not in ops: since entry 8 the ops are known to be a poor guide
+where code is shared between uses (calls that are not inlined) and where branches are hard to
+predict.
 
-- raptor, memory: create a stop arrival only when it is accepted. `transitToStop` and
-  `transferToStop` of `McRangeRaptorWorkerState` create an arrival for every candidate (31 % and
-  22 % of the allocated bytes) and keep it in a list until the commit, where most are rejected.
-  Keep a candidate as values (ride or from-arrival and transfer, stop, arrival time, c1) and let
-  the heuristic check and `StopArrivalParetoSet.add` work on the values; the object is created
-  when the set accepts it, or when a listener or the debugger needs a rejected one. The same
-  checks in the same order with the same values, so the results are identical by construction.
-  Try with `--alloc`. Draft: `../perf-rig-data/drafts/create-stop-arrival-when-accepted.md`.
+- raptor, `HeuristicsProvider` and `DestinationArrivalPaths.qualify`, the destination pruning of
+  every candidate: 12 % of the time (`HeuristicsProvider.get` 3.0 %, `ParetoSet.leftDominanceExist`
+  4.1 %, `ParetoSet.qualify` 2.0 %, `ParetoComparator.compare` 1.9 %, the comparator 1.1 %) and
+  13 % of the ops. Two changes, each an idea of its own:
+  - `HeuristicsProvider.get` reads `stops[stop]` and then the `HeuristicAtStop` object: two
+    reads from memory that depend on each other, for every candidate. Keep the three values
+    (min travel duration, min number of transfers, min cost) of a stop in one `int[]`
+    (`needs time`).
+  - The destination set is a generic `ParetoSet`: `qualify` calls the comparator through
+    `ParetoComparator.compare`, which every kind of set shares, so it is not inlined (as the
+    stop arrivals before entry 8). A check of its own for the destination arrivals, with the
+    criteria of the probe as values. Decide it with `--counters` (instructions), not the ops.
+- raptor, `TripScheduleBoardSearch`: the linear scan after the binary search is 4.2 % of the ops
+  and 8.9 % of the time, `TripPatternForDates.departureTime` 3.1 %, the binary search 2.0 % of the
+  time. Where the departures at every stop are in the order of the trips (to be computed when
+  `TripPatternForDates` fills its arrays, as a flag of `TripSearchTimetable`), the first trip at
+  or after a time is found by a binary search to the end with the same result: the linear scan
+  finds the lowest index of the run of trips that depart late enough, which is the first such
+  trip when the departures are sorted. Only for the unbounded search: with a trip index bound
+  (the standard search, already on a trip) the scan is one or two steps. Same for
+  `TripScheduleAlightSearch` with the arrivals. Caution: the ops will say 6 % less, but a binary
+  search has a branch that is hard to predict in every step and the scan has one; the threshold
+  of 50 was tuned on time. Try a binary search without a branch (`base = time < t ? base + half :
+  base`), and decide on the cycles and the branch mispredictions of `--counters`.
+- raptor, the order of the two checks of a candidate (after "create a stop arrival only when it
+  is accepted"): the heuristic check runs for all 62 M candidates and rejects 37 %, the set of
+  the stop then rejects 84 % of the rest with a far cheaper check. The set first would save most
+  of the 12 % of the destination pruning. Not identical by construction: a rejection updates
+  `goodElement` in the set it happens in, and a set with a listener (via stops) gets an event
+  for a rejected arrival, so the sets with a listener must keep the order, and the rest needs
+  the argument that `goodElement` never changes a result.
 - raptor, `ParetoSet.add` and `qualify`: branch on the two `leftDominanceExist` results instead of
-  `ParetoComparator.compare` (2.7 %), `ParetoDominance.of` (1.4 %) and a switch on the enum.
-- raptor, `TripScheduleBoardSearch`: the linear scan after the binary search is 3.8 %, and
-  `TripPatternForDates.departureTime` 2.8 %. A binary search to the end gives another trip where
-  trips overtake each other, so it needs to know that the departures at the stop are sorted.
-- raptor, `BitSet.get` with `checkInvariants` and `wordIndex` is still 3.8 %: the boarding and
+  `ParetoComparator.compare` (1.0 %), `ParetoDominance.of` and a switch on the enum. The stop
+  arrivals no longer use it (entry 8); left are the pattern rides and the destination arrivals.
+- raptor, `BitSet.get` with `checkInvariants` and `wordIndex` is 4.2 %: the boarding and
   alighting checks of `TripPatternForDates` and the reached stops of the standard search.
-- raptor, memory (`needs time`): `TripScheduleAlightSearch` (the reverse heuristic search) has 7 %
-  of the time and little of the ops: the departure times of large patterns are read from memory.
+- raptor, "is the stop reached in the previous round" for every stop of every route visited:
+  `McStopArrivals.hasArrivalsAfterMarker` 1.0 %, `StopArrivalParetoSet.hasElementsAfterMarker`
+  0.5 %, `McRangeRaptorWorkerState.isStopReachedInPreviousRound` 0.4 %; it reads the set object
+  of the stop from memory. A bit set of the stops with arrivals after the marker answers it
+  without the set (`touchedStops` is such a set, but it is cleared at another moment).
+- raptor, memory (`needs time`): `TripScheduleAlightSearch` (the reverse heuristic search) has
+  8.4 % of the time and 0.35 % of the ops: the arrival times of every pattern of the network are
+  read from memory that is not in the cache. No change is designed yet.
 - raptor, memory: `TripPatternForDates.getTripSchedule` allocates a `TripScheduleWithOffset` for
-  every boarding, 17 % of the allocated bytes. A form that shares nothing between threads:
+  every boarding, 15 % of the allocated bytes. A form that shares nothing between threads:
   `TripScheduleBoardSearch` (and `TripScheduleAlightSearch`), which is created for each visit of a
   route, keeps the last schedule it created with its trip index, and returns it again when the next
   search finds the same trip (several arrivals at a stop board the same trip). Try with `--alloc`;
   the results stay identical if no code compares two schedules with `==`.
+- raptor, memory: `TransitGroupPriorityRideFactory.createPatternRide` is 14 % of the allocated
+  bytes: a ride is created for every boarding and then offered to the pareto set of the rides.
+  Create it when the set accepts it, as for the stop arrivals.
 - raptor, memory (`needs time`): `MultiCriteriaRoutingStrategy.alightOnlyRegularTransferExist` has
-  8 % of the time and 1 % of the ops. For every ride at every stop it reads
+  10 % of the time and 1.2 % of the ops. For every ride at every stop it reads
   `TripPatternForDates.arrivalTimes[stopPos * nTrips + trip]`: the times of a trip are `nTrips`
   ints apart, a new cache line for each stop. No change is designed yet: an array by trip then
   stop makes the alighting sequential and the trip search at a stop strided.
-- raptor, memory: the samples of `IntIterators.intIncIterator` (4.4 % of the time) are most likely
+- raptor, memory: the samples of `IntIterators.intIncIterator` (5.0 % of the time) are most likely
   the first reads of a route in `routeTransit`: `TripPatternForDates`, its `RoutingTripPattern`
   (stop indexes, slack index), the two `BitSet`s with their `long[]` and the time arrays are ten
   cache lines apart for each visit of a route. Fewer objects for what a visit reads first.
 - raptor, memory: `RaptorRoutingRequestTransitData.routeIndexIterator` allocates a `BitSet` of all
-  patterns in every round, and `patternStopIterator` an iterator for every pattern
-  (`IntIterators.intIncIterator` has 4.4 % of the time, 1.4 % of the allocated bytes).
-- raptor, `MinTravelDurationRoutingStrategy.alightOnlyRegularTransferExist` (4.2 % of the time)
-  and `StdTransferEarlyPruning.updateArrival` (`IntIntHashMap.getOrDefault`, 1.3 % of the time):
-  the standard (heuristic) searches.
+  patterns in every round (1.6 % of the time), and `patternStopIterator` an iterator for every
+  pattern (1.6 % of the allocated bytes).
+- raptor, `MinTravelDurationRoutingStrategy.alightOnlyRegularTransferExist` (4.8 % of the time)
+  and `StdTransferEarlyPruning.updateArrival` (`IntIntHashMap.getOrDefault`, 2.2 % of the time):
+  the standard (heuristic) searches. The map has the egress stops only; a `BitSet` of the egress
+  stops, or an `int[]` of all stops, answers "not an egress stop" without hashing.
 
 ## Being tried
 
-Nothing.
+- raptor, memory: create a stop arrival only when it is accepted. `transitToStop` and
+  `transferToStop` of `McRangeRaptorWorkerState` create an arrival for every candidate (31 % and
+  21 % of the allocated bytes) and keep it in a list until the commit. Measured with the ops of
+  the profile of step8: 62 M arrivals are created (34 M transit, 29 M transfer), the heuristic
+  check rejects 23 M, the set of the stop gets 39 M and accepts 6.3 M: nine of ten are created
+  for nothing. Keep a candidate as values (ride or from-arrival and transfer, stop, arrival
+  time, c1) and let the heuristic check and `StopArrivalParetoSet.add` work on the values; the
+  object is created when the set accepts it, or when a listener or the debugger needs a rejected
+  one. The same checks in the same order with the same values, so the results are identical by
+  construction. Tried with `try --alloc` against step8. Draft:
+  `../perf-rig-data/drafts/create-stop-arrival-when-accepted.md`.
 
 ## Tried
 
