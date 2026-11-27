@@ -95,8 +95,8 @@ per commit.
 the results are always checked against the record of `base`. Each benchmark adds a line per level
 to `bench/history.tsv`.
 
-**6. The time check**, a check of its own and not a part of a series: when it is asked for, the ops
-say the total is several percent, and the machine does nothing else.
+**6. The time check**: only when the machine does nothing else, which is the idle mode of the
+skill, or when it is asked for.
 
 ```bash
 python perf-rig/rig.py bench --quick --levels raptor --forks 5 --counters   # the levels the steps changed; half an hour
@@ -123,7 +123,8 @@ comparison of `try`: it needs `B faster`.
 **A series of experiments** (the skill `perf-loop` in `.claude/skills` runs the loop this way):
 
 - `perf-rig/JOURNAL.md` on branch `perf-rig` has every idea that was tried on any branch, accepted
-  or not, and the ideas not tried yet. Before working on a branch, get it:
+  or not, the ideas not tried yet, and the idea that is being tried: work can be interrupted at
+  any time, and the next session goes on from the journal. Before working on a branch, get it:
   `git checkout perf-rig -- perf-rig/JOURNAL.md`, and read it before picking an idea.
 - The result of an idea is written there, also when the idea is rejected and its code is thrown
   away, and committed with `rig.py journal "<message>"`: on the branch worked on and, without a
@@ -131,7 +132,7 @@ comparison of `try`: it needs `B faster`.
 - A series is a branch `perf/<name>` off `perf-rig`, with one commit for each accepted idea. Stay
   on it: the gains add up, and the profile after a gain shows the next one.
 - An idea is accepted on the work done (ops), which a busy machine does not change. The time is
-  not measured in a series: that is the time check (6).
+  measured only while nobody uses the machine: that is the time check (6).
 - Start a new branch off `perf-rig` for another design of code the series already changed (the
   two are then compared with `base`), for a rewrite that later ideas should not build on yet, or
   when several ideas in a row gave nothing.
