@@ -89,6 +89,9 @@ def run_logged(cmd, logfile, cwd=REPO, echo=None, high_priority=False):
 # The commands that only read results. All other commands build or run OTP, one at a time: two
 # would share the build directories and disturb each other's measurements.
 READ_ONLY = {"builds", "diff", "report", "graph-diff"}
+# Commands that run while another command holds the lock: they touch neither the OTP sources nor
+# the builds; 'journal' commits the journal, which is not an OTP source
+UNLOCKED = READ_ONLY | {"journal"}
 
 
 def acquire_lock(command, wait):
@@ -2249,7 +2252,7 @@ def main():
 
     args = p.parse_args()
     args.heap = args.heap or dataset_settings(args.dataset).get("heap", "6g")
-    if args.command in READ_ONLY or os.environ.get("PERF_RIG_LOCKED"):
+    if args.command in UNLOCKED or os.environ.get("PERF_RIG_LOCKED"):
         args.func(args)
         return
     lock = acquire_lock(args.command, args.wait)

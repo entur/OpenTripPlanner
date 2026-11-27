@@ -106,8 +106,9 @@ The benchmark compares `base` with the working tree. Without `--quick` a fork ta
 - A warning about other processes or uneven forks: no result, run it again.
 - `no significant difference` with the ops ratio inside the interval: time can not show a gain
   that small. More forks make the interval narrower.
-- `B slower`, or an interval that lies above the ops ratio: a step costs time that the ops do not
-  show. Compare the steps one by one (`bench --quick --forks 5 --baseline step1 --candidate step2`).
+- `B slower`, or an interval that lies above the ops ratio: a step may cost time that the ops do
+  not show. One verdict can be noise: run the benchmark again, and only if it says so again,
+  compare the steps one by one (`bench --quick --forks 5 --baseline step1 --candidate step2`).
 - The counters say why: the instructions follow the ops, and the cycles the time. Cycles that
   change more than the instructions are waiting for memory (cache misses) or wrong guesses of
   branches.
@@ -213,7 +214,8 @@ goes in `<dataset>.extra.json` (rule 4).
 - `rig.py test [--scope changed|all]` runs the OTP tests (`changed`: the modules changed since the
   commit of build `base`, with their dependencies) and writes `tests/<name>.json`: every test must
   pass. A test that fails is run again twice, and fails the run only if it fails every time. `check --tests none|changed|all` chooses the OTP tests of a check.
-- `rig.py journal MESSAGE` commits `perf-rig/JOURNAL.md` on the current branch and on `perf-rig`.
+- `rig.py journal MESSAGE` commits `perf-rig/JOURNAL.md` on the current branch and on `perf-rig`,
+  also while another command runs.
   It stops if the file lacks an entry that `perf-rig` has, so an entry of another branch is not
   lost.
 - `rig.py selftest [--fast] [--quick]` applies each patch in `perf-rig/mutations`, builds, checks

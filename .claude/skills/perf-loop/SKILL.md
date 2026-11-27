@@ -37,15 +37,24 @@ timeout cuts it off. Do not edit any source file while a rig command runs: it st
 sources no longer match the build (the skill files count as sources, `perf-rig/` does not).
 
 The wait is not idle time, except during a time benchmark (see "Idle mode"): read code, think about
-the next ideas, add them to the list in the journal, and draft the next change in the scratchpad,
-to apply when the command has ended. Commit nothing while it runs.
+the next ideas, and write them so that another agent can go on from them if this session ends:
+
+- an idea goes into the list in the journal at once, with where it is, what to change, and why
+  the results stay identical; commit the journal (`rig.py journal`, which runs while another
+  command runs);
+- a drafted change goes into `../perf-rig-data/drafts/<the idea>.md` (the files, the code, what is
+  left to do), which the idea in the list names. The scratchpad of a session is gone with it.
+
+Apply a draft only when the command has ended.
 
 1. The branch:
    - on `perf/<name>`: continue that series, unless the README rules say a new branch;
    - on `perf-rig`: start a series with `git switch -c perf/<level>-<n>`, n being the first number
      that no `perf/<level>-` branch has.
 
-   Then get the whole journal: `git checkout perf-rig -- perf-rig/JOURNAL.md`.
+   Then get the whole journal: if `perf-rig/JOURNAL.md` has changes that are not committed (an
+   earlier session wrote them), commit them first (`rig.py journal "perf-rig: journal: notes"`),
+   then `git checkout perf-rig -- perf-rig/JOURNAL.md`. Read the drafts the list names.
 2. What an interrupted session left. The journal has the idea that was being tried, if any, under
    "Being tried":
    - `git status` is not clean and an idea is being tried: the changes are that idea's. Go on with
@@ -172,15 +181,19 @@ What the idle mode does, in this order, and then again from the top:
 
 1. **The steps that have no time check**: a time benchmark of the working tree against `base`.
    A time check whose report has the WARNING is none. Write the result as a journal entry
-   (`rig.py journal "perf-rig: journal: <N> time check"`). If the verdict is `B slower`, compare
-   the steps one by one, `git revert` the one that is slower, and write why.
+   (`rig.py journal "perf-rig: journal: <N> time check"`). If the verdict is `B slower`, run the
+   benchmark again: one verdict can be noise. Only when the second also says `B slower`, compare
+   the steps one by one (each `B slower` confirmed by a second benchmark as well), `git revert`
+   the one that is slower, and write why.
 2. **The ideas marked `needs time`**: one round each as in "One round", but with a full
    `rig.py build`, `rig.py check --quick`, and a time benchmark against the last step in place of
    `try`. Accept on the verdict `B faster`; the counters say why (fewer cache misses and cycles
-   for the same instructions).
+   for the same instructions). `no significant difference` does not reject the idea: write the
+   interval in the list, and keep it `needs time` for a benchmark with more forks.
 3. **Rounds as in the normal mode**, with a time benchmark against the step before after every
    accepted idea, written in its journal entry. An idea that was accepted on the ops stays
-   accepted if the time shows no difference; `B slower` takes it out again (`git revert`).
+   accepted if the time shows no difference; only `B slower` in two benchmarks in a row takes it
+   out again (`git revert`).
 
 Windows does not go to sleep while a rig command runs, but it does if the lid is closed.
 
