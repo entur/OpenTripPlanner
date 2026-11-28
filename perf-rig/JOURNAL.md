@@ -539,3 +539,9 @@ Nothing.
   constructor `null` for the two bit sets, which were read only when a flag was asked for. The
   helper gives the bit sets of its pattern now, as `RaptorRoutingRequestTransitDataCreator`
   does; no assertion is changed.
+- time check: no significant difference in time, fewer cache misses. `bench --quick --levels
+  raptor --forks 5 --counters --baseline step18 --candidate step20` (08:37 to 08:58), no warning
+  (forks B1 and B2 were run again), ten minutes after `accept`: time B/A 0.975 (99 % interval
+  0.941 to 1.011). Of the CPU: instructions 0.991 (0.950 to 1.034), cycles 0.9833 (0.9422 to 1.0263),
+  cache misses 0.922 (0.870 to 0.976), branch mispredictions 1.010 (0.968 to 1.054). Allocated
+  bytes 1.000.
