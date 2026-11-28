@@ -27,7 +27,8 @@ they are.
 
 State of the series `perf/raptor-1` on 2026-11-28: the steps 1, 2, 6, 8, 9, 10, 11, 13, 16, 17,
 18 and 20 are accepted; step13 against base is 25.8 % faster for a search and 36 % in total
-time (entry 15), and 16 to 20 add fewer cache misses. The last build is `step20`.
+time (entry 15), and step20 against base is 30.1 % faster for a search and 39.5 % in total time
+(entry 21). The last build is `step20`.
 
 The numbers below are from the raptor profile of build `step13` (oslo, `profile --quick --levels
 raptor --top 60`, `profile/20261128-024922-wt`); the steps 16 to 18 came after it, so profile
@@ -545,3 +546,17 @@ Nothing.
   0.941 to 1.011). Of the CPU: instructions 0.991 (0.950 to 1.034), cycles 0.9833 (0.9422 to 1.0263),
   cache misses 0.922 (0.870 to 0.976), branch mispredictions 1.010 (0.968 to 1.054). Allocated
   bytes 1.000.
+
+### 21. time check: the whole series, step20 against base
+- where: raptor, step20 (71b67723d2) against base, `bench --quick --levels raptor --forks 5
+  --counters --baseline base --candidate step20` (08:58 to 09:18)
+- result: `B faster (30.1%)`: time B/A 0.699 (99 % interval 0.688 to 0.711), B/A of the total
+  time 0.605 (8.18 s to 4.95 s for the 134 searches). Of the CPU: instructions 0.6708 (0.6502 to
+  0.6922), cycles 0.5907 (0.5694 to 0.6128), cache misses 0.3354 (0.3246 to 0.3465), branch
+  mispredictions 1.036 (1.003 to 1.071). Allocated bytes 0.471. Results identical.
+- note: no warning, other processes used 0.14 to 0.22 cores. The steps are 1, 2, 6, 8, 9, 10,
+  11, 13, 16, 17, 18 and 20. The ops of the series are 0.7585 (the product of the steps). Since
+  entry 15 (step13: 0.742, total 0.640) the steps 16 to 20 added 4 points, nearly all of it
+  cache misses (0.449 to 0.335 of those of base). The searches that gained least are
+  `relax-priority-005` (0.92) and the arrive-by searches (0.82); the paging searches gained most
+  (0.47 to 0.53).
