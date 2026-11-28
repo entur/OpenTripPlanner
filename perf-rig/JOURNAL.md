@@ -424,3 +424,16 @@ Nothing.
 - note: what a `needs time` idea promises should be checked against the counters of a profile
   first, if there is a way: this one cost fifty minutes. A count of the stop positions that have
   a set, and of the sets with new arrivals, would have told.
+
+### 15. time check: the whole series, step13 against base
+- where: raptor, step13 (a2b8ada106) against base, `bench --quick --levels raptor --forks 5
+  --counters --baseline base --candidate step13` (03:34 to 03:56)
+- result: `B faster (25.8%)`: time B/A 0.742 (99 % interval 0.732 to 0.752), B/A of the total
+  time 0.640 (8.23 s to 5.27 s for the 134 searches). Of the CPU: instructions 0.6689 (0.6536 to
+  0.6846), cycles 0.6174 (0.5972 to 0.6382), cache misses 0.4485 (0.4234 to 0.4751), branch
+  mispredictions 1.004 (0.982 to 1.026). Allocated bytes 0.582. Results identical.
+- note: no warning, other processes used 0.13 to 0.25 cores, the cores ran at 3.9 to 4.25 GHz.
+  The steps are 1, 2, 6, 8, 9, 10, 11 and 13. The searches that gained least are the arrive-by
+  searches (0.86 to 0.88) and the short ones; the long searches and the paging searches gained
+  most (0.53 to 0.57). The ops of the series are 0.7916 (the product of the steps, step13 has
+  the ops of step11): the ops show less than half of what the time shows.
