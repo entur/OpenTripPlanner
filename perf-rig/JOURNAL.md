@@ -38,6 +38,13 @@ predict.
   only when that is fixed in the baseline (a decision of its own, it changes results): the patch
   is `../perf-rig-data/drafts/stop-set-before-destination-pruning.patch`, and it needs
   `--dataset norway check` besides `accept`.
+- raptor, blocked for the same reason: reject a candidate when it is found, not when it is
+  committed. `transitToStop` and `transferToStop` could ask the set of the stop
+  (`StopArrivalParetoSet.positionOf` of the patch of entry 12) before they add a candidate to the
+  `StopArrivalCandidates`: an arrival the set rejects now is rejected at the commit too, since a
+  set only gets better. Four of five candidates would never be stored, about 3 % of the
+  instructions. It holds only if the dominance is transitive, as the idea of entry 12 does, and
+  not at stops with a listener.
 - raptor, `HeuristicsProvider` and `DestinationArrivalPaths.qualify`, the destination pruning of
   every candidate: 12 % of the time (`HeuristicsProvider.get` 3.0 %, `ParetoSet.leftDominanceExist`
   4.1 %, `ParetoSet.qualify` 2.0 %, `ParetoComparator.compare` 1.9 %, the comparator 1.1 %) and
