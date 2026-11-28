@@ -327,6 +327,12 @@ predict.
   one or two steps). The alight search of the reverse searches is the mirror image.
   The flags cost two comparisons for each stop time when the transit data of a request is
   made, which is not in the raptor level; `e2e` has not been measured.
-  Open, for the time check: a binary search has a branch that is hard to predict in every step,
-  the stepping had one for a search. If the cycles or the branch mispredictions are worse, try
-  the search without a branch, or step through the last 8 trips.
+  A binary search has a branch that is hard to predict in every step, where the stepping had
+  one for a search; the time check shows no more branch mispredictions for it.
+- time check: `B faster (3.7%)` against step10, `bench --quick --levels raptor --forks 5
+  --counters --baseline step10 --candidate step11` (00:45 to 01:07), no warning (forks B0 and B1
+  were run again, 0.53 and 0.84 cores of other processes): time B/A 0.963 (99 % interval 0.932
+  to 0.996), B/A of the total time 0.971. Of the CPU: instructions 0.9726 (0.9469 to 0.9991),
+  cycles 0.9720 (0.9308 to 1.0150), cache misses 0.942 (0.869 to 1.021), branch mispredictions
+  1.0095 (0.9814 to 1.0385). Allocated bytes 1.010. The benchmark started a quarter of an hour
+  after `accept` had ended, and the cores ran at 4.0 to 4.3 GHz in all ten forks.
