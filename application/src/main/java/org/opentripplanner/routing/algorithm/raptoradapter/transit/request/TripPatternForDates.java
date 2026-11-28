@@ -32,6 +32,14 @@ public class TripPatternForDates
 
   private static final int FIRST_STOP_POS_IN_PATTERN = 0;
 
+  /** A flag in {@link #stops}: boarding is possible at the stop position. */
+  private static final int BOARDING_POSSIBLE = 1 << 30;
+
+  /** A flag in {@link #stops}: alighting is possible at the stop position. */
+  private static final int ALIGHTING_POSSIBLE = 1 << 29;
+
+  private static final int STOP_INDEX_MASK = ALIGHTING_POSSIBLE - 1;
+
   private final RoutingTripPattern tripPattern;
 
   private final TripPatternForDate[] tripPatternForDates;
@@ -43,13 +51,20 @@ public class TripPatternForDates
   private final int numberOfStops;
 
   /**
-   * The stop index of each stop position, the slack index and the transit reluctance factor index
-   * of the trip pattern. They are read for every visit of the route in a search, so they are kept
-   * here: reading them from the trip pattern is one more object to fetch from memory.
+   * The stop index of each stop position, with the flags {@link #BOARDING_POSSIBLE} and
+   * {@link #ALIGHTING_POSSIBLE} in its highest bits. The flags are those of the trip pattern,
+   * potentially filtered by wheelchair accessibility. The three are read for every stop of every
+   * visit of the route in a search, so they are kept together: one read from memory, not three.
    */
-  private final int[] stopIndexes;
+  private final int[] stops;
 
+  /**
+   * The slack index and the transit reluctance factor index of the trip pattern. They are read for
+   * every visit of the route in a search, so they are kept here: reading them from the trip
+   * pattern is one more object to fetch from memory.
+   */
   private final int slackIndex;
+
   private final int transitReluctanceFactorIndex;
 
   private final boolean isFrequencyBased;
@@ -73,11 +88,6 @@ public class TripPatternForDates
 
   private final Accessibility[] wheelchairBoardings;
 
-  // bit arrays with boarding/alighting information for all stops on trip pattern,
-  // potentially filtered by wheelchair accessibility
-  private final BitSet boardingPossible;
-  private final BitSet alightingPossible;
-
   private final int priorityGroupId;
 
   TripPatternForDates(
@@ -91,8 +101,6 @@ public class TripPatternForDates
     this.tripPattern = tripPattern;
     this.tripPatternForDates = tripPatternForDates;
     this.offsets = offsets;
-    this.boardingPossible = boardingPossible;
-    this.alightingPossible = alightningPossible;
     this.priorityGroupId = priorityGroupId;
 
     int numberOfTripSchedules = 0;
@@ -110,9 +118,16 @@ public class TripPatternForDates
 
     final int nStops = tripPattern.numberOfStopsInPattern();
     this.numberOfStops = nStops;
-    this.stopIndexes = new int[nStops];
+    this.stops = new int[nStops];
     for (int s = 0; s < nStops; s++) {
-      this.stopIndexes[s] = tripPattern.stopIndex(s);
+      int stopIndex = tripPattern.stopIndex(s);
+      if ((stopIndex & ~STOP_INDEX_MASK) != 0) {
+        throw new IllegalArgumentException("The stop index is out of range: " + stopIndex);
+      }
+      this.stops[s] =
+        stopIndex |
+        (boardingPossible.get(s) ? BOARDING_POSSIBLE : 0) |
+        (alightningPossible.get(s) ? ALIGHTING_POSSIBLE : 0);
     }
     this.slackIndex = tripPattern.slackIndex();
     this.transitReluctanceFactorIndex = tripPattern.transitReluctanceFactorIndex();
@@ -197,17 +212,17 @@ public class TripPatternForDates
 
   @Override
   public int stopIndex(int stopPositionInPattern) {
-    return stopIndexes[stopPositionInPattern];
+    return stops[stopPositionInPattern] & STOP_INDEX_MASK;
   }
 
   @Override
   public boolean boardingPossibleAt(int stopPositionInPattern) {
-    return boardingPossible.get(stopPositionInPattern);
+    return (stops[stopPositionInPattern] & BOARDING_POSSIBLE) != 0;
   }
 
   @Override
   public boolean alightingPossibleAt(int stopPositionInPattern) {
-    return alightingPossible.get(stopPositionInPattern);
+    return (stops[stopPositionInPattern] & ALIGHTING_POSSIBLE) != 0;
   }
 
   @Override

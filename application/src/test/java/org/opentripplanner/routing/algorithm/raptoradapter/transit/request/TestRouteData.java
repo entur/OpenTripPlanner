@@ -71,8 +71,8 @@ public class TestRouteData {
         new TripPatternForDate(routingTripPattern, tripTimes, List.of(), DATE),
       },
       new int[] { OFFSET },
-      null,
-      null,
+      routingTripPattern.getBoardingPossible(),
+      routingTripPattern.getAlightingPossible(),
       0
     );
     int id = 0;
