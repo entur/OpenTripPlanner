@@ -25,13 +25,32 @@ they are.
 
 ## Ideas not tried yet
 
-From the raptor profiles of build `step2` and of build `step8` (oslo, `profile --quick --levels
-raptor --top 60`, the last one is `profile/20261127-200513-wt`). A percentage is the share of the
-ops, unless it says time; the shares are of step8 where they were measured again. The order is
-what each idea promises in time, not in ops: since entry 8 the ops are known to be a poor guide
-where code is shared between uses (calls that are not inlined) and where branches are hard to
-predict.
+From the raptor profile of build `step13` (oslo, `profile --quick --levels raptor --top 60`,
+`profile/20261128-024922-wt`), and what is left of the lists from the profiles of step2 and step8.
+A percentage is the share of the ops, unless it says time. The order is what each idea promises
+in time, not in ops: since entry 8 the ops are known to be a poor guide where code is shared
+between uses (calls that are not inlined) and for memory. In the profile of step13 the time is:
+the pareto sets of the stop arrivals 17 % (`compareC1Relaxed` 10.0 %, `StopArrivalParetoSet.add`
+4.8 %), the alighting of the two standard (heuristic) searches 12.7 %, the destination pruning
+11.5 % (`ParetoSet.qualify` 6.9 %, `HeuristicsProvider.get` 3.3 %), the alighting of the
+multi-criteria search 6.7 %, `IntIterators.intIncIterator` 6.0 % (the first reads of a route),
+`boardWithRegularTransfer` 5.8 %, the transfers 7.1 %, the trip search 4.9 %,
+`TripPatternForDates.getTripSchedule` 3.6 %, `ArrivalView.arrivedBy` 2.2 %. A pass over the
+cases visits 2.9 M routes and 110 M stop positions.
 
+- raptor, memory: what a visit of a route reads first is spread over five objects.
+  `TripPatternForDates.numberOfStopsInPattern()`, `slackIndex()` and `stopIndex(pos)` go to its
+  `RoutingTripPattern` (and from there to the `int[]` of the stop indexes). Keep the slack index
+  and a reference to the stop index array in `TripPatternForDates` (the number of stops is a
+  field since entry 13): one object less to read for each of the 2.9 M route visits, and 1.2 %
+  of the ops are the two `stopIndex` methods, half of which go. Identical by construction.
+- raptor, `MultiCriteriaRoutingStrategy.board`: `prevArrival.arrivedBy(ACCESS)` is an interface
+  call that is not inlined (2.2 % of the time, 13 M boardings). Only an access arrival has no
+  previous arrival, so `prevArrival.previous() == null && prevArrival.arrivedBy(ACCESS)` asks
+  the same and makes the call for access arrivals only. Ops 0.08 %: `needs time`.
+- raptor, `StdTransferEarlyPruning.updateArrival`: `IntIntHashMap.getOrDefault` for every
+  improved arrival of the standard searches, 1.8 % of the time. A `BitSet` of the egress stops
+  answers "not an egress stop" first.
 - raptor, blocked: ask the pareto set of the stop before the destination pruning (entry 12, ops
   0.9422). Rejected because a norway result changes, most likely since
   `GeneralizedCostRelaxFunction.relax` overflows `int` for costs above 21 hours. Try it again
@@ -64,11 +83,6 @@ predict.
     configuration, so the rig shows no gain of it; it is for production.
 - raptor, `BitSet.get` with `checkInvariants` and `wordIndex` is 4.2 %: the boarding and
   alighting checks of `TripPatternForDates` and the reached stops of the standard search.
-- raptor, "is the stop reached in the previous round" for every stop of every route visited:
-  `McStopArrivals.hasArrivalsAfterMarker` 1.0 %, `StopArrivalParetoSet.hasElementsAfterMarker`
-  0.5 %, `McRangeRaptorWorkerState.isStopReachedInPreviousRound` 0.4 %; it reads the set object
-  of the stop from memory. A bit set of the stops with arrivals after the marker answers it
-  without the set (`touchedStops` is such a set, but it is cleared at another moment).
 - raptor, memory (`needs time`): `TripScheduleAlightSearch` (the reverse heuristic search) has
   8.4 % of the time and 0.35 % of the ops: the arrival times of every pattern of the network are
   read from memory that is not in the cache. No change is designed yet.
@@ -95,7 +109,17 @@ predict.
 
 ## Being tried
 
-Nothing.
+- raptor, memory (`needs time`): "is the stop reached in the previous round" is asked for every
+  stop position of every route visited, 110 M times in a pass. In the multi-criteria search it
+  reads `arrivals[stop]` and then the set object of the stop (`hasElementsAfterMarker`), which is
+  somewhere in the heap. A set has elements after its marker only if its stop is in
+  `touchedStops`: an arrival that is accepted touches the stop, and the markers are set for
+  exactly the touched stops when the bit set is cleared. So `touchedStops.get(stop) &&
+  arrivals[stop].hasElementsAfterMarker()` is the same answer, and the set is read only for the
+  touched stops, which are read for boarding anyway. The bit set is 2 KB for oslo. Identical by
+  construction. More ops (`BitSet.get` is 28 bytecodes with its assertions): decided by a time
+  benchmark against step13.
+
 
 ## Tried
 
