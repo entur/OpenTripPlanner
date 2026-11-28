@@ -477,3 +477,8 @@ Nothing.
   rides, arrivals and paths can now share one schedule object for the same trip; nothing in
   Raptor or the routing compares schedules by identity (searched for it), and the schedule only
   caches what it looks up about its own trip.
+- time check: no significant difference in time, fewer cache misses. `bench --quick --levels
+  raptor --forks 5 --counters --baseline step17 --candidate step18` (06:36 to 06:53), no warning,
+  ten minutes after `accept`: time B/A 0.985 (99 % interval 0.956 to 1.016). Of the CPU:
+  instructions 0.9955 (0.968 to 1.024), cycles 0.986 (0.960 to 1.014), cache misses 0.901 (0.866
+  to 0.937), branch mispredictions 1.013 (0.980 to 1.046). Allocated bytes 0.814.
