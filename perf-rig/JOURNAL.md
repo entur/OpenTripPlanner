@@ -95,28 +95,7 @@ predict.
 
 ## Being tried
 
-- raptor, memory (`needs time`): keep the times of `TripPatternForDates` by trip, then stop
-  (`arrivalTimes[tripIndex * nStops + stopPos]`, now it is `[stopPos * nTrips + tripIndex]`).
-  `MultiCriteriaRoutingStrategy.alightOnlyRegularTransferExist` has 10 % of the time and 1.2 % of
-  the ops, the same method of the standard search 4.8 %: a ride reads the arrival time of its
-  trip at every stop it passes, and those are `nTrips` ints apart, a new cache line for each
-  stop. By trip they are next to each other, sixteen stops in a cache line. The times were kept
-  by stop for the stepping of the trip search, which read the trips at a stop one after the
-  other; since entry 11 that search is a binary search for nearly every pattern, and its probes
-  are far apart either way. By trip, the first probes of the binary search (the same trips for
-  every search of a visit of the route, whatever the stop) are in cache lines that the search at
-  the stop before has just read; by stop every stop has a row of its own. The patterns that are
-  not in trip order still step through up to 50 trips, now a cache line for each step: look at
-  the cases that get slower. Change: the index in the constructor (the trip before is `nStops`
-  elements before, for the flags of entry 11) and in `arrivalTime` and `departureTime`, with the
-  number of stops in a field. No ops change: needs `B faster`.
-  Tried with a full build, `check --quick` and a time benchmark against step11.
-  State 2026-11-28 02:30: the code is in the working tree (`TripPatternForDates` only). Full
-  build and `check --quick`: results identical. Time benchmark against step11 (02:06 to 02:28,
-  5 forks, `--counters`, no warning, a quarter of an hour after the build): `B faster (7.8%)`,
-  time B/A 0.922 (0.892 to 0.952), instructions 0.998, cycles 0.8863 (0.8590 to 0.9145), cache
-  misses 0.6385 (0.5860 to 0.6958). Accepted on that; `accept` is running, then commit, freeze
-  `step13` and entry 13.
+Nothing.
 
 ## Tried
 
@@ -391,3 +370,26 @@ predict.
   again. So for the accepted steps 8 to 11: every 4th norway case is identical (145 of them
   with this idea on top of step11, and `transit-069` with step11 itself); the other norway
   cases are not checked.
+
+### 13. accepted: the times of a pattern are kept by trip, then stop
+- where: raptor (the code is in `application`), `TripPatternForDates`
+- result: time raptor `B faster (7.8%)` against step11: B/A 0.922 (99 % interval 0.892 to 0.952),
+  B/A of the total time 0.898. Of the CPU: instructions 0.998 (0.975 to 1.021), cycles 0.8863
+  (0.8590 to 0.9145), cache misses 0.6385 (0.5860 to 0.6958), branch mispredictions 1.008 (0.987
+  to 1.030). Allocated bytes 1.000. The ops are the same (a memory layout). Results identical;
+  `accept`: 550 results identical, also repeated and on 8 threads, and all 9689 OTP tests pass
+- commit: a2b8ada106 on perf/raptor-1, build step13
+- note: tried as a `needs time` idea: full build, `check --quick`, then `bench --quick --levels
+  raptor --forks 5 --counters --baseline step11` (02:06 to 02:28), no warning, started a quarter
+  of an hour after the build; the cores ran at 3.9 to 4.2 GHz in all ten forks.
+  `arrivalTimes` and `departureTimes` were `[stopPos * nTrips + tripIndex]`, the trips at a stop
+  next to each other, which suited the stepping of the trip search. A ride reads the arrival of
+  its trip at every stop it passes: `nTrips` ints apart, a cache line for each stop. Now they
+  are `[tripIndex * nStops + stopPos]`: the stops of a trip are next to each other, and the
+  binary search of entry 11 (which made this possible: its probes are far apart either way)
+  reads the same trips at every stop of a route, so the cache lines of one stop serve the next.
+  A third of the cache misses of the raptor level are gone. The patterns that are not in trip
+  order still step through up to 50 trips, a cache line for each now; no case got slower by
+  more than 1 %.
+  Not tried: arrival and departure times of a trip interleaved in one array, so the departure
+  that the search finds is in the cache line of the next arrivals.
