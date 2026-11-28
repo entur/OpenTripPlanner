@@ -47,6 +47,12 @@ predict.
   the cases that get slower. Change: the index in the constructor (the trip before is `nStops`
   elements before, for the flags of entry 11) and in `arrivalTime` and `departureTime`, with the
   number of stops in a field. No ops change: needs `B faster`.
+- raptor, blocked: ask the pareto set of the stop before the destination pruning (entry 12, ops
+  0.9422). Rejected because a norway result changes, most likely since
+  `GeneralizedCostRelaxFunction.relax` overflows `int` for costs above 21 hours. Try it again
+  only when that is fixed in the baseline (a decision of its own, it changes results): the patch
+  is `../perf-rig-data/drafts/stop-set-before-destination-pruning.patch`, and it needs
+  `--dataset norway check` besides `accept`.
 - raptor, `HeuristicsProvider` and `DestinationArrivalPaths.qualify`, the destination pruning of
   every candidate: 12 % of the time (`HeuristicsProvider.get` 3.0 %, `ParetoSet.leftDominanceExist`
   4.1 %, `ParetoSet.qualify` 2.0 %, `ParetoComparator.compare` 1.9 %, the comparator 1.1 %) and
@@ -97,21 +103,7 @@ predict.
 
 ## Being tried
 
-- raptor, ask the pareto set of the stop before the destination pruning: the heuristic check
-  runs for all 62 M candidates of a pass and rejects 23 M (12 % of the time in the profile of
-  step8), the set of the stop then rejects 33 M of the other 39 M with a far cheaper check. A
-  candidate is accepted iff both pass, so the set can go first and the destination pruning is
-  asked only where the set would accept, right before the arrival is created. A set with a
-  listener (via, egress and debugged stops) keeps the order of today, because its listener gets
-  events for rejected arrivals. Not identical by construction but by an argument: what differs
-  is which probes update `goodElement` of the two sets, and that hint changes no result when the
-  dominance is transitive, which the shortcut in `ParetoSet` relies on already and which holds
-  for the relax function and the c2 dominance OTP uses. Draft with the design and the argument:
-  `../perf-rig-data/drafts/stop-set-before-destination-pruning.md`. Promises most of what is
-  listed here: about 8 % of the ops and of the time.
-  Tried with `try` against step11. The time check of step11 (against step10) is owed and runs
-  before the `try`, while the code of this idea is in the working tree: the laptop is hot after
-  the `accept` of step11, see the time check of entry 10.
+Nothing.
 
 ## Tried
 
@@ -346,3 +338,43 @@ predict.
   cycles 0.9720 (0.9308 to 1.0150), cache misses 0.942 (0.869 to 1.021), branch mispredictions
   1.0095 (0.9814 to 1.0385). Allocated bytes 1.010. The benchmark started a quarter of an hour
   after `accept` had ended, and the cores ran at 4.0 to 4.3 GHz in all ten forks.
+
+### 12. rejected: ask the pareto set of the stop before the destination pruning
+- where: raptor, `McStopArrivals.addStopArrival`, `StopArrivalParetoSet`, `StopArrivalCandidates`
+- result: ops raptor 0.9422 against step11, oslo results identical; `accept` passed (550 oslo
+  results identical, also repeated and on 8 threads, all 9695 OTP tests). But
+  `--dataset norway check --quick`: 1 of 161 raptor results differs, the api and routing results
+  are identical
+- why: it changes a recorded result. Norway case `transit-069` (Harstad to south of Oslo, 17 to
+  25 hours) returns 21 raptor paths, not 22: the path with 7 transfers and c1 4049768 of
+  iteration 52080 is gone. Build step11 gives the recorded result for the case, so it is this
+  idea.
+- note: the idea was to ask the set of the stop first (`positionOf`, cheap, rejects most) and the
+  destination pruning only for a candidate the set would accept, except at stops with a listener.
+  A candidate is accepted iff both pass, in either order; what differs is which candidates
+  update `goodElement`, the hint of the two sets. With a transitive dominance a hint changes no
+  result, and the dominance of the stop arrivals and of the destination arrivals is transitive
+  if the relax function is monotone and never lowers a cost (worked out in the draft). The unit
+  test `addsAnArrivalAtItsPositionOrNotAtAll` of the patch found no difference on random
+  arrivals either.
+  Most likely cause, NOT verified by a run: `GeneralizedCostRelaxFunction.relax` computes
+  `(value * normalizedRatio) / 0x100 + slack` in `int`. With the 1.10x of this request
+  (`relaxC1: f(x) = 1.10 * x + 720.0`, ratio 282/256) the product overflows for a c1 above
+  7 615 000 (21 hours of generalized cost) and the relaxed cost becomes negative: an arrival that
+  expensive is then never beaten on cost by one with a better c2, the dominance is no longer
+  transitive, and the result depends on the order and the hints. The paths of this case cost
+  3.7 to 6.1 million, with walks of 2 million each, so worse arrivals above 7.6 million during
+  the search are likely. With a ratio of 4.0, the largest allowed, the limit is 5.8 hours.
+  This is a bug in OTP whatever the idea: with such costs the result of today is arbitrary too.
+  Fixing it (the product in `long`) changes results, so it is not done here: it needs a decision
+  and a new baseline. After that fix this idea should give identical results; the code is kept
+  as `../perf-rig-data/drafts/stop-set-before-destination-pruning.patch` (against step11), the
+  design in `stop-set-before-destination-pruning.md`.
+  Two things for the loop. `accept` checks the oslo cases only; an idea that is identical by an
+  argument and not by construction needs the norway cases too, and they found this. And the
+  norway graph needs a 12 GB heap: `--dataset norway check --quick` ran (2 minutes), but the
+  full check of step11 (`check --build step11`, all 539 cases) was stopped by Claude Code after
+  some minutes because the laptop (32 GB) was critically low on memory. It was not started
+  again. So for the accepted steps 8 to 11: every 4th norway case is identical (145 of them
+  with this idea on top of step11, and `transit-069` with step11 itself); the other norway
+  cases are not checked.
