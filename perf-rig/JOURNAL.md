@@ -76,12 +76,6 @@ cases visits 2.9 M routes and 110 M stop positions.
 - raptor, memory (`needs time`): `TripScheduleAlightSearch` (the reverse heuristic search) has
   8.4 % of the time and 0.35 % of the ops: the arrival times of every pattern of the network are
   read from memory that is not in the cache. No change is designed yet.
-- raptor, memory: `TripPatternForDates.getTripSchedule` allocates a `TripScheduleWithOffset` for
-  every boarding, 15 % of the allocated bytes. A form that shares nothing between threads:
-  `TripScheduleBoardSearch` (and `TripScheduleAlightSearch`), which is created for each visit of a
-  route, keeps the last schedule it created with its trip index, and returns it again when the next
-  search finds the same trip (several arrivals at a stop board the same trip). Try with `--alloc`;
-  the results stay identical if no code compares two schedules with `==`.
 - raptor, memory: `TransitGroupPriorityRideFactory.createPatternRide` is 14 % of the allocated
   bytes: a ride is created for every boarding and then offered to the pareto set of the rides.
   Create it when the set accepts it, as for the stop arrivals.
@@ -99,14 +93,14 @@ cases visits 2.9 M routes and 110 M stop positions.
 
 ## Being tried
 
-- raptor, memory: what a visit of a route reads first is spread over five objects.
-  `TripPatternForDates.numberOfStopsInPattern()`, `slackIndex()` and `stopIndex(pos)` go to its
-  `RoutingTripPattern` (and from there to the `int[]` of the stop indexes). Keep the slack index
-  and a reference to the stop index array in `TripPatternForDates` (the number of stops is a
-  field since entry 13): one object less to read for each of the 2.9 M route visits, and 1.2 %
-  of the ops are the two `stopIndex` methods, half of which go. Identical by construction.
-  The stop indexes are copied into an array of the `TripPatternForDates` (the pattern does not
-  hand out its array). Tried with `try` against step16, after the time check of step16.
+- raptor, memory: `TripPatternForDates.getTripSchedule` allocates a `TripScheduleWithOffset` for
+  every boarding, 15 % of the allocated bytes. A form that shares nothing between threads:
+  `TripScheduleBoardSearch` (and `TripScheduleAlightSearch`), which is created for each visit of a
+  route, keeps the last schedule it created with its trip index, and returns it again when the next
+  search finds the same trip (several arrivals at a stop board the same trip). Try with `--alloc`;
+  the results stay identical if no code compares two schedules with `==`.
+  In the profile of step13 `getTripSchedule` is 3.6 % of the time. Tried with `try --alloc`
+  against step17, after the time check of step17.
 
 ## Tried
 
@@ -455,3 +449,16 @@ cases visits 2.9 M routes and 110 M stop positions.
   to 1.049), cycles 0.986 (0.956 to 1.016), cache misses 0.954 (0.909 to 1.000), branch
   mispredictions 0.992 (0.952 to 1.033). Allocated bytes 1.000. A few percent fewer cache
   misses at most; the step stays on its ops.
+
+### 17. accepted: TripPatternForDates keeps what a visit of the route reads from its pattern
+- where: raptor (the code is in `application`), `TripPatternForDates`
+- result: ops raptor 0.9914 against step16 (0.7836 against base, the product of the steps),
+  results identical; `accept`: 550 results identical, also repeated and on 8 threads, and all 9689
+  OTP tests pass
+- commit: 056b8ee79e on perf/raptor-1, build step17
+- note: `stopIndex(pos)` (110 M calls in a pass, one for every stop position of every route
+  visited), `slackIndex()`, `numberOfStopsInPattern()` and `transitReluctanceFactorIndex()` went
+  to the `RoutingTripPattern`, one more object to read for each of the 2.9 M route visits. The
+  three ints are fields now and the stop indexes an array of the `TripPatternForDates`, copied
+  when the transit data of a request is made (the pattern does not hand out its array): a few
+  ints for each pattern, next to time arrays of thousands. `e2e` has not been measured.
