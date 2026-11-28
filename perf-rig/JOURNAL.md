@@ -25,9 +25,9 @@ they are.
 
 ## Ideas not tried yet
 
-State of the series `perf/raptor-1` on 2026-11-28: the steps 1, 2, 6, 8, 9, 10, 11, 13, 16, 17 and
-18 are accepted, each with a time check; step13 against base is 25.8 % faster for a search and
-36 % in total time (entry 15), and 16 to 18 add fewer cache misses. The last build is `step18`.
+State of the series `perf/raptor-1` on 2026-11-28: the steps 1, 2, 6, 8, 9, 10, 11, 13, 16, 17,
+18 and 20 are accepted; step13 against base is 25.8 % faster for a search and 36 % in total
+time (entry 15), and 16 to 20 add fewer cache misses. The last build is `step20`.
 
 The numbers below are from the raptor profile of build `step13` (oslo, `profile --quick --levels
 raptor --top 60`, `profile/20261128-024922-wt`); the steps 16 to 18 came after it, so profile
@@ -114,23 +114,7 @@ that it is what made entry 12 differ; see that entry.
 
 ## Being tried
 
-- raptor, memory: `TripPatternForDates.boardingPossibleAt` and `alightingPossibleAt` ask two
-  `BitSet` objects, 88 M times in a pass (`BitSet.get` with its helpers is 4.5 % of the ops, the
-  two objects and their `long[]` are four more places in memory for each of the 2.9 M route
-  visits; entry 17 removed one such object and a tenth of the cache misses). The stop index of a
-  stop position is read from an array of the `TripPatternForDates` right before (entry 17): keep
-  the two flags in the two highest usable bits of that int (bits 30 and 29; a stop index above
-  2^29 is refused when the transit data of a request is made). Identical by construction. Tried
-  with `try` against step18.
-  State 2026-11-28 08:10: the code is in the working tree (`TripPatternForDates`, and the test
-  helper `TestRouteData`). `try` against step18: results identical, ops 0.9725. The first
-  `accept` failed with 26 OTP tests in error (`ConstrainedBoardingSearchTest`,
-  `TransferIndexGeneratorTest`, `MatchersTest`, `TransitGroupPriorityServiceTest`): their helper
-  `TestRouteData` gave the constructor `null` for the two bit sets, which was read only when a
-  test asked for a flag and is read in the constructor now. The helper gives the bit sets of its
-  pattern now, as `RaptorRoutingRequestTransitDataCreator` does; no assertion is changed.
-  `accept` is running again; then commit, freeze `step20`, entry 20 and the time check.
-
+Nothing.
 
 ## Tried
 
@@ -537,3 +521,21 @@ that it is what made entry 12 differ; see that entry.
   `compareC1Relaxed` still has a tenth of the time samples; what is slow there is most likely
   the first read of the set of a stop, which is one object in the heap for each stop whatever
   the order of its fields.
+
+### 20. accepted: the boarding and alighting flags of a stop position are kept with its stop index
+- where: raptor (the code is in `application`), `TripPatternForDates`
+- result: ops raptor 0.9725 against step18 (0.7585 against base, the product of the steps),
+  results identical; `accept`: 550 results identical, also repeated and on 8 threads, and all 9689
+  OTP tests pass
+- commit: 71b67723d2 on perf/raptor-1, build step20
+- note: `boardingPossibleAt` and `alightingPossibleAt` asked two `BitSet` objects, 88 M times in
+  a pass: an object and a `long[]` each, four more places in memory for every route visit, and
+  `BitSet.get` with its helpers was 3.5 % of the ops (the ops count its assertions as if they
+  ran, so that share promised more than there was). The stop index of the same stop position
+  is read from an array of the `TripPatternForDates` right before (entry 17); the two flags are
+  bits 30 and 29 of that int now, set from the bit sets when the transit data of a request is
+  made. A stop index above 2^29 is refused there with an exception.
+  The first `accept` failed with 26 OTP tests in error: the test helper `TestRouteData` gave the
+  constructor `null` for the two bit sets, which were read only when a flag was asked for. The
+  helper gives the bit sets of its pattern now, as `RaptorRoutingRequestTransitDataCreator`
+  does; no assertion is changed.
