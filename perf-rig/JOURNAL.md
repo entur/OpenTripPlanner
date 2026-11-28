@@ -109,17 +109,7 @@ cases visits 2.9 M routes and 110 M stop positions.
 
 ## Being tried
 
-- raptor, memory (`needs time`): "is the stop reached in the previous round" is asked for every
-  stop position of every route visited, 110 M times in a pass. In the multi-criteria search it
-  reads `arrivals[stop]` and then the set object of the stop (`hasElementsAfterMarker`), which is
-  somewhere in the heap. A set has elements after its marker only if its stop is in
-  `touchedStops`: an arrival that is accepted touches the stop, and the markers are set for
-  exactly the touched stops when the bit set is cleared. So `touchedStops.get(stop) &&
-  arrivals[stop].hasElementsAfterMarker()` is the same answer, and the set is read only for the
-  touched stops, which are read for boarding anyway. The bit set is 2 KB for oslo. Identical by
-  construction. More ops (`BitSet.get` is 28 bytecodes with its assertions): decided by a time
-  benchmark against step13.
-
+Nothing.
 
 ## Tried
 
@@ -417,3 +407,20 @@ cases visits 2.9 M routes and 110 M stop positions.
   more than 1 %.
   Not tried: arrival and departure times of a trip interleaved in one array, so the departure
   that the search finds is in the cache line of the next arrivals.
+
+### 14. rejected: ask the touched stops before the set of a stop if it is reached
+- where: raptor, `McStopArrivals.hasArrivalsAfterMarker`
+- result: time raptor B/A 1.003 against step13 (99 % interval 0.972 to 1.035): no significant
+  difference. Of the CPU: instructions 1.014 (0.976 to 1.054), cycles 0.999 (0.953 to 1.047),
+  cache misses 1.012 (0.931 to 1.100), branch mispredictions 0.998 (0.957 to 1.041). Results
+  identical (`check --quick`)
+- why: no gain. The idea was that the set object of every stop of every route visited is read
+  from memory only to find that it has no new arrivals, and that `touchedStops.get(stop) &&
+  arrivals[stop].hasElementsAfterMarker()` (the same answer, the bit set is 2 KB) saves those
+  reads. The cache misses and the cycles are the same, so those reads are not where the cache
+  misses are: either most stops of a visited route have no set yet, or their sets are in the
+  cache. `bench --quick --levels raptor --forks 5 --counters --baseline step13` (03:12 to 03:33),
+  no warning (fork B0 was run again), a quarter of an hour after the build, 3.9 to 4.2 GHz.
+- note: what a `needs time` idea promises should be checked against the counters of a profile
+  first, if there is a way: this one cost fifty minutes. A count of the stop positions that have
+  a set, and of the sets with new arrivals, would have told.
