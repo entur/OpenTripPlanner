@@ -25,71 +25,97 @@ they are.
 
 ## Ideas not tried yet
 
-From the raptor profile of build `step13` (oslo, `profile --quick --levels raptor --top 60`,
-`profile/20261128-024922-wt`), and what is left of the lists from the profiles of step2 and step8.
-A percentage is the share of the ops, unless it says time. The order is what each idea promises
-in time, not in ops: since entry 8 the ops are known to be a poor guide where code is shared
-between uses (calls that are not inlined) and for memory. In the profile of step13 the time is:
-the pareto sets of the stop arrivals 17 % (`compareC1Relaxed` 10.0 %, `StopArrivalParetoSet.add`
-4.8 %), the alighting of the two standard (heuristic) searches 12.7 %, the destination pruning
-11.5 % (`ParetoSet.qualify` 6.9 %, `HeuristicsProvider.get` 3.3 %), the alighting of the
-multi-criteria search 6.7 %, `IntIterators.intIncIterator` 6.0 % (the first reads of a route),
-`boardWithRegularTransfer` 5.8 %, the transfers 7.1 %, the trip search 4.9 %,
-`TripPatternForDates.getTripSchedule` 3.6 %, `ArrivalView.arrivedBy` 2.2 %. A pass over the
-cases visits 2.9 M routes and 110 M stop positions.
+State of the series `perf/raptor-1` on 2026-11-28: the steps 1, 2, 6, 8, 9, 10, 11, 13, 16, 17 and
+18 are accepted, each with a time check; step13 against base is 25.8 % faster for a search and
+36 % in total time (entry 15), and 16 to 18 add fewer cache misses. The last build is `step18`.
 
-- raptor, `MultiCriteriaRoutingStrategy.board`: `prevArrival.arrivedBy(ACCESS)` is an interface
-  call that is not inlined (2.2 % of the time, 13 M boardings). Only an access arrival has no
-  previous arrival, so `prevArrival.previous() == null && prevArrival.arrivedBy(ACCESS)` asks
-  the same and makes the call for access arrivals only. Ops 0.08 %: `needs time`.
-- raptor, `StdTransferEarlyPruning.updateArrival`: `IntIntHashMap.getOrDefault` for every
-  improved arrival of the standard searches, 1.8 % of the time. A `BitSet` of the egress stops
-  answers "not an egress stop" first.
-- raptor, blocked: ask the pareto set of the stop before the destination pruning (entry 12, ops
-  0.9422). Rejected because a norway result changes, most likely since
-  `GeneralizedCostRelaxFunction.relax` overflows `int` for costs above 21 hours. Try it again
-  only when that is fixed in the baseline (a decision of its own, it changes results): the patch
-  is `../perf-rig-data/drafts/stop-set-before-destination-pruning.patch`, and it needs
-  `--dataset norway check` besides `accept`.
+The numbers below are from the raptor profile of build `step13` (oslo, `profile --quick --levels
+raptor --top 60`, `profile/20261128-024922-wt`); the steps 16 to 18 came after it, so profile
+again before trusting a share. A percentage is the share of the time samples, unless it says ops.
+In that profile: the pareto sets of the stop arrivals 17 % (`compareC1Relaxed` 10.0 %,
+`StopArrivalParetoSet.add` 4.8 %), the alighting of the two standard (heuristic) searches 12.7 %,
+the destination pruning 11.5 % (`ParetoSet.qualify` 6.9 %, `HeuristicsProvider.get` 3.3 %, now in
+entry 16), the alighting of the multi-criteria search 6.7 %, the first reads of a route 6.0 %
+(`IntIterators.intIncIterator`, partly entry 17), `boardWithRegularTransfer` 5.8 %, the transfers
+7.1 %, the trip search 4.9 %, `ArrivalView.arrivedBy` 2.2 %. A pass over the cases visits 2.9 M
+routes and 110 M stop positions, makes 62 M candidates for stop arrivals and accepts 6.3 M.
+
+What was learnt about choosing: the ops show less than half of the gains (the series is 0.78 in
+ops and 0.64 in time). The two things the ops do not show are calls that the JIT compiler does
+not inline because several uses share one piece of code (entries 8 and 10, found with
+`RIG_JAVA_OPTS="-XX:+UnlockDiagnosticVMOptions -XX:+PrintInlining"` and one fork of `bench`:
+look for "failed to inline" in the fork log), and memory (entries 9, 13, 17). A guess about
+memory is worth a benchmark only if the reads it removes can be counted beforehand (entries 14
+and 19 could not, and gave nothing). `accept` checks the oslo cases only; an idea that is not
+identical by construction needs the norway cases too (entry 12).
+
+A decision for the owner of the rig, before the two ideas that promise most:
+`GeneralizedCostRelaxFunction.relax` overflows `int` (`value * normalizedRatio`) for a cost above
+21 hours with the ratio 1.10 of the datasets, and above 5.8 hours with 4.0. Fixing it (the product
+in `long`) changes results of long journeys, so it needs a new baseline. Not verified by a run
+that it is what made entry 12 differ; see that entry.
+
+- raptor, blocked on that decision: ask the pareto set of the stop before the destination pruning
+  (entry 12, ops 0.9422 against step11). The patch is
+  `../perf-rig-data/drafts/stop-set-before-destination-pruning.patch` (against step11), the
+  design and the argument in `stop-set-before-destination-pruning.md`. It needs `--dataset norway
+  check` besides `accept`.
 - raptor, blocked for the same reason: reject a candidate when it is found, not when it is
   committed. `transitToStop` and `transferToStop` could ask the set of the stop
   (`StopArrivalParetoSet.positionOf` of the patch of entry 12) before they add a candidate to the
   `StopArrivalCandidates`: an arrival the set rejects now is rejected at the commit too, since a
   set only gets better. Four of five candidates would never be stored, about 3 % of the
-  instructions. It holds only if the dominance is transitive, as the idea of entry 12 does, and
-  not at stops with a listener.
-- raptor, `HeuristicsProvider` and `DestinationArrivalPaths.qualify`, the destination pruning of
-  every candidate: 12 % of the time (`HeuristicsProvider.get` 3.0 %, `ParetoSet.leftDominanceExist`
-  4.1 %, `ParetoSet.qualify` 2.0 %, `ParetoComparator.compare` 1.9 %, the comparator 1.1 %) and
-  13 % of the ops. Two changes, each an idea of its own:
-  - The destination set is a generic `ParetoSet`, and the comparator of the destination
-    arrivals is one of 18 lambdas (`DestinationArrivalParetoSetComparators`), a class of its own
-    for each configuration. A JVM that serves several configurations (depart after and arrive
-    by, with and without transit group priority) has several of them at the call sites of
-    `qualify`, and the JIT compiler inlines none if no one has 90 % of the calls. One comparator
-    class with the configuration in fields (which time criteria, duration or not, which cost
-    criterion) has no such limit; it is a rewrite of the 18 lambdas into one method, to be
-    checked with `DestinationArrivalParetoSetComparatorsTest`. The cases of the rig are 96 % one
-    configuration, so the rig shows no gain of it; it is for production.
-- raptor, `BitSet.get` with `checkInvariants` and `wordIndex` is 4.2 %: the boarding and
-  alighting checks of `TripPatternForDates` and the reached stops of the standard search.
-- raptor, memory (`needs time`): `TripScheduleAlightSearch` (the reverse heuristic search) has
-  8.4 % of the time and 0.35 % of the ops: the arrival times of every pattern of the network are
-  read from memory that is not in the cache. No change is designed yet.
-- raptor, memory: `TransitGroupPriorityRideFactory.createPatternRide` is 14 % of the allocated
-  bytes: a ride is created for every boarding and then offered to the pareto set of the rides.
-  Create it when the set accepts it, as for the stop arrivals.
-- raptor, memory: the samples of `IntIterators.intIncIterator` (5.0 % of the time) are most likely
-  the first reads of a route in `routeTransit`: `TripPatternForDates`, its `RoutingTripPattern`
-  (stop indexes, slack index), the two `BitSet`s with their `long[]` and the time arrays are ten
-  cache lines apart for each visit of a route. Fewer objects for what a visit reads first.
+  instructions. It holds only if the dominance is transitive, and not at stops with a listener.
+- raptor, the stop arrival sets, 17 % of the time: `StopArrivalParetoSet.add` is 362 bytecodes,
+  and the JIT compiler does not inline it in the commit loop ("hot method too big" in the log of
+  entry 9), a call with seven arguments for each of 39 M candidates. Most are rejected by
+  `goodElement`: a small method with only that test, calling the rest, would be inlined. No ops
+  change, and a gain of a percent or two that 5 forks do not show in time: look at the
+  instructions of `--counters`, with more forks.
+- raptor, memory: the sets of the stops are an object and two arrays for each stop, somewhere in
+  the heap; every candidate that reaches a set reads it. One `int[]` for all stops with a fixed
+  block for each (the size, the criteria of `goodElement` and of the first elements), and the
+  objects only for what does not fit, would make it one cache line for a stop. A rewrite of
+  `StopArrivalParetoSet` and `McStopArrivals`; not designed. The oslo arrays would be 1 MB for a
+  search, the norway ones 7 MB.
+- raptor, `MultiCriteriaRoutingStrategy.board`: `prevArrival.arrivedBy(ACCESS)` is an interface
+  call that is not inlined (2.2 %, 13 M boardings). Only an access arrival has no previous
+  arrival, so `prevArrival.previous() == null && prevArrival.arrivedBy(ACCESS)` asks the same and
+  makes the call for access arrivals only. Ops 0.07 % less: too small for the ops rule and for
+  the time of 5 forks.
+- raptor, memory: `TransitGroupPriorityRideFactory.createPatternRide` is a third of the allocated
+  bytes of step18 (0.75 GB of 2.44 GB in a pass): a ride is created for every boarding and then
+  offered to the pareto set of the rides, which keeps a few. Create it when the set accepts it,
+  as for the stop arrivals (entry 9): the criteria of a ride are the trip sort index, the
+  relative c1 and c2. Needs a set that compares values, as entry 8, for the two ride comparators.
+- raptor, the destination pruning: the comparator of the destination arrivals is one of 18
+  lambdas (`DestinationArrivalParetoSetComparators`), a class of its own for each configuration.
+  A JVM that serves several configurations (depart after and arrive by, with and without transit
+  group priority) has several of them at the call sites of `ParetoSet.qualify`, and the JIT
+  compiler inlines none if no one has 90 % of the calls. One comparator class with the
+  configuration in fields has no such limit; it is a rewrite of the 18 lambdas into one method,
+  to be checked with `DestinationArrivalParetoSetComparatorsTest`. The cases of the rig are 96 %
+  one configuration, so the rig shows no gain of it; it is for production.
+- raptor, the standard (heuristic) searches, a fifth of the time: their alighting is 12.7 % with
+  0.4 % of the ops. They visit every route that can be reached once in a round, and for every
+  stop read the trip time and `BestTimes` (two `int[]` of all stops). Nothing is designed; ask
+  first what of the two searches the multi-criteria search uses, and if a search can stop early.
+- raptor, `StdTransferEarlyPruning.updateArrival`: `IntIntHashMap.getOrDefault` for every
+  improved arrival of the standard searches, 1.8 %. A `BitSet` of the egress stops answers "not
+  an egress stop" first. More ops (`BitSet.get` is 28 bytecodes with its assertions).
+- raptor, `BitSet.get` with `checkInvariants` and `wordIndex` is 4.5 % of the ops: the boarding
+  and alighting checks of `TripPatternForDates` (two `BitSet` objects with a `long[]` each, read
+  for every visit of a route) and the reached stops of the standard search. A `long` for a
+  pattern of up to 64 stops would be in the `TripPatternForDates` itself. The ops count the
+  assertions of `BitSet` as if they ran, so the ops will promise more than there is.
 - raptor, memory: `RaptorRoutingRequestTransitData.routeIndexIterator` allocates a `BitSet` of all
-  patterns in every round (1.6 % of the time), and `patternStopIterator` an iterator for every
-  pattern (1.6 % of the allocated bytes).
-- raptor, `MinTravelDurationRoutingStrategy.alightOnlyRegularTransferExist` (4.8 % of the time)
-  and `StdTransferEarlyPruning.updateArrival` (`IntIntHashMap.getOrDefault`, 2.2 % of the time):
-  the standard (heuristic) searches. The map has the egress stops only; a `BitSet` of the egress
-  stops, or an `int[]` of all stops, answers "not an egress stop" without hashing.
+  patterns in every round (1.4 %), and `patternStopIterator` an iterator for every route visit.
+- raptor, memory (`needs time`): arrival and departure times of a trip interleaved in one array
+  of `TripPatternForDates`, so the departure the trip search finds is in the cache line of the
+  arrivals the ride reads next. At most one cache line for a boarding.
+- raptor, `StopArrivalCandidates.clear` fills the object arrays with `null` (`Arrays.fill`, 1.0 %).
+  Without it the list would keep rides and arrivals of the round before reachable until the next
+  round overwrites them, and until the end of the search at most; not tried because of that.
 
 ## Being tried
 
