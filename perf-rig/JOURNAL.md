@@ -68,10 +68,6 @@ cases visits 2.9 M routes and 110 M stop positions.
   every candidate: 12 % of the time (`HeuristicsProvider.get` 3.0 %, `ParetoSet.leftDominanceExist`
   4.1 %, `ParetoSet.qualify` 2.0 %, `ParetoComparator.compare` 1.9 %, the comparator 1.1 %) and
   13 % of the ops. Two changes, each an idea of its own:
-  - `HeuristicsProvider.get` reads `stops[stop]` and then the `HeuristicAtStop` object: two
-    reads from memory that depend on each other, for every candidate. Keep the three values
-    (min travel duration, min number of transfers, min cost) of a stop in one `int[]`
-    (`needs time`).
   - The destination set is a generic `ParetoSet`, and the comparator of the destination
     arrivals is one of 18 lambdas (`DestinationArrivalParetoSetComparators`), a class of its own
     for each configuration. A JVM that serves several configurations (depart after and arrive
@@ -109,7 +105,15 @@ cases visits 2.9 M routes and 110 M stop positions.
 
 ## Being tried
 
-Nothing.
+- raptor, memory: `HeuristicsProvider.get` reads `stops[stop]` and then the `HeuristicAtStop`
+  object, two reads from memory that depend on each other, for every candidate that is checked
+  against the destination (3.3 % of the time in the profile of step13). Keep the three values of
+  a stop (min travel duration, min number of transfers, min cost) in one `int[]`, three for a
+  stop, fetched from the heuristics when the stop is first asked for, as now. Zero in the first
+  value is "not fetched" (the array is created with zeros), so the duration is kept plus one.
+  Identical by construction. Tried with `try` against step13; if the ops are not lower it needs
+  a time benchmark.
+
 
 ## Tried
 
@@ -427,7 +431,7 @@ Nothing.
 
 ### 15. time check: the whole series, step13 against base
 - where: raptor, step13 (a2b8ada106) against base, `bench --quick --levels raptor --forks 5
-  --counters --baseline base --candidate step13` (03:34 to 03:56)
+  --counters --baseline base --candidate step13` (03:34 to 03:54)
 - result: `B faster (25.8%)`: time B/A 0.742 (99 % interval 0.732 to 0.752), B/A of the total
   time 0.640 (8.23 s to 5.27 s for the 134 searches). Of the CPU: instructions 0.6689 (0.6536 to
   0.6846), cycles 0.6174 (0.5972 to 0.6382), cache misses 0.4485 (0.4234 to 0.4751), branch
