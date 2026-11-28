@@ -32,21 +32,6 @@ what each idea promises in time, not in ops: since entry 8 the ops are known to 
 where code is shared between uses (calls that are not inlined) and where branches are hard to
 predict.
 
-- raptor, memory (`needs time`): keep the times of `TripPatternForDates` by trip, then stop
-  (`arrivalTimes[tripIndex * nStops + stopPos]`, now it is `[stopPos * nTrips + tripIndex]`).
-  `MultiCriteriaRoutingStrategy.alightOnlyRegularTransferExist` has 10 % of the time and 1.2 % of
-  the ops, the same method of the standard search 4.8 %: a ride reads the arrival time of its
-  trip at every stop it passes, and those are `nTrips` ints apart, a new cache line for each
-  stop. By trip they are next to each other, sixteen stops in a cache line. The times were kept
-  by stop for the stepping of the trip search, which read the trips at a stop one after the
-  other; since entry 11 that search is a binary search for nearly every pattern, and its probes
-  are far apart either way. By trip, the first probes of the binary search (the same trips for
-  every search of a visit of the route, whatever the stop) are in cache lines that the search at
-  the stop before has just read; by stop every stop has a row of its own. The patterns that are
-  not in trip order still step through up to 50 trips, now a cache line for each step: look at
-  the cases that get slower. Change: the index in the constructor (the trip before is `nStops`
-  elements before, for the flags of entry 11) and in `arrivalTime` and `departureTime`, with the
-  number of stops in a field. No ops change: needs `B faster`.
 - raptor, blocked: ask the pareto set of the stop before the destination pruning (entry 12, ops
   0.9422). Rejected because a norway result changes, most likely since
   `GeneralizedCostRelaxFunction.relax` overflows `int` for costs above 21 hours. Try it again
@@ -103,7 +88,22 @@ predict.
 
 ## Being tried
 
-Nothing.
+- raptor, memory (`needs time`): keep the times of `TripPatternForDates` by trip, then stop
+  (`arrivalTimes[tripIndex * nStops + stopPos]`, now it is `[stopPos * nTrips + tripIndex]`).
+  `MultiCriteriaRoutingStrategy.alightOnlyRegularTransferExist` has 10 % of the time and 1.2 % of
+  the ops, the same method of the standard search 4.8 %: a ride reads the arrival time of its
+  trip at every stop it passes, and those are `nTrips` ints apart, a new cache line for each
+  stop. By trip they are next to each other, sixteen stops in a cache line. The times were kept
+  by stop for the stepping of the trip search, which read the trips at a stop one after the
+  other; since entry 11 that search is a binary search for nearly every pattern, and its probes
+  are far apart either way. By trip, the first probes of the binary search (the same trips for
+  every search of a visit of the route, whatever the stop) are in cache lines that the search at
+  the stop before has just read; by stop every stop has a row of its own. The patterns that are
+  not in trip order still step through up to 50 trips, now a cache line for each step: look at
+  the cases that get slower. Change: the index in the constructor (the trip before is `nStops`
+  elements before, for the flags of entry 11) and in `arrivalTime` and `departureTime`, with the
+  number of stops in a field. No ops change: needs `B faster`.
+  Tried with a full build, `check --quick` and a time benchmark against step11.
 
 ## Tried
 
