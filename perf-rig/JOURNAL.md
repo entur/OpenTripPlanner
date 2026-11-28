@@ -93,14 +93,7 @@ cases visits 2.9 M routes and 110 M stop positions.
 
 ## Being tried
 
-- raptor, memory: `TripPatternForDates.getTripSchedule` allocates a `TripScheduleWithOffset` for
-  every boarding, 15 % of the allocated bytes. A form that shares nothing between threads:
-  `TripScheduleBoardSearch` (and `TripScheduleAlightSearch`), which is created for each visit of a
-  route, keeps the last schedule it created with its trip index, and returns it again when the next
-  search finds the same trip (several arrivals at a stop board the same trip). Try with `--alloc`;
-  the results stay identical if no code compares two schedules with `==`.
-  In the profile of step13 `getTripSchedule` is 3.6 % of the time. Tried with `try --alloc`
-  against step17, after the time check of step17.
+Nothing.
 
 ## Tried
 
@@ -468,3 +461,19 @@ cases visits 2.9 M routes and 110 M stop positions.
   time 0.976. Of the CPU: instructions 1.004 (0.972 to 1.037), cycles 0.971 (0.941 to 1.002),
   cache misses 0.905 (0.846 to 0.967), branch mispredictions 1.005 (0.973 to 1.038). Allocated
   bytes 1.000. A tenth of the cache misses were the pattern objects.
+
+### 18. accepted: the trip search keeps the schedule of the last trip it found
+- where: raptor (the code is in `application`), `TripScheduleBoardSearch`,
+  `TripScheduleAlightSearch`
+- result: `B allocates less (18.6%)` against step17 (2.994 GB to 2.438 GB), ops raptor 0.9955
+  (0.7800 against base, the product of the steps). Results identical; `accept`: 550 results
+  identical, also repeated and on 8 threads, and all 9689 OTP tests pass
+- commit: d8018a23eb on perf/raptor-1, build step18
+- note: `TripPatternForDates.getTripSchedule` creates a `TripScheduleWithOffset` whenever it is
+  asked, and the search asked for every boarding it found (18 % of the allocated bytes of
+  step17, 3.6 % of the time in the profile of step13). A search object is made for one visit
+  of a route and used by one thread, and the arrivals at a stop often board the same trip: it
+  keeps the last schedule with its trip index and returns it again for the same index. Several
+  rides, arrivals and paths can now share one schedule object for the same trip; nothing in
+  Raptor or the routing compares schedules by identity (searched for it), and the schedule only
+  caches what it looks up about its own trip.
