@@ -40,12 +40,15 @@ public class TripPatternForDates
 
   private final int numberOfTripSchedules;
 
+  private final int numberOfStops;
+
   private final boolean isFrequencyBased;
 
   /**
-   * The arrival times in a nStops * numberOfTripSchedules sized array. The trips are stored first
-   * by the stop position and then by trip index, so with stops 1 and 2, and trips A and B, the
-   * order is [1A, 1B, 2A, 2B]
+   * The arrival times in a numberOfTripSchedules * nStops sized array. The times are stored first
+   * by trip index and then by the stop position, so with stops 1 and 2, and trips A and B, the
+   * order is [A1, A2, B1, B2]. A trip that is boarded is followed from stop to stop, and the times
+   * of a trip are next to each other in memory.
    */
   private final int[] arrivalTimes;
 
@@ -96,6 +99,7 @@ public class TripPatternForDates
     this.wheelchairBoardings = new Accessibility[numberOfTripSchedules];
 
     final int nStops = tripPattern.numberOfStopsInPattern();
+    this.numberOfStops = nStops;
     this.arrivalTimes = new int[nStops * numberOfTripSchedules];
     this.departureTimes = new int[nStops * numberOfTripSchedules];
 
@@ -110,16 +114,16 @@ public class TripPatternForDates
 
       wheelchairBoardings[i] = tt.getWheelchairAccessibility();
       for (int s = 0; s < nStops; s++) {
-        int index = s * numberOfTripSchedules + i;
+        int index = i * nStops + s;
         int arrivalTime = tt.getArrivalTime(s) + offset;
         int departureTime = tt.getDepartureTime(s) + offset;
         this.arrivalTimes[index] = arrivalTime;
         this.departureTimes[index] = departureTime;
 
-        // The trip before this one is the element before it in the arrays
+        // The same stop of the trip before this one is nStops elements back in the arrays
         if (i > 0) {
-          arrivalsInTripOrder &= this.arrivalTimes[index - 1] <= arrivalTime;
-          departuresInTripOrder &= this.departureTimes[index - 1] <= departureTime;
+          arrivalsInTripOrder &= this.arrivalTimes[index - nStops] <= arrivalTime;
+          departuresInTripOrder &= this.departureTimes[index - nStops] <= departureTime;
         }
       }
     }
@@ -222,12 +226,12 @@ public class TripPatternForDates
 
   @Override
   public int arrivalTime(int stopPositionInPattern, int tripIndex) {
-    return arrivalTimes[stopPositionInPattern * numberOfTripSchedules + tripIndex];
+    return arrivalTimes[tripIndex * numberOfStops + stopPositionInPattern];
   }
 
   @Override
   public int departureTime(int stopPositionInPattern, int tripIndex) {
-    return departureTimes[stopPositionInPattern * numberOfTripSchedules + tripIndex];
+    return departureTimes[tripIndex * numberOfStops + stopPositionInPattern];
   }
 
   @Override
