@@ -39,6 +39,9 @@ public final class TripScheduleBoardSearch<T extends RaptorTripSchedule> impleme
   private T candidateTrip;
   private int candidateTripIndex = RaptorConstants.NOT_FOUND;
 
+  private T lastTrip;
+  private int lastTripIndex = RaptorConstants.NOT_FOUND;
+
   /**
    * Use {@link TripScheduleSearchFactory#create(SearchDirection, TripSearchTimetable)} to create a
    * trip schedule search.
@@ -160,7 +163,7 @@ public final class TripScheduleBoardSearch<T extends RaptorTripSchedule> impleme
     }
     if (lower < nTrips) {
       candidateTripIndex = lower;
-      candidateTrip = timetable.getTripSchedule(lower);
+      candidateTrip = tripSchedule(lower);
     }
     return this;
   }
@@ -208,7 +211,7 @@ public final class TripScheduleBoardSearch<T extends RaptorTripSchedule> impleme
       }
     }
     if (candidateTripIndex != RaptorConstants.NOT_FOUND) {
-      candidateTrip = timetable.getTripSchedule(candidateTripIndex);
+      candidateTrip = tripSchedule(candidateTripIndex);
     }
     return this;
   }
@@ -224,12 +227,25 @@ public final class TripScheduleBoardSearch<T extends RaptorTripSchedule> impleme
   ) {
     for (int i = tripIndexLowerBound; i < nTrips; ++i) {
       if (timetable.departureTime(stopPositionInPattern, i) >= earliestBoardTime) {
-        candidateTrip = timetable.getTripSchedule(i);
+        candidateTrip = tripSchedule(i);
         candidateTripIndex = i;
         return this;
       }
     }
     return this;
+  }
+
+  /**
+   * The schedule of the trip with the given index. The last one is kept: the searches of a visit
+   * of the route often find the same trip, and a schedule is created for each trip it is asked
+   * for.
+   */
+  private T tripSchedule(int tripIndex) {
+    if (tripIndex != lastTripIndex) {
+      lastTrip = timetable.getTripSchedule(tripIndex);
+      lastTripIndex = tripIndex;
+    }
+    return lastTrip;
   }
 
   /**
