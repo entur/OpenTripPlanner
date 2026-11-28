@@ -93,7 +93,16 @@ cases visits 2.9 M routes and 110 M stop positions.
 
 ## Being tried
 
-Nothing.
+- raptor, memory (`needs time`): in `StopArrivalParetoSet` create the `criteria` array before the
+  `elements` array. The set of a stop is somewhere in the heap, and a candidate that is not
+  rejected by `goodElement` (kept in the object) reads the criteria of the first elements next
+  (`compareC1Relaxed` is 10 % of the time in the profile of step13, and it does nothing but
+  compare what it is given). The object and its two arrays are created together, one after the
+  other in memory: with the criteria first they start 16 bytes after the object, with the
+  elements first 64 bytes later, in another cache line. Two field declarations change places;
+  identical by construction, no ops change. A guess about the memory like entry 14: a time
+  benchmark against step18 decides.
+
 
 ## Tried
 
