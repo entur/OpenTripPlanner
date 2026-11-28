@@ -111,6 +111,12 @@ predict.
   elements before, for the flags of entry 11) and in `arrivalTime` and `departureTime`, with the
   number of stops in a field. No ops change: needs `B faster`.
   Tried with a full build, `check --quick` and a time benchmark against step11.
+  State 2026-11-28 02:30: the code is in the working tree (`TripPatternForDates` only). Full
+  build and `check --quick`: results identical. Time benchmark against step11 (02:06 to 02:28,
+  5 forks, `--counters`, no warning, a quarter of an hour after the build): `B faster (7.8%)`,
+  time B/A 0.922 (0.892 to 0.952), instructions 0.998, cycles 0.8863 (0.8590 to 0.9145), cache
+  misses 0.6385 (0.5860 to 0.6958). Accepted on that; `accept` is running, then commit, freeze
+  `step13` and entry 13.
 
 ## Tried
 
