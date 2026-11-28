@@ -38,12 +38,6 @@ multi-criteria search 6.7 %, `IntIterators.intIncIterator` 6.0 % (the first read
 `TripPatternForDates.getTripSchedule` 3.6 %, `ArrivalView.arrivedBy` 2.2 %. A pass over the
 cases visits 2.9 M routes and 110 M stop positions.
 
-- raptor, memory: what a visit of a route reads first is spread over five objects.
-  `TripPatternForDates.numberOfStopsInPattern()`, `slackIndex()` and `stopIndex(pos)` go to its
-  `RoutingTripPattern` (and from there to the `int[]` of the stop indexes). Keep the slack index
-  and a reference to the stop index array in `TripPatternForDates` (the number of stops is a
-  field since entry 13): one object less to read for each of the 2.9 M route visits, and 1.2 %
-  of the ops are the two `stopIndex` methods, half of which go. Identical by construction.
 - raptor, `MultiCriteriaRoutingStrategy.board`: `prevArrival.arrivedBy(ACCESS)` is an interface
   call that is not inlined (2.2 % of the time, 13 M boardings). Only an access arrival has no
   previous arrival, so `prevArrival.previous() == null && prevArrival.arrivedBy(ACCESS)` asks
@@ -105,15 +99,14 @@ cases visits 2.9 M routes and 110 M stop positions.
 
 ## Being tried
 
-- raptor, memory: `HeuristicsProvider.get` reads `stops[stop]` and then the `HeuristicAtStop`
-  object, two reads from memory that depend on each other, for every candidate that is checked
-  against the destination (3.3 % of the time in the profile of step13). Keep the three values of
-  a stop (min travel duration, min number of transfers, min cost) in one `int[]`, three for a
-  stop, fetched from the heuristics when the stop is first asked for, as now. Zero in the first
-  value is "not fetched" (the array is created with zeros), so the duration is kept plus one.
-  Identical by construction. Tried with `try` against step13; if the ops are not lower it needs
-  a time benchmark.
-
+- raptor, memory: what a visit of a route reads first is spread over five objects.
+  `TripPatternForDates.numberOfStopsInPattern()`, `slackIndex()` and `stopIndex(pos)` go to its
+  `RoutingTripPattern` (and from there to the `int[]` of the stop indexes). Keep the slack index
+  and a reference to the stop index array in `TripPatternForDates` (the number of stops is a
+  field since entry 13): one object less to read for each of the 2.9 M route visits, and 1.2 %
+  of the ops are the two `stopIndex` methods, half of which go. Identical by construction.
+  The stop indexes are copied into an array of the `TripPatternForDates` (the pattern does not
+  hand out its array). Tried with `try` against step16, after the time check of step16.
 
 ## Tried
 
@@ -441,3 +434,18 @@ cases visits 2.9 M routes and 110 M stop positions.
   searches (0.86 to 0.88) and the short ones; the long searches and the paging searches gained
   most (0.53 to 0.57). The ops of the series are 0.7916 (the product of the steps, step13 has
   the ops of step11): the ops show less than half of what the time shows.
+
+### 16. accepted: the heuristics of a stop are three values in an int array
+- where: raptor, `HeuristicsProvider`
+- result: ops raptor 0.9985 against step13 (0.7904 against base, the product of the steps),
+  results identical; `accept`: 550 results identical, also repeated and on 8 threads, and all 9689
+  OTP tests pass
+- commit: fa5660cec8 on perf/raptor-1, build step16
+- note: the provider kept a `HeuristicAtStop` object for each stop it was asked for, in an array
+  of references: two reads from memory that depend on each other for every candidate checked
+  against the destination (3.3 % of the time in the profile of step13). Now the min travel
+  duration, the min number of transfers and the min cost of a stop are three ints next to each
+  other in one array, fetched from the heuristics when a stop is first asked for, as before.
+  The duration is kept plus one, so the zero of a new array is "not fetched" and the array needs
+  no filling. The gain in ops is small (no accessor calls); the gain it is meant for is the
+  memory, see the time check.
