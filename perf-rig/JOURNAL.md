@@ -122,6 +122,14 @@ that it is what made entry 12 differ; see that entry.
   the two flags in the two highest usable bits of that int (bits 30 and 29; a stop index above
   2^29 is refused when the transit data of a request is made). Identical by construction. Tried
   with `try` against step18.
+  State 2026-11-28 08:10: the code is in the working tree (`TripPatternForDates`, and the test
+  helper `TestRouteData`). `try` against step18: results identical, ops 0.9725. The first
+  `accept` failed with 26 OTP tests in error (`ConstrainedBoardingSearchTest`,
+  `TransferIndexGeneratorTest`, `MatchersTest`, `TransitGroupPriorityServiceTest`): their helper
+  `TestRouteData` gave the constructor `null` for the two bit sets, which was read only when a
+  test asked for a flag and is read in the constructor now. The helper gives the bit sets of its
+  pattern now, as `RaptorRoutingRequestTransitDataCreator` does; no assertion is changed.
+  `accept` is running again; then commit, freeze `step20`, entry 20 and the time check.
 
 
 ## Tried
