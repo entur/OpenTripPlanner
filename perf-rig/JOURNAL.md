@@ -449,3 +449,9 @@ cases visits 2.9 M routes and 110 M stop positions.
   The duration is kept plus one, so the zero of a new array is "not fetched" and the array needs
   no filling. The gain in ops is small (no accessor calls); the gain it is meant for is the
   memory, see the time check.
+- time check: no significant difference. `bench --quick --levels raptor --forks 5 --counters
+  --baseline step13 --candidate step16` (04:36 to 04:52), no warning, ten minutes after
+  `accept`: time B/A 0.992 (99 % interval 0.952 to 1.033). Of the CPU: instructions 1.009 (0.970
+  to 1.049), cycles 0.986 (0.956 to 1.016), cache misses 0.954 (0.909 to 1.000), branch
+  mispredictions 0.992 (0.952 to 1.033). Allocated bytes 1.000. A few percent fewer cache
+  misses at most; the step stays on its ops.
