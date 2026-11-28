@@ -103,11 +103,6 @@ that it is what made entry 12 differ; see that entry.
 - raptor, `StdTransferEarlyPruning.updateArrival`: `IntIntHashMap.getOrDefault` for every
   improved arrival of the standard searches, 1.8 %. A `BitSet` of the egress stops answers "not
   an egress stop" first. More ops (`BitSet.get` is 28 bytecodes with its assertions).
-- raptor, `BitSet.get` with `checkInvariants` and `wordIndex` is 4.5 % of the ops: the boarding
-  and alighting checks of `TripPatternForDates` (two `BitSet` objects with a `long[]` each, read
-  for every visit of a route) and the reached stops of the standard search. A `long` for a
-  pattern of up to 64 stops would be in the `TripPatternForDates` itself. The ops count the
-  assertions of `BitSet` as if they ran, so the ops will promise more than there is.
 - raptor, memory: `RaptorRoutingRequestTransitData.routeIndexIterator` allocates a `BitSet` of all
   patterns in every round (1.4 %), and `patternStopIterator` an iterator for every route visit.
 - raptor, memory (`needs time`): arrival and departure times of a trip interleaved in one array
@@ -119,7 +114,15 @@ that it is what made entry 12 differ; see that entry.
 
 ## Being tried
 
-Nothing.
+- raptor, memory: `TripPatternForDates.boardingPossibleAt` and `alightingPossibleAt` ask two
+  `BitSet` objects, 88 M times in a pass (`BitSet.get` with its helpers is 4.5 % of the ops, the
+  two objects and their `long[]` are four more places in memory for each of the 2.9 M route
+  visits; entry 17 removed one such object and a tenth of the cache misses). The stop index of a
+  stop position is read from an array of the `TripPatternForDates` right before (entry 17): keep
+  the two flags in the two highest usable bits of that int (bits 30 and 29; a stop index above
+  2^29 is refused when the transit data of a request is made). Identical by construction. Tried
+  with `try` against step18.
+
 
 ## Tried
 
