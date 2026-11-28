@@ -462,3 +462,9 @@ cases visits 2.9 M routes and 110 M stop positions.
   three ints are fields now and the stop indexes an array of the `TripPatternForDates`, copied
   when the transit data of a request is made (the pattern does not hand out its array): a few
   ints for each pattern, next to time arrays of thousands. `e2e` has not been measured.
+- time check: no significant difference in time, fewer cache misses. `bench --quick --levels
+  raptor --forks 5 --counters --baseline step16 --candidate step17` (05:30 to 05:48), no warning,
+  ten minutes after `accept`: time B/A 0.982 (99 % interval 0.947 to 1.018), B/A of the total
+  time 0.976. Of the CPU: instructions 1.004 (0.972 to 1.037), cycles 0.971 (0.941 to 1.002),
+  cache misses 0.905 (0.846 to 0.967), branch mispredictions 1.005 (0.973 to 1.038). Allocated
+  bytes 1.000. A tenth of the cache misses were the pattern objects.
