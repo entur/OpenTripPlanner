@@ -93,16 +93,7 @@ cases visits 2.9 M routes and 110 M stop positions.
 
 ## Being tried
 
-- raptor, memory (`needs time`): in `StopArrivalParetoSet` create the `criteria` array before the
-  `elements` array. The set of a stop is somewhere in the heap, and a candidate that is not
-  rejected by `goodElement` (kept in the object) reads the criteria of the first elements next
-  (`compareC1Relaxed` is 10 % of the time in the profile of step13, and it does nothing but
-  compare what it is given). The object and its two arrays are created together, one after the
-  other in memory: with the criteria first they start 16 bytes after the object, with the
-  elements first 64 bytes later, in another cache line. Two field declarations change places;
-  identical by construction, no ops change. A guess about the memory like entry 14: a time
-  benchmark against step18 decides.
-
+Nothing.
 
 ## Tried
 
@@ -491,3 +482,21 @@ cases visits 2.9 M routes and 110 M stop positions.
   ten minutes after `accept`: time B/A 0.985 (99 % interval 0.956 to 1.016). Of the CPU:
   instructions 0.9955 (0.968 to 1.024), cycles 0.986 (0.960 to 1.014), cache misses 0.901 (0.866
   to 0.937), branch mispredictions 1.013 (0.980 to 1.046). Allocated bytes 0.814.
+
+### 19. rejected: create the criteria array of a stop arrival set before its elements array
+- where: raptor, `StopArrivalParetoSet` (the order of two field declarations)
+- result: time raptor B/A 1.002 against step18 (99 % interval 0.967 to 1.037): no significant
+  difference. Of the CPU: instructions 1.005 (0.985 to 1.025), cycles 1.004 (0.981 to 1.028),
+  cache misses 0.997 (0.959 to 1.036), branch mispredictions 1.006 (0.985 to 1.027). Results
+  identical (`check --quick`)
+- why: no gain. The guess was that the criteria of the first elements would be in the cache line
+  after the set object, and not one further on. The cache misses are the same: the two lines are
+  next to each other either way and the processor fetches both. `bench --quick --levels raptor
+  --forks 5 --counters --baseline step18` (07:10 to 07:30), no warning, ten minutes after the
+  build.
+- note: with entry 14 this is the second guess about the memory of the stop arrival sets that
+  the counters did not confirm. The two that worked (13 and 17) removed reads that could be
+  counted beforehand: a read for every stop of every ride, an object for every route visit.
+  `compareC1Relaxed` still has a tenth of the time samples; what is slow there is most likely
+  the first read of the set of a stop, which is one object in the heap for each stop whatever
+  the order of its fields.
