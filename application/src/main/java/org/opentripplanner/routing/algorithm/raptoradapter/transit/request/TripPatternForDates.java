@@ -42,6 +42,16 @@ public class TripPatternForDates
 
   private final int numberOfStops;
 
+  /**
+   * The stop index of each stop position, the slack index and the transit reluctance factor index
+   * of the trip pattern. They are read for every visit of the route in a search, so they are kept
+   * here: reading them from the trip pattern is one more object to fetch from memory.
+   */
+  private final int[] stopIndexes;
+
+  private final int slackIndex;
+  private final int transitReluctanceFactorIndex;
+
   private final boolean isFrequencyBased;
 
   /**
@@ -100,6 +110,12 @@ public class TripPatternForDates
 
     final int nStops = tripPattern.numberOfStopsInPattern();
     this.numberOfStops = nStops;
+    this.stopIndexes = new int[nStops];
+    for (int s = 0; s < nStops; s++) {
+      this.stopIndexes[s] = tripPattern.stopIndex(s);
+    }
+    this.slackIndex = tripPattern.slackIndex();
+    this.transitReluctanceFactorIndex = tripPattern.transitReluctanceFactorIndex();
     this.arrivalTimes = new int[nStops * numberOfTripSchedules];
     this.departureTimes = new int[nStops * numberOfTripSchedules];
 
@@ -176,12 +192,12 @@ public class TripPatternForDates
 
   @Override
   public int numberOfStopsInPattern() {
-    return tripPattern.numberOfStopsInPattern();
+    return numberOfStops;
   }
 
   @Override
   public int stopIndex(int stopPositionInPattern) {
-    return tripPattern.stopIndex(stopPositionInPattern);
+    return stopIndexes[stopPositionInPattern];
   }
 
   @Override
@@ -196,7 +212,7 @@ public class TripPatternForDates
 
   @Override
   public int slackIndex() {
-    return tripPattern.slackIndex();
+    return slackIndex;
   }
 
   @Override
@@ -250,7 +266,7 @@ public class TripPatternForDates
   }
 
   public int transitReluctanceFactorIndex() {
-    return tripPattern.transitReluctanceFactorIndex();
+    return transitReluctanceFactorIndex;
   }
 
   public Route route() {
