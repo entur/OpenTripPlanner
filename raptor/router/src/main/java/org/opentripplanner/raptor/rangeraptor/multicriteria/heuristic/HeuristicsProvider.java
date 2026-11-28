@@ -19,9 +19,24 @@ import org.opentripplanner.raptor.spi.RaptorTripSchedule;
  */
 public final class HeuristicsProvider<T extends RaptorTripSchedule> {
 
+  /** The values kept for each stop: min travel duration, min number of transfers and min cost. */
+  private static final int N_VALUES = 3;
+
+  /** In place of the first value of a stop: its values are not fetched from the heuristics yet. */
+  private static final int NOT_FETCHED = 0;
+
+  /** In place of the first value of a stop: the heuristic search did not reach the stop. */
+  private static final int UNREACHED = Integer.MIN_VALUE;
+
   private final Heuristics heuristics;
   private final DestinationArrivalPaths<T> paths;
-  private final HeuristicAtStop[] stops;
+
+  /**
+   * The heuristics of the stops, {@link #N_VALUES} for each stop. The values of a stop are read
+   * for every stop arrival, so they are kept together in one array. The first is the min travel
+   * duration plus one: an array is created with zeros, and zero is {@link #NOT_FETCHED}.
+   */
+  private final int[] stops;
   private final DebugHandlerFactory<T> debugHandlerFactory;
 
   private int round;
@@ -41,7 +56,7 @@ public final class HeuristicsProvider<T extends RaptorTripSchedule> {
   ) {
     this.heuristics = Objects.requireNonNull(heuristics);
     this.paths = Objects.requireNonNull(paths);
-    this.stops = new HeuristicAtStop[heuristics.size()];
+    this.stops = new int[heuristics.size() * N_VALUES];
     this.debugHandlerFactory = Objects.requireNonNull(debugHandlerFactory);
 
     // Use life-cycle events to inject the range-raptor round
@@ -113,27 +128,42 @@ public final class HeuristicsProvider<T extends RaptorTripSchedule> {
    * no heuristic calculation for the C2 value. Destination pruning can only be used if this is ok.
    */
   private boolean qualify(int stop, int arrivalTime, int cost, int c2) {
-    HeuristicAtStop h = get(stop);
+    final int i = stop * N_VALUES;
+    int minTravelDurationPlusOne = stops[i];
 
-    if (h == HeuristicAtStop.UNREACHED) {
+    if (minTravelDurationPlusOne == NOT_FETCHED) {
+      minTravelDurationPlusOne = fetch(stop);
+    }
+    if (minTravelDurationPlusOne == UNREACHED) {
       return false;
     }
-    int minArrivalTime = arrivalTime + h.minTravelDuration();
-    int minNumberOfTransfers = round - 1 + h.minNumTransfers();
-    int minCost = cost + h.minCost();
+    int minArrivalTime = arrivalTime + minTravelDurationPlusOne - 1;
+    int minNumberOfTransfers = round - 1 + stops[i + 1];
+    int minCost = cost + stops[i + 2];
     return paths.qualify(minArrivalTime, minNumberOfTransfers, minCost, c2);
   }
 
   private String rejectErrorMessage(int stop) {
-    return get(stop) == HeuristicAtStop.UNREACHED
+    HeuristicAtStop h = heuristics.createHeuristicAtStop(stop);
+    return h == HeuristicAtStop.UNREACHED
       ? "The stop was not reached in the heuristic calculation."
-      : get(stop).toString();
+      : h.toString();
   }
 
-  private HeuristicAtStop get(int stop) {
-    if (stops[stop] == null) {
-      stops[stop] = heuristics.createHeuristicAtStop(stop);
+  /**
+   * Fetch the values of a stop from the heuristics, and return the first of them as it is kept.
+   */
+  private int fetch(int stop) {
+    final int i = stop * N_VALUES;
+    HeuristicAtStop h = heuristics.createHeuristicAtStop(stop);
+
+    if (h == HeuristicAtStop.UNREACHED) {
+      stops[i] = UNREACHED;
+    } else {
+      stops[i] = h.minTravelDuration() + 1;
+      stops[i + 1] = h.minNumTransfers();
+      stops[i + 2] = h.minCost();
     }
-    return stops[stop];
+    return stops[i];
   }
 }
